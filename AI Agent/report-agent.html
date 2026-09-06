@@ -1,0 +1,902 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Odyssey — Inbound</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+<!-- Firebase SDK — sama persis pola yang dipakai di inbound.html / outbound.html.
+     auth-guard.js yang nyimpen firebaseConfig asli & handle login redirect.
+     Taruh file ini di folder project yang SAMA dengan auth-guard.js biar konek otomatis.
+     Chat AI-nya manggil Google Gemini API lewat proxy Netlify Function di
+     netlify/functions/gemini-proxy.js — API key disimpan aman di server
+     (env variable GEMINI_API_KEY), gak pernah ke-expose di browser. -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+
+<style>
+  :root{
+    --bg:#10141A; --panel:#171D26; --panel-2:#1E2530; --line:#2B3341;
+    --text:#E7EAEE; --muted:#8B93A1; --amber:#E8A33D; --cyan:#4FD1C5; --red:#E4604D;
+    --paper:#F4F1E9; --paper-ink:#23201A; --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;height:100%;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'IBM Plex Sans',sans-serif;
+    height:100vh; overflow:hidden; padding:16px 24px; display:flex; justify-content:center;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  .wrap{max-width:none; width:100%; display:flex; flex-direction:column; height:calc(100vh - 32px);}
+
+  header{
+    display:flex; align-items:baseline; justify-content:space-between;
+    border-bottom:1px solid var(--line); padding-bottom:16px; margin-bottom:14px; flex-wrap:wrap; gap:8px;
+  }
+  header .title{font-size:20px; font-weight:600; letter-spacing:-.01em;}
+  header .title span{color:var(--amber);}
+  header .sub{display:none;}
+
+  .topbar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    background:var(--panel); border:1px solid var(--line); border-radius:9px;
+    padding:10px 12px; margin-bottom:14px; font-size:13px;
+  }
+  .topbar label{color:var(--muted); font-size:12px;}
+  .topbar input[type=date]{
+    background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    padding:6px 8px; border-radius:6px; font-family:'IBM Plex Mono',monospace; font-size:12px;
+  }
+  .topbar .stat{display:none;}
+  .topbar .stat b{color:var(--text);}
+  .switch{position:relative; width:34px; height:18px; flex:none;}
+  .switch input{opacity:0; width:0; height:0; position:absolute;}
+  .slider{position:absolute; inset:0; background:#39424F; border-radius:20px; cursor:pointer; transition:.15s;}
+  .slider:before{content:""; position:absolute; height:12px; width:12px; left:3px; top:3px; background:var(--text); border-radius:50%; transition:.15s;}
+  .switch input:checked + .slider{background:var(--cyan);}
+  .switch input:checked + .slider:before{transform:translateX(16px); background:#0D1A18;}
+  .spacer{flex:1;}
+  .icon-btn{
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    border-radius:6px; padding:5px 10px; font-size:12px; cursor:pointer; font-family:inherit;
+  }
+  .icon-btn:hover{color:var(--cyan); border-color:var(--cyan);}
+
+  .chat-panel{
+    flex:1; display:flex; flex-direction:column; background:var(--panel);
+    border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
+  }
+  #chatLog{flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;}
+  /* Scrollbar chat dibikin tipis & nyatu sama tema gelap, bukan scrollbar
+     tebal default browser yang norak nongol di kanan. */
+  #chatLog{scrollbar-width:thin; scrollbar-color:var(--line) transparent;}
+  #chatLog::-webkit-scrollbar{width:6px;}
+  #chatLog::-webkit-scrollbar-track{background:transparent;}
+  #chatLog::-webkit-scrollbar-thumb{background:var(--line); border-radius:10px;}
+  #chatLog::-webkit-scrollbar-thumb:hover{background:var(--muted);}
+
+  .msg{max-width:min(78%, 720px); display:flex; flex-direction:column; gap:6px;}
+  .msg.user{align-self:flex-end; align-items:flex-end;}
+  .msg.agent{align-self:flex-start; align-items:flex-start;}
+  .bubble{padding:10px 14px; border-radius:14px; font-size:14px; line-height:1.5; white-space:pre-wrap;}
+  .msg.user .bubble{background:var(--amber); color:#241704; border-bottom-right-radius:4px;}
+  .msg.agent .bubble{background:var(--panel-2); border:1px solid var(--line); border-bottom-left-radius:4px;}
+  .msg .who{font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted);}
+
+  .copy-btn{
+    align-self:flex-start; display:inline-flex; align-items:center; gap:5px;
+    background:transparent; border:1px solid var(--line); color:var(--muted);
+    border-radius:6px; padding:3px 9px; font-size:11px; cursor:pointer; font-family:inherit;
+    transition:.15s;
+  }
+  .copy-btn:hover{color:var(--cyan); border-color:var(--cyan);}
+  .copy-btn.copied{color:var(--cyan); border-color:var(--cyan);}
+
+  .attach-card{
+    background:var(--paper); color:var(--paper-ink); border-radius:8px;
+    padding:12px 14px; font-size:12px; width:100%; max-width:100%; overflow-x:auto;
+  }
+  .attach-card table{width:100%; border-collapse:collapse;}
+  .attach-card th{
+    text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.05em;
+    color:#8A8368; padding:4px 6px; border-bottom:1px solid #DDD7C6; white-space:nowrap;
+  }
+  .attach-card td{padding:5px 6px; border-bottom:1px solid #ECE7D8; font-family:'IBM Plex Mono',monospace; white-space:nowrap;}
+  .attach-card tr:last-child td{border-bottom:none;}
+  .badge{display:inline-block; padding:1px 7px; border-radius:20px; font-size:10px; font-family:'IBM Plex Sans',sans-serif; font-weight:600;}
+  .badge-late{background:rgba(228,96,77,.15); color:#C6482F;}
+  .badge-early{background:rgba(45,150,140,.15); color:#237A70;}
+  .badge-ontime{background:rgba(139,147,161,.2); color:#5B6472;}
+  .badge-transit{background:rgba(232,163,61,.18); color:#B4761A;}
+
+  .typing{font-size:12px; color:var(--muted); font-style:italic; padding-left:4px;}
+  .typing-dots{display:inline-flex; align-items:center; gap:4px; padding:6px 4px;}
+  .typing-dots span{
+    width:6px; height:6px; border-radius:50%; background:var(--muted);
+    animation:typingBounce 1.2s infinite ease-in-out both;
+  }
+  .typing-dots span:nth-child(1){animation-delay:-0.24s;}
+  .typing-dots span:nth-child(2){animation-delay:-0.12s;}
+  .typing-dots span:nth-child(3){animation-delay:0s;}
+  @keyframes typingBounce{
+    0%, 80%, 100%{transform:scale(.6); opacity:.4;}
+    40%{transform:scale(1); opacity:1;}
+  }
+
+  .chat-input-row{
+    display:flex; flex-direction:column; gap:8px; padding:12px; border-top:1px solid var(--line); background:var(--panel);
+  }
+  .model-select-row{display:flex; justify-content:flex-end;}
+  .model-select{
+    appearance:none; -webkit-appearance:none; -moz-appearance:none;
+    background-color:var(--panel-2); color:var(--muted); border:1px solid var(--line);
+    border-radius:20px; padding:5px 26px 5px 12px; font-size:11px; font-family:inherit;
+    cursor:pointer; max-width:100%;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238a93a1' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M6 9l6 6 6-6'/></svg>");
+    background-repeat:no-repeat; background-position:right 8px center; background-size:12px;
+  }
+  .model-select:focus{outline:none; border-color:var(--amber); color:var(--text);}
+  .chat-input-inner{display:flex; gap:8px;}
+  .chat-input-inner input{
+    flex:1; background:var(--panel-2); border:1px solid var(--line); color:var(--text);
+    padding:11px 14px; border-radius:20px; font-size:14px; font-family:inherit;
+  }
+  .chat-input-inner input:focus{outline:none; border-color:var(--amber);}
+  .chat-input-inner button{
+    background:var(--amber); color:#241704; border:none; border-radius:20px;
+    padding:0 20px; font-weight:600; font-size:13px; cursor:pointer; font-family:inherit;
+  }
+  .chat-input-inner button:disabled{opacity:.5; cursor:default;}
+
+  .img-preview-row{display:none; align-items:center; gap:10px; padding:4px 4px 0;}
+  .img-preview-row.show{display:flex;}
+  .img-preview-row .thumb-wrap{position:relative; width:52px; height:52px; flex:none;}
+  .img-preview-row img{width:52px; height:52px; object-fit:cover; border-radius:8px; border:1px solid var(--line); display:block;}
+  .img-preview-row .remove-img{
+    position:absolute; top:-6px; right:-6px; width:18px; height:18px; border-radius:50%;
+    background:var(--red); color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; padding:0;
+  }
+  .img-preview-row .hint{font-size:11px; color:var(--muted);}
+
+  .msg-image{max-width:220px; border-radius:10px; border:1px solid var(--line); display:block; cursor:zoom-in;}
+
+  details.note-details{margin-top:12px; font-size:12px; color:var(--muted);}
+  details.note-details summary{cursor:pointer; color:var(--cyan);}
+  details.note-details .inner{padding:10px 2px 2px; line-height:1.6;}
+  details.note-details code{background:var(--panel-2); padding:1px 5px; border-radius:4px; font-family:'IBM Plex Mono',monospace;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Header "The Odyssey" DIHAPUS dari sini — judulnya sekarang cuma
+       ditampilin sekali di title bar popup (index.html), biar area di bawah
+       ini (chat-panel) bisa FULL kepake buat percakapan, gak keulang 2x.
+       #statusLine ("mode: mock data") masih dipertahanin di script bawah
+       lewat elemen tersembunyi biar kode JS yang nulis ke situ gak error
+       karena elemen ilang. -->
+  <div class="sub" id="statusLine" style="display:none;">mode: mock data</div>
+
+  <!-- Topbar (stat "N trip tercatat" + tombol "Refresh Data") juga DISEMBUNYIIN
+       dari sini — tombol "Refresh Data"-nya udah dipindah ke title bar popup
+       di index.html (biar sebaris sama "The Odyssey"), dan klik di sana
+       nge-postMessage ke sini (lihat listener "odysseyRefresh" di script
+       bawah) buat manggil loadData() yang sama persis. Elemen-elemen di
+       dalam sini dibiarin tetep ada (bukan dihapus) biar kode JS yang masih
+       nulis ke situ (quickStat, refreshBtn) gak error. -->
+  <div class="topbar" style="display:none;">
+    <span class="stat" id="quickStat"><b>0</b> trip tercatat</span>
+    <div class="spacer"></div>
+    <button class="icon-btn" id="refreshBtn">Refresh Data</button>
+  </div>
+
+  <div class="chat-panel">
+    <div id="chatLog"></div>
+    <div class="chat-input-row">
+      <div class="model-select-row">
+        <select id="modelSelect" class="model-select" title="Pilih model AI">
+          <option value="">Auto</option>
+          <option value="gemini-3.6-flash">Odyssey 3.6 Flash</option>
+          <option value="gemini-3.1-flash-lite">Odyssey 3.1 Flash Lite</option>
+          <option value="gemini-3.5-flash-lite">Odyssey 3.5 Flash Lite</option>
+        </select>
+      </div>
+      <div class="img-preview-row" id="imgPreviewRow">
+        <div class="thumb-wrap">
+          <img id="imgPreviewThumb" src="" alt="preview">
+          <button class="remove-img" id="removeImgBtn" type="button" title="Hapus gambar">✕</button>
+        </div>
+        <span class="hint">Gambar siap dikirim — tambahin pertanyaan (opsional) lalu Kirim</span>
+      </div>
+      <div class="chat-input-inner">
+        <input id="chatInput" type="text" placeholder='Tanya AI Agent... misal "ada unit Late Arrival hari ini?" (bisa paste gambar Ctrl+V)'>
+        <button id="sendBtn">Kirim</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>window.__PAGE_TAB = "odyssey";</script>
+<script src="auth-guard.js"></script>
+<script>
+const FB_ROOT = "prDcInboundTracking";
+const LH_PATH = FB_ROOT + "/lhTracking";
+
+let currentTrips = [];
+let chatHistory = []; // {role:'user'|'assistant', content:'...'}
+let firebaseReady = false;
+
+// ===== Mock data (dipakai kalau live toggle mati / firebase belum siap) =====
+function generateMockData(dateStr){
+  const base = dateStr || new Date().toISOString().slice(0,10);
+  function iso(h,m){ return base + "T" + String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":00"; }
+  return [
+    { tripNum:"LH-2201", routeName:"Banjarmasin - Palangka Raya", vendorName:"PT Trans Kalimantan", driver:"Sujono", vehicleType:"Fuso", vehiclePlate:"DA 8812 XZ", qtyParcelVal:640, stdOrigin:iso(0,0), staDest:iso(6,30), atdOrigin:iso(0,10), ataDest:iso(5,20) },
+    { tripNum:"LH-2202", routeName:"Sampit - Palangka Raya", vendorName:"CV Borneo Cargo", driver:"Herman", vehicleType:"CDD", vehiclePlate:"DA 4471 QA", qtyParcelVal:410, stdOrigin:iso(1,0), staDest:iso(7,30), atdOrigin:iso(1,20), ataDest:iso(8,5) },
+    { tripNum:"LH-2203", routeName:"Kuala Kapuas - Palangka Raya", vendorName:"PT Trans Kalimantan", driver:"Andi", vehicleType:"Fuso", vehiclePlate:"DA 5510 LP", qtyParcelVal:290, stdOrigin:iso(2,0), staDest:iso(8,0), atdOrigin:iso(2,15), ataDest:iso(8,10) },
+    { tripNum:"LH-2204", routeName:"Pangkalan Bun - Palangka Raya", vendorName:"CV Borneo Cargo", driver:"Rudi", vehicleType:"Fuso", vehiclePlate:"DA 3390 WK", qtyParcelVal:520, stdOrigin:iso(3,0), staDest:iso(9,30), atdOrigin:iso(3,30), ataDest:null },
+    { tripNum:"LH-2205", routeName:"Banjarmasin - Palangka Raya", vendorName:"PT Trans Kalimantan", driver:"Yanto", vehicleType:"CDD", vehiclePlate:"DA 7701 YD", qtyParcelVal:355, stdOrigin:iso(4,0), staDest:iso(10,30), atdOrigin:iso(4,5), ataDest:iso(9,50) }
+  ];
+}
+
+// ===== Firebase live fetch =====
+function fetchLiveTrips(){
+  return new Promise((resolve, reject) => {
+    if (!window.firebase || !firebase.apps || !firebase.apps.length){
+      reject(new Error("Firebase belum ke-init (auth-guard.js gak ketemu / belum login)"));
+      return;
+    }
+    if (!firebase.auth().currentUser){
+      reject(new Error("Belum login — buka file ini lewat app shell / login dulu"));
+      return;
+    }
+    const db = firebase.database();
+    db.ref(LH_PATH).once("value")
+      .then(snap => {
+        const val = snap.val() || {};
+        resolve(Object.keys(val).map(k => val[k]));
+      })
+      .catch(reject);
+  });
+}
+
+// ===== Replikasi persis logic status di inbound.html =====
+function computeStatus(t){
+  const atdOrigin = t.atdOrigin ? new Date(t.atdOrigin) : null;
+  const ataDest = t.ataDest ? new Date(t.ataDest) : null;
+  const now = new Date();
+  let statusText = "-";
+  let etaDateObj = atdOrigin ? new Date(atdOrigin.getTime() + 390*60*1000) : null; // ETA = atdOrigin + 6.5 jam
+
+  if (atdOrigin){
+    if (ataDest){
+      const durationHours = (ataDest.getTime() - atdOrigin.getTime()) / 3600000;
+      if (durationHours < 6.0) statusText = "Early Arrived";
+      else if (durationHours <= 6.5) statusText = "On Time";
+      else statusText = "Late Arrival";
+    } else {
+      statusText = (etaDateObj && now > etaDateObj) ? "Late Arrival" : "In Transit";
+    }
+  }
+  return { statusText, etaDateObj };
+}
+
+// Format tanggal pakai KOMPONEN WAKTU LOKAL (WIB) — SAMA PERSIS kayak
+// formatDateYYYYMMDD() di inbound.html. JANGAN pakai .toISOString().slice(0,10)
+// buat ambil tanggal, karena toISOString() itu UTC: trip yang ATD Origin-nya
+// jam 00:00-06:59 pagi WIB bakal "mundur" ke tanggal UTC sebelumnya (H-1),
+// jadi gak match sama kolom "Tanggal" di dashboard Inbound yang pakai local time.
+// Ini yang bikin AI Agent salah nyortir trip pas ditanya "hari ini".
+function formatDateYYYYMMDDLocal(d){
+  const pad = n => String(n).padStart(2,"0");
+  return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
+}
+
+function normalizeTrip(t){
+  const { statusText, etaDateObj } = computeStatus(t);
+  const dateSourceRaw = t.atdOrigin || t.stdOrigin;
+  const dateSource = dateSourceRaw ? new Date(dateSourceRaw) : null;
+  return {
+    tripNum: t.tripNum || "-",
+    routeName: t.routeName || "-",
+    vendorName: t.vendorName || "-",
+    driver: t.driver || "-",
+    vehiclePlate: t.vehiclePlate || "-",
+    vehicleType: t.vehicleType || "-",
+    qtyParcelVal: t.qtyParcelVal || 0,
+    stdOrigin: t.stdOrigin || null,
+    staDest: t.staDest || null,
+    atdOrigin: t.atdOrigin || null,
+    ataDest: t.ataDest || null,
+    etaDest: etaDateObj ? etaDateObj.toISOString() : null,
+    tanggal: dateSource && !isNaN(dateSource) ? formatDateYYYYMMDDLocal(dateSource) : null,
+    status: statusText
+  };
+}
+
+async function loadData(){
+  // Auto: kalau session login (auth-guard.js) udah kevalidasi, langsung sync live
+  // dari Firebase. Kalau belum login / firebase belum siap, fallback ke data contoh.
+  const isLive = firebaseReady;
+  document.getElementById("statusLine").textContent = "mode: " + (isLive?"live firebase":"mock data") + " — memuat...";
+  try{
+    const raw = isLive ? await fetchLiveTrips() : generateMockData();
+    // Semua tanggal ditampung tanpa difilter — AI Agent yang nyortir sendiri
+    // berdasarkan field "tanggal" tiap trip waktu ada pertanyaan soal tanggal tertentu.
+    currentTrips = raw.map(normalizeTrip);
+    document.getElementById("quickStat").innerHTML = "<b>"+currentTrips.length+"</b> trip tercatat";
+    document.getElementById("statusLine").textContent = "mode: " + (isLive?"live firebase":"mock data");
+  }catch(e){
+    console.error(e);
+    document.getElementById("statusLine").textContent = "gagal ambil data live: " + e.message;
+  }
+}
+
+function fmtTime(iso){
+  const d = new Date(iso);
+  if (isNaN(d)) return "-";
+  return d.toTimeString().slice(0,5);
+}
+
+function badgeClassFor(status){
+  if (status === "Late Arrival") return "badge-late";
+  if (status === "Early Arrived") return "badge-early";
+  if (status === "In Transit") return "badge-transit";
+  return "badge-ontime";
+}
+
+function renderAttachCard(units){
+  if (!units || units.length === 0) return "";
+  let rows = units.map(u => {
+    return `<tr>
+      <td>${u.tripNum||"-"}</td>
+      <td>${u.vehiclePlate||"-"}</td>
+      <td>${u.vendorName||"-"}</td>
+      <td>${u.atdOrigin?fmtTime(u.atdOrigin):"-"}</td>
+      <td>${u.ataDest?fmtTime(u.ataDest):"-"}</td>
+      <td><span class="badge ${badgeClassFor(u.status)}">${u.status||"-"}</span></td>
+    </tr>`;
+  }).join("");
+  return `<div class="attach-card"><table>
+    <thead><tr><th>Trip</th><th>No Truk</th><th>Vendor</th><th>Berangkat</th><th>Tiba</th><th>Status</th></tr></thead>
+    <tbody>${rows}</tbody>
+  </table></div>`;
+}
+
+function addMessage(role, text, attachUnits, imageDataUrl){
+  const log = document.getElementById("chatLog");
+  const wrap = document.createElement("div");
+  wrap.className = "msg " + (role==="user" ? "user" : "agent");
+  const who = document.createElement("div");
+  who.className = "who";
+  who.textContent = role==="user" ? "Lo" : "Odyssey";
+  wrap.appendChild(who);
+  if (imageDataUrl){
+    const img = document.createElement("img");
+    img.className = "msg-image";
+    img.src = imageDataUrl;
+    img.alt = "gambar terlampir";
+    img.addEventListener("click", () => window.open(imageDataUrl, "_blank"));
+    wrap.appendChild(img);
+  }
+  if (text && text.trim()){
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+    wrap.appendChild(bubble);
+  }
+  if (attachUnits && attachUnits.length){
+    const card = document.createElement("div");
+    card.innerHTML = renderAttachCard(attachUnits);
+    wrap.appendChild(card);
+  }
+  if (role !== "user" && text && text.trim()){
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "copy-btn";
+    copyBtn.type = "button";
+    copyBtn.textContent = "📋 Copy";
+    copyBtn.addEventListener("click", () => {
+      const finish = () => {
+        copyBtn.textContent = "✓ Tersalin";
+        copyBtn.classList.add("copied");
+        setTimeout(() => {
+          copyBtn.textContent = "📋 Copy";
+          copyBtn.classList.remove("copied");
+        }, 1500);
+      };
+      if (navigator.clipboard && navigator.clipboard.writeText){
+        navigator.clipboard.writeText(text).then(finish).catch(() => {
+          const ta = document.createElement("textarea");
+          ta.value = text;
+          document.body.appendChild(ta);
+          ta.select();
+          document.execCommand("copy");
+          ta.remove();
+          finish();
+        });
+      } else {
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand("copy");
+        ta.remove();
+        finish();
+      }
+    });
+    wrap.appendChild(copyBtn);
+  }
+  log.appendChild(wrap);
+  log.scrollTop = log.scrollHeight;
+  return wrap;
+}
+
+function addTyping(){
+  const log = document.getElementById("chatLog");
+  const el = document.createElement("div");
+  el.className = "msg agent";
+  el.id = "typingIndicator";
+  el.innerHTML = '<div class="who">Odyssey</div><div class="typing-dots"><span></span><span></span><span></span></div>';
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+}
+function removeTyping(){
+  const el = document.getElementById("typingIndicator");
+  if (el) el.remove();
+}
+
+// Ubah pesan error teknis dari API jadi kalimat simpel yang enak dibaca user
+// biasa, bukan mentahan pesan Gemini/HTTP yang penuh istilah teknis.
+function simplifyErrorMessage(raw){
+  const msg = String(raw || "");
+
+  // Kena limit pemakaian (rate limit / quota harian free tier Gemini, dll)
+  if (/rate.?limit/i.test(msg) || /RESOURCE_EXHAUSTED/i.test(msg) || /quota/i.test(msg)){
+    // Kalau Gemini kasih tau berapa detik lagi harus nunggu (retryDelay/"try again
+    // in 12.3s"), hitung jadi jam WIB yang konkret. Kalau gak ada info itu, kasih
+    // estimasi umum.
+    const waitMatch = msg.match(/try again in\s*([\d.]+)\s*s/i) || msg.match(/"retryDelay"\s*:\s*"([\d.]+)s"/i);
+    if (waitMatch){
+      const waitSeconds = parseFloat(waitMatch[1]);
+      const retryAt = new Date(Date.now() + waitSeconds * 1000);
+      const hh = String(retryAt.getHours()).padStart(2,"0");
+      const mm = String(retryAt.getMinutes()).padStart(2,"0");
+      return `Anda telah melebihi limit penggunaan AI Agent. Mohon gunakan kembali pada jam ${hh}:${mm} WIB ya bro.`;
+    }
+    return "Anda telah melebihi limit penggunaan AI Agent bro. Mohon tunggu sekitar 1 menit lalu coba lagi ya.";
+  }
+
+  // Model gak ketemu/gak bisa diakses, atau kena filter safety Gemini
+  if (/does not exist|do not have access|not found|NOT_FOUND/i.test(msg)){
+    return "Waduh, model AI-nya lagi bermasalah di sisi server bro. Coba lagi sebentar, atau kabarin admin kalau masih error terus.";
+  }
+  if (/SAFETY|blockReason|PROHIBITED_CONTENT/i.test(msg)){
+    return "Waduh, jawabannya keblokir filter safety AI bro. Coba tulis ulang pertanyaannya dengan cara lain ya.";
+  }
+
+  // Server function belum ke-deploy / respons bukan JSON
+  if (/non-JSON|Server balikin respons/i.test(msg)){
+    return "Waduh, server AI Agent-nya lagi gak bisa dihubungin bro. Coba refresh & tanya lagi sebentar ya.";
+  }
+
+  // Fallback umum — gak nampilin detail teknis mentah ke user
+  return "Waduh, gagal ngambil jawaban AI bro. Coba tanya ulang sebentar lagi ya.";
+}
+
+async function askAgent(question, imageDataUrl){
+  addMessage("user", question, null, imageDataUrl);
+  // Kalau ada gambar, isi content jadi array format vision (OpenAI-compatible)
+  // biar bisa dikirim ke model yang bisa "lihat" gambar lewat proxy.
+  const userContent = imageDataUrl
+    ? [
+        { type:"text", text: question || "Tolong lihat & jelasin gambar ini bro." },
+        { type:"image_url", image_url:{ url: imageDataUrl } }
+      ]
+    : question;
+  chatHistory.push({role:"user", content: userContent, hasImage: !!imageDataUrl});
+  addTyping();
+
+  const lateCount = currentTrips.filter(t => t.status === "Late Arrival").length;
+
+  // Deteksi simpel: pertanyaan ini soal DATA TRIP (report/status/vendor/dll) atau
+  // cuma obrolan santai yang gak butuh data? Kalau cuma basa-basi ("bro", "makasih",
+  // "lu tau gua?"), JANGAN kirim seluruh dump data + template Report yang berat —
+  // itu yang bikin AI keder/salah format DAN boros token (gampang kepentok limit).
+  // Data & template berat cuma dikirim kalau emang relevan.
+  const dataKeywords = /report|laporan|trip|late|telat|awal|early|unit|vendor|driver|status|hari ini|kemarin|tanggal|durasi|jadwal|\bsta\b|\beta\b|\bata\b|\bstd\b|\blt[\s-]?\d|nomor|plat|parcel|qty|data|dc\b|banjarmasin|sampit|kapuas|pangkalan/i;
+  // Report kedua: DW (Daily Worker) Fulfillment — beda topik dari trip Inbound,
+  // datanya BUKAN dari currentTrips (Firebase) tapi dari GAMBAR tabel jadwal DW
+  // yang di-paste user (screenshot spreadsheet shift/permintaan/kehadiran).
+  const dwKeywords = /\bdw\b|fulfillment|daily worker|reguler|on-?call/i;
+  const isDwReport = dwKeywords.test(question || "");
+  const isDataQuery = isDwReport || dataKeywords.test(question || "") || !!imageDataUrl;
+
+  const basePersona = `Kamu Odyssey — AI Agent yang awalnya dibikin buat bantu Shift Lead Sortation Center
+mantau trip Inbound (Line Haul dari origin ke DC), TAPI wawasan kamu gak kebatas itu doang. Kamu punya
+pengetahuan umum yang luas kayak asisten AI pada umumnya — bebas diajak diskusi, nanya hal umum, minta
+bantuan nulis/ngoding, brainstorming, atau apapun di luar topik dashboard. Gaya ngomong santai kayak
+ngobrol sama rekan kerja sendiri (natural, boleh pakai "bro", boleh bercanda dikit, gak kaku/formal) —
+tapi tetep sopan & jawabannya harus BENERAN membantu/akurat, jangan asal karena sok santai.`;
+
+  const jsonFormatRule = `WAJIB balas HANYA dengan JSON valid, tanpa teks lain di luar JSON, tanpa markdown
+code fence, persis format ini:
+{"replyLines": ["baris pertama jawaban", "baris kedua kalau ada, dst — tiap item array = satu baris teks,
+JANGAN pernah taruh karakter enter/newline literal ATAU escape \\n di DALAM satu item, kalau butuh baris
+baru bikin item array baru (baris kosong = string kosong \"\")"], "attachedUnits": []}
+
+Kalau jawabannya butuh nulis KODE/HTML/script panjang: tetap ikutin aturan array di atas — PECAH tiap
+baris kode jadi 1 item array terpisah (persis kayak baris asli kodenya, boleh diawali spasi buat
+indentasi), JANGAN digabung jadi satu string panjang dengan escape \\n. Kalau ada tanda kutip dua (")
+DI DALAM baris kode/teks, WAJIB di-escape jadi \\" biar JSON-nya tetep valid.`;
+
+  let systemPrompt;
+  if (isDwReport){
+    // Mode DW FULFILLMENT REPORT — topik & sumber data BEDA dari trip Inbound:
+    // gak ada dump JSON dari Firebase di sini, datanya AI baca sendiri langsung
+    // dari GAMBAR tabel jadwal DW yang di-paste user (Ctrl+V) di pesan ini ATAU
+    // di riwayat pesan terakhir (kalau user nanya follow-up tanpa paste ulang).
+    systemPrompt = `${basePersona}
+
+Pertanyaan kali ini soal REPORT FULFILLMENT DAILY WORKER (DW), bukan soal trip Inbound. Sumber datanya
+ADALAH GAMBAR (screenshot tabel jadwal DW) yang dilampirkan user di pesan ini atau di pesan sebelumnya
+dalam percakapan ini — BUKAN dari data trip yang kamu tau. Kalau gak ada gambar tabel DW yang
+dilampirkan sama sekali di percakapan ini, bilang aja terus terang minta user paste/lampirkan
+screenshot tabel jadwal DW-nya dulu, JANGAN ngarang angka.
+
+Kalau di riwayat percakapan sebelumnya ada pembahasan topik LAIN (misal data/report trip Inbound),
+ABAIKAN TOTAL itu buat jawaban kali ini — fokus CUMA ke gambar tabel DW yang dilampirkan.
+
+STRUKTUR TABEL yang bakal kamu liat di gambar: kolom "Tanggal", "Permintaan DW Reguler", "Permintaan DW
+Oncall", "Shift" (rentang jam KECIL per baris, misal 00:00-01:00, 01:00-02:00, dst), "Position", "Remark",
+"Kehadiran Actual DW Reguler", "Kehadiran Actual DW Oncall".
+
+PENTING soal cara baca tabelnya — kolom-kolom angka (Permintaan Reguler/Oncall, Kehadiran Actual
+Reguler/Oncall) itu CELL YANG DI-MERGE secara visual: dalam satu hari ada BEBERAPA BLOK SHIFT BESAR
+(jumlahnya BISA BEDA-BEDA tiap gambar, JANGAN diasumsikan selalu 3 atau selalu jam yang sama — baca apa
+adanya dari gambar). Tiap blok shift besar itu keliatan dari beberapa baris jam kecil yang
+"digabung"/punya nilai "Position" yang sama secara berurutan; JAM SHIFT yang ditulis di report adalah
+jam AWAL baris paling atas sampai jam AKHIR baris paling bawah dalam blok itu (contoh: kalau blok
+mencakup baris kecil dari "00:00-01:00" sampai "08:00-09:00", maka ditulis "00:00-09:00"). Angka
+Permintaan/Kehadiran Actual buat tiap kolom itu CUMA NONGOL SEKALI di salah satu baris jam kecil di
+DALAM rentang vertikal blok shift itu (posisi barisnya bisa beda-beda tiap kolom, gak harus sejajar).
+Yang kamu ambil adalah SATU angka per kolom per blok shift (abaikan baris-baris kosong di sekitarnya),
+BUKAN dijumlah dari tiap baris jam kecil.
+
+Untuk TIAP blok SHIFT yang kamu temuin di gambar (berapa pun jumlahnya, jam berapa pun rentangnya —
+ikutin gambar, jangan hardcode), hitung:
+GAP Reguler = Permintaan DW Reguler - Kehadiran Actual DW Reguler
+GAP Oncall = Permintaan DW Oncall - Kehadiran Actual DW Oncall
+
+Di akhir report, hitung TOTAL cuma buat DW ONCALL aja (jumlahin dari SEMUA blok shift yang ada di
+gambar, DW Reguler TIDAK usah ditotal):
+Total Request DW Oncall = jumlah Permintaan DW Oncall dari semua shift
+Total Actual DW Oncall = jumlah Kehadiran Actual DW Oncall dari semua shift
+GAP DW Oncall = Total Request DW Oncall - Total Actual DW Oncall
+Persentase di belakang GAP = (Total Actual DW Oncall / Total Request DW Oncall) x 100, dibulatkan 1
+angka desimal, PAKAI KOMA sebagai pemisah desimal (bukan titik), contoh "88,7%".
+
+TEMPLATE WAJIB (ikuti PERSIS termasuk spasi & urutan, teks polos TANPA tanda bintang/simbol markdown,
+tiap baris = 1 item terpisah di array "replyLines", baris kosong = item string kosong ""). Blok
+"SHIFT Pukul ..." di bawah ini DIULANG buat SETIAP blok shift yang ada di gambar (urut dari jam paling
+pagi), pakai jam sesuai gambar (BUKAN contoh jam di bawah ini):
+
+REPORT FULLFILLMENT DAILY WORKER PALANGKA RAYA DC
+(tanggal dari kolom "Tanggal" di gambar, ditulis format "D MMMM YYYY" contoh "5 September 2026")
+<baris kosong>
+SHIFT Pukul (jam awal blok)-(jam akhir blok)
+Request DW Reguler: (angka) - [Actual: (angka)]  [GAP: (angka)]
+Request DW Oncall: (angka) - [Actual: (angka)]  [GAP: (angka)]
+<baris kosong>
+...(ulangi blok SHIFT di atas buat tiap blok shift berikutnya yang ada di gambar)...
+<baris kosong>
+Total Request DW Oncall: (angka)
+Total Actual DW Oncall: (angka)
+GAP DW Oncall: (angka)  / [(persentase)%]
+
+${jsonFormatRule}`;
+  } else if (!isDataQuery){
+    // Mode RINGAN — obrolan/pertanyaan umum, gak nyangkut data trip. Prompt sengaja
+    // dibikin pendek soal instruksi dashboard-nya (biar gak numpuk & bikin AI keder),
+    // tapi persona di atas udah nyatain wawasannya luas gak cuma dashboard.
+    systemPrompt = `${basePersona}
+
+Pertanyaan kali ini gak nyangkut data trip dashboard. Jawab santai & informatif sesuai konteks obrolan,
+pake pengetahuan umum kamu — jangan bilang "gua cuma bisa bantu soal trip" kalau ditanya hal lain,
+karena kamu memang bisa bantu topik apa aja.
+
+${jsonFormatRule}
+
+Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
+  } else {
+    // Mode LENGKAP — pertanyaan soal data trip / minta report, baru kirim semua
+    // instruksi detail + dump data JSON-nya.
+    systemPrompt = `${basePersona}
+
+PENTING soal riwayat obrolan: kalau di riwayat percakapan sebelumnya ada pembahasan topik LAIN (misal
+report DW Fulfillment, atau obrolan santai), ABAIKAN TOTAL kesimpulan/angka dari situ buat jawaban kali
+ini. Pertanyaan sekarang soal data TRIP INBOUND, dan SATU-SATUNYA sumber kebenaran buat data trip
+adalah dump JSON di bawah ini (yang SELALU paling baru/fresh tiap kamu jawab) — jangan kebawa asumsi
+atau pola jawaban dari turn sebelumnya yang topiknya beda.
+
+Data di bawah mencakup SEMUA tanggal yang ada (gak difilter otomatis). Tiap trip punya field "tanggal"
+(format YYYY-MM-DD). Kalau user nanya soal "hari ini", "kemarin", atau tanggal tertentu, kamu yang
+nyortir sendiri dari field "tanggal" itu — jangan asumsi semua data itu buat satu tanggal yang sama.
+
+PENTING — field "status" tiap trip SUDAH FINAL dihitung oleh sistem (nilainya salah satu dari:
+"Early Arrived", "On Time", "Late Arrival", "In Transit", atau "-"). JANGAN hitung ulang durasi atau
+nebak status sendiri dari atdOrigin/ataDest — CUKUP baca dan filter langsung berdasarkan field "status"
+itu apa adanya, string-nya harus cocok PERSIS (case-sensitive). Sebelum jawab, cek SATU PER SATU tiap
+object di array — jangan asal simpulkan tanpa ngecek semua trip yang ada.
+
+Referensi arti status (buat konteks aja, BUKAN buat dihitung ulang): "Late Arrival" = durasi tempuh
+atdOrigin ke ataDest lebih dari 6.5 jam (atau ETA 6.5 jam dari atdOrigin udah lewat tapi belum sampai).
+"Early Arrived" = durasi tempuh kurang dari 6 jam. "On Time" = 6-6.5 jam. "In Transit" = masih di jalan,
+ETA belum lewat.
+
+Format WAJIB buat semua jam/tanggal yang kamu tulis (STA, ETA, waktu berangkat/tiba, dll):
+tulis dalam format "DD/MM HH:mm WIB" yang gampang dibaca manusia (contoh: "05/09 07:30 WIB"), AMBIL DARI
+JAM LOKAL field ISO yang ada (abaikan huruf "T" dan "Z" serta angka detik/milidetik-nya, itu cuma format
+teknis, JANGAN pernah ditulis mentah-mentah ke user).
+
+TEMPLATE WAJIB kalau user minta "Report" / "Laporan" Late Arrival dan/atau Early Arrival (ikuti PERSIS,
+teks polos TANPA tanda bintang atau simbol markdown apa pun, tiap baris di bawah = 1 item terpisah di
+array "replyLines"):
+
+Late/Early Arrival Issue's
+(tulis tanggal yang relevan di sini, format DD/MM/YYYY)
+<baris kosong>
+1. LT Number : (isi tripNum)
+   Vendor : (isi vendorName)
+   Driver : (isi driver)
+   Qty Parcel : (isi qtyParcelVal)
+   STA : (isi staDest, format jam di atas)
+   ATA : (isi ataDest, format jam di atas — kalau belum ada tulis "-")
+   Travel Time : (isi durasi tempuh, format "Xh Ym")
+<baris kosong>
+2. LT Number : ...dst, angka urut lanjut buat tiap trip berikutnya, dengan struktur field yang SAMA PERSIS.
+
+Kalau user minta gabungan Late Arrival DAN Early Arrival, urutin Late Arrival dulu semua baru Early
+Arrived, atau kalau user cuma minta salah satu ya isi yang diminta aja. Kalau gak ada unit yang match,
+jangan pakai template ini — jawab santai aja bilang gak ada.
+
+Data trip tercatat, total ${currentTrips.length} trip, dengan ${lateCount} di antaranya berstatus
+"Late Arrival" (JSON):
+${JSON.stringify(currentTrips, null, 2)}
+
+${jsonFormatRule}
+
+Contoh buat jawaban singkat 1 baris, "replyLines" tetap array isi 1 item, misal: {"replyLines": ["Gak ada unit Late Arrival hari ini bro."], "attachedUnits": []}`;
+  }
+
+  // Gemini pakai format "contents": array {role:"user"|"model", parts:[...]}
+  // (BUKAN "assistant" kayak OpenAI/Groq — Gemini pakai "model"). Tiap part
+  // bisa {text:"..."} biasa, atau {inline_data:{mime_type, data}} buat gambar
+  // (base64 TANPA prefix "data:image/...;base64,", makanya di-strip di bawah).
+  // Batasin cuma N pesan TERAKHIR yang dikirim ulang ke API (bukan seluruh riwayat
+  // dari awal sesi) — biar prompt gak numpuk makin panjang makin berat tiap turn,
+  // yang bikin token per-request membengkak & gampang kena limit di percakapan panjang.
+  const HISTORY_LIMIT = 12;
+  const recentHistory = chatHistory.slice(-HISTORY_LIMIT);
+  function toGeminiParts(content){
+    if (Array.isArray(content)){
+      return content.map(part => {
+        if (part && part.type === "image_url"){
+          const url = (part.image_url && part.image_url.url) || "";
+          const match = url.match(/^data:([^;]+);base64,(.+)$/);
+          return match
+            ? { inline_data: { mime_type: match[1], data: match[2] } }
+            : { text: "" };
+        }
+        return { text: String((part && part.text) || "") };
+      });
+    }
+    return [{ text: String(content || "") }];
+  }
+  const contentsForApi = recentHistory.map(m => ({
+    role: m.role === "assistant" ? "model" : "user",
+    parts: toGeminiParts(m.content)
+  }));
+
+  try{
+    // Panggil lewat Netlify Function proxy (bukan langsung ke Gemini) supaya
+    // API key gak pernah ke-expose di browser. Lihat netlify/functions/gemini-proxy.js
+    // Model (termasuk dukungan vision buat gambar) udah ditentuin di sisi proxy
+    // (GEMINI_MODEL_CHAIN) — model Gemini flash-nya udah multimodal jadi gak
+    // perlu ganti model/parameter khusus kalau ada gambar terlampir. Kalau
+    // user milih model tertentu di dropdown (bukan "Auto"), kirim sebagai
+    // preferred_model — proxy bakal nyoba model itu duluan, tapi tetep
+    // fallback ke chain default kalau model itu kena rate limit.
+    const modelSelectEl = document.getElementById("modelSelect");
+    const preferredModel = modelSelectEl ? modelSelectEl.value : "";
+    const requestBody = {
+      max_tokens: isDataQuery ? 3000 : 1500, // mode report dikasih jatah lebih gede
+      // Level thinking: mode data (trip JSON / DW report) butuh AI teliti nyisir
+      // data satu-satu DAN gak kebawa topik riwayat obrolan sebelumnya (misal abis
+      // ditanya report DW, terus ditanya Late Arrival trip — pernah kejadian
+      // AI ke-distract & jawabannya asal gara-gara "minimal" kekurangan mikir).
+      // Obrolan santai tetep "minimal" biar hemat token/latency.
+      thinking_level: isDataQuery ? "low" : "minimal",
+      system: systemPrompt,
+      contents: contentsForApi
+    };
+    if (preferredModel) requestBody.preferred_model = preferredModel;
+    const response = await fetch("/.netlify/functions/gemini-proxy", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify(requestBody)
+    });
+    const rawText = await response.text();
+    let data;
+    try{
+      data = rawText ? JSON.parse(rawText) : {};
+    }catch(e){
+      throw new Error("Server balikin respons non-JSON (kemungkinan function belum ke-deploy atau crash). Cuplikan: " + rawText.slice(0,150));
+    }
+    if (!response.ok){
+      throw new Error((data && data.error && data.error.message) ? data.error.message : ((data && data.error) ? data.error : ("HTTP " + response.status + " (respons kosong)")));
+    }
+    // Gemini balikin "candidates" (bukan "choices" kayak OpenAI/Groq). Kalau
+    // jawaban keblokir safety filter, candidates bisa kosong & alasannya ada
+    // di promptFeedback.blockReason.
+    const candidate = (data.candidates && data.candidates[0]) || null;
+    if (!candidate && data.promptFeedback && data.promptFeedback.blockReason){
+      throw new Error("blockReason: " + data.promptFeedback.blockReason);
+    }
+    const partsText = candidate && candidate.content && Array.isArray(candidate.content.parts)
+      ? candidate.content.parts.map(p => (p && p.text) || "").join("")
+      : "";
+    let text = partsText.trim();
+    // Bersihin code fence di mana pun posisinya (bukan cuma di awal/akhir persis)
+    text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+    // Ambil substring dari kurung kurawal PERTAMA sampai kurung kurawal
+    // TERAKHIR — jadi kalau AI masih nyelipin kalimat pembuka/penutup di luar
+    // JSON (padahal udah dilarang), itu gak bikin JSON.parse langsung gagal.
+    const firstBrace = text.indexOf("{");
+    const lastBrace = text.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace > firstBrace){
+      text = text.slice(firstBrace, lastBrace + 1);
+    }
+
+    // Coba parse langsung dulu. Kalau AI-nya (Gemini) masih ngasal — misal nulis
+    // enter/tab literal, over-escape jadi "\\n" dobel, pakai tanda kutip
+    // "pintar" (smart quotes), atau nyisain trailing comma — di dalam string
+    // JSON, JSON.parse bisa gagal atau kebaca aneh. Sebelumnya ini bikin
+    // mentahan JSON ke-tampil ke chat. Sekarang kalau parse pertama gagal,
+    // coba beberapa cara perbaikan berurutan sebelum nyerah ke fallback.
+    let parsed;
+    let ok = false;
+    const attempts = [
+      text,
+      text.replace(/\r\n|\r|\n/g, "\\n").replace(/\t/g, "\\t"), // newline/tab literal -> escaped
+      text.replace(/\\\\n/g, "\\n").replace(/\\\\t/g, "\\t"),    // over-escaped \\n -> \n
+      text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"'), // smart quotes -> lurus
+      text.replace(/,\s*([\]}])/g, "$1")                         // hapus trailing comma sebelum ] / }
+    ];
+    for (const candidate of attempts){
+      try{ parsed = JSON.parse(candidate); ok = true; break; }
+      catch(e){ /* coba kandidat berikutnya */ }
+    }
+
+    // Last resort kalau SEMUA percobaan JSON.parse tetep gagal: jangan lempar
+    // mentahan JSON ke chat kayak sebelumnya — tarik isi array "replyLines"
+    // pakai regex biar user tetap dapet teks yang bisa dibaca manusia.
+    if (!ok){
+      const linesMatch = text.match(/"replyLines"\s*:\s*\[([\s\S]*?)\]\s*,\s*"attachedUnits"/);
+      if (linesMatch){
+        const items = [];
+        const itemRegex = /"((?:[^"\\]|\\.)*)"/g;
+        let m;
+        while ((m = itemRegex.exec(linesMatch[1])) !== null){
+          items.push(m[1].replace(/\\n/g, "\n").replace(/\\"/g, '"'));
+        }
+        if (items.length){ parsed = { replyLines: items, attachedUnits: [] }; ok = true; }
+      }
+    }
+    if (!ok) parsed = { replyLines: ["Waduh, format balasan AI-nya berantakan bro, coba tanya ulang sekali lagi ya."], attachedUnits: [] };
+
+    // Susun teks final dari array replyLines (baris baru beneran, bukan hasil
+    // escape dari AI) — kalau AI masih pakai format lama "reply" (string biasa),
+    // tetap didukung biar gak putus kompatibilitas.
+    let replyText = "...";
+    if (Array.isArray(parsed.replyLines)){
+      replyText = parsed.replyLines.map(l => String(l)).join("\n");
+    } else if (typeof parsed.reply === "string"){
+      replyText = parsed.reply;
+    }
+
+    removeTyping();
+    addMessage("agent", replyText, parsed.attachedUnits);
+    chatHistory.push({role:"assistant", content: replyText});
+  }catch(e){
+    console.error(e);
+    removeTyping();
+    addMessage("agent", simplifyErrorMessage(e.message));
+  }
+}
+
+document.getElementById("refreshBtn").addEventListener("click", loadData);
+
+// Tombol "Refresh Data" aslinya (di atas) udah disembunyiin — yang beneran
+// keliatan buat user itu tombol kembarannya di title bar popup, di luar
+// iframe ini (index.html). Klik di sana ngirim postMessage ke sini; begitu
+// ketrima, panggil loadData() yang sama kayak refreshBtn dulu manggilnya.
+window.addEventListener("message", function (e) {
+  var data = e.data;
+  if (!data || data.source !== "pkydc") return;
+  if (data.type === "odysseyRefresh") loadData();
+});
+
+// ===== Attach gambar via paste (Ctrl+V) =====
+let pendingImageDataUrl = null;
+
+function setPendingImage(dataUrl){
+  pendingImageDataUrl = dataUrl;
+  const row = document.getElementById("imgPreviewRow");
+  const thumb = document.getElementById("imgPreviewThumb");
+  thumb.src = dataUrl;
+  row.classList.add("show");
+}
+function clearPendingImage(){
+  pendingImageDataUrl = null;
+  const row = document.getElementById("imgPreviewRow");
+  row.classList.remove("show");
+  document.getElementById("imgPreviewThumb").src = "";
+}
+function handlePasteEvent(e){
+  const items = (e.clipboardData || e.originalEvent && e.originalEvent.clipboardData || {}).items;
+  if (!items) return;
+  for (const item of items){
+    if (item.type && item.type.indexOf("image") !== -1){
+      const file = item.getAsFile();
+      if (!file) continue;
+      const reader = new FileReader();
+      reader.onload = (ev) => setPendingImage(ev.target.result);
+      reader.readAsDataURL(file);
+      e.preventDefault();
+      break;
+    }
+  }
+}
+document.getElementById("chatInput").addEventListener("paste", handlePasteEvent);
+document.getElementById("removeImgBtn").addEventListener("click", clearPendingImage);
+
+document.getElementById("sendBtn").addEventListener("click", () => {
+  const input = document.getElementById("chatInput");
+  const q = input.value.trim();
+  if (!q && !pendingImageDataUrl) return; // minimal harus ada teks ATAU gambar
+  input.value = "";
+  const img = pendingImageDataUrl;
+  clearPendingImage();
+  askAgent(q, img);
+});
+document.getElementById("chatInput").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") document.getElementById("sendBtn").click();
+});
+
+// Sama kayak inbound.html: baru mulai sync Firebase SETELAH status login kevalidasi.
+// Begitu status login berubah (mis. auth-guard.js baru selesai validasi setelah
+// halaman ke-render), langsung auto-reload data dari live Firebase.
+if (window.firebase && firebase.auth){
+  try{
+    firebase.auth().onAuthStateChanged(function(user){
+      const wasReady = firebaseReady;
+      firebaseReady = !!user;
+      if (firebaseReady && !wasReady) loadData();
+    });
+  }catch(e){ console.warn("Firebase auth belum siap:", e.message); }
+}
+
+(async function init(){
+  await loadData();
+  addMessage("agent", "Halo bro, gua AI Agent buat mantau trip Inbound hari ini. Tanya aja, misal \"ada yang Late Arrival hari ini?\" atau \"yang paling lama durasinya berapa?\"");
+})();
+</script>
+</body>
+</html>

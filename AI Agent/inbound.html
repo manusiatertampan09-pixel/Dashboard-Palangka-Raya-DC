@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Inbound - Internal Palangka Raya DC</title>
+  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
+  <!-- PapaParse CDN for CSV parsing -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- FIREBASE SDK (app+auth dibutuhkan auth-guard.js, database dibutuhkan buat sync LH Tracking & Forecast MP) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <style>
+    /* ==== SIDEBAR NAVIGASI (selalu dark navy, senada sama modul lain) ==== */
+    :root {
+      --bg-sidebar: #0b1329;
+      --border-sidebar: #1e293b;
+      --text-sidebar: #f1f5f9;
+      --text-sidebar-muted: #94a3b8;
+      --bg-sidebar-card: #060a17;
+    }
+    .hamburger-btn {
+      position: fixed; top: 16px; left: 16px; z-index: 120;
+      width: 40px; height: 40px; border-radius: 8px;
+      background: var(--bg-sidebar); color: #f1f5f9; border: 1px solid var(--border-sidebar);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    .hamburger-btn:hover { background: #1e293b; }
+    .sidebar-backdrop {
+      position: fixed; inset: 0; background: rgba(2,6,23,0.6);
+      backdrop-filter: blur(2px); z-index: 150; display: none;
+    }
+    .sidebar-backdrop.open { display: block; }
+    .app-sidebar {
+      position: fixed; top: 0; left: 0; height: 100%; width: 300px;
+      background-color: var(--bg-sidebar); border-right: 1px solid var(--border-sidebar);
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-100%); z-index: 200; box-shadow: 0 0 30px rgba(0,0,0,0.35);
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    .app-sidebar.open { transform: translateX(0); }
+    .app-sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: var(--bg-sidebar-card);
+      border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0;
+    }
+    .app-sidebar-header-inner { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .app-sidebar-icon-box {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      background: rgba(230,126,34,0.12); border: 1px solid rgba(230,126,34,0.35);
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .app-sidebar-title-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .app-sidebar-title { color: #f1f5f9; font-weight: 700; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.2; }
+    .app-sidebar-subtitle { color: var(--text-sidebar-muted); font-weight: 500; font-size: 10px; line-height: 1.2; }
+    .app-sidebar-header button { background: transparent; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; padding: 4px 8px; }
+    .app-sidebar-header button:hover { color: #fff; }
+    .app-sidebar-body { padding: 16px 12px; overflow-y: auto; flex-grow: 1; }
+    .app-sidebar-group-label {
+      font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-sidebar-muted); margin: 14px 4px 8px; padding: 0 4px;
+    }
+    .app-sidebar-group-label:first-child { margin-top: 0; }
+    .app-sidebar-group-label.collapsible {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none; border-radius: 6px; padding: 6px 4px;
+    }
+    .app-sidebar-group-label.collapsible:hover { background: rgba(255,255,255,0.06); color: #d4d4d4; }
+    .app-sidebar-group-label.collapsible .chevron { transition: transform 0.2s ease; font-size: 9px; }
+    .app-sidebar-group-label.collapsible.collapsed .chevron { transform: rotate(-90deg); }
+    .app-sidebar-group {
+      overflow: hidden; max-height: 500px; transition: max-height 0.25s ease;
+    }
+    .app-sidebar-group.collapsed { max-height: 0; }
+    .app-sidebar-link {
+      display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 6px;
+      color: var(--text-sidebar); font-weight: 600; font-size: 12px; text-decoration: none; margin-bottom: 4px;
+    }
+    .app-sidebar-link:hover { background: rgba(255,255,255,0.06); }
+    .app-sidebar-link.active { background: #e67e22; color: #fff; font-weight: 700; }
+    .app-sidebar-footer { border-top: 1px solid var(--border-sidebar); padding: 15px; }
+    .app-sidebar-footer button {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      padding: 10px; border: 1px solid var(--border-sidebar); background: #1e293b;
+      color: #f87171; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;
+      font-family: 'Inter', 'Segoe UI', sans-serif;
+    }
+    .app-sidebar-footer button:hover { background: #2b3a52; }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: #f1f5f9; margin: 0; padding: 20px 20px 20px 70px; color: #334155; }
+    
+    .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+    
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+    h2 { margin: 0; color: #1e3a8a; display: flex; align-items: center; gap: 8px; }
+    
+    /* Live Refresh & Freshness Bar */
+    .freshness-bar { display: flex; align-items: center; gap: 15px; font-size: 13px; font-weight: 600; background: #f8fafc; padding: 8px 16px; border-radius: 20px; border: 1px solid #e2e8f0; }
+    .freshness-tag { padding: 4px 10px; border-radius: 12px; }
+    .fresh-green { background: #dcfce7; color: #15803d; }
+    .fresh-orange { background: #ffedd5; color: #c2410c; }
+    
+    .upload-section { margin-bottom: 20px; padding: 15px; border: 2px dashed #93c5fd; background: #eff6ff; border-radius: 8px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+    .header-right { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .import-compact { display: flex; align-items: center; gap: 6px; }
+    .btn-upload-sm { background-color: #2563eb; color: white; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 12px; display: inline-block; white-space: nowrap; transition: 0.2s; }
+    .btn-upload-sm:hover { background-color: #1d4ed8; }
+    .btn-clear-sm { background-color: #ef4444; color: white; padding: 6px 10px; border-radius: 6px; border: none; cursor: pointer; font-weight: 600; font-size: 12px; white-space: nowrap; transition: 0.2s; }
+    .btn-clear-sm:hover { background-color: #dc2626; }
+    .import-filename { font-size: 11px; color: #475569; max-width: 130px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    input[type="file"] { display: none; }
+    .btn-upload { background-color: #2563eb; color: white; padding: 10px 18px; border-radius: 6px; cursor: pointer; font-weight: bold; display: inline-block; transition: 0.2s; }
+    .btn-upload:hover { background-color: #1d4ed8; }
+    .btn-clear { background-color: #ef4444; color: white; padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+    .btn-clear:hover { background-color: #dc2626; }
+    
+    /* KPI Cards Grid */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    .kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
+    .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+    .kpi-card.active { border-color: #2563eb; background-color: #eff6ff; }
+    .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700; margin-bottom: 4px; }
+    .kpi-value { font-size: 22px; font-weight: 800; color: #0f172a; }
+    
+    /* Critical Action Center & Predictive Panel */
+    .panels-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; margin-bottom: 20px; }
+    .panel-box { border-radius: 8px; padding: 15px; border: 1px solid; max-height: 250px; overflow-y: auto; }
+    .panel-action { background-color: #fef2f2; border-color: #fecaca; }
+    .panel-predictive { background-color: #fffbebfb; border-color: #fef3c7; }
+    .panel-sla { background-color: #f0fdf4; border-color: #bbf7d0; }
+    .panel-header { font-weight: 700; font-size: 14px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: -15px; padding: 15px 0 8px 0; margin-top: -15px; z-index: 2; }
+    .panel-action .panel-header { background-color: #fef2f2; }
+    .panel-predictive .panel-header { background-color: #fffbebfb; }
+    .panel-sla .panel-header { background-color: #f0fdf4; }
+    
+    .action-card { background: white; border-radius: 6px; padding: 10px; margin-bottom: 8px; border-left: 4px solid #ef4444; box-shadow: 0 1px 3px rgba(0,0,0,0.05); font-size: 12px; }
+    .action-card.orange { border-left-color: #f97316; }
+    .action-card.yellow { border-left-color: #eab308; }
+    
+    /* Vendor Performance Section */
+    .performance-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
+    .perf-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-size: 12px; }
+    .perf-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    .perf-table th, .perf-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #f1f5f9; }
+    .perf-table th { background-color: #f8fafc; color: #475569; font-weight: 700; }
+
+    /* Forecast & Manpower Panel */
+    .forecast-card { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
+    .forecast-header { font-weight: 700; font-size: 14px; color: #0369a1; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+    .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 15px; }
+    .forecast-item { background: #ffffff; border: 1px solid #e0f2fe; border-radius: 6px; padding: 12px; }
+    .forecast-title { font-size: 11px; font-weight: 700; color: #0369a1; text-transform: uppercase; margin-bottom: 4px; }
+    .forecast-value { font-size: 20px; font-weight: 800; color: #0c4a6e; }
+    .forecast-editable { background: #fefce8; border: 1px dashed #fde047; padding: 6px 10px; border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+    .forecast-editable:hover { background: #fef9c3; }
+    .inline-edit-input { width: 100%; font-size: 18px; font-weight: 800; border: 1px solid #ca8a04; border-radius: 4px; padding: 2px 6px; color: #854d0e; outline: none; }
+
+    /* MP Tabs (By Actual / By Projection) */
+    .mp-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
+    .mp-tab-btn { background: #ffffff; color: #0369a1; border: 1px solid #bae6fd; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.15s; }
+    .mp-tab-btn:hover { background: #e0f2fe; }
+    .mp-tab-btn.active { background: #0369a1; color: #ffffff; border-color: #0369a1; }
+    .mp-panel { display: none; }
+    .mp-panel.active { display: block; }
+    .projection-filter-bar { background: #ffffff; border: 1px solid #e0f2fe; padding: 12px 15px; border-radius: 8px; margin-bottom: 15px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    tr.projection-row-highlight td { background-color: #fef08a !important; font-weight: 800 !important; }
+    .projection-table-toggle-bar { display: flex; justify-content: space-between; align-items: center; background: #0369a1; color: #ffffff; padding: 10px 14px; border-radius: 6px 6px 0 0; font-weight: 700; font-size: 12px; cursor: pointer; user-select: none; }
+    .projection-table-toggle-bar:hover { background: #075985; }
+
+    /* Count Head Calculator Table Styling */
+    .ch-wrapper { overflow-x: auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; }
+    .ch-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .ch-table th { background-color: #ff8c00; color: #ffffff; font-weight: 700; padding: 8px; border: 1px solid #e5e7eb; text-align: center; }
+    .ch-table td { padding: 6px 8px; border: 1px dashed #cbd5e1; text-align: center; font-weight: 600; color: #1e293b; }
+    
+    /* Shift Header Row Dark Styling */
+    .ch-shift-row { background-color: #0b1e42 !important; color: #ffffff !important; }
+    .ch-shift-row td { background-color: #0b1e42 !important; color: #ffffff !important; font-weight: 800; border-color: #1e293b !important; }
+    .ch-shift-label { font-weight: 800; color: #ffffff; }
+
+    /* Editable cells in Count Head */
+    .ch-editable-cell { background-color: #f8fafc; cursor: pointer; transition: background-color 0.2s; }
+    .ch-editable-cell:hover { background-color: #fef08a !important; }
+    .ch-input { width: 45px; text-align: center; font-size: 12px; font-weight: 700; border: 1px solid #2563eb; border-radius: 3px; outline: none; padding: 2px; }
+
+    /* Filter Bar */
+    .filter-bar { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
+    .filter-item { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #475569; }
+    .filter-item input, .filter-item select { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; background: white; }
+    .btn-reset-filter { background: #64748b; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; align-self: flex-end; margin-top: auto; }
+    .btn-reset-filter:hover { background: #475569; }
+
+    /* Table Styles */
+    .table-wrapper { overflow-x: auto; max-height: 60vh; border: 1px solid #cbd5e1; border-radius: 6px; }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; white-space: nowrap; }
+    th, td { border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; background-color: #fff; }
+    th { background-color: #1e40af; color: white; position: sticky; top: 0; z-index: 2; height: 38px; }
+    tr:nth-child(even) td { background-color: #f8fafc; }
+    tr:hover td { background-color: #f1f5f9; }
+
+    /* Sticky Freeze Columns */
+    .freeze-col { position: sticky !important; z-index: 3; }
+    th.freeze-col { z-index: 4 !important; background-color: #1e40af !important; }
+    .freeze-border { border-right: 3px solid #1e40af !important; }
+    .col-0 { left: 0px; } 
+    .col-1 { left: 85px; } 
+    .col-2 { left: 180px; } 
+    .col-3 { left: 360px; }
+    .col-4 { left: 425px; } 
+    .col-5 { left: 495px; } 
+    .col-6 { left: 600px; } 
+    .col-7 { left: 720px; }
+    .col-8 { left: 815px; }
+
+    /* Badges Status & Remarks */
+    .badge { padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold; font-size: 11px; display: inline-block; }
+    .bg-early { background-color: #10b981; }
+    .bg-ontime { background-color: #3b82f6; }
+    .bg-late { background-color: #ef4444; }
+    .bg-pending { background-color: #6b7280; }
+
+    .badge-remark { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; display: inline-block; }
+    .rm-loading { background-color: #e2e8f0; color: #475569; border: 1px solid #cbd5e1; }
+    .rm-transport { background-color: #e0f2fe; color: #0369a1; border: 1px solid #7dd3fc; } 
+    .rm-unseal { background-color: #fef08a; color: #854d0e; border: 1px solid #fde047; } 
+    .rm-completed { background-color: #dcfce7; color: #15803d; border: 1px solid #86efac; } 
+    .rm-pending { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } 
+
+    /* Aging Indicator Badges */
+    .aging-tag { font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; display: inline-block; }
+    .aging-green { background: #dcfce7; color: #166534; }
+    .aging-yellow { background: #fef9c3; color: #854d0e; }
+    .aging-red { background: #fee2e2; color: #991b1b; }
+  
+    /* Toast notifikasi in-app (ganti alert() bawaan browser) */
+    .toast-stack {
+      position: fixed; top: 16px; right: 16px; z-index: 9999;
+      display: flex; flex-direction: column; gap: 10px; max-width: 340px;
+    }
+    .toast-item {
+      background: #000000; color: #ffffff; border-radius: 8px; padding: 12px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; align-items: flex-start; gap: 10px;
+      font-size: 12.5px; font-weight: 600; line-height: 1.5; white-space: pre-line;
+      animation: toast-in 0.2s ease-out; border: 1px solid #262626;
+    }
+    .toast-item.ok { border-left: 4px solid #22c55e; }
+    .toast-item.err { border-left: 4px solid #ef4444; }
+    .toast-item.info { border-left: 4px solid #9ca3af; }
+    .toast-icon { flex-shrink: 0; font-size: 14px; line-height: 1.5; }
+    .toast-msg { flex: 1; }
+    .toast-close { background: transparent; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 0 0 4px; flex-shrink: 0; }
+    .toast-close:hover { color: #fff; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+    </style>
+</head>
+<body>
+<script>window.__PAGE_TAB = "inbound";</script>
+<script src="auth-guard.js"></script>
+<div class="toast-stack" id="toastStack"></div>
+<script>
+  // Toast notifikasi in-app, pengganti alert() bawaan browser. type: 'ok' | 'err' | 'info'
+  function showToast(message, type, durationMs) {
+    type = type || 'info';
+    var icon = type === 'ok' ? '✅' : (type === 'err' ? '⛔' : 'ℹ️');
+    var stack = document.getElementById('toastStack');
+    if (!stack) { console.warn('[toast]', message); return; }
+    var el = document.createElement('div');
+    el.className = 'toast-item ' + type;
+    el.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
+      '<span class="toast-msg">' + escapeHtml(message) + '</span>' +
+      '<button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+    stack.appendChild(el);
+    setTimeout(function () {
+      if (el.parentElement) el.remove();
+    }, durationMs || (type === 'err' ? 7000 : 4500));
+  }
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+</script>
+
+
+<!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
+<button class="hamburger-btn" onclick="toggleAppSidebar()" title="Buka Menu">☰</button>
+<div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
+<nav class="app-sidebar" id="appSidebar">
+  <div>
+    <div class="app-sidebar-header">
+      <div class="app-sidebar-header-inner">
+        <div class="app-sidebar-icon-box">🚚</div>
+        <div class="app-sidebar-title-group">
+          <span class="app-sidebar-title">Palangka Raya DC</span>
+          <span class="app-sidebar-subtitle">Inbound</span>
+        </div>
+      </div>
+      <button onclick="toggleAppSidebar()">✕</button>
+    </div>
+    <div class="app-sidebar-body">
+      <div class="app-sidebar-group-label collapsible" data-group="Productivity" onclick="toggleSidebarGroup('Productivity')">
+        <span>Productivity</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="Productivity">
+        <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link">⏳ Rest Time Monitoring</a>
+        <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 Performance Bagger</a>
+      </div>
+
+      <div class="app-sidebar-group-label collapsible" data-group="Inbound" onclick="toggleSidebarGroup('Inbound')">
+        <span>Inbound</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="Inbound">
+        <a href="inbound.html" class="app-sidebar-link active">🚚 LH Tracking &amp; Forecast MP</a>
+      </div>
+
+      <div class="app-sidebar-group-label collapsible" data-group="OutboundMonitoring" onclick="toggleSidebarGroup('OutboundMonitoring')">
+        <span>Outbound Monitoring</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="OutboundMonitoring">
+        <a href="outbound.html" id="navToOutboundAging" class="app-sidebar-link">📦 Aging &amp; Packer Backlog</a>
+        <a href="outbound.html#occupancy" id="navToOutboundOccupancy" class="app-sidebar-link">🏭 Occupancy &amp; Shift</a>
+      </div>
+
+      <div class="app-sidebar-group-label collapsible" data-group="InventoryControl" onclick="toggleSidebarGroup('InventoryControl')">
+        <span>Inventory Control</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="InventoryControl">
+        <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ Inventory Control</a>
+      </div>
+    </div>
+  </div>
+  <div class="app-sidebar-footer">
+    <button onclick="logoutApp()">🚪 Logout</button>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Header Bar -->
+  <div class="header-bar">
+    <h2>🚚 Line Haul Tracking & Manpower Planning Palangka Raya DC</h2>
+    <div class="header-right">
+      <div class="import-compact">
+        <label class="btn-upload-sm" for="csvInput">📁 Import Data Inbound</label>
+        <input type="file" id="csvInput" accept=".csv">
+        <span id="fileName" class="import-filename"></span>
+        <button class="btn-clear-sm" id="btnClearData" title="Reset Dashboard">🗑️ Reset</button>
+      </div>
+      <div class="freshness-bar">
+        <span>🟢 Auto Refresh: <span id="lblNextRefresh">00:60</span></span>
+        <span class="freshness-tag fresh-green" id="lblDataFreshness">🟢 Data Updated Just Now</span>
+        <span style="color: #64748b;" id="lblLastUpdate">Last: -</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODULE: FORECAST INBOUND & MANPOWER PLANNING ==================== -->
+  <!-- Forecast & Manpower Planning Panel -->
+  <div class="forecast-card">
+    <div class="forecast-header">
+      <span>📈 Inbound Forecast & Manpower Planning</span>
+      <span style="font-size:11px; font-weight:600; color:#0284c7;">*(Klik/Double-click angka pada kolom DW Reg, DW OC, Operator, atau Actual Operator Dedicated untuk mengubah Manpower)*</span>
+    </div>
+    
+    <!-- Row 3 Inbound Forecast Cards -->
+    <div class="forecast-grid">
+      <!-- Total Active Parcel -->
+      <div class="forecast-item">
+        <div class="forecast-title">📦 Total Active Parcel (In-Flight)</div>
+        <div class="forecast-value" id="fctActiveParcel">0</div>
+        <div style="font-size:10px; color:#64748b; margin-top:2px;">Proses Bongkar, Pending, Transporting & Loading</div>
+      </div>
+      
+      <!-- Editable Pending Banjarmasin -->
+      <div class="forecast-item">
+        <div class="forecast-title">🏭 Pending Loading Banjarmasin 2 DC</div>
+        <div class="forecast-editable" ondblclick="enableInlineEdit('pendingBanjarmasin')" title="Double click untuk edit langsung">
+          <span class="forecast-value" id="fctPendingBanjarmasin">0</span>
+          <input type="number" id="inputPendingBanjarmasin" class="inline-edit-input" style="display:none;" onblur="saveInlineEdit('pendingBanjarmasin')" onkeydown="handleEditKey(event, 'pendingBanjarmasin')">
+          <span id="pencilPendingBanjarmasin">✏️</span>
+        </div>
+      </div>
+      
+      <!-- Editable Pending Palangka -->
+      <div class="forecast-item">
+        <div class="forecast-title">🏢 Pending Packed Palangka Raya DC</div>
+        <div class="forecast-editable" ondblclick="enableInlineEdit('pendingPalangka')" title="Double click untuk edit langsung">
+          <span class="forecast-value" id="fctPendingPalangka">0</span>
+          <input type="number" id="inputPendingPalangka" class="inline-edit-input" style="display:none;" onblur="saveInlineEdit('pendingPalangka')" onkeydown="handleEditKey(event, 'pendingPalangka')">
+          <span id="pencilPendingPalangka">✏️</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sub Tabs: By Actual Inbound / By Projection Inbound -->
+    <div class="mp-tabs">
+      <button type="button" class="mp-tab-btn active" id="tabBtnActual" onclick="switchMpTab('actual')">📊 By Actual Inbound</button>
+      <button type="button" class="mp-tab-btn" id="tabBtnProjection" onclick="switchMpTab('projection')">📈 By Projection Inbound</button>
+    </div>
+
+    <!-- Tab Panel: By Actual Inbound (Count Head Calculator Table) -->
+    <div class="mp-panel active" id="mpPanelActual">
+      <div class="projection-table-toggle-bar" onclick="toggleActualTable()">
+        <span>📋 Detail Tabel Manpower per Shift</span>
+        <span id="actualToggleIcon">▲ Hide</span>
+      </div>
+
+      <div class="ch-wrapper" id="actualTableWrapper">
+        <table class="ch-table">
+          <thead>
+            <tr>
+              <th style="width: 10%;">Shift</th>
+              <th style="width: 10%;">Clock In</th>
+              <th style="width: 10%;">Clock Out</th>
+              <th style="width: 12%;">DW Reguler</th>
+              <th style="width: 12%;">DW On Call</th>
+              <th style="width: 12%;">Operator Dedicated</th>
+              <th style="width: 12%;">Total MP</th>
+              <th style="width: 11%;">Team SPX</th>
+              <th style="width: 11%;">Team Daily Workers</th>
+            </tr>
+          </thead>
+          <tbody id="chTableBody">
+            <!-- Rows will be dynamically rendered -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Tab Panel: By Projection Inbound -->
+    <div class="mp-panel" id="mpPanelProjection">
+      <div class="projection-filter-bar">
+        <div class="filter-item">
+          <label>📅 Filter Tanggal Projection</label>
+          <input type="date" id="filterProjectionDate">
+        </div>
+        <button type="button" class="btn-reset-filter" id="btnResetProjectionFilter">🔄 Reset Filter</button>
+      </div>
+
+      <div class="forecast-grid" style="margin-bottom:15px;">
+        <div class="forecast-item">
+          <div class="forecast-title">📦 Total Projection Inbound</div>
+          <div class="forecast-value" id="fctProjectionTotal">-</div>
+        </div>
+        <div class="forecast-item">
+          <div class="forecast-title">➕ Projection + 30%</div>
+          <div class="forecast-value" id="fctProjectionPlus30">-</div>
+        </div>
+        <div class="forecast-item">
+          <div class="forecast-title">🧑‍🔧 Actual Operator Dedicated</div>
+          <div class="forecast-value" id="fctProjectionOperator">-</div>
+        </div>
+        <div class="forecast-item">
+          <div class="forecast-title">👥 Needs Daily Worker</div>
+          <div class="forecast-value" id="fctProjectionNeedsMp">-</div>
+        </div>
+      </div>
+
+      <div class="projection-table-toggle-bar" onclick="toggleProjectionTable()">
+        <span>📋 Detail Tabel Projection Inbound</span>
+        <span id="projectionToggleIcon">▲ Hide</span>
+      </div>
+
+      <div class="ch-wrapper" id="projectionTableWrapper" style="max-height: 420px; overflow-y: auto;">
+        <table class="ch-table">
+          <thead>
+            <tr>
+              <th style="width: 9%;">Week</th>
+              <th style="width: 9%;">Month</th>
+              <th style="width: 16%;">Date</th>
+              <th style="width: 18%;">Projection Inbound</th>
+              <th style="width: 13%;">+30%</th>
+              <th style="width: 17%;">Actual Operator Dedicated</th>
+              <th style="width: 18%;">Needs Daily Worker</th>
+            </tr>
+          </thead>
+          <tbody id="projectionTableBody">
+            <!-- Rows will be dynamically rendered -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MODULE: TRACKING LINE HAUL ==================== -->
+  <!-- KPI Cards Grid -->
+  <div class="kpi-grid">
+    <div class="kpi-card" onclick="filterByKpi('ALL')">
+      <div class="kpi-title">Total Trip</div>
+      <div class="kpi-value" id="kpiTotal">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('EARLY')">
+      <div class="kpi-title" style="color: #10b981;">🟢 Early Arrival</div>
+      <div class="kpi-value" id="kpiEarly">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('ONTIME')">
+      <div class="kpi-title" style="color: #3b82f6;">🔵 On Time</div>
+      <div class="kpi-value" id="kpiOntime">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('LATE')">
+      <div class="kpi-title" style="color: #ef4444;">🔴 Late Arrival</div>
+      <div class="kpi-value" id="kpiLate">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('TRANSIT')">
+      <div class="kpi-title" style="color: #0284c7;">🚚 Transporting</div>
+      <div class="kpi-value" id="kpiTransit">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('PENDING_BONGKAR')">
+      <div class="kpi-title" style="color: #ea580c;">⚠️ Pending Bongkar</div>
+      <div class="kpi-value" id="kpiPendingBongkar">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('PROSES_BONGKAR')">
+      <div class="kpi-title" style="color: #ca8a04;">📦 Proses Bongkar</div>
+      <div class="kpi-value" id="kpiProsesBongkar">0</div>
+    </div>
+    <div class="kpi-card" onclick="filterByKpi('SELESAI_BONGKAR')">
+      <div class="kpi-title" style="color: #16a34a;">✅ Selesai Bongkar</div>
+      <div class="kpi-value" id="kpiSelesaiBongkar">0</div>
+    </div>
+  </div>
+
+  <!-- Panels Wrapper -->
+  <div class="panels-wrapper">
+    <!-- Critical Action Center -->
+    <div class="panel-box panel-action">
+      <div class="panel-header" style="color: #991b1b;">
+        <span>🚨 Critical Action Center</span>
+        <span id="cntCriticalAction" class="badge bg-late">0 Actions</span>
+      </div>
+      <div id="listCriticalAction">
+        <div style="font-size:12px; color:#64748b; text-align:center; padding: 20px;">Tidak ada tindakan kritis yang diperlukan.</div>
+      </div>
+    </div>
+
+    <!-- Predictive Risk Alert -->
+    <div class="panel-box panel-predictive">
+      <div class="panel-header" style="color: #854d0e;">
+        <span>🔮 Predictive Risk Alert</span>
+        <span id="cntPredictive" class="badge" style="background:#d97706;">0 Predicted Late</span>
+      </div>
+      <div id="listPredictiveAlert">
+        <div style="font-size:12px; color:#64748b; text-align:center; padding: 20px;">Semua trip berjalan sesuai jadwal.</div>
+      </div>
+    </div>
+
+    <!-- SLA Compliance Center -->
+    <div class="panel-box panel-sla">
+      <div class="panel-header" style="color: #166534;">
+        <span>📊 SLA Compliance Center</span>
+        <button onclick="filterByKpi('SLA_BREACH')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;">
+          🔴 Filter SLA Breach (<span id="cntSlaBreach">0</span>)
+        </button>
+      </div>
+      <div style="font-size: 12px; display: grid; gap: 8px;">
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
+          <span>SLA Arrival Target: <strong>6:30 jam</strong></span>
+          <span>Avg Travel: <strong id="lblAvgTravel">-</strong></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
+          <span>SLA Arrival Compliance:</span>
+          <strong id="lblSlaArrivalComp" style="color:#16a34a;">0%</strong>
+        </div>
+        <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
+          <span>SLA Bongkar Target: <strong>2:00 jam</strong></span>
+          <span>Compliance: <strong id="lblSlaBongkarComp" style="color:#16a34a;">0%</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vendor Performance -->
+  <div class="performance-grid">
+    <div class="perf-card">
+      <strong style="font-size:14px; color:#1e3a8a;">🏢 Vendor / Agency Performance</strong>
+      <table class="perf-table" id="tblVendorPerf">
+        <thead>
+          <tr><th>Vendor</th><th>Total Trip</th><th>OnTime %</th><th>Late Count</th></tr>
+        </thead>
+        <tbody><tr><td colspan="4" style="text-align:center; color:#94a3b8;">Belum ada data</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+
+  <!-- Filter & Search Bar -->
+  <div class="filter-bar">
+    <div class="filter-item" style="flex: 2; min-width: 180px;">
+      <label>🔎 Search LT / Driver / Plat / Vendor</label>
+      <input type="text" id="filterSearch" placeholder="Cari LT, Vendor, Driver, Plat...">
+    </div>
+    <div class="filter-item">
+      <label>Date</label>
+      <input type="date" id="filterDate">
+    </div>
+    <div class="filter-item">
+      <label>Vendor</label>
+      <select id="filterVendor">
+        <option value="ALL">All Vendor</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Status</label>
+      <select id="filterStatus">
+        <option value="ALL">All Status</option>
+        <option value="Early Arrived">Early Arrived</option>
+        <option value="On Time">On Time</option>
+        <option value="Late Arrival">Late Arrival</option>
+        <option value="In Transit">In Transit</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Remarks</label>
+      <select id="filterRemarks">
+        <option value="ALL">All Remarks</option>
+        <option value="Loading Origin">Loading Origin</option>
+        <option value="Transporting">Transporting</option>
+        <option value="Pending Bongkar">Pending Bongkar</option>
+        <option value="Proses Bongkar">Proses Bongkar</option>
+        <option value="Selesai Bongkar">Selesai Bongkar</option>
+      </select>
+    </div>
+    <div class="filter-item">
+      <label>Vehicle Type</label>
+      <select id="filterVehicle">
+        <option value="ALL">All Vehicle</option>
+      </select>
+    </div>
+    <button class="btn-reset-filter" id="btnResetFilter">🔄 Reset Filter</button>
+  </div>
+
+  <!-- Table Section -->
+  <div class="table-wrapper">
+    <table id="dashboardTable">
+      <thead>
+        <tr>
+          <!-- Sticky Freeze Columns -->
+          <th class="freeze-col col-0">Tanggal</th>
+          <th class="freeze-col col-1">LT Number</th>
+          <th class="freeze-col col-2">Route</th>
+          <th class="freeze-col col-3">Qty TO</th>
+          <th class="freeze-col col-4">Qty Parcel</th>
+          <th class="freeze-col col-5">Vendor</th>
+          <th class="freeze-col col-6">Driver</th>
+          <th class="freeze-col col-7">Type Unit</th>
+          <th class="freeze-col col-8 freeze-border">Vehicle Plate Number</th>
+          
+          <!-- Scrollable Columns -->
+          <th>STD Origin</th>
+          <th>ATD Origin</th>
+          <th>STA Destination</th>
+          <th>ETA Destination (+6.30h)</th>
+          <th>ATA Destination</th>
+          <th>Travel Time</th>
+          <th>Aging Status</th>
+          <th>Status</th>
+          <th>Remarks</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr>
+          <td colspan="18" style="text-align: center; color: #64748b; padding: 20px;">
+            Silakan upload file CSV Raw Data untuk menampilkan dashboard.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  let globalTripsMaster = {};
+  let currentActiveKpiFilter = 'ALL';
+  let lastDataUploadTime = null;
+  let refreshTimerSeconds = 60;
+
+  // Editable Forecast Values
+  let manualForecast = {
+    pendingBanjarmasin: 0,
+    pendingPalangka: 0
+  };
+
+  // Initial Count Head Master Data (Persis sesuai gambar)
+  let countHeadData = [
+    // Shift 3 Header
+    { id: 1, shift: 'Shift 3', clockIn: '16:00', clockOut: '1:00', dwReg: 11, dwOc: 0, operator: 9, isShiftHeader: true },
+    { id: 2, shift: '', clockIn: '17:00', clockOut: '2:00', dwReg: 0, dwOc: 13, operator: 0, isShiftHeader: false },
+    { id: 3, shift: '', clockIn: '18:00', clockOut: '3:00', dwReg: 0, dwOc: 1, operator: 0, isShiftHeader: false },
+    { id: 4, shift: '', clockIn: '19:00', clockOut: '4:00', dwReg: 0, dwOc: 8, operator: 0, isShiftHeader: false },
+    { id: 5, shift: '', clockIn: '20:00', clockOut: '5:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 6, shift: '', clockIn: '21:00', clockOut: '6:00', dwReg: 0, dwOc: 2, operator: 0, isShiftHeader: false },
+    { id: 7, shift: '', clockIn: '22:00', clockOut: '7:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 8, shift: '', clockIn: '23:00', clockOut: '8:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+
+    // Shift 1 Header
+    { id: 9, shift: 'Shift 1', clockIn: '0:00', clockOut: '9:00', dwReg: 14, dwOc: 11, operator: 11, isShiftHeader: true },
+    { id: 10, shift: '', clockIn: '1:00', clockOut: '10:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 11, shift: '', clockIn: '2:00', clockOut: '11:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 12, shift: '', clockIn: '3:00', clockOut: '12:00', dwReg: 0, dwOc: 4, operator: 0, isShiftHeader: false },
+    { id: 13, shift: '', clockIn: '4:00', clockOut: '13:00', dwReg: 0, dwOc: 9, operator: 0, isShiftHeader: false },
+    { id: 14, shift: '', clockIn: '5:00', clockOut: '14:00', dwReg: 7, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 15, shift: '', clockIn: '6:00', clockOut: '15:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 16, shift: '', clockIn: '7:00', clockOut: '16:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+
+    // Shift 2 Header
+    { id: 17, shift: 'Shift 2', clockIn: '8:00', clockOut: '17:00', dwReg: 10, dwOc: 3, operator: 19, isShiftHeader: true },
+    { id: 18, shift: '', clockIn: '9:00', clockOut: '18:00', dwReg: 0, dwOc: 10, operator: 0, isShiftHeader: false },
+    { id: 19, shift: '', clockIn: '10:00', clockOut: '19:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 20, shift: '', clockIn: '11:00', clockOut: '20:00', dwReg: 6, dwOc: 7, operator: 0, isShiftHeader: false },
+    { id: 21, shift: '', clockIn: '12:00', clockOut: '21:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 22, shift: '', clockIn: '13:00', clockOut: '22:00', dwReg: 0, dwOc: 1, operator: 0, isShiftHeader: false },
+    { id: 23, shift: '', clockIn: '14:00', clockOut: '23:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 24, shift: '', clockIn: '15:00', clockOut: '0:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+
+    // Shift 3 Header (Sesi Berikutnya)
+    { id: 25, shift: 'Shift 3', clockIn: '16:00', clockOut: '1:00', dwReg: 11, dwOc: 0, operator: 9, isShiftHeader: true },
+    { id: 26, shift: '', clockIn: '17:00', clockOut: '2:00', dwReg: 0, dwOc: 9, operator: 0, isShiftHeader: false },
+    { id: 27, shift: '', clockIn: '18:00', clockOut: '3:00', dwReg: 0, dwOc: 1, operator: 0, isShiftHeader: false },
+    { id: 28, shift: '', clockIn: '19:00', clockOut: '4:00', dwReg: 0, dwOc: 6, operator: 0, isShiftHeader: false },
+    { id: 29, shift: '', clockIn: '20:00', clockOut: '5:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 30, shift: '', clockIn: '21:00', clockOut: '6:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 31, shift: '', clockIn: '22:00', clockOut: '7:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
+    { id: 32, shift: '', clockIn: '23:00', clockOut: '8:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false }
+  ];
+
+  // Manpower calculation constant: 950 parcel per MP
+  const MP_CAPACITY_PER_PERSON = 950;
+
+  // Projection Inbound Dataset (Agustus - September 2026)
+  // Format tanggal disimpan sebagai YYYY-MM-DD supaya cocok dengan input type="date"
+  let projectionInboundData = [
+    { week: 31, month: 8, date: '2026-08-01', dateDisplay: '01-Aug-2026', inbound: 123054 },
+    { week: 31, month: 8, date: '2026-08-02', dateDisplay: '02-Aug-2026', inbound: 121169 },
+    { week: 32, month: 8, date: '2026-08-03', dateDisplay: '03-Aug-2026', inbound: 98998 },
+    { week: 32, month: 8, date: '2026-08-04', dateDisplay: '04-Aug-2026', inbound: 116523 },
+    { week: 32, month: 8, date: '2026-08-05', dateDisplay: '05-Aug-2026', inbound: 123576 },
+    { week: 32, month: 8, date: '2026-08-06', dateDisplay: '06-Aug-2026', inbound: 122928 },
+    { week: 32, month: 8, date: '2026-08-07', dateDisplay: '07-Aug-2026', inbound: 132561 },
+    { week: 32, month: 8, date: '2026-08-08', dateDisplay: '08-Aug-2026', inbound: 140062 },
+    { week: 32, month: 8, date: '2026-08-09', dateDisplay: '09-Aug-2026', inbound: 131768 },
+    { week: 33, month: 8, date: '2026-08-10', dateDisplay: '10-Aug-2026', inbound: 132822 },
+    { week: 33, month: 8, date: '2026-08-11', dateDisplay: '11-Aug-2026', inbound: 127620 },
+    { week: 33, month: 8, date: '2026-08-12', dateDisplay: '12-Aug-2026', inbound: 119120 },
+    { week: 33, month: 8, date: '2026-08-13', dateDisplay: '13-Aug-2026', inbound: 108606 },
+    { week: 33, month: 8, date: '2026-08-14', dateDisplay: '14-Aug-2026', inbound: 119322 },
+    { week: 33, month: 8, date: '2026-08-15', dateDisplay: '15-Aug-2026', inbound: 130044 },
+    { week: 33, month: 8, date: '2026-08-16', dateDisplay: '16-Aug-2026', inbound: 124344 },
+    { week: 34, month: 8, date: '2026-08-17', dateDisplay: '17-Aug-2026', inbound: 107405 },
+    { week: 34, month: 8, date: '2026-08-18', dateDisplay: '18-Aug-2026', inbound: 106868 },
+    { week: 34, month: 8, date: '2026-08-19', dateDisplay: '19-Aug-2026', inbound: 104503 },
+    { week: 34, month: 8, date: '2026-08-20', dateDisplay: '20-Aug-2026', inbound: 102889 },
+    { week: 34, month: 8, date: '2026-08-21', dateDisplay: '21-Aug-2026', inbound: 104830 },
+    { week: 34, month: 8, date: '2026-08-22', dateDisplay: '22-Aug-2026', inbound: 118754 },
+    { week: 34, month: 8, date: '2026-08-23', dateDisplay: '23-Aug-2026', inbound: 109279 },
+    { week: 35, month: 8, date: '2026-08-24', dateDisplay: '24-Aug-2026', inbound: 98714 },
+    { week: 35, month: 8, date: '2026-08-25', dateDisplay: '25-Aug-2026', inbound: 112152 },
+    { week: 35, month: 8, date: '2026-08-26', dateDisplay: '26-Aug-2026', inbound: 100122 },
+    { week: 35, month: 8, date: '2026-08-27', dateDisplay: '27-Aug-2026', inbound: 98831 },
+    { week: 35, month: 8, date: '2026-08-28', dateDisplay: '28-Aug-2026', inbound: 104736 },
+    { week: 35, month: 8, date: '2026-08-29', dateDisplay: '29-Aug-2026', inbound: 116949 },
+    { week: 35, month: 8, date: '2026-08-30', dateDisplay: '30-Aug-2026', inbound: 112317 },
+    { week: 36, month: 8, date: '2026-08-31', dateDisplay: '31-Aug-2026', inbound: 101666 },
+    { week: 36, month: 9, date: '2026-09-01', dateDisplay: '01-Sep-2026', inbound: 111519 },
+    { week: 36, month: 9, date: '2026-09-02', dateDisplay: '02-Sep-2026', inbound: 109640 },
+    { week: 36, month: 9, date: '2026-09-03', dateDisplay: '03-Sep-2026', inbound: 110774 },
+    { week: 36, month: 9, date: '2026-09-04', dateDisplay: '04-Sep-2026', inbound: 116757 },
+    { week: 36, month: 9, date: '2026-09-05', dateDisplay: '05-Sep-2026', inbound: 124896 },
+    { week: 36, month: 9, date: '2026-09-06', dateDisplay: '06-Sep-2026', inbound: 120409 },
+    { week: 37, month: 9, date: '2026-09-07', dateDisplay: '07-Sep-2026', inbound: 111910 },
+    { week: 37, month: 9, date: '2026-09-08', dateDisplay: '08-Sep-2026', inbound: 117894 },
+    { week: 37, month: 9, date: '2026-09-09', dateDisplay: '09-Sep-2026', inbound: 128847 },
+    { week: 37, month: 9, date: '2026-09-10', dateDisplay: '10-Sep-2026', inbound: 159605 },
+    { week: 37, month: 9, date: '2026-09-11', dateDisplay: '11-Sep-2026', inbound: 165417 },
+    { week: 37, month: 9, date: '2026-09-12', dateDisplay: '12-Sep-2026', inbound: 152063 },
+    { week: 37, month: 9, date: '2026-09-13', dateDisplay: '13-Sep-2026', inbound: 127929 },
+    { week: 38, month: 9, date: '2026-09-14', dateDisplay: '14-Sep-2026', inbound: 119722 },
+    { week: 38, month: 9, date: '2026-09-15', dateDisplay: '15-Sep-2026', inbound: 124196 },
+    { week: 38, month: 9, date: '2026-09-16', dateDisplay: '16-Sep-2026', inbound: 108032 },
+    { week: 38, month: 9, date: '2026-09-17', dateDisplay: '17-Sep-2026', inbound: 109308 },
+    { week: 38, month: 9, date: '2026-09-18', dateDisplay: '18-Sep-2026', inbound: 113219 },
+    { week: 38, month: 9, date: '2026-09-19', dateDisplay: '19-Sep-2026', inbound: 128069 },
+    { week: 38, month: 9, date: '2026-09-20', dateDisplay: '20-Sep-2026', inbound: 127929 },
+    { week: 39, month: 9, date: '2026-09-21', dateDisplay: '21-Sep-2026', inbound: 98926 },
+    { week: 39, month: 9, date: '2026-09-22', dateDisplay: '22-Sep-2026', inbound: 108393 },
+    { week: 39, month: 9, date: '2026-09-23', dateDisplay: '23-Sep-2026', inbound: 108032 },
+    { week: 39, month: 9, date: '2026-09-24', dateDisplay: '24-Sep-2026', inbound: 109308 },
+    { week: 39, month: 9, date: '2026-09-25', dateDisplay: '25-Sep-2026', inbound: 113219 },
+    { week: 39, month: 9, date: '2026-09-26', dateDisplay: '26-Sep-2026', inbound: 128069 },
+    { week: 39, month: 9, date: '2026-09-27', dateDisplay: '27-Sep-2026', inbound: 127929 },
+    { week: 39, month: 9, date: '2026-09-28', dateDisplay: '28-Sep-2026', inbound: 98926 },
+    { week: 40, month: 9, date: '2026-09-29', dateDisplay: '29-Sep-2026', inbound: null },
+    { week: 40, month: 9, date: '2026-09-30', dateDisplay: '30-Sep-2026', inbound: null }
+  ];
+  // Tambahkan field operator (Actual Operator Dedicated) default 0 untuk setiap baris projection
+  projectionInboundData.forEach(row => { row.operator = row.operator || 0; });
+
+  const THRESHOLDS = {
+    TRANSPORTING: 390,      // 6 jam 30 menit
+    PENDING_BONGKAR: 30,    // 30 menit
+    PROSES_BONGKAR: 120     // 2 jam
+  };
+
+  // ==== FIREBASE SYNC (biar data LH Tracking & Forecast MP kebaca real-time di semua
+  // device, sama kayak modul Rest Time Monitoring / Performance Bagger / Outbound
+  // Monitoring. Sebelumnya modul Inbound ini belum konek Firebase sama sekali, jadi
+  // semua data (hasil import CSV, edit Count Head, edit Projection Inbound, edit
+  // Pending Loading/Packed) cuma nyangkut di browser device itu doang & ilang pas
+  // di-refresh / gak keliatan di device lain). ====
+  let fbDb = null;
+  const FB_ROOT = "prDcInboundTracking"; // node root khusus modul Inbound di Realtime Database
+
+  function sanitizeFbKey(key) {
+    // Key Firebase Realtime Database gak boleh mengandung karakter . # $ [ ] /
+    return String(key).replace(/[.#$\[\]\/]/g, '_');
+  }
+
+  function serializeTrip(t) {
+    // Date object gak bisa disimpen langsung ke Firebase, jadi diubah ke ISO string dulu
+    return Object.assign({}, t, {
+      stdOrigin: t.stdOrigin ? t.stdOrigin.toISOString() : null,
+      staDest: t.staDest ? t.staDest.toISOString() : null,
+      atdOrigin: t.atdOrigin ? t.atdOrigin.toISOString() : null,
+      ataDest: t.ataDest ? t.ataDest.toISOString() : null,
+      unsealedTime: t.unsealedTime ? t.unsealedTime.toISOString() : null
+    });
+  }
+
+  function deserializeTrip(t) {
+    // Balikin ISO string dari Firebase jadi Date object lagi (pakai parseDate yang udah ada)
+    return Object.assign({}, t, {
+      stdOrigin: parseDate(t.stdOrigin),
+      staDest: parseDate(t.staDest),
+      atdOrigin: parseDate(t.atdOrigin),
+      ataDest: parseDate(t.ataDest),
+      unsealedTime: parseDate(t.unsealedTime)
+    });
+  }
+
+  function initInboundFirebaseSync() {
+    if (fbDb) return; // udah pernah init, gak perlu ulang
+    try {
+      fbDb = firebase.database();
+    } catch (e) {
+      console.error('Gagal connect Firebase Database:', e);
+      return;
+    }
+
+    // Seed dataset default (SEKALI SAJA, kalau node-nya masih kosong di Firebase) biar
+    // device pertama yang buka nanem starting dataset Count Head & Projection Inbound
+    // bawaan ke database online — device-device berikutnya narik value yang SAMA dari
+    // Firebase, bukan masing-masing punya default lokal sendiri yang bisa beda-beda.
+    fbDb.ref(FB_ROOT + '/countHead').once('value').then(function (snap) {
+      if (!snap.exists()) fbDb.ref(FB_ROOT + '/countHead').set(countHeadData);
+    }).catch(function (err) { console.error('Gagal cek/seed Count Head:', err); });
+
+    fbDb.ref(FB_ROOT + '/projectionInbound').once('value').then(function (snap) {
+      if (!snap.exists()) fbDb.ref(FB_ROOT + '/projectionInbound').set(projectionInboundData);
+    }).catch(function (err) { console.error('Gagal cek/seed Projection Inbound:', err); });
+
+    fbDb.ref(FB_ROOT + '/manualForecast').once('value').then(function (snap) {
+      if (!snap.exists()) fbDb.ref(FB_ROOT + '/manualForecast').set(manualForecast);
+    }).catch(function (err) { console.error('Gagal cek/seed Manual Forecast:', err); });
+
+    // Sinkron LH Tracking (hasil import CSV) - real-time, semua device lihat data yang sama
+    fbDb.ref(FB_ROOT + '/lhTracking').on('value', function (snap) {
+      const val = snap.val() || {};
+      const merged = {};
+      Object.keys(val).forEach(function (k) {
+        const t = deserializeTrip(val[k]);
+        merged[t.tripNum || k] = t;
+      });
+      globalTripsMaster = merged;
+      updateDropdownOptions();
+      renderAll();
+    }, function (err) { console.error('Gagal baca data LH Tracking dari Firebase:', err); });
+
+    // Sinkron Count Head Calculator (By Actual Inbound)
+    fbDb.ref(FB_ROOT + '/countHead').on('value', function (snap) {
+      const val = snap.val();
+      if (Array.isArray(val) && val.length) countHeadData = val;
+      renderCountHeadTable();
+    }, function (err) { console.error('Gagal baca data Count Head dari Firebase:', err); });
+
+    // Sinkron Projection Inbound (termasuk kolom Actual Operator Dedicated yang bisa diedit)
+    fbDb.ref(FB_ROOT + '/projectionInbound').on('value', function (snap) {
+      const val = snap.val();
+      if (Array.isArray(val) && val.length) projectionInboundData = val;
+      renderProjectionTable();
+    }, function (err) { console.error('Gagal baca data Projection Inbound dari Firebase:', err); });
+
+    // Sinkron Pending Loading Banjarmasin 2 DC & Pending Packed Palangka Raya DC
+    fbDb.ref(FB_ROOT + '/manualForecast').on('value', function (snap) {
+      const val = snap.val();
+      if (val) manualForecast = val;
+      renderForecast();
+    }, function (err) { console.error('Gagal baca data Pending Loading/Packed dari Firebase:', err); });
+  }
+
+  // Upload Listener
+  document.getElementById('csvInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    document.getElementById('fileName').textContent = file.name;
+
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: function(results) {
+        lastDataUploadTime = new Date();
+        processAndMergeData(results.data);
+      }
+    });
+
+    this.value = '';
+  });
+
+  document.getElementById('btnClearData').addEventListener('click', function() {
+    if (confirm('Apakah Anda yakin ingin menghapus semua data di dashboard?\n\n(Data LH Tracking juga bakal kehapus di database online, jadi ikut hilang di semua device.)')) {
+      globalTripsMaster = {};
+      renderAll();
+      document.getElementById('fileName').textContent = '';
+      if (fbDb) {
+        fbDb.ref(FB_ROOT + '/lhTracking').set(null).catch(function (err) {
+          showToast('❌ Gagal hapus data LH Tracking di database online: ' + err.message, 'err');
+        });
+      }
+    }
+  });
+
+  // Dynamic Filters Listener
+  ['filterSearch', 'filterDate', 'filterVendor', 'filterStatus', 'filterRemarks', 'filterVehicle'].forEach(id => {
+    document.getElementById(id).addEventListener('change', renderAll);
+    document.getElementById(id).addEventListener('keyup', renderAll);
+  });
+
+  document.getElementById('btnResetFilter').addEventListener('click', () => {
+    document.getElementById('filterSearch').value = '';
+    document.getElementById('filterDate').value = '';
+    document.getElementById('filterVendor').value = 'ALL';
+    document.getElementById('filterStatus').value = 'ALL';
+    document.getElementById('filterRemarks').value = 'ALL';
+    document.getElementById('filterVehicle').value = 'ALL';
+    currentActiveKpiFilter = 'ALL';
+    renderAll();
+  });
+
+  // Projection Inbound Date Filter Listener
+  document.getElementById('filterProjectionDate').addEventListener('change', renderProjectionTable);
+  document.getElementById('btnResetProjectionFilter').addEventListener('click', () => {
+    document.getElementById('filterProjectionDate').value = '';
+    renderProjectionTable();
+  });
+
+  // Auto Refresh Timer
+  setInterval(() => {
+    refreshTimerSeconds--;
+    if (refreshTimerSeconds <= 0) {
+      refreshTimerSeconds = 60;
+      renderAll();
+    }
+    const pad = n => String(n).padStart(2, '0');
+    document.getElementById('lblNextRefresh').textContent = `00:${pad(refreshTimerSeconds)}`;
+
+    if (lastDataUploadTime) {
+      const diffMins = Math.floor((new Date() - lastDataUploadTime) / (1000 * 60));
+      const lbl = document.getElementById('lblDataFreshness');
+      if (diffMins < 15) {
+        lbl.className = 'freshness-tag fresh-green';
+        lbl.textContent = `🟢 Updated ${diffMins == 0 ? 'Just now' : diffMins + ' min ago'}`;
+      } else {
+        lbl.className = 'freshness-tag fresh-orange';
+        lbl.textContent = `🟠 Data may be outdated (${diffMins} min ago)`;
+      }
+    }
+  }, 1000);
+
+  function processAndMergeData(rows) {
+    const currentCsvTripNums = new Set();
+    const currentCsvGroups = {};
+    const fbUpdates = {}; // dikumpulin dulu, di-push sekaligus ke Firebase di akhir
+
+    rows.forEach(row => {
+      const routeName = row['LH Trip Name'] || '';
+      if (!routeName.includes('Banjarmasin 2 DC') && !routeName.includes('Banjarmasin DC')) return;
+
+      const tripNum = row['LH Trip Number'];
+      if (!tripNum) return;
+
+      currentCsvTripNums.add(tripNum);
+      if (!currentCsvGroups[tripNum]) {
+        currentCsvGroups[tripNum] = { st1: null, st2: null, allRows: [] };
+      }
+
+      currentCsvGroups[tripNum].allRows.push(row);
+      const stNum = String(row['Station Number']).trim();
+      if (stNum === '1') currentCsvGroups[tripNum].st1 = row;
+      else if (stNum === '2') currentCsvGroups[tripNum].st2 = row;
+    });
+
+    Object.keys(currentCsvGroups).forEach(tripNum => {
+      const group = currentCsvGroups[tripNum];
+      const st1Row = group.st1 || group.allRows[0];
+      const st2Row = group.st2 || (group.allRows.length > 1 ? group.allRows[1] : group.allRows[0]);
+
+      const rawOutboundTo = st1Row['Outbound(TO)'] ? String(st1Row['Outbound(TO)']).replace(/'/g, '').trim() : '';
+      const rawOutboundOrder = st1Row['Outbound(order)'] ? String(st1Row['Outbound(order)']).trim() : '';
+      const qtyToVal = Number(rawOutboundTo) || 0;
+      const qtyParcelVal = Number(rawOutboundOrder) || 0;
+
+      if ((rawOutboundTo === '' || rawOutboundTo === '0/0' || qtyToVal === 0) && qtyParcelVal === 0) return;
+
+      const stdOrigin = parseDate(st1Row['Schedule Departure Time']);
+      const staDest = parseDate(st2Row['Schedule Arrival Time']) || parseDate(st1Row['Schedule Arrival Time']);
+      const atdOrigin = parseDate(st1Row['Actual Departure Time']);
+      const ataDest = parseDate(st2Row['Actual Arrival Time']);
+      const unsealedTime = parseDate(st2Row['Unsealed time']) || parseDate(st1Row['Unsealed time']);
+      
+      const vendorName = st1Row['Agency Name'] || '-';
+
+      const tripObj = {
+        tripNum,
+        routeName: st1Row['LH Trip Name'] || '-',
+        rawOutboundTo: rawOutboundTo || '0',
+        qtyParcelVal,
+        qtyToVal,
+        vendorName,
+        driver: st1Row['Driver'] || '-',
+        vehicleType: st1Row['Vehicle Type'] || '-',
+        vehiclePlate: st1Row['Vehicle Plate Number'] || '-',
+        stdOrigin,
+        staDest,
+        atdOrigin,
+        ataDest,
+        unsealedTime,
+        lastSeenInCsv: true
+      };
+
+      globalTripsMaster[tripNum] = tripObj;
+      fbUpdates[FB_ROOT + '/lhTracking/' + sanitizeFbKey(tripNum)] = serializeTrip(tripObj);
+    });
+
+    Object.keys(globalTripsMaster).forEach(tripNum => {
+      if (!currentCsvTripNums.has(tripNum)) {
+        globalTripsMaster[tripNum].lastSeenInCsv = false;
+        fbUpdates[FB_ROOT + '/lhTracking/' + sanitizeFbKey(tripNum) + '/lastSeenInCsv'] = false;
+      }
+    });
+
+    updateDropdownOptions();
+    renderAll();
+
+    // Push hasil import ke Firebase biar semua device (bukan cuma browser ini) lihat
+    // data yang sama. Kalau koneksi/Firebase belum siap, dashboard tetep kepakai
+    // (data lokal di atas udah kerender), cuma gak ke-sync ke device lain.
+    if (fbDb && Object.keys(fbUpdates).length) {
+      fbDb.ref().update(fbUpdates).catch(function (err) {
+        console.error('Gagal sync data LH Tracking ke database online:', err);
+        showToast('⚠️ Data ke-import di layar ini, tapi GAGAL sync ke database online: ' + err.message, 'err');
+      });
+    } else if (!fbDb) {
+      console.warn('Firebase belum siap, data import LH Tracking gak ke-sync ke device lain.');
+    }
+  }
+
+  function updateDropdownOptions() {
+    const selVendor = document.getElementById('filterVendor');
+    const currVendor = selVendor.value;
+    const vendors = new Set();
+
+    const selVehicle = document.getElementById('filterVehicle');
+    const currVehicle = selVehicle.value;
+    const vehicles = new Set();
+
+    Object.values(globalTripsMaster).forEach(t => { 
+      if(t.vendorName && t.vendorName !== '-') vendors.add(t.vendorName);
+      if(t.vehicleType && t.vehicleType !== '-') vehicles.add(t.vehicleType);
+    });
+
+    selVendor.innerHTML = '<option value="ALL">All Vendor</option>';
+    vendors.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      selVendor.appendChild(opt);
+    });
+    selVendor.value = currVendor;
+
+    selVehicle.innerHTML = '<option value="ALL">All Vehicle</option>';
+    vehicles.forEach(v => {
+      const opt = document.createElement('option');
+      opt.value = v; opt.textContent = v;
+      selVehicle.appendChild(opt);
+    });
+    selVehicle.value = currVehicle;
+  }
+
+  function filterByKpi(type) {
+    currentActiveKpiFilter = type;
+    renderAll();
+  }
+
+  /* Inline Editing Functions for Top Forecast */
+  function enableInlineEdit(key) {
+    const isBanjarmasin = key === 'pendingBanjarmasin';
+    const spanVal = document.getElementById(isBanjarmasin ? 'fctPendingBanjarmasin' : 'fctPendingPalangka');
+    const inputVal = document.getElementById(isBanjarmasin ? 'inputPendingBanjarmasin' : 'inputPendingPalangka');
+    const pencil = document.getElementById(isBanjarmasin ? 'pencilPendingBanjarmasin' : 'pencilPendingPalangka');
+
+    if (inputVal.style.display === 'inline-block') return;
+
+    inputVal.value = manualForecast[key];
+    spanVal.style.display = 'none';
+    pencil.style.display = 'none';
+    
+    inputVal.style.display = 'inline-block';
+    inputVal.focus();
+    inputVal.select();
+  }
+
+  function saveInlineEdit(key) {
+    const isBanjarmasin = key === 'pendingBanjarmasin';
+    const spanVal = document.getElementById(isBanjarmasin ? 'fctPendingBanjarmasin' : 'fctPendingPalangka');
+    const inputVal = document.getElementById(isBanjarmasin ? 'inputPendingBanjarmasin' : 'inputPendingPalangka');
+    const pencil = document.getElementById(isBanjarmasin ? 'pencilPendingBanjarmasin' : 'pencilPendingPalangka');
+
+    let parsedVal = parseInt(inputVal.value, 10);
+    if (isNaN(parsedVal) || parsedVal < 0) parsedVal = 0;
+
+    manualForecast[key] = parsedVal;
+
+    inputVal.style.display = 'none';
+    spanVal.style.display = 'inline-block';
+    pencil.style.display = 'inline-block';
+
+    renderForecast();
+
+    if (fbDb) {
+      fbDb.ref(FB_ROOT + '/manualForecast').update({ [key]: parsedVal }).catch(function (err) {
+        showToast('❌ Gagal simpan perubahan ke database online: ' + err.message, 'err');
+      });
+    }
+  }
+
+  function handleEditKey(event, key) {
+    if (event.key === 'Enter') {
+      saveInlineEdit(key);
+    } else if (event.key === 'Escape') {
+      const isBanjarmasin = key === 'pendingBanjarmasin';
+      document.getElementById(isBanjarmasin ? 'inputPendingBanjarmasin' : 'inputPendingPalangka').style.display = 'none';
+      document.getElementById(isBanjarmasin ? 'fctPendingBanjarmasin' : 'fctPendingPalangka').style.display = 'inline-block';
+      document.getElementById(isBanjarmasin ? 'pencilPendingBanjarmasin' : 'pencilPendingPalangka').style.display = 'inline-block';
+    }
+  }
+
+  /* Count Head Table Render & Editing Functions (8-Hour Rolling Cumulative Sum) */
+  function renderCountHeadTable() {
+    const tbody = document.getElementById('chTableBody');
+    tbody.innerHTML = '';
+
+    countHeadData.forEach((row, index) => {
+      // Menghitung akumulasi Manpower selama 8 jam kerja (8 jam ke belakang)
+      let sumDwReg = 0;
+      let sumDwOc = 0;
+      let sumOperator = 0;
+
+      const startIndex = Math.max(0, index - 7); // Ambil window hingga 8 jam
+      for (let i = startIndex; i <= index; i++) {
+        sumDwReg += countHeadData[i].dwReg || 0;
+        sumDwOc += countHeadData[i].dwOc || 0;
+        sumOperator += countHeadData[i].operator || 0;
+      }
+
+      const totalMp = sumDwReg + sumDwOc + sumOperator;
+      const teamSpx = sumOperator;
+      const teamDw = sumDwReg + sumDwOc;
+
+      const tr = document.createElement('tr');
+      if (row.isShiftHeader) {
+        tr.className = 'ch-shift-row';
+      }
+
+      tr.innerHTML = `
+        <td class="${row.isShiftHeader ? 'ch-shift-label' : ''}">${row.shift}</td>
+        <td>${row.clockIn}</td>
+        <td>${row.clockOut}</td>
+        <td class="ch-editable-cell" onclick="editChCell(${index}, 'dwReg')" title="Klik untuk edit">${row.dwReg || ''}</td>
+        <td class="ch-editable-cell" onclick="editChCell(${index}, 'dwOc')" title="Klik untuk edit">${row.dwOc || ''}</td>
+        <td class="ch-editable-cell" onclick="editChCell(${index}, 'operator')" title="Klik untuk edit">${row.operator || ''}</td>
+        <td style="font-weight:800; color:${row.isShiftHeader ? '#fde047' : '#0369a1'};">${totalMp || ''}</td>
+        <td>${teamSpx || ''}</td>
+        <td>${teamDw || ''}</td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function editChCell(rowIndex, field) {
+    const row = countHeadData[rowIndex];
+    const currentValue = row[field] || '';
+
+    const cell = event.currentTarget;
+    if (cell.querySelector('input')) return; // Sudah terbuka input
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'ch-input';
+    input.value = currentValue;
+
+    cell.innerHTML = '';
+    cell.appendChild(input);
+    input.focus();
+    input.select();
+
+    const saveCell = () => {
+      let newVal = parseInt(input.value, 10);
+      if (isNaN(newVal) || newVal < 0) newVal = 0;
+      countHeadData[rowIndex][field] = newVal;
+      renderCountHeadTable();
+      if (fbDb) {
+        fbDb.ref(FB_ROOT + '/countHead').set(countHeadData).catch(function (err) {
+          showToast('❌ Gagal simpan perubahan Count Head ke database online: ' + err.message, 'err');
+        });
+      }
+    };
+
+    input.addEventListener('blur', saveCell);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveCell();
+      else if (e.key === 'Escape') renderCountHeadTable();
+    });
+  }
+
+  function renderForecast(activeParcelsCount = null) {
+    if (activeParcelsCount !== null) {
+      window._activeParcelsCache = activeParcelsCount;
+    } else {
+      activeParcelsCount = window._activeParcelsCache || 0;
+    }
+
+    document.getElementById('fctActiveParcel').textContent = activeParcelsCount.toLocaleString();
+    document.getElementById('fctPendingBanjarmasin').textContent = manualForecast.pendingBanjarmasin.toLocaleString();
+    document.getElementById('fctPendingPalangka').textContent = manualForecast.pendingPalangka.toLocaleString();
+
+    renderCountHeadTable();
+    renderProjectionTable();
+  }
+
+  /* Switch Tab Panel: By Actual Inbound <-> By Projection Inbound */
+  function switchMpTab(tab) {
+    const btnActual = document.getElementById('tabBtnActual');
+    const btnProjection = document.getElementById('tabBtnProjection');
+    const panelActual = document.getElementById('mpPanelActual');
+    const panelProjection = document.getElementById('mpPanelProjection');
+
+    if (tab === 'projection') {
+      btnActual.classList.remove('active');
+      btnProjection.classList.add('active');
+      panelActual.classList.remove('active');
+      panelProjection.classList.add('active');
+    } else {
+      btnProjection.classList.remove('active');
+      btnActual.classList.add('active');
+      panelProjection.classList.remove('active');
+      panelActual.classList.add('active');
+    }
+  }
+
+  /* Toggle Show/Hide Tabel Manpower per Shift (By Actual Inbound) */
+  function toggleActualTable() {
+    const wrapper = document.getElementById('actualTableWrapper');
+    const icon = document.getElementById('actualToggleIcon');
+    const isHidden = wrapper.style.display === 'none';
+
+    if (isHidden) {
+      wrapper.style.display = 'block';
+      icon.textContent = '▲ Hide';
+    } else {
+      wrapper.style.display = 'none';
+      icon.textContent = '▼ Open';
+    }
+  }
+
+  /* Toggle Show/Hide Tabel Detail Projection Inbound */
+  function toggleProjectionTable() {
+    const wrapper = document.getElementById('projectionTableWrapper');
+    const icon = document.getElementById('projectionToggleIcon');
+    const isHidden = wrapper.style.display === 'none';
+
+    if (isHidden) {
+      wrapper.style.display = 'block';
+      icon.textContent = '▲ Hide';
+    } else {
+      wrapper.style.display = 'none';
+      icon.textContent = '▼ Open';
+    }
+  }
+
+  /* By Projection Inbound Table & Manpower Needs Calculation
+     Formula: Needs Daily Worker = (Projection Inbound + 30%) / 950 per MP - Actual Operator Dedicated */
+  function renderProjectionTable() {
+    const tbody = document.getElementById('projectionTableBody');
+    const filterDate = document.getElementById('filterProjectionDate').value;
+
+    tbody.innerHTML = projectionInboundData.map((row, index) => {
+      const isMatch = filterDate && row.date === filterDate;
+      // Pakai != (bukan !==) supaya undefined ikut ke-treat sama kayak null.
+      // Firebase RTDB otomatis BUANG field yang value-nya null pas di-.set(),
+      // jadi row yang tadinya inbound: null bakal balik sebagai row TANPA
+      // field inbound sama sekali (alias undefined) begitu dibaca lagi -
+      // ini yang bikin .toLocaleString() error "Cannot read properties of undefined".
+      const plus30 = row.inbound != null ? Math.round(row.inbound * 1.3) : null;
+      const operatorVal = row.operator || 0;
+      const needsDw = row.inbound != null ? Math.max(0, Math.ceil(plus30 / MP_CAPACITY_PER_PERSON) - operatorVal) : null;
+      return `
+        <tr class="${isMatch ? 'projection-row-highlight' : ''}">
+          <td>${row.week}</td>
+          <td>${row.month}</td>
+          <td>${row.dateDisplay}</td>
+          <td>${row.inbound != null ? row.inbound.toLocaleString() : '-'}</td>
+          <td>${plus30 !== null ? plus30.toLocaleString() : '-'}</td>
+          <td class="ch-editable-cell" onclick="editProjectionOperatorCell(${index})" title="Klik untuk edit">${operatorVal || ''}</td>
+          <td style="color:#0369a1;">${needsDw !== null ? needsDw.toLocaleString() : '-'}</td>
+        </tr>
+      `;
+    }).join('');
+
+    // Auto-fill summary cards sesuai filter tanggal
+    const matchedRow = projectionInboundData.find(row => row.date === filterDate);
+    if (matchedRow && matchedRow.inbound != null) {
+      const plus30 = Math.round(matchedRow.inbound * 1.3);
+      const needsDw = Math.max(0, Math.ceil(plus30 / MP_CAPACITY_PER_PERSON) - (matchedRow.operator || 0));
+      document.getElementById('fctProjectionTotal').textContent = matchedRow.inbound.toLocaleString();
+      document.getElementById('fctProjectionPlus30').textContent = plus30.toLocaleString();
+      document.getElementById('fctProjectionOperator').textContent = (matchedRow.operator || 0).toLocaleString();
+      document.getElementById('fctProjectionNeedsMp').textContent = needsDw.toLocaleString();
+    } else {
+      document.getElementById('fctProjectionTotal').textContent = '-';
+      document.getElementById('fctProjectionPlus30').textContent = '-';
+      document.getElementById('fctProjectionOperator').textContent = '-';
+      document.getElementById('fctProjectionNeedsMp').textContent = '-';
+    }
+  }
+
+  /* Edit Actual Operator Dedicated pada tabel By Projection Inbound */
+  function editProjectionOperatorCell(rowIndex) {
+    const row = projectionInboundData[rowIndex];
+    const currentValue = row.operator || '';
+
+    const cell = event.currentTarget;
+    if (cell.querySelector('input')) return; // Sudah terbuka input
+
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.className = 'ch-input';
+    input.value = currentValue;
+
+    cell.innerHTML = '';
+    cell.appendChild(input);
+    input.focus();
+    input.select();
+
+    const saveCell = () => {
+      let newVal = parseInt(input.value, 10);
+      if (isNaN(newVal) || newVal < 0) newVal = 0;
+      projectionInboundData[rowIndex].operator = newVal;
+      renderProjectionTable();
+      if (fbDb) {
+        fbDb.ref(FB_ROOT + '/projectionInbound').set(projectionInboundData).catch(function (err) {
+          showToast('❌ Gagal simpan perubahan Projection Inbound ke database online: ' + err.message, 'err');
+        });
+      }
+    };
+
+    input.addEventListener('blur', saveCell);
+    input.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') saveCell();
+      else if (e.key === 'Escape') renderProjectionTable();
+    });
+  }
+
+  function renderAll() {
+    const now = new Date();
+    document.getElementById('lblLastUpdate').textContent = `Last: ${now.toLocaleTimeString()}`;
+
+    const list = [];
+    let cntTotal = 0, cntEarly = 0, cntOntime = 0, cntLate = 0, cntTransit = 0;
+    let cntPendingBongkar = 0, cntProsesBongkar = 0, cntSelesaiBongkar = 0;
+    let cntSlaBreach = 0;
+
+    let activeParcelSum = 0;
+
+    const criticalActions = [];
+    const predictiveAlerts = [];
+    
+    let totalTravelMins = 0, travelCount = 0;
+    let onTimeOrEarlyArrivals = 0, totalCompletedArrivals = 0;
+    let unsealCompletedCount = 0, unsealOnTimeCount = 0;
+
+    const vendorPerf = {};
+
+    Object.values(globalTripsMaster).forEach(item => {
+      cntTotal++;
+      const {
+        tripNum, routeName, rawOutboundTo, qtyParcelVal, qtyToVal, vendorName, driver,
+        vehicleType, vehiclePlate, stdOrigin, staDest, atdOrigin,
+        ataDest, unsealedTime, lastSeenInCsv
+      } = item;
+
+      let statusText = '-';
+      let statusClass = '';
+      let remarksText = '-';
+      let remarksClass = '';
+
+      let etaDateObj = atdOrigin ? new Date(atdOrigin.getTime() + 390 * 60 * 1000) : null;
+      let etaDestStr = etaDateObj ? formatDate(etaDateObj) : '-';
+
+      if (atdOrigin) {
+        if (ataDest) {
+          const durationHours = (ataDest.getTime() - atdOrigin.getTime()) / (1000 * 60 * 60);
+          if (durationHours < 6.0) { statusText = 'Early Arrived'; statusClass = 'bg-early'; cntEarly++; }
+          else if (durationHours <= 6.5) { statusText = 'On Time'; statusClass = 'bg-ontime'; cntOntime++; }
+          else { statusText = 'Late Arrival'; statusClass = 'bg-late'; cntLate++; cntSlaBreach++; }
+
+          totalCompletedArrivals++;
+          if (durationHours <= 6.5) onTimeOrEarlyArrivals++;
+          
+          totalTravelMins += (durationHours * 60);
+          travelCount++;
+        } else {
+          if (etaDateObj && now > etaDateObj) {
+            statusText = 'Late Arrival'; statusClass = 'bg-late'; cntLate++; cntSlaBreach++;
+          } else {
+            statusText = 'In Transit'; statusClass = 'bg-pending';
+          }
+        }
+      }
+
+      if ((qtyToVal > 0 || qtyParcelVal > 0) && !atdOrigin) {
+        remarksText = 'Loading Origin'; remarksClass = 'rm-loading';
+      } else if (unsealedTime && !lastSeenInCsv) {
+        remarksText = 'Selesai Bongkar'; remarksClass = 'rm-completed'; cntSelesaiBongkar++;
+      } else if (unsealedTime && lastSeenInCsv) {
+        remarksText = 'Proses Bongkar'; remarksClass = 'rm-unseal'; cntProsesBongkar++;
+      } else if (ataDest && !unsealedTime) {
+        remarksText = 'Pending Bongkar'; remarksClass = 'rm-pending'; cntPendingBongkar++;
+      } else if (atdOrigin && !ataDest && !unsealedTime) {
+        remarksText = 'Transporting'; remarksClass = 'rm-transport'; cntTransit++;
+      }
+
+      // Hitung Total Active Parcel
+      if (remarksText === 'Proses Bongkar' || remarksText === 'Pending Bongkar' || remarksText === 'Transporting' || remarksText === 'Loading Origin') {
+        activeParcelSum += qtyParcelVal;
+      }
+
+      let agingDisplay = '-';
+      let agingClass = '';
+      let currentAgingMins = 0;
+
+      if (remarksText === 'Transporting' && atdOrigin) {
+        currentAgingMins = Math.floor((now - atdOrigin) / (1000 * 60));
+        agingDisplay = formatMinsToHHMM(currentAgingMins);
+        agingClass = currentAgingMins > THRESHOLDS.TRANSPORTING ? 'aging-red' : (currentAgingMins > 330 ? 'aging-yellow' : 'aging-green');
+      } else if (remarksText === 'Pending Bongkar' && ataDest) {
+        currentAgingMins = Math.floor((now - ataDest) / (1000 * 60));
+        agingDisplay = formatMinsToHHMM(currentAgingMins);
+        agingClass = currentAgingMins > THRESHOLDS.PENDING_BONGKAR ? 'aging-red' : (currentAgingMins > 20 ? 'aging-yellow' : 'aging-green');
+      } else if (remarksText === 'Proses Bongkar' && unsealedTime) {
+        currentAgingMins = Math.floor((now - unsealedTime) / (1000 * 60));
+        agingDisplay = formatMinsToHHMM(currentAgingMins);
+        agingClass = currentAgingMins > THRESHOLDS.PROSES_BONGKAR ? 'aging-red' : (currentAgingMins > 90 ? 'aging-yellow' : 'aging-green');
+      }
+
+      if (unsealedTime && ataDest) {
+        unsealCompletedCount++;
+        const bongkarMins = Math.floor((unsealedTime - ataDest) / (1000 * 60));
+        if (bongkarMins <= 120) unsealOnTimeCount++;
+      }
+
+      if (statusText === 'Late Arrival' && !ataDest) {
+        const lateMins = Math.floor((now - etaDateObj) / (1000 * 60));
+        const lateDisplay = formatMinsToHHMM(lateMins);
+        criticalActions.push({
+          tripNum, routeName, lateMins, title: `Late Arrival +${lateDisplay} jam`,
+          eta: etaDestStr, action: `Follow up Vendor (${vendorName}) / Driver (${driver})`
+        });
+      } else if (remarksText === 'Pending Bongkar' && currentAgingMins > THRESHOLDS.PENDING_BONGKAR) {
+        criticalActions.push({
+          tripNum, routeName, agingStr: agingDisplay, title: `Pending Bongkar ${agingDisplay}`,
+          type: 'orange', action: `Hubungi Operational DC untuk Unseal Unit (${vehiclePlate})`
+        });
+      }
+
+      if (atdOrigin && !ataDest && etaDateObj) {
+        const minsToEta = Math.floor((etaDateObj - now) / (1000 * 60));
+        if (minsToEta < 30 && minsToEta > -10) {
+          predictiveAlerts.push({
+            tripNum, driver, eta: etaDestStr, latePred: Math.abs(minsToEta),
+            msg: `HIGH RISK: Diprediksi Late Arrival dalam ~${minsToEta} menit`
+          });
+        }
+      }
+
+      // Vendor Performance
+      if (vendorName && vendorName !== '-') {
+        if (!vendorPerf[vendorName]) vendorPerf[vendorName] = { total: 0, ontime: 0, late: 0 };
+        vendorPerf[vendorName].total++;
+        if (statusText === 'On Time' || statusText === 'Early Arrived') vendorPerf[vendorName].ontime++;
+        if (statusText === 'Late Arrival') vendorPerf[vendorName].late++;
+      }
+
+      const dateSource = atdOrigin || stdOrigin;
+      list.push({
+        tanggal: dateSource ? formatDateYYYYMMDD(dateSource) : '-',
+        tripNum, routeName, rawOutboundTo, qtyParcelVal, vendorName, driver,
+        vehicleType, vehiclePlate, stdOrigin, staDest, atdOrigin,
+        etaDestStr, ataDest,
+        travelTimeDisplay: atdOrigin ? formatMinsToHHMM(Math.floor(((ataDest || now) - atdOrigin) / (1000 * 60))) : '-',
+        agingDisplay, agingClass, statusText, statusClass, remarksText, remarksClass
+      });
+    });
+
+    document.getElementById('kpiTotal').textContent = cntTotal;
+    document.getElementById('kpiEarly').textContent = cntEarly;
+    document.getElementById('kpiOntime').textContent = cntOntime;
+    document.getElementById('kpiLate').textContent = cntLate;
+    document.getElementById('kpiTransit').textContent = cntTransit;
+    document.getElementById('kpiPendingBongkar').textContent = cntPendingBongkar;
+    document.getElementById('kpiProsesBongkar').textContent = cntProsesBongkar;
+    document.getElementById('kpiSelesaiBongkar').textContent = cntSelesaiBongkar;
+    document.getElementById('cntSlaBreach').textContent = cntSlaBreach;
+
+    document.getElementById('lblAvgTravel').textContent = travelCount > 0 ? formatMinsToHHMM(Math.floor(totalTravelMins / travelCount)) : '-';
+    document.getElementById('lblSlaArrivalComp').textContent = totalCompletedArrivals > 0 ? Math.round((onTimeOrEarlyArrivals / totalCompletedArrivals) * 100) + '%' : '100%';
+    document.getElementById('lblSlaBongkarComp').textContent = unsealCompletedCount > 0 ? Math.round((unsealOnTimeCount / unsealCompletedCount) * 100) + '%' : '100%';
+
+    renderCriticalActions(criticalActions);
+    renderPredictiveAlerts(predictiveAlerts);
+    renderPerformanceTables(vendorPerf);
+    renderForecast(activeParcelSum);
+
+    // Apply Filters
+    const search = document.getElementById('filterSearch').value.toLowerCase();
+    const fDate = document.getElementById('filterDate').value;
+    const fVendor = document.getElementById('filterVendor').value;
+    const fStatus = document.getElementById('filterStatus').value;
+    const fRemarks = document.getElementById('filterRemarks').value;
+    const fVehicle = document.getElementById('filterVehicle').value;
+
+    const filtered = list.filter(item => {
+      if (currentActiveKpiFilter === 'EARLY' && item.statusText !== 'Early Arrived') return false;
+      if (currentActiveKpiFilter === 'ONTIME' && item.statusText !== 'On Time') return false;
+      if (currentActiveKpiFilter === 'LATE' && item.statusText !== 'Late Arrival') return false;
+      if (currentActiveKpiFilter === 'TRANSIT' && item.remarksText !== 'Transporting') return false;
+      if (currentActiveKpiFilter === 'PENDING_BONGKAR' && item.remarksText !== 'Pending Bongkar') return false;
+      if (currentActiveKpiFilter === 'PROSES_BONGKAR' && item.remarksText !== 'Proses Bongkar') return false;
+      if (currentActiveKpiFilter === 'SELESAI_BONGKAR' && item.remarksText !== 'Selesai Bongkar') return false;
+      if (currentActiveKpiFilter === 'SLA_BREACH' && item.statusText !== 'Late Arrival') return false;
+
+      if (search && !item.tripNum.toLowerCase().includes(search) && !item.vendorName.toLowerCase().includes(search) && !item.driver.toLowerCase().includes(search) && !item.vehiclePlate.toLowerCase().includes(search)) return false;
+      if (fDate && item.tanggal !== fDate) return false;
+      if (fVendor !== 'ALL' && item.vendorName !== fVendor) return false;
+      if (fStatus !== 'ALL' && item.statusText !== fStatus) return false;
+      if (fRemarks !== 'ALL' && item.remarksText !== fRemarks) return false;
+      if (fVehicle !== 'ALL' && item.vehicleType !== fVehicle) return false;
+
+      return true;
+    });
+
+    filtered.sort((a, b) => (a.stdOrigin || 0) - (b.stdOrigin || 0));
+    renderTableRows(filtered);
+  }
+
+  function renderCriticalActions(actions) {
+    const container = document.getElementById('listCriticalAction');
+    document.getElementById('cntCriticalAction').textContent = `${actions.length} Actions`;
+    if (actions.length === 0) {
+      container.innerHTML = `<div style="font-size:12px; color:#64748b; text-align:center; padding: 15px;">Tidak ada tindakan kritis yang diperlukan.</div>`;
+      return;
+    }
+    container.innerHTML = actions.map(act => `
+      <div class="action-card ${act.type || 'red'}">
+        <strong>🔴 ${act.tripNum} — ${act.title}</strong><br>
+        <span style="color:#64748b;">Route: ${act.routeName} | ETA: ${act.eta || '-'}</span><br>
+        <span style="color:#2563eb; font-weight:600;">Action: ${act.action}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderPredictiveAlerts(alerts) {
+    const container = document.getElementById('listPredictiveAlert');
+    document.getElementById('cntPredictive').textContent = `${alerts.length} Predicted Risk`;
+    if (alerts.length === 0) {
+      container.innerHTML = `<div style="font-size:12px; color:#64748b; text-align:center; padding: 15px;">Semua trip berjalan sesuai estimasi.</div>`;
+      return;
+    }
+    container.innerHTML = alerts.map(alt => `
+      <div class="action-card yellow">
+        <strong>🚨 HIGH RISK — LT ${alt.tripNum}</strong> (${alt.driver})<br>
+        <span>ETA: ${alt.eta} — ${alt.msg}</span>
+      </div>
+    `).join('');
+  }
+
+  function renderPerformanceTables(vPerf) {
+    const vTbody = document.querySelector('#tblVendorPerf tbody');
+    const vKeys = Object.keys(vPerf);
+    if (vKeys.length === 0) vTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Belum ada data</td></tr>`;
+    else {
+      vTbody.innerHTML = vKeys.map(k => {
+        const pct = Math.round((vPerf[k].ontime / vPerf[k].total) * 100);
+        return `
+          <tr>
+            <td><strong>${k}</strong></td>
+            <td>${vPerf[k].total}</td>
+            <td style="color:${pct >= 80 ? '#16a34a' : '#d97706'}">${pct}%</td>
+            <td style="color:#dc2626;">${vPerf[k].late}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+  }
+
+  function renderTableRows(list) {
+    const tbody = document.getElementById('tableBody');
+    tbody.innerHTML = '';
+
+    if (list.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="18" style="text-align: center; color: #ef4444; font-weight: bold; padding: 20px;">Tidak ada trip yang memenuhi kriteria filter.</td></tr>`;
+      return;
+    }
+
+    list.forEach(item => {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td class="freeze-col col-0">${item.tanggal}</td>
+        <td class="freeze-col col-1"><strong>${item.tripNum}</strong></td>
+        <td class="freeze-col col-2" style="text-align: left;">${item.routeName}</td>
+        <td class="freeze-col col-3"><strong>${item.rawOutboundTo}</strong></td>
+        <td class="freeze-col col-4"><strong>${item.qtyParcelVal}</strong></td>
+        <td class="freeze-col col-5" style="text-align: left; font-weight: 600; color: #1e40af;">${item.vendorName}</td>
+        <td class="freeze-col col-6" style="text-align: left;">${item.driver}</td>
+        <td class="freeze-col col-7">${item.vehicleType}</td>
+        <td class="freeze-col col-8 freeze-border"><strong>${item.vehiclePlate}</strong></td>
+        
+        <td>${formatDate(item.stdOrigin)}</td>
+        <td>${formatDate(item.atdOrigin)}</td>
+        <td>${formatDate(item.staDest)}</td>
+        <td>${item.etaDestStr}</td>
+        <td>${formatDate(item.ataDest)}</td>
+        <td><strong>${item.travelTimeDisplay}</strong></td>
+        <td><span class="aging-tag ${item.agingClass}">${item.agingDisplay}</span></td>
+        <td><span class="badge ${item.statusClass}">${item.statusText}</span></td>
+        <td><span class="badge-remark ${item.remarksClass}">${item.remarksText}</span></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  }
+
+  function parseDate(dateStr) {
+    if (!dateStr || dateStr.trim() === '') return null;
+    const d = new Date(dateStr);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function formatDate(d) {
+    if (!d) return '-';
+    const pad = n => String(n).padStart(2, '0');
+    return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  }
+
+  function formatDateYYYYMMDD(d) {
+    if (!d) return '-';
+    const pad = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+  }
+
+  function formatMinsToHHMM(totalMinutes) {
+    if (totalMinutes <= 0 || isNaN(totalMinutes)) return '00:00';
+    const hours = String(Math.floor(totalMinutes / 60)).padStart(2, '0');
+    const mins = String(totalMinutes % 60).padStart(2, '0');
+    return `${hours}:${mins}`;
+  }
+
+  // Initial Call
+  renderAll();
+
+  // Baru mulai sync Firebase SETELAH status login kevalidasi (biar gak kena
+  // permission-denied karena Security Rules butuh auth != null) - persis pola yang
+  // dipakai di outbound.html.
+  if (window.firebase && firebase.auth) {
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (user) initInboundFirebaseSync();
+    });
+  }
+</script>
+
+<script>
+  // ==== SIDEBAR TOGGLE ====
+  function toggleAppSidebar() {
+    document.getElementById('appSidebar').classList.toggle('open');
+    document.getElementById('appSidebarBackdrop').classList.toggle('open');
+  }
+
+  // ESC buat nutup sidebar (ikutin pola tombol Esc di modul lain)
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' && e.key !== 'Esc') return;
+    const sidebar = document.getElementById('appSidebar');
+    if (sidebar && sidebar.classList.contains('open')) toggleAppSidebar();
+  });
+
+  // Open/Hide grup sidebar (Inbound / Productivity / Outbound Monitoring). Sengaja GAK
+  // diinget lewat localStorage — tiap buka halaman / pindah tab, semua grup default Hide,
+  // user wajib Open manual biar Sidebar-nya tetep rapi.
+  function toggleSidebarGroup(group) {
+    const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
+    const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
+    if (!label || !body) return;
+    const collapsed = label.classList.toggle('collapsed');
+    body.classList.toggle('collapsed', collapsed);
+  }
+
+  function setSidebarGroupCollapsed(group, collapsed) {
+    const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
+    const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
+    if (!label || !body) return;
+    label.classList.toggle('collapsed', collapsed);
+    body.classList.toggle('collapsed', collapsed);
+  }
+
+  const SIDEBAR_NAV_GROUPS = ['Productivity', 'Inbound', 'OutboundMonitoring', 'InventoryControl'];
+
+  function collapseAllSidebarGroups() {
+    SIDEBAR_NAV_GROUPS.forEach(function (group) { setSidebarGroupCollapsed(group, true); });
+  }
+  collapseAllSidebarGroups();
+
+  // ==== APP-SHELL BRIDGE ====
+  // Kalau halaman ini dibuka langsung (bukan lewat index.html app-shell), link sidebar
+  // tetap jalan normal (pindah halaman biasa). Tapi kalau dibuka di dalam iframe shell,
+  // klik link ke modul lain di-intercept dan diteruskan ke shell lewat postMessage,
+  // biar shell yang toggle tab tanpa reload sama sekali.
+  (function () {
+    if (window.self === window.top) return; // diakses langsung, biarin behavior default
+
+    function hijack(id, tab, submenu) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        window.top.postMessage({ source: "pkydc", type: "switchTab", tab: tab, submenu: submenu || null }, "*");
+      });
+    }
+
+    hijack("navToRestTime", "rest-time");
+    hijack("navToPerformanceBagger", "performance-bagger");
+    hijack("navToOutboundAging", "outbound", "aging");
+    hijack("navToOutboundOccupancy", "outbound", "occupancy");
+    hijack("navToInventoryControl", "inventory-control");
+
+    // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
+    window.addEventListener("message", function (e) {
+      var data = e.data;
+      if (!data || data.source !== "pkydc") return;
+      if (data.type === "collapseSidebarGroups") collapseAllSidebarGroups();
+    });
+  })();
+</script>
+
+</body>
+</html>

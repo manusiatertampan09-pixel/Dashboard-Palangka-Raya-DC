@@ -1,0 +1,2810 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=1280">
+  <meta name="robots" content="noindex, nofollow, noarchive">
+  <title>Inventory Control - Internal Palangka Raya DC</title>
+  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+  <!-- Chart.js buat grafik Highlight Daily & Monthly Usage -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <!-- SheetJS buat fitur Export Laporan ke Excel -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <!-- QRCode.js buat fitur QR Code / Label Generator (khusus Asset NCA) -->
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+  <!-- jsPDF + AutoTable buat fitur Export Laporan ke PDF -->
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+  <!-- FIREBASE SDK (app+auth dibutuhkan auth-guard.js, database dibutuhkan buat sync Stock & Usage Log) -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <style>
+    /* ==== TEMA MINIMALIS HITAM-PUTIH — font stack default Tailwind (sans) ==== */
+    :root {
+      --tw-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+        "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+        "Segoe UI Symbol", "Noto Color Emoji";
+      --bg-sidebar: #000000;
+      --border-sidebar: #262626;
+      --text-sidebar: #ffffff;
+      --text-sidebar-muted: #9ca3af;
+      --bg-sidebar-card: #0a0a0a;
+    }
+    .hamburger-btn {
+      position: fixed; top: 16px; left: 16px; z-index: 120;
+      width: 40px; height: 40px; border-radius: 8px;
+      background: var(--bg-sidebar); color: #fff; border: 1px solid var(--border-sidebar);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      font-family: var(--tw-sans);
+    }
+    .hamburger-btn:hover { background: #171717; }
+    .sidebar-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(2px); z-index: 150; display: none;
+    }
+    .sidebar-backdrop.open { display: block; }
+    .app-sidebar {
+      position: fixed; top: 0; left: 0; height: 100%; width: 300px;
+      background-color: var(--bg-sidebar); border-right: 1px solid var(--border-sidebar);
+      display: flex; flex-direction: column; justify-content: space-between;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      transform: translateX(-100%); z-index: 200; box-shadow: 0 0 30px rgba(0,0,0,0.25);
+      font-family: var(--tw-sans);
+    }
+    .app-sidebar.open { transform: translateX(0); }
+    .app-sidebar-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: var(--bg-sidebar-card);
+      border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0;
+    }
+    .app-sidebar-header-inner { display: flex; align-items: center; gap: 10px; min-width: 0; }
+    .app-sidebar-icon-box {
+      width: 34px; height: 34px; border-radius: 9px; flex-shrink: 0;
+      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.25);
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .app-sidebar-title-group { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+    .app-sidebar-title { color: #fff; font-weight: 700; font-size: 11.5px; letter-spacing: 0.5px; text-transform: uppercase; line-height: 1.2; }
+    .app-sidebar-subtitle { color: var(--text-sidebar-muted); font-weight: 500; font-size: 10px; line-height: 1.2; }
+    .app-sidebar-header button { background: transparent; border: none; color: #9ca3af; font-size: 16px; cursor: pointer; padding: 4px 8px; }
+    .app-sidebar-header button:hover { color: #fff; }
+    .app-sidebar-body { padding: 16px 12px; overflow-y: auto; flex-grow: 1; }
+    .app-sidebar-group-label {
+      font-weight: 800; font-size: 10px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-sidebar-muted); margin: 14px 4px 8px; padding: 0 4px;
+    }
+    .app-sidebar-group-label:first-child { margin-top: 0; }
+    /* Group label yang bisa diklik buat Open/Hide (collapsible) */
+    .app-sidebar-group-label.collapsible {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: pointer; user-select: none; border-radius: 6px; padding: 6px 4px;
+    }
+    .app-sidebar-group-label.collapsible:hover { background: rgba(255,255,255,0.06); color: #d4d4d4; }
+    .app-sidebar-group-label.collapsible .chevron { transition: transform 0.2s ease; font-size: 9px; }
+    .app-sidebar-group-label.collapsible.collapsed .chevron { transform: rotate(-90deg); }
+    .app-sidebar-group {
+      overflow: hidden; max-height: 500px; transition: max-height 0.25s ease;
+    }
+    .app-sidebar-group.collapsed { max-height: 0; }
+    .app-sidebar-link {
+      display: flex; align-items: center; gap: 8px; padding: 9px 10px; border-radius: 6px;
+      color: var(--text-sidebar); font-weight: 600; font-size: 12px; text-decoration: none; margin-bottom: 4px;
+      cursor: pointer; border: none; width: 100%; background: transparent; text-align: left;
+      font-family: var(--tw-sans);
+    }
+    .app-sidebar-link:hover { background: rgba(255,255,255,0.08); }
+    .app-sidebar-link.active { background: #ffffff; color: #000000; font-weight: 700; }
+    .app-sidebar-footer { border-top: 1px solid var(--border-sidebar); padding: 15px; }
+    .app-sidebar-footer button {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      padding: 10px; border: 1px solid var(--border-sidebar); background: #111111;
+      color: #ffffff; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px;
+      font-family: var(--tw-sans);
+    }
+    .app-sidebar-footer button:hover { background: #1f1f1f; }
+
+    * { box-sizing: border-box; font-family: var(--tw-sans); }
+    body { background-color: #fafafa; margin: 0; padding: 20px 20px 20px 70px; color: #171717; }
+
+    .container { max-width: 100%; margin: 0 auto; background: #fff; padding: 20px; border-radius: 10px; border: 1px solid #e5e5e5; box-shadow: 0 1px 3px rgba(0,0,0,0.04); }
+
+    .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
+    h2 { margin: 0; color: #000000; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+
+    /* Submenu tabs (Log Activity Usage / Stock) */
+    .inv-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
+    .inv-tab-btn { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 9px 18px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.15s; }
+    .inv-tab-btn:hover { background: #f5f5f5; }
+    .inv-tab-btn.active { background: #000000; color: #ffffff; border-color: #000000; }
+    .inv-panel { display: none; }
+    .inv-panel.active { display: block; }
+
+    /* KPI Cards */
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
+    .kpi-card { background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; text-align: center; }
+    .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #737373; font-weight: 700; margin-bottom: 4px; }
+    .kpi-value { font-size: 22px; font-weight: 800; color: #000000; }
+    .kpi-card.warn { border-color: #000000; cursor: pointer; }
+    .kpi-card.warn .kpi-value { color: #000000; }
+    .kpi-delta { font-size: 11px; font-weight: 700; margin-top: 4px; }
+    .kpi-delta.up { color: #b91c1c; }
+    .kpi-delta.down { color: #15803d; }
+    .kpi-delta.flat { color: #737373; }
+    .lb-bar-wrap { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
+    .lb-bar-track { flex: 1; max-width: 90px; height: 6px; background: #eee; border-radius: 3px; overflow: hidden; }
+    .lb-bar-fill { height: 100%; background: #b45309; }
+    .days-left { font-weight: 800; }
+    .days-left.critical { color: #b91c1c; }
+    .days-left.warn-soon { color: #b45309; }
+    .range-tabs { display: flex; gap: 6px; }
+    .range-tab-btn { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 11px; cursor: pointer; transition: 0.15s; }
+    .range-tab-btn:hover { background: #f5f5f5; }
+    .range-tab-btn.active { background: #000000; color: #ffffff; border-color: #000000; }
+    .date-range-input { border: 1px solid #d4d4d4; border-radius: 6px; padding: 5px 8px; font-size: 12px; font-family: inherit; color: #171717; }
+
+    .grid-2 { display: grid; grid-template-columns: 1.3fr 1fr; gap: 15px; margin-bottom: 18px; }
+    @media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } }
+
+    .panel-box { background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 15px; }
+    .panel-title { font-weight: 700; font-size: 13px; color: #000000; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* Form input */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
+    .form-item { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #404040; }
+    .form-item input, .form-item select, .form-item textarea { padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; background: white; font-family: inherit; color: #171717; }
+    .form-item input:focus, .form-item select:focus, .form-item textarea:focus { outline: none; border-color: #000000; }
+    .form-item small { font-weight: 500; color: #a3a3a3; }
+
+    /* Layout khusus form "Log Activity Usage": kolom Asset (kiri, tinggi berubah-ubah
+       karena baris asset bisa ditambah) dipisah dari kolom Tanggal/Devisi/Simpan Log
+       (kanan) pakai flex align-items:flex-start, biar kolom kanan gak ikut kedorong ke
+       bawah tiap kali "Tambah Asset Lain" diklik. */
+    .usage-form-layout { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+    .usage-form-layout .usage-asset-col { flex: 1 1 320px; min-width: 280px; }
+    .usage-form-layout .usage-rest-grid {
+      flex: 2 1 480px; min-width: 280px;
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end;
+    }
+    @media (max-width: 700px) { .usage-form-layout .usage-asset-col, .usage-form-layout .usage-rest-grid { flex-basis: 100%; } }
+    .tag-chip-wrap { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+    .tag-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: #f1f1f1; color: #171717; border: 1px solid #e0e0e0; border-radius: 999px;
+      padding: 3px 6px 3px 10px; font-size: 11px; font-weight: 600; white-space: nowrap;
+    }
+    .tag-chip-remove {
+      background: transparent; color: #737373; border: none;
+      width: 15px; height: 15px; border-radius: 50%; cursor: pointer;
+      font-size: 11px; line-height: 1; display: flex; align-items: center; justify-content: center;
+      padding: 0;
+    }
+    .tag-chip-remove:hover { background: #d4d4d4; color: #171717; }
+
+    /* Kotak input tag (chip nempel DI DALAM kolom yang sama, bukan baris terpisah di bawah) */
+    .ac-wrap { position: relative; }
+    .tag-input-box {
+      display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+      padding: 6px 8px; border: 1px solid #d4d4d4; border-radius: 6px; background: #fff;
+    }
+    .tag-input-box:focus-within { border-color: #000000; }
+    .tag-input-box .tag-chip-wrap { display: contents; }
+    .tag-input-box .tag-input-field {
+      flex: 1 1 80px; min-width: 80px; border: none !important; outline: none;
+      padding: 3px 2px !important; font-size: 12px; background: transparent !important;
+    }
+    .ac-dropdown {
+      display: none; position: absolute; top: calc(100% + 4px); left: 0; right: 0; z-index: 50;
+      background: #ffffff; border: 1px solid #d4d4d4; border-radius: 6px;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.12); max-height: 220px; overflow-y: auto;
+    }
+    .ac-dropdown.open { display: block; }
+    .ac-item { padding: 8px 10px; font-size: 12px; color: #171717; cursor: pointer; }
+    .ac-item:hover, .ac-item.active { background: #f1f1f1; color: #171717; }
+    .ac-item mark { background: #ffe58a; color: inherit; border-radius: 2px; }
+    .ac-empty { padding: 8px 10px; font-size: 12px; color: #a3a3a3; font-style: italic; }
+    .btn-primary { background: #000000; color: #ffffff; border: 1px solid #000000; padding: 9px 18px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+    .btn-primary:hover { background: #262626; }
+    .btn-primary:disabled { background: #d4d4d4; border-color: #d4d4d4; color: #737373; cursor: not-allowed; }
+    .btn-secondary { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 9px 16px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 12px; }
+    .btn-secondary:hover { background: #f5f5f5; }
+    .btn-danger-sm { background: #ffffff; color: #000000; border: 1px solid #000000; padding: 5px 9px; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 11px; }
+    .btn-danger-sm:hover { background: #000000; color: #ffffff; }
+    .btn-edit-sm { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 5px 9px; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 11px; }
+    .btn-edit-sm:hover { background: #f5f5f5; border-color: #000000; }
+    .usage-item-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+    .usage-item-row select.usage-item-asset { flex: 2; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; background: #fff; }
+    .usage-item-row input.usage-item-qty { flex: 1; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; min-width: 70px; }
+    .usage-item-row .usage-item-remove { flex-shrink: 0; }
+    .form-msg { font-size: 12px; font-weight: 600; min-height: 16px; margin-top: 8px; }
+    .form-msg.err { color: #000000; text-decoration: underline; }
+    .form-msg.ok { color: #171717; }
+
+    /* Table */
+    .table-wrapper { overflow-x: auto; max-height: 55vh; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
+    table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
+    th, td { border-bottom: 1px solid #eef1f5; padding: 10px 14px; text-align: left; background-color: #fff; white-space: nowrap; color: #171717; }
+    th {
+      background-color: #eef1f6;
+      color: #0f172a;
+      position: sticky; top: 0; z-index: 2; height: 38px;
+      font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px;
+      border-bottom: 1.5px solid #cbd5e1;
+      box-shadow: inset 0 -1px 0 rgba(15,23,42,0.03);
+    }
+    th:first-child { border-top-left-radius: 10px; }
+    th:last-child { border-top-right-radius: 10px; }
+    td { transition: background-color 0.1s; }
+    tr:nth-child(even) td { background-color: #fafbfc; }
+    tr:hover td { background-color: #f1f5f9; }
+    tr.low-stock td { background-color: #f5f5f5 !important; font-weight: 700; }
+    tr:last-child td { border-bottom: none; }
+    .empty-row td { padding: 22px; color: #a3a3a3; font-weight: 600; text-align: center; }
+
+    .badge-lowstock { background: #000000; color: #ffffff; font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
+    .readonly-note { font-size: 11px; color: #a3a3a3; font-style: italic; margin-top: 6px; }
+
+    /* ==== LOW-STOCK BANNER (global, tampil di semua tab Inventory Control) ==== */
+    .lowstock-banner {
+      display: none; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px;
+      margin-bottom: 14px; font-size: 12.5px; font-weight: 700; border: 1px solid transparent;
+    }
+    .lowstock-banner.show { display: flex; }
+    .lowstock-banner.level-warn { background: #fffbeb; border-color: #fde68a; color: #92400e; }
+    .lowstock-banner.level-danger { background: #fef2f2; border-color: #fecaca; color: #991b1b; }
+    .lowstock-banner-icon { font-size: 18px; flex-shrink: 0; }
+    .lowstock-banner-text { flex-grow: 1; min-width: 0; }
+    .lowstock-banner-close {
+      background: transparent; border: none; cursor: pointer; font-size: 15px; font-weight: 800;
+      color: inherit; opacity: 0.6; padding: 2px 6px; flex-shrink: 0;
+    }
+    .lowstock-banner-close:hover { opacity: 1; }
+
+    /* Thumbnail foto kondisi asset (Database Asset IT & NCA) */
+    .asset-photo-thumb { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; border: 1px solid #d4d4d4; cursor: pointer; display: block; }
+    .asset-photo-empty { color: #d4d4d4; font-size: 11px; }
+    .btn-icon-sm { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 5px 9px; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 11px; margin-right: 4px; }
+    .btn-icon-sm:hover { background: #f5f5f5; border-color: #000000; }
+    .photo-preview-box { margin-top: 8px; display: flex; align-items: center; gap: 10px; }
+    .photo-preview-box img { width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #d4d4d4; }
+    #qrCodeCanvasWrap { display: flex; justify-content: center; padding: 16px; background: #fff; }
+    .audit-action-badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
+    .audit-action-badge.create { background: #dcfce7; color: #15803d; }
+    .audit-action-badge.update { background: #fef3c7; color: #b45309; }
+    .audit-action-badge.delete { background: #fee2e2; color: #b91c1c; }
+
+    /* Modal Asset */
+    /* Toast notifikasi in-app (ganti alert() bawaan browser) */
+    .toast-stack {
+      position: fixed; top: 16px; right: 16px; z-index: 400;
+      display: flex; flex-direction: column; gap: 10px; max-width: 340px;
+    }
+    .toast-item {
+      background: #000000; color: #ffffff; border-radius: 8px; padding: 12px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3); display: flex; align-items: flex-start; gap: 10px;
+      font-size: 12.5px; font-weight: 600; line-height: 1.5; white-space: pre-line;
+      animation: toast-in 0.2s ease-out; border: 1px solid #262626;
+    }
+    .toast-item.ok { border-left: 4px solid #22c55e; }
+    .toast-item.err { border-left: 4px solid #ef4444; }
+    .toast-item.info { border-left: 4px solid #9ca3af; }
+    .toast-icon { flex-shrink: 0; font-size: 14px; line-height: 1.5; }
+    .toast-msg { flex: 1; }
+    .toast-close { background: transparent; border: none; color: #9ca3af; cursor: pointer; font-size: 14px; padding: 0 0 0 4px; flex-shrink: 0; }
+    .toast-close:hover { color: #fff; }
+    @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+    .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 300; display: none; align-items: center; justify-content: center; }
+    .modal-backdrop.open { display: flex; }
+    .modal-box { background: #fff; border-radius: 10px; padding: 20px; width: 100%; max-width: 420px; box-shadow: 0 10px 40px rgba(0,0,0,0.25); }
+    .modal-box h3 { margin: 0 0 14px 0; color: #000000; font-size: 15px; font-weight: 700; }
+    .modal-box .form-item { margin-bottom: 10px; }
+    .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
+
+    /* Confirm modal custom, pengganti confirm() bawaan browser */
+    .confirm-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
+    .confirm-backdrop.open { display: flex; animation: confirm-fade 0.15s ease-out; }
+    .confirm-box { background: #fff; border-radius: 12px; padding: 22px; width: 100%; max-width: 380px; box-shadow: 0 12px 44px rgba(0,0,0,0.3); }
+    .confirm-box .confirm-msg { color: #171717; font-size: 13.5px; font-weight: 600; line-height: 1.55; white-space: pre-line; margin: 0; }
+    .confirm-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; }
+    .confirm-btn { border: none; border-radius: 7px; padding: 8px 16px; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .confirm-btn-cancel { background: #eef1f6; color: #171717; }
+    .confirm-btn-cancel:hover { background: #e2e6ec; }
+    .confirm-btn-ok { background: #000000; color: #ffffff; }
+    .confirm-btn-ok:hover { background: #262626; }
+    @keyframes confirm-fade { from { opacity: 0; } to { opacity: 1; } }
+  </style>
+</head>
+<body>
+<div class="toast-stack" id="toastStack"></div>
+<div class="confirm-backdrop" id="confirmModalBackdrop">
+  <div class="confirm-box">
+    <p class="confirm-msg" id="confirmModalMsg"></p>
+    <div class="confirm-actions">
+      <button class="confirm-btn confirm-btn-cancel" id="confirmModalCancelBtn">Batal</button>
+      <button class="confirm-btn confirm-btn-ok" id="confirmModalOkBtn">Ya, Lanjut</button>
+    </div>
+  </div>
+</div>
+<script>window.__PAGE_TAB = "inventory-control";</script>
+<script src="auth-guard.js"></script>
+
+<!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
+<button class="hamburger-btn" onclick="toggleAppSidebar()" title="Buka Menu">☰</button>
+<div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
+<nav class="app-sidebar" id="appSidebar">
+  <div>
+    <div class="app-sidebar-header">
+      <div class="app-sidebar-header-inner">
+        <div class="app-sidebar-icon-box">🗃️</div>
+        <div class="app-sidebar-title-group">
+          <span class="app-sidebar-title">Palangka Raya DC</span>
+          <span class="app-sidebar-subtitle">Inventory Control</span>
+        </div>
+      </div>
+      <button onclick="toggleAppSidebar()">✕</button>
+    </div>
+    <div class="app-sidebar-body">
+      <div class="app-sidebar-group-label collapsible" data-group="Productivity" onclick="toggleSidebarGroup('Productivity')">
+        <span>Productivity</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="Productivity">
+        <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link">⏳ Rest Time Monitoring</a>
+        <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 Performance Bagger</a>
+      </div>
+
+      <div class="app-sidebar-group-label collapsible" data-group="Inbound" onclick="toggleSidebarGroup('Inbound')">
+        <span>Inbound</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="Inbound">
+        <a href="inbound.html" id="navToInbound" class="app-sidebar-link">🚚 LH Tracking &amp; Forecast MP</a>
+      </div>
+
+      <div class="app-sidebar-group-label collapsible" data-group="OutboundMonitoring" onclick="toggleSidebarGroup('OutboundMonitoring')">
+        <span>Outbound Monitoring</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="OutboundMonitoring">
+        <a href="outbound.html" id="navToOutboundAging" class="app-sidebar-link">📦 Aging &amp; Packer Backlog</a>
+        <a href="outbound.html#occupancy" id="navToOutboundOccupancy" class="app-sidebar-link">🏭 Occupancy &amp; Shift</a>
+      </div>
+
+      <div class="app-sidebar-group-label collapsible" data-group="SOC" onclick="toggleSidebarGroup('SOC')">
+        <span>Inventory Control</span><span class="chevron">▾</span>
+      </div>
+      <div class="app-sidebar-group" data-group-body="SOC">
+        <button class="app-sidebar-link" data-tab="usage" onclick="switchInvSubmenu('usage')">📝 Log Activity Usage</button>
+        <button class="app-sidebar-link" data-tab="dashboard" onclick="switchInvSubmenu('dashboard')">📊 Highlight Usage</button>
+        <button class="app-sidebar-link" data-tab="stock" onclick="switchInvSubmenu('stock')">🗄️ Stock</button>
+        <button class="app-sidebar-link" data-tab="assetItNca" onclick="switchInvSubmenu('assetItNca')">🖥️ Database Asset IT &amp; NCA</button>
+        <button class="app-sidebar-link" data-tab="auditLog" onclick="switchInvSubmenu('auditLog')">📜 Audit Log</button>
+      </div>
+
+    </div>
+  </div>
+  <div class="app-sidebar-footer">
+    <button onclick="logoutApp()">🚪 Logout</button>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="header-bar">
+    <h2>📦 Inventory Control Palangka Raya DC</h2>
+  </div>
+  <div class="header-bar">
+    <div class="inv-tabs">
+      <button class="inv-tab-btn" data-tab="usage" onclick="switchInvSubmenu('usage')">📝 Log Activity Usage</button>
+      <button class="inv-tab-btn" data-tab="dashboard" onclick="switchInvSubmenu('dashboard')">📊 Highlight Usage</button>
+      <button class="inv-tab-btn" data-tab="stock" onclick="switchInvSubmenu('stock')">🗄️ Stock</button>
+      <button class="inv-tab-btn" data-tab="assetItNca" onclick="switchInvSubmenu('assetItNca')">🖥️ Database Asset IT &amp; NCA</button>
+      <button class="inv-tab-btn" data-tab="auditLog" onclick="switchInvSubmenu('auditLog')">📜 Audit Log</button>
+    </div>
+  </div>
+
+  <!-- ================= LOW-STOCK BANNER (global, tampil terus di semua tab) ================= -->
+  <div class="lowstock-banner" id="lowStockBanner">
+    <span class="lowstock-banner-icon" id="lowStockBannerIcon">⚠️</span>
+    <span class="lowstock-banner-text" id="lowStockBannerText"></span>
+    <button class="lowstock-banner-close" onclick="dismissLowStockBanner()" title="Tutup sementara">✕</button>
+  </div>
+
+  <!-- ================= SUBMENU 1: LOG ACTIVITY USAGE (Input murni) ================= -->
+  <section id="invPanelUsage" class="inv-panel">
+
+    <div class="panel-box" style="margin-bottom:18px;">
+      <div class="panel-title">➕ Input Penggunaan Asset / Pcs</div>
+      <div class="usage-form-layout">
+        <div class="form-item usage-asset-col">
+          <label>Asset &amp; Qty Dipakai (bisa lebih dari satu sekaligus)</label>
+          <div id="usageItemsContainer"></div>
+          <button type="button" class="btn-secondary" style="width:fit-content; margin-top:2px;" onclick="addUsageItemRow()">➕ Tambah Asset Lain</button>
+        </div>
+        <div class="usage-rest-grid">
+          <div class="form-item">
+            <label>Tanggal</label>
+            <input type="date" id="usageDateInput">
+          </div>
+          <div class="form-item" id="devisiFormItem">
+            <label>Divisi</label>
+            <div style="display:flex; align-items:center; height:38px;">
+              <span id="devisiFormBadge" style="font-size:12px; background:#000; color:#fff; padding:5px 12px; border-radius:999px; font-weight:800;">SOC</span>
+            </div>
+          </div>
+          <div class="form-item">
+            <label>&nbsp;</label>
+            <button class="btn-primary" onclick="submitUsageLog()">Simpan Log</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-msg" id="usageFormMsg"></div>
+    </div>
+
+    <div class="panel-box">
+      <div class="panel-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <span>🕒 Riwayat Log Penggunaan Terbaru</span>
+        <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+          <input type="text" id="logFilterAssetInput" class="date-range-input" style="min-width:150px;" placeholder="🔍 Cari nama asset..." oninput="applyLogFilter()">
+          <input type="date" id="logFilterStartInput" class="date-range-input">
+          <span style="font-size:11px; color:#737373; font-weight:700;">s/d</span>
+          <input type="date" id="logFilterEndInput" class="date-range-input">
+          <button class="range-tab-btn" onclick="applyLogFilter()">Filter</button>
+          <button class="range-tab-btn" onclick="resetLogFilter()">Reset</button>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr id="usageLogTableHead"><th>Tanggal</th><th>Asset</th><th>Qty</th><th>Divisi</th><th>Diinput Oleh</th><th>Action</th></tr>
+          </thead>
+          <tbody id="usageLogBody"><tr class="empty-row"><td colspan="6">Belum ada log</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SUBMENU 2: HIGHLIGHT DAILY & MONTHLY USAGE (Dashboard) ================= -->
+  <section id="invPanelDashboard" class="inv-panel">
+
+    <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
+      <span style="font-size:12px; font-weight:800; color:#525252;">Breakdown Divisi:</span>
+      <select id="dashboardDevisiFilter" class="date-range-input" style="min-width:220px;" onchange="applyDashboardDevisiFilter()">
+        <option value="">Semua Divisi</option>
+        <option value="SOC">Sortation Center</option>
+        <option value="EHA">Exception Handling Area</option>
+      </select>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-title">Usage Hari Ini</div>
+        <div class="kpi-value" id="kpiTodayUsage">0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Usage Bulan Ini</div>
+        <div class="kpi-value" id="kpiMonthUsage">0</div>
+        <div class="kpi-delta" id="kpiMonthDelta"></div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-title">Asset Terpakai Bulan Ini</div>
+        <div class="kpi-value" id="kpiAssetTouched">0</div>
+      </div>
+      <div class="kpi-card warn" onclick="document.getElementById('lowStockDetailPanel').scrollIntoView({behavior:'smooth', block:'center'});">
+        <div class="kpi-title">Stock Menipis</div>
+        <div class="kpi-value" id="kpiLowStock">0</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel-box">
+        <div class="panel-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <span id="dailyUsageChartTitle">📊 Highlight Daily Usage</span>
+          <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+            <input type="date" id="dailyRangeStart" class="date-range-input">
+            <span style="font-size:11px; color:#737373; font-weight:700;">s/d</span>
+            <input type="date" id="dailyRangeEnd" class="date-range-input">
+            <button class="range-tab-btn" onclick="applyDailyUsageDateRange()">Terapkan</button>
+          </div>
+        </div>
+        <div class="chart-wrap"><canvas id="dailyUsageChart"></canvas></div>
+      </div>
+      <div class="panel-box">
+        <div class="panel-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+          <span>🏆 Top Asset Terpakai (Bulan Ini)</span>
+          <button class="range-tab-btn" onclick="exportUsageExcelReport()">⬇️ Export Excel</button>
+          <button class="range-tab-btn" onclick="exportDashboardPdfReport()">📄 Export PDF</button>
+        </div>
+        <div class="table-wrapper" style="max-height:220px;">
+          <table>
+            <thead><tr><th>Asset</th><th>Total Terpakai</th></tr></thead>
+            <tbody id="monthlyUsageBody"><tr class="empty-row"><td colspan="2">Belum ada data</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel-box" style="margin-top:18px;">
+      <div class="panel-title">📈 Trend Bulanan Usage (6 Bulan Terakhir)</div>
+      <div class="chart-wrap"><canvas id="monthlyTrendChart"></canvas></div>
+    </div>
+
+    <div class="panel-box" id="lowStockDetailPanel" style="margin-top:18px;">
+      <div class="panel-title">⚠️ Detail Stock Menipis &amp; Estimasi Habis</div>
+      <div class="table-wrapper" style="max-height:280px;">
+        <table>
+          <thead><tr><th>Asset</th><th>Stock Saat Ini</th><th>Min Stock</th><th>Rata-rata Pemakaian/Hari (30 hari)</th><th>Estimasi Habis</th><th>Saran Reorder Qty</th></tr></thead>
+          <tbody id="lowStockDetailBody"><tr class="empty-row"><td colspan="6">Belum ada data</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= SUBMENU 3: STOCK ================= -->
+  <section id="invPanelStock" class="inv-panel">
+    <div class="header-bar">
+      <div class="panel-title" style="margin:0;">🗄️ Database Stock Asset</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn-primary" id="btnAddAsset" onclick="openAssetModal(null)">➕ Tambah Asset</button>
+        <button class="btn-secondary" id="btnImportStock" onclick="document.getElementById('stockImportFileInput').click()">📥 Import Excel</button>
+        <button class="btn-secondary" id="btnBulkTemplate" onclick="downloadStockBulkTemplate()">📄 Bulk Template</button>
+        <input type="file" id="stockImportFileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleStockImportFile(event)">
+      </div>
+    </div>
+    <p class="readonly-note" id="stockReadonlyNote" style="display:none;">🔒 Kamu cuma bisa lihat data Stock. Tambah/Edit/Hapus Asset cuma bisa dilakukan admin.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Asset</th><th>Kategori</th><th>Unit</th><th>Qty</th><th>Min Stock</th><th>Catatan</th><th>Update Terakhir</th><th>Action</th></tr>
+        </thead>
+        <tbody id="stockBody"><tr class="empty-row"><td colspan="8">Belum ada data Stock</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= SUBMENU 4: DATABASE ASSET IT & NCA ================= -->
+  <section id="invPanelAssetItNca" class="inv-panel">
+    <div class="header-bar">
+      <div class="panel-title" style="margin:0;">🖥️ Database Asset IT &amp; NCA (Non Consumable Asset)</div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <button class="btn-secondary" id="btnExportAssetItNca" onclick="exportAssetItNcaExcel()">⬇️ Export Excel</button>
+        <button class="btn-secondary" onclick="exportAssetItNcaPdf()">📄 Export PDF</button>
+        <button class="btn-primary" id="btnAddAssetItNca" onclick="openAssetItNcaModal(null)">➕ Tambah Asset</button>
+        <button class="btn-secondary" id="btnImportAssetItNca" onclick="document.getElementById('assetItNcaImportFileInput').click()">📥 Import Excel</button>
+        <button class="btn-secondary" id="btnBulkTemplateAssetItNca" onclick="downloadAssetItNcaBulkTemplate()">📄 Bulk Template</button>
+        <input type="file" id="assetItNcaImportFileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleAssetItNcaImportFile(event)">
+      </div>
+    </div>
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+      <input type="text" id="assetItNcaFilterInput" class="date-range-input" style="min-width:180px;" placeholder="🔍 Cari nama / no. inventaris / PIC..." oninput="applyAssetItNcaFilter()">
+      <select id="assetItNcaJenisFilter" class="date-range-input" onchange="applyAssetItNcaFilter()">
+        <option value="">Semua Jenis</option>
+        <option value="IT">IT</option>
+        <option value="NCA">NCA</option>
+      </select>
+      <button class="range-tab-btn" onclick="resetAssetItNcaFilter()">Reset</button>
+    </div>
+    <p class="readonly-note" id="assetItNcaReadonlyNote" style="display:none;">🔒 Kamu cuma bisa lihat data Database Asset IT &amp; NCA. Tambah/Edit/Hapus cuma bisa dilakukan admin.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Foto</th><th>Nama Asset</th><th>Jenis</th><th>Jumlah</th><th>No. Serial / Inventaris</th><th>PIC Pemegang</th><th>Lokasi</th><th>Status</th><th>Catatan</th><th>Update Terakhir</th><th>Action</th></tr>
+        </thead>
+        <tbody id="assetItNcaBody"><tr class="empty-row"><td colspan="11">Belum ada data Asset IT &amp; NCA</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ================= SUBMENU 5: AUDIT LOG ================= -->
+  <section id="invPanelAuditLog" class="inv-panel">
+    <div class="header-bar">
+      <div class="panel-title" style="margin:0;">📜 Audit Log — Jejak Perubahan Data</div>
+    </div>
+    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
+      <input type="text" id="auditLogFilterInput" class="date-range-input" style="min-width:180px;" placeholder="🔍 Cari nama item / diubah oleh..." oninput="applyAuditLogFilter()">
+      <select id="auditLogModuleFilter" class="date-range-input" onchange="applyAuditLogFilter()">
+        <option value="">Semua Modul</option>
+        <option value="Stock">Stock</option>
+        <option value="Asset IT & NCA">Asset IT &amp; NCA</option>
+        <option value="Log Usage">Log Usage</option>
+      </select>
+      <button class="range-tab-btn" onclick="resetAuditLogFilter()">Reset</button>
+    </div>
+    <p class="readonly-note">🔒 Audit Log otomatis tercatat tiap ada Tambah/Edit/Hapus data — cuma buat lihat riwayat, gak bisa diubah/dihapus manual.</p>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>Waktu</th><th>Modul</th><th>Aksi</th><th>Item</th><th>Detail</th><th>Diubah Oleh</th></tr>
+        </thead>
+        <tbody id="auditLogBody"><tr class="empty-row"><td colspan="6">Belum ada Audit Log</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- ==== MODAL TAMBAH / EDIT ASSET ==== -->
+<div class="modal-backdrop" id="assetModalBackdrop">
+  <div class="modal-box">
+    <h3 id="assetModalTitle">➕ Tambah Asset Baru</h3>
+    <input type="hidden" id="assetModalId">
+    <div class="form-item">
+      <label>Nama Asset</label>
+      <input type="text" id="assetNameInput" placeholder="Contoh: Handpallet, Cutter, dll">
+    </div>
+    <div class="form-item">
+      <label>Kategori (opsional)</label>
+      <input type="text" id="assetCategoryInput" placeholder="Contoh: Alat Bantu, Consumable">
+    </div>
+    <div class="form-item">
+      <label>Unit</label>
+      <input type="text" id="assetUnitInput" placeholder="Contoh: pcs, unit, box">
+    </div>
+    <div class="form-item">
+      <label>Qty Saat Ini</label>
+      <input type="number" id="assetQtyInput" min="0" step="1" placeholder="0">
+    </div>
+    <div class="form-item">
+      <label>Min Stock (alert kalau di bawah ini)</label>
+      <input type="number" id="assetMinStockInput" min="0" step="1" placeholder="0">
+      <small id="minStockHint">Otomatis 35% dari Qty. Minim: &lt;35% Qty · Aman: &gt;35% Qty (bisa diubah manual)</small>
+    </div>
+    <div class="form-item">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="assetNoteInput" placeholder="Keterangan tambahan...">
+    </div>
+    <div class="form-msg" id="assetModalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAssetModal()">Batal</button>
+      <button class="btn-primary" onclick="saveAsset()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== MODAL EDIT LOG ACTIVITY USAGE ==== -->
+<div class="modal-backdrop" id="logModalBackdrop">
+  <div class="modal-box">
+    <h3>✏️ Edit Log Penggunaan</h3>
+    <input type="hidden" id="logModalId">
+    <div class="form-item">
+      <label>Asset</label>
+      <select id="logModalAssetSelect"></select>
+    </div>
+    <div class="form-item">
+      <label>Qty Dipakai</label>
+      <input type="number" id="logModalQtyInput" min="1" step="1" placeholder="0">
+    </div>
+    <div class="form-item">
+      <label>Tanggal</label>
+      <input type="date" id="logModalDateInput">
+    </div>
+    <div class="form-item" id="logModalDevisiItem">
+      <label>Divisi</label>
+      <select id="logModalDevisiInput">
+        <option value="SOC">Sortation Center</option>
+        <option value="EHA">Exception Handling Area</option>
+      </select>
+    </div>
+    <div class="form-msg" id="logModalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeLogModal()">Batal</button>
+      <button class="btn-primary" onclick="saveEditLog()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== MODAL TAMBAH / EDIT ASSET IT & NCA ==== -->
+<div class="modal-backdrop" id="assetItNcaModalBackdrop">
+  <div class="modal-box">
+    <h3 id="assetItNcaModalTitle">➕ Tambah Asset IT / NCA Baru</h3>
+    <input type="hidden" id="assetItNcaModalId">
+    <div class="form-item">
+      <label>Nama Asset</label>
+      <input type="text" id="assetItNcaNameInput" placeholder="Contoh: Laptop Lenovo, Meja Kerja, dll">
+    </div>
+    <div class="form-item">
+      <label>Jenis</label>
+      <select id="assetItNcaJenisInput" onchange="toggleAssetItNcaJumlahField()">
+        <option value="IT">IT</option>
+        <option value="NCA">NCA (Non Consumable Asset)</option>
+      </select>
+    </div>
+    <div class="form-item" id="assetItNcaJumlahFormItem" style="display:none;">
+      <label>Jumlah Asset</label>
+      <input type="number" id="assetItNcaQtyInput" min="1" step="1" placeholder="1">
+      <small>Buat NCA yang jumlahnya lebih dari 1 (misal: 5 Meja Kerja, 10 Kursi Kantor)</small>
+    </div>
+    <div class="form-item">
+      <label>No. Serial / Inventaris (opsional)</label>
+      <input type="text" id="assetItNcaSerialInput" placeholder="Contoh: SN-12345 / INV-0001">
+    </div>
+    <div class="form-item">
+      <label>PIC Pemegang (opsional)</label>
+      <input type="text" id="assetItNcaPicInput" placeholder="Nama karyawan/divisi pemegang asset">
+    </div>
+    <div class="form-item">
+      <label>Lokasi (opsional)</label>
+      <input type="text" id="assetItNcaLokasiInput" placeholder="Contoh: Ruang Ops, Meja PIC IT, dll">
+    </div>
+    <div class="form-item">
+      <label>Status</label>
+      <select id="assetItNcaStatusInput">
+        <option value="Aktif">Aktif</option>
+        <option value="Rusak">Rusak</option>
+        <option value="Diperbaiki">Diperbaiki</option>
+        <option value="Non-Aktif">Non-Aktif</option>
+      </select>
+    </div>
+    <div class="form-item">
+      <label>Catatan (opsional)</label>
+      <input type="text" id="assetItNcaNoteInput" placeholder="Keterangan tambahan...">
+    </div>
+    <div class="form-item">
+      <label>Foto Kondisi Asset (opsional)</label>
+      <input type="file" id="assetItNcaPhotoInput" accept="image/*" onchange="handleAssetItNcaPhotoPick(event)">
+      <input type="hidden" id="assetItNcaPhotoData">
+      <div class="photo-preview-box" id="assetItNcaPhotoPreviewBox" style="display:none;">
+        <img id="assetItNcaPhotoPreviewImg" src="" alt="Preview">
+        <button type="button" class="btn-secondary" onclick="removeAssetItNcaPhoto()">🗑️ Hapus Foto</button>
+      </div>
+      <small>Foto otomatis dikompres biar hemat, cocok buat dokumentasi kondisi Rusak/Diperbaiki.</small>
+    </div>
+    <div class="form-msg" id="assetItNcaModalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAssetItNcaModal()">Batal</button>
+      <button class="btn-primary" onclick="saveAssetItNca()">Simpan</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== MODAL LIGHTBOX FOTO KONDISI ASSET ==== -->
+<div class="modal-backdrop" id="photoLightboxBackdrop">
+  <div class="modal-box" style="max-width:420px; text-align:center;">
+    <h3 id="photoLightboxTitle">📷 Foto Kondisi Asset</h3>
+    <img id="photoLightboxImg" src="" alt="Foto asset" style="width:100%; border-radius:8px; border:1px solid #d4d4d4;">
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closePhotoLightbox()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== MODAL QR CODE / LABEL (khusus Asset NCA) ==== -->
+<div class="modal-backdrop" id="qrLabelModalBackdrop">
+  <div class="modal-box" style="max-width:360px;">
+    <h3>🏷️ QR Code / Label Asset</h3>
+    <div id="qrCodeCanvasWrap"></div>
+    <div style="text-align:center; margin-top:6px;">
+      <div style="font-weight:800; font-size:14px;" id="qrLabelAssetName"></div>
+      <div style="font-size:12px; color:#737373;" id="qrLabelAssetSerial"></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeQrLabelModal()">Tutup</button>
+      <button class="btn-primary" onclick="printQrLabel()">🖨️ Cetak Label</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== MODAL RIWAYAT MUTASI ASSET ==== -->
+<div class="modal-backdrop" id="assetHistoryModalBackdrop">
+  <div class="modal-box" style="max-width:520px;">
+    <h3 id="assetHistoryModalTitle">🕘 Riwayat Mutasi Asset</h3>
+    <div class="table-wrapper" style="max-height:340px;">
+      <table>
+        <thead><tr><th>Waktu</th><th>Perubahan</th><th>Diubah Oleh</th></tr></thead>
+        <tbody id="assetHistoryBody"><tr class="empty-row"><td colspan="3">Memuat riwayat...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAssetHistoryModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- ==== MODAL RIWAYAT PEMAKAIAN PER ITEM (Stock) ==== -->
+<div class="modal-backdrop" id="itemHistoryModalBackdrop">
+  <div class="modal-box" style="max-width:560px;">
+    <h3 id="itemHistoryModalTitle">🕘 Riwayat Pemakaian</h3>
+    <div id="itemHistoryInfoBox" style="font-size:11.5px; color:#525252; margin-bottom:10px; line-height:1.6;"></div>
+    <div class="table-wrapper" style="max-height:320px;">
+      <table>
+        <thead><tr><th>Tanggal</th><th>Qty</th><th>Divisi</th><th>Diinput Oleh</th></tr></thead>
+        <tbody id="itemHistoryBody"><tr class="empty-row"><td colspan="4">Memuat riwayat...</td></tr></tbody>
+      </table>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeItemHistoryModal()">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ================= STATE & FIREBASE =================
+  const FB_ROOT = "inventoryControl"; // root data khusus Inventory Control, project Firebase sama kayak modul lain
+  const FACILITIES = ["SOC"]; // SOC & EHA udah digabung jadi 1 menu — "SOC" cuma nama path Firebase internal (inventoryControl/SOC/...), gak ditampilin ke user lagi
+  let fbDb = null;
+  // Data sekarang kepisah per Facility. Data lama (root inventoryControl/stock & /usageLogs,
+  // sebelum ada Facility) SENGAJA nggak dipindah/dibaca lagi di sini — diarsipkan begitu aja,
+  // jadi SOC & EHA mulai dari kosong.
+  let stockDataByFacility = { SOC: {} };     // { SOC: { assetId: {name, category, unit, qty, minStock, note, updatedAt, updatedBy} } }
+  let usageLogsDataByFacility = { SOC: {} }; // { SOC: { logId: {assetId, assetName, unit, qtyUsed, workingDate, devisi, createdAt, createdBy} } }
+  let assetItNcaByFacility = { SOC: {} };    // { SOC: { itemId: {name, jenis(IT/NCA), category, serial, pic, lokasi, status, note, photoData, updatedAt, updatedBy} } }
+  let auditLogByFacility = { SOC: {} };       // { SOC: { logId: {module, action, itemName, detail, changedAt, changedBy} } }
+  let lowStockBannerDismissed = false;        // ditutup manual, balik muncul lagi kalau pindah tab/reload
+  let auditLogFilterQuery = '';
+  let auditLogFilterModule = '';
+  let assetItNcaFilterQuery = '';
+  let assetItNcaFilterJenis = '';
+  let dashboardDevisiFilter = ''; // filter breakdown '' (Semua) / 'SOC' / 'EHA' khusus di Highlight Usage
+  let dailyUsageChart = null;
+  let monthlyTrendChart = null;
+  // Cache data render terakhir, dipakai pas export ke Excel biar gak hitung ulang
+  let lastReportData = { topAsset: [], dailyChart: { rows: [], start: '', end: '' }, monthlyTrend: [], lowStock: [] };
+  let dailyUsageStartDate = null; // 'YYYY-MM-DD', diisi pas init
+  let dailyUsageEndDate = null;   // 'YYYY-MM-DD', diisi pas init
+  let currentFacility = "SOC";
+  let currentInvSubmenu = "usage";
+
+  function getStockData() { return stockDataByFacility[currentFacility] || {}; }
+  function getAssetItNcaData() { return assetItNcaByFacility[currentFacility] || {}; }
+  function getLogsArr(facility) {
+    const data = usageLogsDataByFacility[facility] || {};
+    return Object.keys(data).map(function (id) { return Object.assign({ _key: id }, data[id]); });
+  }
+
+  // ===== Devisi otomatis (SOC / EHA) berdasarkan email yang lagi login =====
+  // Email di bawah ini dianggap Devisi EHA. Selain email ini, otomatis masuk Devisi SOC.
+  const EHA_EMAILS = [
+    "yoga.parera@spxexpress.com",
+    "yuyun.lestari@spx-external.com",
+    "ugbm_ismu.al-washit@spx-external.com",
+    "rahman.ra@spx-external.com",
+    "febrio.febrio@spx-external.com",
+    "ramadhani@spx-external.com",
+    "septhia.arifiani@spx-external.com"
+  ];
+  function getDevisiForEmail(email) {
+    const e = (email || '').trim().toLowerCase();
+    return EHA_EMAILS.indexOf(e) !== -1 ? 'EHA' : 'SOC';
+  }
+  function getCurrentUserDevisi() { return getDevisiForEmail(window.__authUserEmail); }
+
+  // Nama lengkap Devisi buat ditampilin ke user — kode SOC/EHA tetep dipakai apa
+  // adanya di data (Firebase, filter, dsb), cuma yang ditampilin ke layar full name-nya.
+  const DEVISI_LABELS = { SOC: 'Sortation Center', EHA: 'Exception Handling Area' };
+  function getDevisiLabel(code) { return DEVISI_LABELS[code] || code; }
+
+  // Devisi (SOC/EHA) cuma buat breakdown laporan — gak butuh field tambahan apapun
+  // di form input, karena siapa yang input udah otomatis kecatet di "Diinput Oleh".
+  function updateUsageFormVisibility() {
+    const devisi = getCurrentUserDevisi();
+    document.getElementById('devisiFormBadge').innerText = getDevisiLabel(devisi);
+    document.getElementById('usageLogTableHead').innerHTML =
+      '<th>Tanggal</th><th>Asset</th><th>Qty</th><th>Divisi</th><th>Diinput Oleh</th><th>Action</th>';
+  }
+
+  function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+  }
+
+  // ================= SIDEBAR & SUBMENU SWITCH =================
+  function toggleAppSidebar() {
+    document.getElementById('appSidebar').classList.toggle('open');
+    document.getElementById('appSidebarBackdrop').classList.toggle('open');
+  }
+
+  // Open/Hide grup SOC / EHA di sidebar. Sengaja GAK diinget lewat localStorage — tiap
+  // buka halaman / pindah tab, semua grup default Hide, user wajib Open manual biar
+  // Sidebar-nya tetep rapi.
+  function toggleSidebarGroup(group) {
+    const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
+    const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
+    if (!label || !body) return;
+    const collapsed = label.classList.toggle('collapsed');
+    body.classList.toggle('collapsed', collapsed);
+  }
+
+  function setSidebarGroupCollapsed(group, collapsed) {
+    const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
+    const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
+    if (!label || !body) return;
+    label.classList.toggle('collapsed', collapsed);
+    body.classList.toggle('collapsed', collapsed);
+  }
+
+  const SIDEBAR_NAV_GROUPS = ['Productivity', 'Inbound', 'OutboundMonitoring', 'SOC'];
+
+  function collapseAllSidebarGroups() {
+    SIDEBAR_NAV_GROUPS.forEach(function (group) { setSidebarGroupCollapsed(group, true); });
+  }
+  collapseAllSidebarGroups();
+
+  function switchInvSubmenu(tab) {
+    currentInvSubmenu = tab;
+
+    ['usage', 'dashboard', 'stock', 'assetItNca', 'auditLog'].forEach(function (key) {
+      document.getElementById('invPanel' + capitalize(key)).classList.toggle('active', key === tab);
+    });
+    document.querySelectorAll('.inv-tab-btn').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
+    document.querySelectorAll('.app-sidebar-link[data-tab]').forEach(function (btn) {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === tab);
+    });
+
+    document.getElementById('appSidebar').classList.remove('open');
+    document.getElementById('appSidebarBackdrop').classList.remove('open');
+
+    renderForCurrentFacility();
+    if (tab === 'dashboard' && dailyUsageChart) dailyUsageChart.resize();
+    if (tab === 'dashboard' && monthlyTrendChart) monthlyTrendChart.resize();
+  }
+
+  // Render ulang ketiga Sub Menu (Log Activity / Highlight / Stock) pakai data
+  // Facility yang lagi aktif. Dipanggil tiap pindah Facility/Sub Menu, dan tiap
+  // ada data baru masuk dari Firebase buat Facility yang lagi aktif.
+  function renderForCurrentFacility() {
+    updateUsageFormVisibility();
+    populateAssetSelect();
+    renderStockTable();
+    renderUsageDashboard();
+    renderAssetItNcaTable();
+    renderAuditLogTable();
+    renderLowStockBanner();
+  }
+
+  function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+  // ================= FIREBASE SYNC =================
+  // SOC & EHA sekarang 1 menu gabungan — semua data disimpen di 1 cabang Firebase
+  // (inventoryControl/SOC/stock & /usageLogs), pembeda SOC/EHA cuma di field
+  // "devisi" tiap Log Activity Usage (otomatis dari email yang input).
+  function initInventoryFirebaseSync() {
+    if (fbDb) return; // udah pernah init
+    try {
+      fbDb = firebase.database();
+    } catch (e) {
+      console.error('Gagal connect Firebase Database:', e);
+      return;
+    }
+
+    FACILITIES.forEach(function (facility) {
+      fbDb.ref(FB_ROOT + '/' + facility + '/stock').on('value', function (snap) {
+        stockDataByFacility[facility] = snap.val() || {};
+        if (facility === currentFacility) {
+          renderStockTable();
+          populateAssetSelect();
+          renderUsageDashboard();
+          renderLowStockBanner();
+        }
+      });
+
+      fbDb.ref(FB_ROOT + '/' + facility + '/usageLogs').limitToLast(500).on('value', function (snap) {
+        usageLogsDataByFacility[facility] = snap.val() || {};
+        if (facility === currentFacility) renderUsageDashboard();
+      });
+
+      fbDb.ref(FB_ROOT + '/' + facility + '/assetItNca').on('value', function (snap) {
+        assetItNcaByFacility[facility] = snap.val() || {};
+        if (facility === currentFacility) renderAssetItNcaTable();
+      });
+
+      fbDb.ref(FB_ROOT + '/' + facility + '/auditLog').limitToLast(300).on('value', function (snap) {
+        auditLogByFacility[facility] = snap.val() || {};
+        if (facility === currentFacility) renderAuditLogTable();
+      });
+    });
+  }
+
+  // ================= AUDIT LOG (SUBMENU 5) =================
+  // Dipanggil tiap ada Tambah/Edit/Hapus data di Stock, Asset IT & NCA, atau Log Usage.
+  // Catatan otomatis, gak bisa diedit/dihapus manual dari UI.
+  function logAudit(module, action, itemName, detail) {
+    if (!fbDb) return;
+    const payload = {
+      module: module, action: action, itemName: itemName || '-', detail: detail || '',
+      changedAt: Date.now(), changedBy: window.__authUserEmail || '-'
+    };
+    fbDb.ref(FB_ROOT + '/' + currentFacility + '/auditLog').push().set(payload).catch(function (e) {
+      console.error('Gagal catat Audit Log:', e);
+    });
+  }
+
+  function getAuditLogArr() {
+    const data = auditLogByFacility[currentFacility] || {};
+    return Object.keys(data).map(function (id) { return Object.assign({ _key: id }, data[id]); });
+  }
+
+  function auditActionBadgeHtml(action) {
+    const map = { create: 'Tambah', update: 'Edit', delete: 'Hapus' };
+    return '<span class="audit-action-badge ' + (action || '') + '">' + (map[action] || action || '-') + '</span>';
+  }
+
+  function renderAuditLogTable() {
+    const tbody = document.getElementById('auditLogBody');
+    if (!tbody) return;
+    let rows = getAuditLogArr();
+
+    const q = auditLogFilterQuery.trim().toLowerCase();
+    if (q) {
+      rows = rows.filter(function (r) {
+        return (r.itemName || '').toLowerCase().indexOf(q) !== -1 || (r.changedBy || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    if (auditLogFilterModule) {
+      rows = rows.filter(function (r) { return r.module === auditLogFilterModule; });
+    }
+
+    rows.sort(function (a, b) { return (b.changedAt || 0) - (a.changedAt || 0); });
+
+    if (!rows.length) {
+      const isFiltering = !!(q || auditLogFilterModule);
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">' + (isFiltering ? 'Gak ada Audit Log yang cocok dengan filter.' : 'Belum ada Audit Log ' + currentFacility + '.') + '</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = rows.slice(0, 300).map(function (r) {
+      return '<tr>' +
+        '<td>' + (r.changedAt ? formatDateTimeShort(new Date(r.changedAt)) : '-') + '</td>' +
+        '<td>' + escapeHtml(r.module || '-') + '</td>' +
+        '<td>' + auditActionBadgeHtml(r.action) + '</td>' +
+        '<td style="text-align:left;">' + escapeHtml(r.itemName || '-') + '</td>' +
+        '<td style="text-align:left; white-space:normal;">' + escapeHtml(r.detail || '-') + '</td>' +
+        '<td>' + escapeHtml(r.changedBy || '-') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  function applyAuditLogFilter() {
+    auditLogFilterQuery = document.getElementById('auditLogFilterInput').value;
+    auditLogFilterModule = document.getElementById('auditLogModuleFilter').value;
+    renderAuditLogTable();
+  }
+
+  function resetAuditLogFilter() {
+    document.getElementById('auditLogFilterInput').value = '';
+    document.getElementById('auditLogModuleFilter').value = '';
+    auditLogFilterQuery = ''; auditLogFilterModule = '';
+    renderAuditLogTable();
+  }
+
+  // ================= STOCK TABLE (SUBMENU 2) =================
+  function renderStockTable() {
+    const tbody = document.getElementById('stockBody');
+    const stockData = getStockData();
+    const canEdit = !!window.__authCanDelete; // dipakai bareng sama hak admin (nambah/edit/hapus Asset)
+    document.getElementById('btnAddAsset').style.display = canEdit ? '' : 'none';
+    document.getElementById('btnImportStock').style.display = canEdit ? '' : 'none';
+    document.getElementById('btnBulkTemplate').style.display = canEdit ? '' : 'none';
+    document.getElementById('stockReadonlyNote').style.display = canEdit ? 'none' : 'block';
+
+    const ids = Object.keys(stockData);
+    if (ids.length === 0) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="8">Belum ada data Stock ' + currentFacility + '. ' + (canEdit ? 'Klik "Tambah Asset" untuk mulai.' : 'Hubungi admin untuk menambahkan.') + '</td></tr>';
+      return;
+    }
+
+    ids.sort(function (a, b) {
+      return (stockData[a].name || '').localeCompare(stockData[b].name || '');
+    });
+
+    let html = '';
+    ids.forEach(function (id) {
+      const a = stockData[id];
+      const qty = Number(a.qty) || 0;
+      const minStock = Number(a.minStock) || 0;
+      const isLow = minStock > 0 && qty <= minStock;
+      html += '<tr class="' + (isLow ? 'low-stock' : '') + '">';
+      html += '<td style="text-align:left;">' + escapeHtml(a.name || '-') + (isLow ? '<span class="badge-lowstock">Menipis</span>' : '') + '</td>';
+      html += '<td>' + escapeHtml(a.category || '-') + '</td>';
+      html += '<td>' + escapeHtml(a.unit || '-') + '</td>';
+      html += '<td><b>' + qty + '</b></td>';
+      html += '<td>' + minStock + '</td>';
+      html += '<td>' + escapeHtml(a.note || '-') + '</td>';
+      html += '<td>' + (a.updatedAt ? formatDateTimeShort(new Date(a.updatedAt)) + '<br><small>' + escapeHtml(a.updatedBy || '-') + '</small>' : '-') + '</td>';
+      html += '<td>';
+      html += '<button class="btn-edit-sm" onclick="openItemHistoryModal(\'' + id + '\')">🕘 Riwayat</button> ';
+      if (canEdit) {
+        html += '<button class="btn-edit-sm" onclick="openAssetModal(\'' + id + '\')">✏️ Edit</button> ';
+        html += '<button class="btn-danger-sm" onclick="deleteAsset(\'' + id + '\')">🗑️</button>';
+      }
+      html += '</td></tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  function openAssetModal(id) {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat ubah Database Stock.', 'err'); return; }
+    document.getElementById('assetModalMsg').innerText = '';
+    document.getElementById('assetModalId').value = id || '';
+    minStockTouched = false; // reset auto-fill tiap kali modal dibuka
+    const stockData = getStockData();
+    if (id && stockData[id]) {
+      const a = stockData[id];
+      document.getElementById('assetModalTitle').innerText = '✏️ Edit Asset';
+      document.getElementById('assetNameInput').value = a.name || '';
+      document.getElementById('assetCategoryInput').value = a.category || '';
+      document.getElementById('assetUnitInput').value = a.unit || '';
+      document.getElementById('assetQtyInput').value = a.qty != null ? a.qty : '';
+      document.getElementById('assetMinStockInput').value = a.minStock != null ? a.minStock : '';
+      document.getElementById('assetNoteInput').value = a.note || '';
+      // Kalau minStock yang lagi kesimpen BEDA dari hasil hitungan 35% Qty, anggap
+      // sebelumnya udah pernah di-override manual → jangan auto-timpa pas Qty diubah lagi.
+      minStockTouched = (a.qty != null && a.minStock != null && Number(a.minStock) !== calcSuggestedMinStock(Number(a.qty)));
+    } else {
+      document.getElementById('assetModalTitle').innerText = '➕ Tambah Asset Baru';
+      document.getElementById('assetNameInput').value = '';
+      document.getElementById('assetCategoryInput').value = '';
+      document.getElementById('assetUnitInput').value = 'pcs';
+      document.getElementById('assetQtyInput').value = '';
+      document.getElementById('assetMinStockInput').value = '';
+      document.getElementById('assetNoteInput').value = '';
+    }
+    updateMinStockHint();
+    document.getElementById('assetModalBackdrop').classList.add('open');
+  }
+
+  function closeAssetModal() {
+    document.getElementById('assetModalBackdrop').classList.remove('open');
+  }
+
+  // ================= AUTO-FILL MIN STOCK (35% dari Qty) =================
+  // Minim  : Qty <35% dari Qty yang diisi saat asset dibuat/di-set → auto Min Stock = 35% Qty
+  // Aman   : selama qty aktual masih >35% dari angka itu, status Stock dianggap aman
+  let minStockTouched = false; // true kalau user udah ngetik manual di kolom Min Stock
+
+  function calcSuggestedMinStock(qty) {
+    if (isNaN(qty) || qty <= 0) return 0;
+    return Math.max(1, Math.round(qty * 0.35));
+  }
+
+  function updateMinStockHint() {
+    const hint = document.getElementById('minStockHint');
+    const qty = Number(document.getElementById('assetQtyInput').value);
+    if (!qty || isNaN(qty) || qty <= 0) {
+      hint.innerText = 'Otomatis 35% dari Qty. Minim: <35% Qty · Aman: >35% Qty (bisa diubah manual)';
+      return;
+    }
+    const suggested = calcSuggestedMinStock(qty);
+    hint.innerText = 'Saran otomatis: ' + suggested + ' (35% dari Qty ' + qty + ') · Minim: <35% Qty · Aman: >35% Qty';
+  }
+
+  document.getElementById('assetQtyInput').addEventListener('input', function () {
+    const qty = Number(this.value);
+    if (!minStockTouched) {
+      document.getElementById('assetMinStockInput').value = calcSuggestedMinStock(qty);
+    }
+    updateMinStockHint();
+  });
+
+  document.getElementById('assetMinStockInput').addEventListener('input', function () {
+    minStockTouched = true; // user override manual, auto-fill berhenti nimpa
+  });
+
+  function saveAsset() {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat ubah Database Stock.', 'err'); return; }
+    const msgEl = document.getElementById('assetModalMsg');
+    const id = document.getElementById('assetModalId').value;
+    const name = document.getElementById('assetNameInput').value.trim();
+    const category = document.getElementById('assetCategoryInput').value.trim();
+    const unit = document.getElementById('assetUnitInput').value.trim() || 'pcs';
+    const qty = Number(document.getElementById('assetQtyInput').value);
+    const minStock = Number(document.getElementById('assetMinStockInput').value) || 0;
+    const note = document.getElementById('assetNoteInput').value.trim();
+
+    if (!name) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Nama Asset wajib diisi.'; return; }
+    if (isNaN(qty) || qty < 0) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Qty gak valid.'; return; }
+
+    const facilityRoot = FB_ROOT + '/' + currentFacility;
+    const isNew = !id;
+    const oldData = id ? getStockData()[id] : null;
+
+    const payload = {
+      name: name, category: category, unit: unit, qty: qty, minStock: minStock, note: note,
+      updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-',
+      // createdAt/createdBy dipakai buat "Riwayat Pemakaian per Item" (kapan asset ini pertama ditambahin).
+      // Kalau edit data lama yang belum punya createdAt, dianggap "ditambahin" pas edit ini biar tetep ada catatannya.
+      createdAt: (oldData && oldData.createdAt) || Date.now(),
+      createdBy: (oldData && oldData.createdBy) || window.__authUserEmail || '-'
+    };
+
+    const ref = id ? fbDb.ref(facilityRoot + '/stock/' + id) : fbDb.ref(facilityRoot + '/stock').push();
+    ref.set(payload).then(function () {
+      logAudit('Stock', isNew ? 'create' : 'update', name, 'Qty: ' + qty + ' ' + unit + ', Min Stock: ' + minStock);
+      closeAssetModal();
+    }).catch(function (e) {
+      msgEl.className = 'form-msg err'; msgEl.innerText = 'Gagal simpan: ' + e.message;
+    });
+  }
+
+  function deleteAsset(id) {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat hapus data.', 'err'); return; }
+    const assetName = (getStockData()[id] || {}).name || id;
+    showConfirmModal('Yakin mau hapus Asset "' + assetName + '" dari Stock ' + currentFacility + '?', function () {
+      fbDb.ref(FB_ROOT + '/' + currentFacility + '/stock/' + id).remove().then(function () {
+        logAudit('Stock', 'delete', assetName, 'Asset dihapus dari Stock');
+      });
+    }, 'Ya, Hapus');
+  }
+
+  // ================= IMPORT / BULK TEMPLATE STOCK (Excel) =================
+  // Template dibuat sesuai kolom yang dibutuhin buat Import: Nama Asset & Qty wajib,
+  // sisanya opsional (Unit default "pcs", Min Stock auto 35% dari Qty kalau kosong).
+  function downloadStockBulkTemplate() {
+    if (!window.__authCanDelete) { showToast('Kamu gak punya akses buat fitur ini.', 'err'); return; }
+    const wb = XLSX.utils.book_new();
+    const rows = [
+      ['Nama Asset', 'Kategori', 'Unit', 'Qty', 'Min Stock', 'Catatan'],
+      ['Handpallet', 'Alat Bantu', 'unit', 10, 4, 'Contoh baris - boleh dihapus'],
+      ['Cutter', 'Consumable', 'pcs', 50, 18, '']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 10 }, { wch: 8 }, { wch: 10 }, { wch: 32 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Import Stock');
+
+    const noteRows = [
+      ['Petunjuk Import Stock'],
+      [''],
+      ['1. Isi data di sheet "Import Stock", satu baris = satu Asset.'],
+      ['2. Kolom "Nama Asset" dan "Qty" wajib diisi.'],
+      ['3. Kolom "Unit" kalau dikosongin otomatis jadi "pcs".'],
+      ['4. Kolom "Min Stock" kalau dikosongin otomatis dihitung 35% dari Qty.'],
+      ['5. Hapus dulu 2 baris contoh kalau gak diperlukan.'],
+      ['6. Simpan file dalam format .xlsx, lalu klik tombol "Import Excel" di halaman Stock.'],
+      ['7. Import ini cuma NAMBAH Asset baru, bukan update Asset yang udah ada.']
+    ];
+    const wsNote = XLSX.utils.aoa_to_sheet(noteRows);
+    wsNote['!cols'] = [{ wch: 75 }];
+    XLSX.utils.book_append_sheet(wb, wsNote, 'Petunjuk');
+
+    XLSX.writeFile(wb, 'Template_Import_Stock_' + currentFacility + '.xlsx');
+    showToast('Template Import Stock ' + currentFacility + ' berhasil didownload.', 'ok');
+  }
+
+  function handleStockImportFile(evt) {
+    const fileInput = evt.target;
+    if (!window.__authCanDelete) { showToast('Kamu gak punya akses buat import data Stock.', 'err'); fileInput.value = ''; return; }
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!rows.length) { showToast('File kosong atau gak ada baris data.', 'err'); fileInput.value = ''; return; }
+
+        const toImport = [];
+        const errors = [];
+        rows.forEach(function (row, idx) {
+          const name = String(row['Nama Asset'] || row['Nama'] || '').trim();
+          if (!name) return; // lewatin baris kosong
+
+          const category = String(row['Kategori'] || '').trim();
+          const unit = String(row['Unit'] || '').trim() || 'pcs';
+          const qty = Number(row['Qty']);
+          let minStock = Number(row['Min Stock'] || 0);
+          const note = String(row['Catatan'] || '').trim();
+
+          if (isNaN(qty) || qty < 0) { errors.push('Baris ' + (idx + 2) + ' ("' + name + '"): Qty gak valid.'); return; }
+          if (!minStock) minStock = calcSuggestedMinStock(qty);
+
+          toImport.push({ name: name, category: category, unit: unit, qty: qty, minStock: minStock, note: note });
+        });
+
+        if (errors.length) {
+          showToast('Import dibatalkan, ada baris bermasalah:\n' + errors.join('\n'), 'err', 9000);
+          fileInput.value = '';
+          return;
+        }
+        if (!toImport.length) {
+          showToast('Gak ada baris valid buat diimport. Pastiin kolom "Nama Asset" & "Qty" udah keisi.', 'err');
+          fileInput.value = '';
+          return;
+        }
+        showConfirmModal(toImport.length + ' Asset bakal ditambahkan ke Stock ' + currentFacility + '. Lanjut import?', function () {
+          const facilityRoot = FB_ROOT + '/' + currentFacility;
+          const updates = {};
+          toImport.forEach(function (item) {
+            const newKey = fbDb.ref(facilityRoot + '/stock').push().key;
+            updates['/stock/' + newKey] = Object.assign({}, item, {
+              updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
+            });
+          });
+
+          fbDb.ref(facilityRoot).update(updates).then(function () {
+            showToast('Berhasil import ' + toImport.length + ' Asset ke Stock ' + currentFacility + '.', 'ok');
+          }).catch(function (err) {
+            showToast('Gagal simpan hasil import: ' + err.message, 'err');
+          });
+        }, 'Ya, Import');
+        fileInput.value = '';
+      } catch (err) {
+        showToast('Gagal baca file Excel: ' + err.message, 'err');
+      } finally {
+        fileInput.value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ================= DATABASE ASSET IT & NCA (SUBMENU 4) =================
+  // Beda sama Stock: gak ada Qty/Min Stock, tapi punya Jenis (IT/NCA), No Serial/Inventaris,
+  // PIC Pemegang, Lokasi & Status (Aktif/Rusak/Diperbaiki/Non-Aktif). Data-nya kepisah total
+  // dari Stock, di cabang Firebase inventoryControl/{facility}/assetItNca.
+  function statusBadgeHtml(status) {
+    const map = {
+      'Aktif': { bg: '#171717', fg: '#ffffff' },
+      'Rusak': { bg: '#b91c1c', fg: '#ffffff' },
+      'Diperbaiki': { bg: '#b45309', fg: '#ffffff' },
+      'Non-Aktif': { bg: '#e5e5e5', fg: '#525252' }
+    };
+    const c = map[status] || { bg: '#e5e5e5', fg: '#525252' };
+    return '<span style="display:inline-block; padding:2px 9px; border-radius:999px; font-size:10.5px; font-weight:700; background:' + c.bg + '; color:' + c.fg + ';">' + escapeHtml(status || '-') + '</span>';
+  }
+
+  function renderAssetItNcaTable() {
+    const tbody = document.getElementById('assetItNcaBody');
+    const data = getAssetItNcaData();
+    const canEdit = !!window.__authCanDelete;
+    document.getElementById('btnAddAssetItNca').style.display = canEdit ? '' : 'none';
+    document.getElementById('btnImportAssetItNca').style.display = canEdit ? '' : 'none';
+    document.getElementById('btnBulkTemplateAssetItNca').style.display = canEdit ? '' : 'none';
+    document.getElementById('assetItNcaReadonlyNote').style.display = canEdit ? 'none' : 'block';
+
+    let ids = Object.keys(data);
+
+    // Terapkan filter search (nama/serial/PIC) & filter Jenis kalau lagi aktif
+    const q = assetItNcaFilterQuery.trim().toLowerCase();
+    if (q) {
+      ids = ids.filter(function (id) {
+        const a = data[id];
+        return (a.name || '').toLowerCase().indexOf(q) !== -1 ||
+          (a.serial || '').toLowerCase().indexOf(q) !== -1 ||
+          (a.pic || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    if (assetItNcaFilterJenis) {
+      ids = ids.filter(function (id) { return (data[id].jenis || 'IT') === assetItNcaFilterJenis; });
+    }
+
+    if (ids.length === 0) {
+      const isFiltering = !!(q || assetItNcaFilterJenis);
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="11">' +
+        (isFiltering ? 'Gak ada data yang cocok dengan filter.' : ('Belum ada data Asset IT & NCA ' + currentFacility + '. ' + (canEdit ? 'Klik "Tambah Asset" untuk mulai.' : 'Hubungi admin untuk menambahkan.'))) +
+        '</td></tr>';
+      return;
+    }
+
+    ids.sort(function (a, b) {
+      return (data[a].name || '').localeCompare(data[b].name || '');
+    });
+
+    let html = '';
+    ids.forEach(function (id) {
+      const a = data[id];
+      const jenis = a.jenis || 'IT';
+      html += '<tr>';
+      html += '<td>' + (a.photoData ? ('<img class="asset-photo-thumb" src="' + a.photoData + '" onclick="openPhotoLightbox(\'' + a.photoData + '\', \'' + escapeHtml(a.name || '') + '\')">') : '<span class="asset-photo-empty">-</span>') + '</td>';
+      html += '<td style="text-align:left;">' + escapeHtml(a.name || '-') + '</td>';
+      html += '<td>' + escapeHtml(jenis) + '</td>';
+      html += '<td>' + (jenis === 'NCA' ? '<b>' + (Number(a.qty) || 1) + '</b>' : String(Number(a.qty) || 1)) + '</td>';
+      html += '<td>' + escapeHtml(a.serial || '-') + '</td>';
+      html += '<td>' + escapeHtml(a.pic || '-') + '</td>';
+      html += '<td>' + escapeHtml(a.lokasi || '-') + '</td>';
+      html += '<td>' + statusBadgeHtml(a.status || 'Aktif') + '</td>';
+      html += '<td style="white-space:normal;">' + escapeHtml(a.note || '-') + '</td>';
+      html += '<td>' + (a.updatedAt ? formatDateTimeShort(new Date(a.updatedAt)) + '<br><small>' + escapeHtml(a.updatedBy || '-') + '</small>' : '-') + '</td>';
+      html += '<td style="white-space:normal;">';
+      html += '<button class="btn-icon-sm" onclick="openAssetHistoryModal(\'' + id + '\')" title="Riwayat Mutasi">🕘 Riwayat</button>';
+      if (jenis === 'NCA') {
+        html += '<button class="btn-icon-sm" onclick="openQrLabelModal(\'' + id + '\')" title="QR Code / Label">🏷️ QR</button>';
+      }
+      if (canEdit) {
+        html += '<button class="btn-edit-sm" onclick="openAssetItNcaModal(\'' + id + '\')">✏️ Edit</button> ';
+        html += '<button class="btn-danger-sm" onclick="deleteAssetItNca(\'' + id + '\')">🗑️</button>';
+      }
+      html += '</td></tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  function applyAssetItNcaFilter() {
+    assetItNcaFilterQuery = document.getElementById('assetItNcaFilterInput').value;
+    assetItNcaFilterJenis = document.getElementById('assetItNcaJenisFilter').value;
+    renderAssetItNcaTable();
+  }
+
+  function resetAssetItNcaFilter() {
+    document.getElementById('assetItNcaFilterInput').value = '';
+    document.getElementById('assetItNcaJenisFilter').value = '';
+    assetItNcaFilterQuery = ''; assetItNcaFilterJenis = '';
+    renderAssetItNcaTable();
+  }
+
+  function openAssetItNcaModal(id) {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat ubah Database Asset IT & NCA.', 'err'); return; }
+    document.getElementById('assetItNcaModalMsg').innerText = '';
+    document.getElementById('assetItNcaModalId').value = id || '';
+    const data = getAssetItNcaData();
+    if (id && data[id]) {
+      const a = data[id];
+      document.getElementById('assetItNcaModalTitle').innerText = '✏️ Edit Asset IT / NCA';
+      document.getElementById('assetItNcaNameInput').value = a.name || '';
+      document.getElementById('assetItNcaJenisInput').value = a.jenis || 'IT';
+      document.getElementById('assetItNcaQtyInput').value = a.qty || 1;
+      document.getElementById('assetItNcaSerialInput').value = a.serial || '';
+      document.getElementById('assetItNcaPicInput').value = a.pic || '';
+      document.getElementById('assetItNcaLokasiInput').value = a.lokasi || '';
+      document.getElementById('assetItNcaStatusInput').value = a.status || 'Aktif';
+      document.getElementById('assetItNcaNoteInput').value = a.note || '';
+      document.getElementById('assetItNcaPhotoData').value = a.photoData || '';
+      showAssetItNcaPhotoPreview(a.photoData || '');
+    } else {
+      document.getElementById('assetItNcaModalTitle').innerText = '➕ Tambah Asset IT / NCA Baru';
+      document.getElementById('assetItNcaNameInput').value = '';
+      document.getElementById('assetItNcaJenisInput').value = 'IT';
+      document.getElementById('assetItNcaQtyInput').value = 1;
+      document.getElementById('assetItNcaSerialInput').value = '';
+      document.getElementById('assetItNcaPicInput').value = '';
+      document.getElementById('assetItNcaLokasiInput').value = '';
+      document.getElementById('assetItNcaStatusInput').value = 'Aktif';
+      document.getElementById('assetItNcaNoteInput').value = '';
+      document.getElementById('assetItNcaPhotoData').value = '';
+      showAssetItNcaPhotoPreview('');
+    }
+    toggleAssetItNcaJumlahField();
+    document.getElementById('assetItNcaPhotoInput').value = '';
+    document.getElementById('assetItNcaModalBackdrop').classList.add('open');
+  }
+
+  // Field "Jumlah Asset" cuma relevan buat Jenis NCA (asset IT biasanya dicatat
+  // satuan per unit via No. Serial, jadi jumlahnya selalu dianggap 1).
+  function toggleAssetItNcaJumlahField() {
+    const isNca = document.getElementById('assetItNcaJenisInput').value === 'NCA';
+    document.getElementById('assetItNcaJumlahFormItem').style.display = isNca ? '' : 'none';
+  }
+
+  // ================= FOTO KONDISI ASSET (upload + kompres client-side) =================
+  function showAssetItNcaPhotoPreview(dataUrl) {
+    const box = document.getElementById('assetItNcaPhotoPreviewBox');
+    const img = document.getElementById('assetItNcaPhotoPreviewImg');
+    if (dataUrl) { img.src = dataUrl; box.style.display = 'flex'; }
+    else { img.src = ''; box.style.display = 'none'; }
+  }
+
+  function removeAssetItNcaPhoto() {
+    document.getElementById('assetItNcaPhotoData').value = '';
+    document.getElementById('assetItNcaPhotoInput').value = '';
+    showAssetItNcaPhotoPreview('');
+  }
+
+  // Foto dikompres di browser (resize max 480px + JPEG q0.6) sebelum disimpan sebagai
+  // base64 ke Firebase Realtime Database, biar ukuran datanya tetep kecil & hemat kuota.
+  function handleAssetItNcaPhotoPick(evt) {
+    const file = evt.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { showToast('File harus berupa gambar.', 'err'); evt.target.value = ''; return; }
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      const img = new Image();
+      img.onload = function () {
+        const MAX_W = 480;
+        const scale = img.width > MAX_W ? MAX_W / img.width : 1;
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+        document.getElementById('assetItNcaPhotoData').value = dataUrl;
+        showAssetItNcaPhotoPreview(dataUrl);
+      };
+      img.onerror = function () { showToast('Gagal baca gambar.', 'err'); };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function openPhotoLightbox(dataUrl, title) {
+    if (!dataUrl) return;
+    document.getElementById('photoLightboxImg').src = dataUrl;
+    document.getElementById('photoLightboxTitle').innerText = '📷 ' + (title || 'Foto Kondisi Asset');
+    document.getElementById('photoLightboxBackdrop').classList.add('open');
+  }
+  function closePhotoLightbox() {
+    document.getElementById('photoLightboxBackdrop').classList.remove('open');
+  }
+
+  function closeAssetItNcaModal() {
+    document.getElementById('assetItNcaModalBackdrop').classList.remove('open');
+  }
+
+  function saveAssetItNca() {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat ubah Database Asset IT & NCA.', 'err'); return; }
+    const msgEl = document.getElementById('assetItNcaModalMsg');
+    const id = document.getElementById('assetItNcaModalId').value;
+    const name = document.getElementById('assetItNcaNameInput').value.trim();
+    const jenis = document.getElementById('assetItNcaJenisInput').value;
+    const qty = jenis === 'NCA' ? (Number(document.getElementById('assetItNcaQtyInput').value) || 1) : 1;
+    const serial = document.getElementById('assetItNcaSerialInput').value.trim();
+    const pic = document.getElementById('assetItNcaPicInput').value.trim();
+    const lokasi = document.getElementById('assetItNcaLokasiInput').value.trim();
+    const status = document.getElementById('assetItNcaStatusInput').value;
+    const note = document.getElementById('assetItNcaNoteInput').value.trim();
+
+    if (!name) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Nama Asset wajib diisi.'; return; }
+    if (jenis === 'NCA' && (isNaN(qty) || qty < 1)) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Jumlah Asset minimal 1.'; return; }
+
+    const photoData = document.getElementById('assetItNcaPhotoData').value || '';
+    const oldData = id ? (getAssetItNcaData()[id] || {}) : null;
+
+    const payload = {
+      name: name, jenis: jenis, qty: qty, serial: serial, pic: pic, lokasi: lokasi, status: status, note: note,
+      photoData: photoData, updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
+    };
+
+    const facilityRoot = FB_ROOT + '/' + currentFacility;
+    const isNew = !id;
+    const itemId = id || fbDb.ref(facilityRoot + '/assetItNca').push().key;
+    const ref = fbDb.ref(facilityRoot + '/assetItNca/' + itemId);
+    ref.set(payload).then(function () {
+      // Catat Riwayat Mutasi: bandingin PIC/Lokasi/Status lama vs baru, tiap ada
+      // perubahan disimpan sebagai 1 entry history biar jejak siapa pindah kapan kelihatan.
+      const histRef = fbDb.ref(facilityRoot + '/assetItNcaHistory/' + itemId);
+      const changedBy = window.__authUserEmail || '-';
+      if (isNew) {
+        histRef.push().set({ change: 'Asset dibuat. PIC: ' + (pic || '-') + ', Lokasi: ' + (lokasi || '-') + ', Status: ' + status + (jenis === 'NCA' ? ', Jumlah: ' + qty : ''), changedAt: Date.now(), changedBy: changedBy });
+      } else if (oldData) {
+        const diffs = [];
+        if ((oldData.pic || '') !== pic) diffs.push('PIC Pemegang: "' + (oldData.pic || '-') + '" → "' + (pic || '-') + '"');
+        if ((oldData.lokasi || '') !== lokasi) diffs.push('Lokasi: "' + (oldData.lokasi || '-') + '" → "' + (lokasi || '-') + '"');
+        if ((oldData.status || 'Aktif') !== status) diffs.push('Status: "' + (oldData.status || 'Aktif') + '" → "' + status + '"');
+        if (jenis === 'NCA' && (Number(oldData.qty) || 1) !== qty) diffs.push('Jumlah Asset: ' + (Number(oldData.qty) || 1) + ' → ' + qty);
+        diffs.forEach(function (change) {
+          histRef.push().set({ change: change, changedAt: Date.now(), changedBy: changedBy });
+        });
+      }
+      logAudit('Asset IT & NCA', isNew ? 'create' : 'update', name, 'Jenis: ' + jenis + (jenis === 'NCA' ? ' (' + qty + ' unit)' : '') + ', Status: ' + status + (pic ? ', PIC: ' + pic : ''));
+      closeAssetItNcaModal();
+    }).catch(function (e) {
+      msgEl.className = 'form-msg err'; msgEl.innerText = 'Gagal simpan: ' + e.message;
+    });
+  }
+
+  function deleteAssetItNca(id) {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat hapus data.', 'err'); return; }
+    const assetName = (getAssetItNcaData()[id] || {}).name || id;
+    showConfirmModal('Yakin mau hapus Asset "' + assetName + '" dari Database Asset IT & NCA ' + currentFacility + '?', function () {
+      fbDb.ref(FB_ROOT + '/' + currentFacility + '/assetItNca/' + id).remove().then(function () {
+        fbDb.ref(FB_ROOT + '/' + currentFacility + '/assetItNcaHistory/' + id).remove();
+        logAudit('Asset IT & NCA', 'delete', assetName, 'Asset dihapus dari Database Asset IT & NCA');
+      });
+    }, 'Ya, Hapus');
+  }
+
+  // ================= RIWAYAT MUTASI ASSET (modal) =================
+  function openAssetHistoryModal(id) {
+    const asset = getAssetItNcaData()[id];
+    document.getElementById('assetHistoryModalTitle').innerText = '🕘 Riwayat Mutasi — ' + (asset ? asset.name : id);
+    document.getElementById('assetHistoryBody').innerHTML = '<tr class="empty-row"><td colspan="3">Memuat riwayat...</td></tr>';
+    document.getElementById('assetHistoryModalBackdrop').classList.add('open');
+
+    fbDb.ref(FB_ROOT + '/' + currentFacility + '/assetItNcaHistory/' + id).once('value').then(function (snap) {
+      const data = snap.val() || {};
+      const rows = Object.keys(data).map(function (k) { return data[k]; }).sort(function (a, b) { return (b.changedAt || 0) - (a.changedAt || 0); });
+      const tbody = document.getElementById('assetHistoryBody');
+      if (!rows.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="3">Belum ada riwayat mutasi buat asset ini.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = rows.map(function (r) {
+        return '<tr>' +
+          '<td>' + (r.changedAt ? formatDateTimeShort(new Date(r.changedAt)) : '-') + '</td>' +
+          '<td style="text-align:left; white-space:normal;">' + escapeHtml(r.change || '-') + '</td>' +
+          '<td>' + escapeHtml(r.changedBy || '-') + '</td>' +
+          '</tr>';
+      }).join('');
+    }).catch(function (e) {
+      document.getElementById('assetHistoryBody').innerHTML = '<tr class="empty-row"><td colspan="3">Gagal muat riwayat: ' + escapeHtml(e.message) + '</td></tr>';
+    });
+  }
+  function closeAssetHistoryModal() {
+    document.getElementById('assetHistoryModalBackdrop').classList.remove('open');
+  }
+
+  // ================= RIWAYAT PEMAKAIAN PER ITEM (Stock) =================
+  // Dipicu tombol "🕘 Riwayat" di tabel Stock. Nampilin kapan asset ditambahin,
+  // siapa yang paling sering minjem/minta (dihitung dari usageLogs), dan tabel
+  // riwayat pemakaian lengkap (Tanggal, Qty, Divisi, Diinput Oleh).
+  function openItemHistoryModal(id) {
+    const asset = getStockData()[id];
+    document.getElementById('itemHistoryModalTitle').innerText = '🕘 Riwayat Pemakaian — ' + (asset ? asset.name : id);
+    document.getElementById('itemHistoryInfoBox').innerHTML = 'Memuat info...';
+    document.getElementById('itemHistoryBody').innerHTML = '<tr class="empty-row"><td colspan="4">Memuat riwayat...</td></tr>';
+    document.getElementById('itemHistoryModalBackdrop').classList.add('open');
+
+    const logsArr = getLogsArr(currentFacility).filter(function (l) { return l.assetId === id; });
+    logsArr.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+
+    // Hitung siapa yang paling sering minjem/minta asset ini
+    const countByEmail = {};
+    logsArr.forEach(function (l) {
+      const who = l.createdBy || '-';
+      countByEmail[who] = (countByEmail[who] || 0) + 1;
+    });
+    let topBorrower = null, topCount = 0;
+    Object.keys(countByEmail).forEach(function (email) {
+      if (countByEmail[email] > topCount) { topCount = countByEmail[email]; topBorrower = email; }
+    });
+
+    const addedInfo = (asset && asset.createdAt)
+      ? 'Ditambahkan: <b>' + formatDateTimeShort(new Date(asset.createdAt)) + '</b> oleh <b>' + escapeHtml(asset.createdBy || '-') + '</b>'
+      : 'Ditambahkan: <i>data lama, waktu tepatnya gak tercatat</i>';
+    const topInfo = topBorrower
+      ? 'Paling sering minjem/minta: <b>' + escapeHtml(topBorrower) + '</b> (' + topCount + 'x dari total ' + logsArr.length + ' log)'
+      : 'Belum ada riwayat pemakaian buat asset ini.';
+    document.getElementById('itemHistoryInfoBox').innerHTML = addedInfo + '<br>' + topInfo;
+
+    const tbody = document.getElementById('itemHistoryBody');
+    if (!logsArr.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">Belum ada riwayat pemakaian buat asset ini.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = logsArr.map(function (l) {
+      const devisi = l.devisi || getDevisiForEmail(l.createdBy);
+      return '<tr>' +
+        '<td>' + escapeHtml(l.workingDate || '-') + '</td>' +
+        '<td><b>' + (l.qtyUsed || 0) + ' ' + escapeHtml(l.unit || '') + '</b></td>' +
+        '<td>' + escapeHtml(getDevisiLabel(devisi)) + '</td>' +
+        '<td>' + escapeHtml(l.createdBy || '-') + '</td>' +
+        '</tr>';
+    }).join('');
+  }
+  function closeItemHistoryModal() {
+    document.getElementById('itemHistoryModalBackdrop').classList.remove('open');
+  }
+
+  // ================= LOW-STOCK BANNER (global) =================
+  // Dipanggil tiap Stock berubah (realtime dari Firebase) & tiap pindah tab/facility.
+  // "Habis" (qty <= 0) dianggap paling parah (merah), "Menipis" (qty <= minStock) kuning.
+  function renderLowStockBanner() {
+    const banner = document.getElementById('lowStockBanner');
+    if (lowStockBannerDismissed) { banner.classList.remove('show'); return; }
+
+    const stockData = getStockData();
+    const outOfStock = [];
+    const lowStock = [];
+    Object.keys(stockData).forEach(function (id) {
+      const a = stockData[id];
+      const qty = Number(a.qty) || 0;
+      const minStock = Number(a.minStock) || 0;
+      if (minStock <= 0) return;
+      if (qty <= 0) outOfStock.push(a.name || id);
+      else if (qty <= minStock) lowStock.push(a.name || id);
+    });
+
+    if (!outOfStock.length && !lowStock.length) {
+      banner.classList.remove('show');
+      return;
+    }
+
+    const level = outOfStock.length ? 'danger' : 'warn';
+    banner.classList.remove('level-warn', 'level-danger');
+    banner.classList.add('level-' + level, 'show');
+    document.getElementById('lowStockBannerIcon').innerText = level === 'danger' ? '🛑' : '⚠️';
+
+    function namesPreview(arr) {
+      const shown = arr.slice(0, 4).join(', ');
+      return shown + (arr.length > 4 ? ' +' + (arr.length - 4) + ' lainnya' : '');
+    }
+    let text = '';
+    if (outOfStock.length) text += outOfStock.length + ' asset stok-nya HABIS (' + namesPreview(outOfStock) + ')';
+    if (lowStock.length) text += (text ? ' — ' : '') + lowStock.length + ' asset menipis di bawah Min Stock (' + namesPreview(lowStock) + ')';
+    document.getElementById('lowStockBannerText').innerText = text;
+  }
+  function dismissLowStockBanner() {
+    lowStockBannerDismissed = true;
+    document.getElementById('lowStockBanner').classList.remove('show');
+  }
+
+  // ================= QR CODE / LABEL (khusus Asset NCA) =================
+  let qrLabelCurrentAsset = null;
+  function openQrLabelModal(id) {
+    const asset = getAssetItNcaData()[id];
+    if (!asset) return;
+    qrLabelCurrentAsset = Object.assign({ _key: id }, asset);
+    document.getElementById('qrLabelAssetName').innerText = asset.name || '-';
+    document.getElementById('qrLabelAssetSerial').innerText = asset.serial ? ('No: ' + asset.serial) : '';
+    const wrap = document.getElementById('qrCodeCanvasWrap');
+    wrap.innerHTML = '';
+    const qrText = 'ASSET-NCA | ' + currentFacility + ' | ' + (asset.name || '-') + ' | ' + (asset.serial || id);
+    if (typeof QRCode !== 'undefined') {
+      new QRCode(wrap, { text: qrText, width: 180, height: 180, colorDark: '#000000', colorLight: '#ffffff' });
+    } else {
+      wrap.innerHTML = '<span style="color:#a3a3a3; font-size:12px;">Library QR belum ke-load, coba refresh halaman.</span>';
+    }
+    document.getElementById('qrLabelModalBackdrop').classList.add('open');
+  }
+  function closeQrLabelModal() {
+    document.getElementById('qrLabelModalBackdrop').classList.remove('open');
+  }
+
+  // Cetak label kecil (QR + nama + serial) lewat window print terpisah, siap tempel di fisik asset.
+  function printQrLabel() {
+    if (!qrLabelCurrentAsset) return;
+    const wrap = document.getElementById('qrCodeCanvasWrap');
+    const img = wrap.querySelector('img') || wrap.querySelector('canvas');
+    const imgSrc = img ? (img.tagName === 'CANVAS' ? img.toDataURL('image/png') : img.src) : '';
+    const w = window.open('', '_blank', 'width=400,height=500');
+    if (!w) { showToast('Popup diblokir browser, izinkan popup buat cetak label.', 'err'); return; }
+    w.document.write('<html><head><title>Cetak Label Asset</title><style>' +
+      'body{font-family:sans-serif; text-align:center; padding:20px;}' +
+      '.label{border:1px dashed #999; padding:14px; display:inline-block;}' +
+      'img{width:150px; height:150px;} .nm{font-weight:800; font-size:14px; margin-top:6px;} .sr{font-size:11px; color:#555;}' +
+      '</style></head><body>' +
+      '<div class="label"><img src="' + imgSrc + '"><div class="nm">' + escapeHtml(qrLabelCurrentAsset.name || '-') + '</div>' +
+      '<div class="sr">' + escapeHtml(qrLabelCurrentAsset.serial ? ('No: ' + qrLabelCurrentAsset.serial) : currentFacility) + '</div></div>' +
+      '<script>window.onload=function(){window.print();}<\/script></body></html>');
+    w.document.close();
+  }
+
+  // ================= EXPORT / IMPORT / BULK TEMPLATE ASSET IT & NCA (Excel) =================
+  // Export ngikutin filter (search & Jenis) yang lagi aktif di tabel — jadi yang
+  // ke-download = persis yang lagi ditampilin di layar. Export ini kebuka buat
+  // semua orang (bukan cuma admin), soalnya cuma baca data, bukan ubah.
+  function exportAssetItNcaExcel() {
+    if (typeof XLSX === 'undefined') { showToast('Library Excel belum ke-load, coba refresh halaman.', 'err'); return; }
+    const data = getAssetItNcaData();
+    let ids = Object.keys(data);
+
+    const q = assetItNcaFilterQuery.trim().toLowerCase();
+    if (q) {
+      ids = ids.filter(function (id) {
+        const a = data[id];
+        return (a.name || '').toLowerCase().indexOf(q) !== -1 ||
+          (a.serial || '').toLowerCase().indexOf(q) !== -1 ||
+          (a.pic || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    if (assetItNcaFilterJenis) {
+      ids = ids.filter(function (id) { return (data[id].jenis || 'IT') === assetItNcaFilterJenis; });
+    }
+
+    if (!ids.length) { showToast('Gak ada data buat di-export (cek filter yang lagi aktif).', 'err'); return; }
+
+    ids.sort(function (a, b) { return (data[a].name || '').localeCompare(data[b].name || ''); });
+
+    const rows = [['Nama Asset', 'Jenis', 'Jumlah', 'Kategori', 'No Serial/Inventaris', 'PIC Pemegang', 'Lokasi', 'Status', 'Catatan', 'Update Terakhir', 'Diupdate Oleh']];
+    ids.forEach(function (id) {
+      const a = data[id];
+      rows.push([
+        a.name || '-', a.jenis || 'IT', (Number(a.qty) || 1), a.category || '-', a.serial || '-', a.pic || '-',
+        a.lokasi || '-', a.status || 'Aktif', a.note || '-',
+        a.updatedAt ? formatDateTimeShort(new Date(a.updatedAt)) : '-',
+        a.updatedBy || '-'
+      ]);
+    });
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 26 }, { wch: 8 }, { wch: 9 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 12 }, { wch: 32 }, { wch: 18 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Asset IT & NCA');
+
+    const fname = 'Export_AssetITNCA_' + currentFacility + '_' + todayStr().split('-').reverse().join('') + '.xlsx';
+    XLSX.writeFile(wb, fname);
+    showToast('Export ' + ids.length + ' Asset IT & NCA ' + currentFacility + ' berhasil didownload.', 'ok');
+  }
+
+  function downloadAssetItNcaBulkTemplate() {
+    if (!window.__authCanDelete) { showToast('Kamu gak punya akses buat fitur ini.', 'err'); return; }
+    const wb = XLSX.utils.book_new();
+    const rows = [
+      ['Nama Asset', 'Jenis (IT/NCA)', 'Jumlah (khusus NCA)', 'Kategori', 'No Serial/Inventaris', 'PIC Pemegang', 'Lokasi', 'Status', 'Catatan'],
+      ['Laptop Lenovo Thinkpad', 'IT', '', 'Laptop', 'SN-12345', 'Rahman 3', 'Ruang Ops', 'Aktif', 'Contoh baris - boleh dihapus'],
+      ['Meja Kerja', 'NCA', 5, 'Furniture', 'INV-0021', 'Tim SOC', 'Area Sortir', 'Aktif', '']
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 26 }, { wch: 14 }, { wch: 16 }, { wch: 16 }, { wch: 18 }, { wch: 18 }, { wch: 16 }, { wch: 12 }, { wch: 32 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Import Asset IT NCA');
+
+    const noteRows = [
+      ['Petunjuk Import Database Asset IT & NCA'],
+      [''],
+      ['1. Isi data di sheet "Import Asset IT NCA", satu baris = satu Asset.'],
+      ['2. Kolom "Nama Asset" wajib diisi.'],
+      ['3. Kolom "Jenis (IT/NCA)" cuma boleh isi "IT" atau "NCA", kalau dikosongin/salah otomatis jadi "IT".'],
+      ['4. Kolom "Jumlah (khusus NCA)" cuma berlaku buat Jenis NCA, kalau dikosongin/salah otomatis jadi 1. Asset IT selalu dianggap 1 (dicatat per unit lewat No. Serial).'],
+      ['5. Kolom "Status" cuma boleh isi salah satu: Aktif, Rusak, Diperbaiki, Non-Aktif. Kalau dikosongin/salah otomatis jadi "Aktif".'],
+      ['6. Kolom lainnya opsional.'],
+      ['7. Hapus dulu 2 baris contoh kalau gak diperlukan.'],
+      ['8. Simpan file dalam format .xlsx, lalu klik tombol "Import Excel" di halaman Database Asset IT & NCA.'],
+      ['9. Import ini cuma NAMBAH Asset baru, bukan update Asset yang udah ada.']
+    ];
+    const wsNote = XLSX.utils.aoa_to_sheet(noteRows);
+    wsNote['!cols'] = [{ wch: 75 }];
+    XLSX.utils.book_append_sheet(wb, wsNote, 'Petunjuk');
+
+    XLSX.writeFile(wb, 'Template_Import_AssetITNCA_' + currentFacility + '.xlsx');
+    showToast('Template Import Asset IT & NCA ' + currentFacility + ' berhasil didownload.', 'ok');
+  }
+
+  function handleAssetItNcaImportFile(evt) {
+    const fileInput = evt.target;
+    if (!window.__authCanDelete) { showToast('Kamu gak punya akses buat import data Asset IT & NCA.', 'err'); fileInput.value = ''; return; }
+    const file = fileInput.files[0];
+    if (!file) return;
+
+    const VALID_JENIS = ['IT', 'NCA'];
+    const VALID_STATUS = ['Aktif', 'Rusak', 'Diperbaiki', 'Non-Aktif'];
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+      try {
+        const data = new Uint8Array(e.target.result);
+        const wb = XLSX.read(data, { type: 'array' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(ws, { defval: '' });
+
+        if (!rows.length) { showToast('File kosong atau gak ada baris data.', 'err'); fileInput.value = ''; return; }
+
+        const toImport = [];
+        rows.forEach(function (row) {
+          const name = String(row['Nama Asset'] || row['Nama'] || '').trim();
+          if (!name) return; // lewatin baris kosong
+
+          let jenis = String(row['Jenis (IT/NCA)'] || row['Jenis'] || '').trim().toUpperCase();
+          if (VALID_JENIS.indexOf(jenis) === -1) jenis = 'IT';
+
+          let qty = Number(row['Jumlah (khusus NCA)'] || row['Jumlah'] || 1);
+          if (jenis !== 'NCA') qty = 1;
+          else if (isNaN(qty) || qty < 1) qty = 1;
+
+          const category = String(row['Kategori'] || '').trim();
+          const serial = String(row['No Serial/Inventaris'] || row['No Serial'] || row['Inventaris'] || '').trim();
+          const pic = String(row['PIC Pemegang'] || row['PIC'] || '').trim();
+          const lokasi = String(row['Lokasi'] || '').trim();
+          let status = String(row['Status'] || '').trim();
+          if (VALID_STATUS.indexOf(status) === -1) status = 'Aktif';
+          const note = String(row['Catatan'] || '').trim();
+
+          toImport.push({ name: name, jenis: jenis, qty: qty, category: category, serial: serial, pic: pic, lokasi: lokasi, status: status, note: note });
+        });
+
+        if (!toImport.length) {
+          showToast('Gak ada baris valid buat diimport. Pastiin kolom "Nama Asset" udah keisi.', 'err');
+          fileInput.value = '';
+          return;
+        }
+        showConfirmModal(toImport.length + ' Asset bakal ditambahkan ke Database Asset IT & NCA ' + currentFacility + '. Lanjut import?', function () {
+          const facilityRoot = FB_ROOT + '/' + currentFacility;
+          const updates = {};
+          toImport.forEach(function (item) {
+            const newKey = fbDb.ref(facilityRoot + '/assetItNca').push().key;
+            updates['/assetItNca/' + newKey] = Object.assign({}, item, {
+              updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
+            });
+          });
+
+          fbDb.ref(facilityRoot).update(updates).then(function () {
+            showToast('Berhasil import ' + toImport.length + ' Asset ke Database Asset IT & NCA ' + currentFacility + '.', 'ok');
+          }).catch(function (err) {
+            showToast('Gagal simpan hasil import: ' + err.message, 'err');
+          });
+        }, 'Ya, Import');
+        fileInput.value = '';
+      } catch (err) {
+        showToast('Gagal baca file Excel: ' + err.message, 'err');
+      } finally {
+        fileInput.value = '';
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  // ================= LOG ACTIVITY USAGE (SUBMENU 1) =================
+  function buildAssetOptionsHtml() {
+    const stockData = getStockData();
+    const ids = Object.keys(stockData).sort(function (a, b) {
+      return (stockData[a].name || '').localeCompare(stockData[b].name || '');
+    });
+    let html = '<option value="">-- Pilih Asset --</option>';
+    ids.forEach(function (id) {
+      const a = stockData[id];
+      html += '<option value="' + id + '">' + escapeHtml(a.name || '-') + ' (stock: ' + (Number(a.qty) || 0) + ' ' + escapeHtml(a.unit || '') + ')</option>';
+    });
+    return { html: html, ids: ids };
+  }
+
+  // Isi ulang semua dropdown Asset yang lagi kepasang: baris-baris multi-input
+  // di form "Input Penggunaan" (class usage-item-asset) DAN dropdown di modal Edit Log.
+  function populateAssetSelect() {
+    const built = buildAssetOptionsHtml();
+    document.querySelectorAll('.usage-item-asset').forEach(function (sel) {
+      const prev = sel.value;
+      sel.innerHTML = built.html;
+      if (built.ids.indexOf(prev) !== -1) sel.value = prev;
+    });
+    const logSel = document.getElementById('logModalAssetSelect');
+    if (logSel) {
+      const prev = logSel.value;
+      logSel.innerHTML = built.html;
+      if (built.ids.indexOf(prev) !== -1) logSel.value = prev;
+    }
+  }
+
+  // ================= MULTI-INPUT: baris Asset & Qty di form "Input Penggunaan" =================
+  let usageItemRowSeq = 0;
+
+  function usageItemRowHtml(rowId) {
+    return '<div class="usage-item-row" data-row-id="' + rowId + '">' +
+      '<select class="usage-item-asset">' + buildAssetOptionsHtml().html + '</select>' +
+      '<input type="number" class="usage-item-qty" min="1" step="1" placeholder="Qty">' +
+      '<button type="button" class="btn-danger-sm usage-item-remove" onclick="removeUsageItemRow(\'' + rowId + '\')">✕</button>' +
+      '</div>';
+  }
+
+  function addUsageItemRow() {
+    usageItemRowSeq++;
+    const rowId = 'r' + usageItemRowSeq;
+    const container = document.getElementById('usageItemsContainer');
+    const wrapper = document.createElement('div');
+    wrapper.innerHTML = usageItemRowHtml(rowId);
+    container.appendChild(wrapper.firstChild);
+    updateUsageItemRemoveButtons();
+  }
+
+  function removeUsageItemRow(rowId) {
+    const row = document.querySelector('.usage-item-row[data-row-id="' + rowId + '"]');
+    if (row) row.remove();
+    updateUsageItemRemoveButtons();
+  }
+
+  // Tombol "✕" cuma muncul kalau barisnya lebih dari 1, biar minimal selalu ada 1 baris.
+  function updateUsageItemRemoveButtons() {
+    const rows = document.querySelectorAll('.usage-item-row');
+    rows.forEach(function (row) {
+      const btn = row.querySelector('.usage-item-remove');
+      if (btn) btn.style.display = rows.length > 1 ? '' : 'none';
+    });
+  }
+
+  function initUsageItemRows() {
+    const container = document.getElementById('usageItemsContainer');
+    container.innerHTML = '';
+    usageItemRowSeq = 0;
+    addUsageItemRow();
+  }
+
+  function submitUsageLog() {
+    const msgEl = document.getElementById('usageFormMsg');
+    updateUsageFormVisibility(); // jaga-jaga kalau badge Devisi belum sempet ke-refresh pas email login baru kebaca
+    const dateStr = document.getElementById('usageDateInput').value || todayStr();
+    const devisi = getCurrentUserDevisi();
+    const stockData = getStockData();
+
+    // Kumpulin semua baris Asset+Qty yang keisi (multi-input sekaligus).
+    const rowEls = Array.prototype.slice.call(document.querySelectorAll('.usage-item-row'));
+    const items = [];
+    for (let i = 0; i < rowEls.length; i++) {
+      const assetId = rowEls[i].querySelector('.usage-item-asset').value;
+      const qtyRaw = rowEls[i].querySelector('.usage-item-qty').value;
+      if (!assetId && !qtyRaw) continue; // baris kosong dilewati aja
+      const qty = Number(qtyRaw);
+      if (!assetId || !stockData[assetId]) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Baris ' + (i + 1) + ': pilih Asset dulu.'; return; }
+      if (!qty || qty <= 0) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Baris ' + (i + 1) + ': Qty harus lebih dari 0.'; return; }
+      items.push({ assetId: assetId, qty: qty });
+    }
+    if (!items.length) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Isi minimal 1 Asset & Qty.'; return; }
+
+    const overStock = items.filter(function (it) { return it.qty > (Number(stockData[it.assetId].qty) || 0); });
+    if (overStock.length) {
+      const names = overStock.map(function (it) { return stockData[it.assetId].name; }).join(', ');
+      showConfirmModal('Qty melebihi stock saat ini untuk: ' + names + '. Tetap lanjut? (stock akan minus)', function () {
+        proceedSubmitUsageLog(items, dateStr, devisi, stockData, msgEl);
+      }, 'Ya, Lanjut');
+      return;
+    }
+
+    proceedSubmitUsageLog(items, dateStr, devisi, stockData, msgEl);
+  }
+
+  function proceedSubmitUsageLog(items, dateStr, devisi, stockData, msgEl) {
+    const facilityRoot = FB_ROOT + '/' + currentFacility;
+
+    // Proses tiap baris berurutan (bukan paralel) biar transaction pengurangan
+    // stock-nya aman & gampang dilacak kalau ada yang gagal di tengah jalan.
+    let chain = Promise.resolve();
+    items.forEach(function (item) {
+      chain = chain.then(function () {
+        const asset = stockData[item.assetId];
+        const logPayload = {
+          assetId: item.assetId, assetName: asset.name || '-', unit: asset.unit || '-',
+          qtyUsed: item.qty, workingDate: dateStr, devisi: devisi,
+          createdAt: Date.now(), createdBy: window.__authUserEmail || '-'
+        };
+        const newKey = fbDb.ref(facilityRoot + '/usageLogs').push().key;
+        return fbDb.ref(facilityRoot + '/usageLogs/' + newKey).set(logPayload)
+          .then(function () {
+            return fbDb.ref(facilityRoot + '/stock/' + item.assetId + '/qty').transaction(function (curQty) {
+              return (Number(curQty) || 0) - item.qty;
+            });
+          })
+          .then(function () {
+            return fbDb.ref(facilityRoot + '/stock/' + item.assetId).update({ updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-' });
+          });
+      });
+    });
+
+    chain.then(function () {
+      const itemNames = items.map(function (it) { return stockData[it.assetId].name + ' (' + it.qty + ')'; }).join(', ');
+      logAudit('Log Usage', 'create', itemNames, 'Tanggal: ' + dateStr + ', Divisi: ' + getDevisiLabel(devisi));
+      msgEl.className = 'form-msg ok'; msgEl.innerText = '✅ ' + items.length + ' log tersimpan & stock ter-update.';
+      initUsageItemRows();
+      populateAssetSelect();
+    }).catch(function (e) {
+      msgEl.className = 'form-msg err'; msgEl.innerText = 'Gagal simpan: ' + e.message;
+    });
+  }
+
+  function deleteUsageLog(id) {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat hapus data.', 'err'); return; }
+    const logsData = usageLogsDataByFacility[currentFacility] || {};
+    const log = logsData[id];
+    if (!log) return;
+    const stockData = getStockData();
+    const assetStillExists = !!(log.assetId && stockData[log.assetId]);
+    const restoreNote = assetStillExists
+      ? ('Stock akan otomatis dikembalikan (+' + (log.qtyUsed || 0) + ' ' + (log.unit || '') + ' ke ' + (log.assetName || '-') + ').')
+      : ('Asset "' + (log.assetName || '-') + '" udah gak ada di Stock, jadi qty gak bisa di-restore otomatis.');
+    showConfirmModal('Hapus log ini?\n' + restoreNote, function () {
+      const facilityRoot = FB_ROOT + '/' + currentFacility;
+      const assetId = log.assetId;
+      const qty = Number(log.qtyUsed) || 0;
+
+      fbDb.ref(facilityRoot + '/usageLogs/' + id).remove()
+        .then(function () {
+          logAudit('Log Usage', 'delete', log.assetName || '-', 'Qty ' + (log.qtyUsed || 0) + ' ' + (log.unit || '') + ' dihapus, tanggal ' + (log.workingDate || '-'));
+          if (!assetStillExists) return;
+          // Auto-restore: kembaliin qty yang tadi dipakai balik ke stock asset-nya.
+          return fbDb.ref(facilityRoot + '/stock/' + assetId + '/qty').transaction(function (curQty) {
+            return (Number(curQty) || 0) + qty;
+          }).then(function () {
+            return fbDb.ref(facilityRoot + '/stock/' + assetId).update({ updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-' });
+          });
+        })
+        .catch(function (e) {
+          showToast('Gagal hapus log / restore stock: ' + e.message, 'err');
+        });
+    }, 'Ya, Hapus');
+  }
+
+  // ================= EDIT LOG (modal) =================
+  function openEditLogModal(id) {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat edit data.', 'err'); return; }
+    const logsData = usageLogsDataByFacility[currentFacility] || {};
+    const log = logsData[id];
+    if (!log) { showToast('Log gak ditemukan (mungkin udah dihapus).', 'err'); return; }
+
+    document.getElementById('logModalMsg').innerText = '';
+    document.getElementById('logModalId').value = id;
+    populateAssetSelect();
+    const logSel = document.getElementById('logModalAssetSelect');
+    if (log.assetId) logSel.value = log.assetId;
+    document.getElementById('logModalQtyInput').value = log.qtyUsed != null ? log.qtyUsed : '';
+    document.getElementById('logModalDateInput').value = log.workingDate || todayStr();
+
+    const logDevisi = log.devisi || getDevisiForEmail(log.createdBy);
+    document.getElementById('logModalDevisiInput').value = logDevisi;
+
+    document.getElementById('logModalBackdrop').classList.add('open');
+  }
+
+  function closeLogModal() {
+    document.getElementById('logModalBackdrop').classList.remove('open');
+  }
+
+  function saveEditLog() {
+    if (!window.__authCanDelete) { showToast('🚫 Kamu gak punya akses buat edit data.', 'err'); return; }
+    const msgEl = document.getElementById('logModalMsg');
+    const id = document.getElementById('logModalId').value;
+    const logsData = usageLogsDataByFacility[currentFacility] || {};
+    const oldLog = logsData[id];
+    if (!oldLog) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Log gak ditemukan (mungkin udah dihapus).'; return; }
+
+    const newAssetId = document.getElementById('logModalAssetSelect').value;
+    const newQty = Number(document.getElementById('logModalQtyInput').value);
+    const dateStr = document.getElementById('logModalDateInput').value || todayStr();
+    const devisi = document.getElementById('logModalDevisiInput').value || 'SOC';
+
+    const stockData = getStockData();
+    if (!newAssetId || !stockData[newAssetId]) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Pilih Asset dulu.'; return; }
+    if (!newQty || newQty <= 0) { msgEl.className = 'form-msg err'; msgEl.innerText = 'Qty harus lebih dari 0.'; return; }
+
+    const facilityRoot = FB_ROOT + '/' + currentFacility;
+    const oldAssetId = oldLog.assetId;
+    const oldQty = Number(oldLog.qtyUsed) || 0;
+    const newAsset = stockData[newAssetId];
+
+    const updatedPayload = {
+      assetId: newAssetId, assetName: newAsset.name || '-', unit: newAsset.unit || '-',
+      qtyUsed: newQty, workingDate: dateStr, devisi: devisi,
+      createdAt: oldLog.createdAt || Date.now(), createdBy: oldLog.createdBy || '-',
+      updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
+    };
+
+    // Kembalikan dulu qty lama ke asset lama (kalau assetnya masih ada di Stock),
+    // baru potong qty baru dari asset baru. Kalau asset-nya sama, efek bersihnya
+    // otomatis cuma selisihnya aja.
+    let chain = Promise.resolve();
+    if (oldAssetId && stockData[oldAssetId]) {
+      chain = chain.then(function () {
+        return fbDb.ref(facilityRoot + '/stock/' + oldAssetId + '/qty').transaction(function (curQty) {
+          return (Number(curQty) || 0) + oldQty;
+        });
+      }).then(function () {
+        return fbDb.ref(facilityRoot + '/stock/' + oldAssetId).update({ updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-' });
+      });
+    }
+
+    chain.then(function () {
+      return fbDb.ref(facilityRoot + '/stock/' + newAssetId + '/qty').transaction(function (curQty) {
+        return (Number(curQty) || 0) - newQty;
+      });
+    }).then(function () {
+      return fbDb.ref(facilityRoot + '/stock/' + newAssetId).update({ updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-' });
+    }).then(function () {
+      return fbDb.ref(facilityRoot + '/usageLogs/' + id).set(updatedPayload);
+    }).then(function () {
+      logAudit('Log Usage', 'update', newAsset.name || '-', 'Qty jadi ' + newQty + ', tanggal ' + dateStr);
+      closeLogModal();
+    }).catch(function (e) {
+      msgEl.className = 'form-msg err'; msgEl.innerText = 'Gagal simpan: ' + e.message;
+    });
+  }
+
+  // ================= SEARCH/FILTER RIWAYAT LOG =================
+  let logFilterAssetQuery = '';
+  let logFilterStart = '';
+  let logFilterEnd = '';
+
+  function applyLogFilter() {
+    logFilterAssetQuery = document.getElementById('logFilterAssetInput').value.trim().toLowerCase();
+    logFilterStart = document.getElementById('logFilterStartInput').value || '';
+    logFilterEnd = document.getElementById('logFilterEndInput').value || '';
+    if (logFilterStart && logFilterEnd && logFilterStart > logFilterEnd) {
+      showToast('Tanggal mulai gak boleh lebih besar dari tanggal akhir.', 'err');
+      return;
+    }
+    renderUsageLogTable(getLogsArr(currentFacility));
+  }
+
+  function resetLogFilter() {
+    document.getElementById('logFilterAssetInput').value = '';
+    document.getElementById('logFilterStartInput').value = '';
+    document.getElementById('logFilterEndInput').value = '';
+    logFilterAssetQuery = ''; logFilterStart = ''; logFilterEnd = '';
+    renderUsageLogTable(getLogsArr(currentFacility));
+  }
+
+  // Wrapper: hitung sekali, lalu render ke Sub Menu "Log Activity Usage" (riwayat log)
+  // dan Sub Menu "Highlight Usage" (KPI + chart + tabel bulanan) sekaligus, buat
+  // Facility yang lagi aktif. Dua-duanya tetep harus update bareng tiap ada
+  // perubahan data, meskipun tampil di tab beda.
+  function renderUsageDashboard() {
+    const logsArr = getLogsArr(currentFacility);
+    const highlightArr = dashboardDevisiFilter
+      ? logsArr.filter(function (l) { return (l.devisi || getDevisiForEmail(l.createdBy)) === dashboardDevisiFilter; })
+      : logsArr;
+    renderUsageHighlight(highlightArr);
+    renderUsageLogTable(logsArr); // Riwayat Log tetep nampilin semua Devisi, filter breakdown cuma buat Highlight Usage
+  }
+
+  function applyDashboardDevisiFilter() {
+    dashboardDevisiFilter = document.getElementById('dashboardDevisiFilter').value;
+    renderUsageDashboard();
+  }
+
+  function renderUsageHighlight(logsArr) {
+    const today = todayStr();
+    const monthPrefix = today.slice(0, 7); // YYYY-MM
+
+    // Bulan lalu, dipakai buat hitung delta % vs sekarang
+    const now = new Date();
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonthPrefix = lastMonthDate.getFullYear() + '-' + String(lastMonthDate.getMonth() + 1).padStart(2, '0');
+
+    let todayTotal = 0, monthTotal = 0, lastMonthTotal = 0;
+    const monthAssetTotals = {};
+    const dailyTotals = {}; // { 'YYYY-MM-DD': qty }
+
+    logsArr.forEach(function (log) {
+      const d = log.workingDate || '';
+      const q = Number(log.qtyUsed) || 0;
+      if (d === today) todayTotal += q;
+      if (d.slice(0, 7) === monthPrefix) {
+        monthTotal += q;
+        monthAssetTotals[log.assetName || '-'] = (monthAssetTotals[log.assetName || '-'] || 0) + q;
+      }
+      if (d.slice(0, 7) === lastMonthPrefix) lastMonthTotal += q;
+      dailyTotals[d] = (dailyTotals[d] || 0) + q;
+    });
+
+    document.getElementById('kpiTodayUsage').innerText = todayTotal;
+    document.getElementById('kpiMonthUsage').innerText = monthTotal;
+    document.getElementById('kpiAssetTouched').innerText = Object.keys(monthAssetTotals).length;
+
+    // Delta % Usage Bulan Ini vs Bulan Lalu
+    const deltaEl = document.getElementById('kpiMonthDelta');
+    if (lastMonthTotal === 0 && monthTotal === 0) {
+      deltaEl.className = 'kpi-delta'; deltaEl.innerText = '';
+    } else if (lastMonthTotal === 0) {
+      deltaEl.className = 'kpi-delta up'; deltaEl.innerText = '▲ Baru mulai bulan ini';
+    } else {
+      const pct = Math.round(((monthTotal - lastMonthTotal) / lastMonthTotal) * 100);
+      if (pct > 0) { deltaEl.className = 'kpi-delta up'; deltaEl.innerText = '▲ ' + pct + '% dari bulan lalu'; }
+      else if (pct < 0) { deltaEl.className = 'kpi-delta down'; deltaEl.innerText = '▼ ' + Math.abs(pct) + '% dari bulan lalu'; }
+      else { deltaEl.className = 'kpi-delta flat'; deltaEl.innerText = '± 0% dari bulan lalu'; }
+    }
+
+    // Rata-rata pemakaian/hari per Asset, 30 hari terakhir (buat estimasi habis stock)
+    const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 29);
+    const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
+    const last30Totals = {}; // keyed by assetId
+    logsArr.forEach(function (log) {
+      const d = log.workingDate || '';
+      if (d >= cutoffStr && log.assetId) {
+        last30Totals[log.assetId] = (last30Totals[log.assetId] || 0) + (Number(log.qtyUsed) || 0);
+      }
+    });
+    const avgPerDayByAsset = {};
+    Object.keys(last30Totals).forEach(function (id) { avgPerDayByAsset[id] = last30Totals[id] / 30; });
+
+    // Stock Menipis: KPI count + detail list dengan estimasi habis
+    let lowStockCount = 0;
+    const stockData = getStockData();
+    const lowStockItems = [];
+    Object.keys(stockData).forEach(function (id) {
+      const a = stockData[id];
+      const minStock = Number(a.minStock) || 0;
+      const qty = Number(a.qty) || 0;
+      if (minStock > 0 && qty <= minStock) {
+        lowStockCount++;
+        const avgPerDay = avgPerDayByAsset[id] || 0;
+        const daysRemaining = qty <= 0 ? 0 : (avgPerDay > 0 ? Math.floor(qty / avgPerDay) : null);
+        // Saran Reorder Qty: target stock = pemakaian rata-rata 30 hari ke depan (buffer 1 bulan).
+        // Kalau belum ada histori pemakaian, saranin balik ke Min Stock aja.
+        const reorderQty = avgPerDay > 0
+          ? Math.max(0, Math.ceil((avgPerDay * 30) - qty))
+          : Math.max(0, minStock - qty);
+        lowStockItems.push({ id: id, name: a.name || '-', unit: a.unit || '', qty: qty, minStock: minStock, avgPerDay: avgPerDay, daysRemaining: daysRemaining, reorderQty: reorderQty });
+      }
+    });
+    document.getElementById('kpiLowStock').innerText = lowStockCount;
+
+    lowStockItems.sort(function (a, b) {
+      const av = a.daysRemaining === null ? Infinity : a.daysRemaining;
+      const bv = b.daysRemaining === null ? Infinity : b.daysRemaining;
+      return av - bv;
+    });
+
+    const lowStockBody = document.getElementById('lowStockDetailBody');
+    if (lowStockItems.length === 0) {
+      lowStockBody.innerHTML = '<tr class="empty-row"><td colspan="6">Gak ada asset yang stock-nya menipis 👍</td></tr>';
+    } else {
+      lowStockBody.innerHTML = lowStockItems.map(function (item) {
+        let daysHtml;
+        if (item.daysRemaining === null) {
+          daysHtml = '<span style="color:#a3a3a3;">– (belum ada histori pemakaian)</span>';
+        } else {
+          const cls = item.daysRemaining <= 3 ? 'critical' : (item.daysRemaining <= 7 ? 'warn-soon' : '');
+          daysHtml = '<span class="days-left ' + cls + '">' + item.daysRemaining + ' hari lagi</span>';
+        }
+        const reorderHtml = item.reorderQty > 0
+          ? '<b>+' + item.reorderQty + ' ' + escapeHtml(item.unit) + '</b>'
+          : '<span style="color:#a3a3a3;">Cukup</span>';
+        return '<tr>' +
+          '<td style="text-align:left;">' + escapeHtml(item.name) + '</td>' +
+          '<td><b>' + item.qty + ' ' + escapeHtml(item.unit) + '</b></td>' +
+          '<td>' + item.minStock + ' ' + escapeHtml(item.unit) + '</td>' +
+          '<td>' + (item.avgPerDay > 0 ? item.avgPerDay.toFixed(1) + ' ' + escapeHtml(item.unit) + '/hari' : '-') + '</td>' +
+          '<td>' + daysHtml + '</td>' +
+          '<td>' + reorderHtml + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+    // Cache buat export PDF/Excel laporan dashboard
+    lastReportData.lowStock = lowStockItems;
+
+    // Top Asset Terpakai bulan ini (leaderboard + mini bar)
+    const monthBody = document.getElementById('monthlyUsageBody');
+    const monthKeys = Object.keys(monthAssetTotals).sort(function (a, b) { return monthAssetTotals[b] - monthAssetTotals[a]; });
+    if (monthKeys.length === 0) {
+      monthBody.innerHTML = '<tr class="empty-row"><td colspan="2">Belum ada data bulan ini</td></tr>';
+      lastReportData.topAsset = [];
+    } else {
+      const maxVal = monthAssetTotals[monthKeys[0]] || 1;
+      monthBody.innerHTML = monthKeys.map(function (name, idx) {
+        const val = monthAssetTotals[name];
+        const pct = Math.round((val / maxVal) * 100);
+        return '<tr>' +
+          '<td style="text-align:left; white-space:nowrap;">' + (idx + 1) + '. ' + escapeHtml(name) + '</td>' +
+          '<td><div class="lb-bar-wrap"><div class="lb-bar-track"><div class="lb-bar-fill" style="width:' + pct + '%;"></div></div><b>' + val + '</b></div></td>' +
+          '</tr>';
+      }).join('');
+      lastReportData.topAsset = monthKeys.map(function (name, idx) { return { rank: idx + 1, name: name, total: monthAssetTotals[name] }; });
+    }
+
+    // Daily chart, sesuai rentang tanggal custom yang dipilih user
+    const days = [];
+    const startD = new Date(dailyUsageStartDate + 'T00:00:00');
+    const endD = new Date(dailyUsageEndDate + 'T00:00:00');
+    for (let d = new Date(startD); d <= endD; d.setDate(d.getDate() + 1)) {
+      days.push(d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0"));
+    }
+    const chartValues = days.map(function (d) { return dailyTotals[d] || 0; });
+    const chartLabels = days.map(function (d) { return d.slice(5).split('-').reverse().join('/'); });
+
+    document.getElementById('dailyUsageChartTitle').innerText = '📊 Highlight Daily Usage (' + formatDateID(dailyUsageStartDate) + ' – ' + formatDateID(dailyUsageEndDate) + ')';
+
+    // Cache data chart harian (versi tanggal lengkap DD/MM/YYYY) buat export Excel
+    lastReportData.dailyChart = {
+      rows: days.map(function (d, idx) { return { date: formatDateID(d), qty: chartValues[idx] }; }),
+      start: dailyUsageStartDate, end: dailyUsageEndDate
+    };
+
+    const ctx = document.getElementById('dailyUsageChart').getContext('2d');
+    if (dailyUsageChart) {
+      dailyUsageChart.data.labels = chartLabels;
+      dailyUsageChart.data.datasets[0].data = chartValues;
+      dailyUsageChart.options.scales.x.ticks.maxTicksLimit = days.length > 30 ? 15 : 31;
+      dailyUsageChart.update();
+    } else {
+      dailyUsageChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: chartLabels,
+          datasets: [{ label: 'Qty Terpakai', data: chartValues, backgroundColor: '#b45309', borderRadius: 4 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            y: { beginAtZero: true, ticks: { precision: 0 } },
+            x: { ticks: { maxTicksLimit: days.length > 30 ? 15 : 31, autoSkip: true } }
+          }
+        }
+      });
+    }
+
+    // ===== Trend Bulanan Usage (6 bulan terakhir) — buat lihat pola musiman =====
+    const MONTH_LABELS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
+    const monthlyTrendTotals = {}; // { 'YYYY-MM': qty }
+    logsArr.forEach(function (log) {
+      const d = log.workingDate || '';
+      if (!d) return;
+      const key = d.slice(0, 7);
+      monthlyTrendTotals[key] = (monthlyTrendTotals[key] || 0) + (Number(log.qtyUsed) || 0);
+    });
+
+    const trendMonthKeys = [];
+    for (let i = 5; i >= 0; i--) {
+      const md = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      trendMonthKeys.push(md.getFullYear() + '-' + String(md.getMonth() + 1).padStart(2, '0'));
+    }
+    const trendLabels = trendMonthKeys.map(function (key) {
+      const parts = key.split('-');
+      return MONTH_LABELS_ID[Number(parts[1]) - 1] + ' \'' + parts[0].slice(2);
+    });
+    const trendValues = trendMonthKeys.map(function (key) { return monthlyTrendTotals[key] || 0; });
+
+    lastReportData.monthlyTrend = trendMonthKeys.map(function (key, idx) {
+      const parts = key.split('-');
+      return { month: MONTH_LABELS_ID[Number(parts[1]) - 1] + ' ' + parts[0], qty: trendValues[idx] };
+    });
+
+    const trendCtx = document.getElementById('monthlyTrendChart').getContext('2d');
+    if (monthlyTrendChart) {
+      monthlyTrendChart.data.labels = trendLabels;
+      monthlyTrendChart.data.datasets[0].data = trendValues;
+      monthlyTrendChart.update();
+    } else {
+      monthlyTrendChart = new Chart(trendCtx, {
+        type: 'line',
+        data: {
+          labels: trendLabels,
+          datasets: [{
+            label: 'Qty Terpakai / Bulan', data: trendValues,
+            borderColor: '#171717', backgroundColor: 'rgba(23,23,23,0.08)',
+            fill: true, tension: 0.3, pointRadius: 4, pointBackgroundColor: '#171717'
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: { y: { beginAtZero: true, ticks: { precision: 0 } } }
+        }
+      });
+    }
+  }
+
+  // ===== Export Laporan ke Excel (Top Asset + Chart Daily Usage + Trend Bulanan) =====
+  function exportUsageExcelReport() {
+    if (typeof XLSX === 'undefined') { showToast('Library Excel belum ke-load, coba refresh halaman.', 'err'); return; }
+
+    const wb = XLSX.utils.book_new();
+
+    // Sheet 1: Top Asset Terpakai (Bulan Ini)
+    const topAssetRows = [['No', 'Asset', 'Total Terpakai']];
+    if (lastReportData.topAsset.length === 0) {
+      topAssetRows.push(['-', 'Belum ada data bulan ini', '-']);
+    } else {
+      lastReportData.topAsset.forEach(function (r) { topAssetRows.push([r.rank, r.name, r.total]); });
+    }
+    const wsTopAsset = XLSX.utils.aoa_to_sheet(topAssetRows);
+    wsTopAsset['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, wsTopAsset, 'Top Asset Bulan Ini');
+
+    // Sheet 2: Chart Highlight Daily Usage (sesuai rentang tanggal yang lagi ditampilin)
+    const dailyRows = [['Tanggal', 'Qty Terpakai']];
+    lastReportData.dailyChart.rows.forEach(function (r) { dailyRows.push([r.date, r.qty]); });
+    const wsDaily = XLSX.utils.aoa_to_sheet(dailyRows);
+    wsDaily['!cols'] = [{ wch: 14 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, wsDaily, 'Chart Daily Usage');
+
+    // Sheet 3: Trend Bulanan (6 Bulan Terakhir)
+    const trendRows = [['Bulan', 'Total Qty Terpakai']];
+    lastReportData.monthlyTrend.forEach(function (r) { trendRows.push([r.month, r.qty]); });
+    const wsTrend = XLSX.utils.aoa_to_sheet(trendRows);
+    wsTrend['!cols'] = [{ wch: 14 }, { wch: 18 }];
+    XLSX.utils.book_append_sheet(wb, wsTrend, 'Trend Bulanan');
+
+    // Sheet 4: Saran Reorder (Stock Menipis)
+    const reorderRows = [['Asset', 'Stock Saat Ini', 'Min Stock', 'Rata-rata Pemakaian/Hari', 'Estimasi Habis (hari)', 'Saran Reorder Qty']];
+    if (lastReportData.lowStock.length === 0) {
+      reorderRows.push(['-', '-', '-', '-', '-', 'Gak ada stock menipis']);
+    } else {
+      lastReportData.lowStock.forEach(function (r) {
+        reorderRows.push([r.name, r.qty, r.minStock, r.avgPerDay ? r.avgPerDay.toFixed(1) : '-', r.daysRemaining === null ? '-' : r.daysRemaining, r.reorderQty]);
+      });
+    }
+    const wsReorder = XLSX.utils.aoa_to_sheet(reorderRows);
+    wsReorder['!cols'] = [{ wch: 26 }, { wch: 14 }, { wch: 12 }, { wch: 20 }, { wch: 18 }, { wch: 16 }];
+    XLSX.utils.book_append_sheet(wb, wsReorder, 'Saran Reorder');
+
+    const fname = 'Laporan_Usage_' + currentFacility + '_' + todayStr().split('-').reverse().join('') + '.xlsx';
+    XLSX.writeFile(wb, fname);
+  }
+
+  // ================= EXPORT LAPORAN KE PDF =================
+  function exportDashboardPdfReport() {
+    if (typeof window.jspdf === 'undefined') { showToast('Library PDF belum ke-load, coba refresh halaman.', 'err'); return; }
+    const doc = new window.jspdf.jsPDF();
+    const today = new Date();
+
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text('Laporan Inventory Control - ' + currentFacility, 14, 16);
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text('Dicetak: ' + formatDateTimeShort(today), 14, 22);
+
+    let y = 30;
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text('Top Asset Terpakai (Bulan Ini)', 14, y);
+    doc.autoTable({
+      startY: y + 3,
+      head: [['No', 'Asset', 'Total Terpakai']],
+      body: lastReportData.topAsset.length ? lastReportData.topAsset.map(function (r) { return [r.rank, r.name, r.total]; }) : [['-', 'Belum ada data bulan ini', '-']],
+      styles: { fontSize: 9 }, headStyles: { fillColor: [0, 0, 0] }
+    });
+
+    y = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text('Detail Stock Menipis & Saran Reorder', 14, y);
+    doc.autoTable({
+      startY: y + 3,
+      head: [['Asset', 'Qty', 'Min Stock', 'Estimasi Habis', 'Saran Reorder']],
+      body: lastReportData.lowStock.length ? lastReportData.lowStock.map(function (r) {
+        return [r.name, r.qty + ' ' + r.unit, r.minStock + ' ' + r.unit, r.daysRemaining === null ? '-' : (r.daysRemaining + ' hari'), r.reorderQty > 0 ? ('+' + r.reorderQty + ' ' + r.unit) : 'Cukup'];
+      }) : [['-', '-', '-', '-', 'Gak ada stock menipis 👍']],
+      styles: { fontSize: 9 }, headStyles: { fillColor: [0, 0, 0] }
+    });
+
+    y = doc.lastAutoTable.finalY + 10;
+    doc.setFontSize(11); doc.setFont(undefined, 'bold');
+    doc.text('Trend Bulanan Usage (6 Bulan Terakhir)', 14, y);
+    doc.autoTable({
+      startY: y + 3,
+      head: [['Bulan', 'Total Qty Terpakai']],
+      body: lastReportData.monthlyTrend.length ? lastReportData.monthlyTrend.map(function (r) { return [r.month, r.qty]; }) : [['-', '-']],
+      styles: { fontSize: 9 }, headStyles: { fillColor: [0, 0, 0] }
+    });
+
+    doc.save('Laporan_Inventory_' + currentFacility + '_' + todayStr().split('-').reverse().join('') + '.pdf');
+  }
+
+  function exportAssetItNcaPdf() {
+    if (typeof window.jspdf === 'undefined') { showToast('Library PDF belum ke-load, coba refresh halaman.', 'err'); return; }
+    const data = getAssetItNcaData();
+    let ids = Object.keys(data);
+    const q = assetItNcaFilterQuery.trim().toLowerCase();
+    if (q) {
+      ids = ids.filter(function (id) {
+        const a = data[id];
+        return (a.name || '').toLowerCase().indexOf(q) !== -1 || (a.serial || '').toLowerCase().indexOf(q) !== -1 || (a.pic || '').toLowerCase().indexOf(q) !== -1;
+      });
+    }
+    if (assetItNcaFilterJenis) ids = ids.filter(function (id) { return (data[id].jenis || 'IT') === assetItNcaFilterJenis; });
+    if (!ids.length) { showToast('Gak ada data buat di-export (cek filter yang lagi aktif).', 'err'); return; }
+    ids.sort(function (a, b) { return (data[a].name || '').localeCompare(data[b].name || ''); });
+
+    const doc = new window.jspdf.jsPDF({ orientation: 'landscape' });
+    doc.setFontSize(14); doc.setFont(undefined, 'bold');
+    doc.text('Database Asset IT & NCA - ' + currentFacility, 14, 16);
+    doc.setFontSize(10); doc.setFont(undefined, 'normal');
+    doc.text('Dicetak: ' + formatDateTimeShort(new Date()) + ' | Total: ' + ids.length + ' Asset', 14, 22);
+
+    doc.autoTable({
+      startY: 28,
+      head: [['Nama Asset', 'Jenis', 'Jumlah', 'Kategori', 'No. Serial/Inventaris', 'PIC Pemegang', 'Lokasi', 'Status', 'Catatan']],
+      body: ids.map(function (id) {
+        const a = data[id];
+        return [a.name || '-', a.jenis || 'IT', (Number(a.qty) || 1), a.category || '-', a.serial || '-', a.pic || '-', a.lokasi || '-', a.status || 'Aktif', a.note || '-'];
+      }),
+      styles: { fontSize: 8 }, headStyles: { fillColor: [0, 0, 0] }
+    });
+
+    doc.save('AssetITNCA_' + currentFacility + '_' + todayStr().split('-').reverse().join('') + '.pdf');
+  }
+
+  function formatDateID(dateStr) {
+    if (!dateStr) return '-';
+    const parts = dateStr.split('-'); // YYYY-MM-DD
+    return parts[2] + '/' + parts[1] + '/' + parts[0];
+  }
+
+  // Terapkan filter tanggal custom buat chart "Highlight Daily Usage"
+  function applyDailyUsageDateRange() {
+    const startVal = document.getElementById('dailyRangeStart').value;
+    const endVal = document.getElementById('dailyRangeEnd').value;
+    if (!startVal || !endVal) { showToast('Isi tanggal mulai & tanggal akhir dulu.', 'err'); return; }
+    if (startVal > endVal) { showToast('Tanggal mulai gak boleh lebih besar dari tanggal akhir.', 'err'); return; }
+    dailyUsageStartDate = startVal;
+    dailyUsageEndDate = endVal;
+    renderUsageDashboard();
+  }
+
+  function renderUsageLogTable(logsArr) {
+    const canEdit = !!window.__authCanDelete;
+    const colCount = 6;
+
+    // Terapkan filter search (nama asset) & rentang tanggal kalau lagi aktif
+    let filtered = logsArr;
+    if (logFilterAssetQuery) {
+      filtered = filtered.filter(function (l) { return (l.assetName || '').toLowerCase().indexOf(logFilterAssetQuery) !== -1; });
+    }
+    if (logFilterStart) {
+      filtered = filtered.filter(function (l) { return (l.workingDate || '') >= logFilterStart; });
+    }
+    if (logFilterEnd) {
+      filtered = filtered.filter(function (l) { return (l.workingDate || '') <= logFilterEnd; });
+    }
+    const isFiltering = !!(logFilterAssetQuery || logFilterStart || logFilterEnd);
+
+    // Recent logs table (terbaru dulu). Kalau lagi filter, tampilin lebih banyak baris.
+    const sorted = filtered.slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+    const recent = sorted.slice(0, isFiltering ? 500 : 100);
+    const logBody = document.getElementById('usageLogBody');
+    if (recent.length === 0) {
+      logBody.innerHTML = '<tr class="empty-row"><td colspan="' + colCount + '">' + (isFiltering ? 'Gak ada log yang cocok dengan filter.' : 'Belum ada log') + '</td></tr>';
+    } else {
+      logBody.innerHTML = recent.map(function (log) {
+        const devisi = log.devisi || getDevisiForEmail(log.createdBy);
+        return '<tr>' +
+          '<td>' + escapeHtml(log.workingDate || '-') + '</td>' +
+          '<td style="text-align:left;">' + escapeHtml(log.assetName || '-') + '</td>' +
+          '<td><b>' + (log.qtyUsed || 0) + ' ' + escapeHtml(log.unit || '') + '</b></td>' +
+          '<td>' + escapeHtml(getDevisiLabel(devisi)) + '</td>' +
+          '<td>' + escapeHtml(log.createdBy || '-') + '</td>' +
+          '<td>' + (canEdit ? ('<button class="btn-edit-sm" onclick="openEditLogModal(\'' + log._key + '\')">✏️</button> <button class="btn-danger-sm" onclick="deleteUsageLog(\'' + log._key + '\')">🗑️</button>') : '-') + '</td>' +
+          '</tr>';
+      }).join('');
+    }
+  }
+
+  // ================= HELPERS =================
+  // Toast notifikasi in-app, pengganti alert() bawaan browser. type: 'ok' | 'err' | 'info'
+  function showToast(message, type, durationMs) {
+    type = type || 'info';
+    const icon = type === 'ok' ? '✅' : (type === 'err' ? '⛔' : 'ℹ️');
+    const stack = document.getElementById('toastStack');
+    const el = document.createElement('div');
+    el.className = 'toast-item ' + type;
+    el.innerHTML = '<span class="toast-icon">' + icon + '</span>' +
+      '<span class="toast-msg">' + escapeHtml(message) + '</span>' +
+      '<button class="toast-close" onclick="this.parentElement.remove()">✕</button>';
+    stack.appendChild(el);
+    setTimeout(function () {
+      if (el.parentElement) el.remove();
+    }, durationMs || (type === 'err' ? 7000 : 4500));
+  }
+
+  // Modal konfirmasi in-app, pengganti confirm() bawaan browser.
+  // Dipanggil async: onConfirm cuma jalan kalau user klik "Ya, Lanjut".
+  // okLabel opsional buat ganti teks tombol (misal "Ya, Hapus").
+  function showConfirmModal(message, onConfirm, okLabel) {
+    const backdrop = document.getElementById('confirmModalBackdrop');
+    document.getElementById('confirmModalMsg').innerText = message;
+    const okBtn = document.getElementById('confirmModalOkBtn');
+    const cancelBtn = document.getElementById('confirmModalCancelBtn');
+    okBtn.innerText = okLabel || 'Ya, Lanjut';
+
+    // Ganti listener tiap kali dipanggil (biar gak numpuk callback lama)
+    const newOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+
+    function close() { backdrop.classList.remove('open'); }
+    newOkBtn.addEventListener('click', function () { close(); onConfirm(); });
+    newCancelBtn.addEventListener('click', close);
+    backdrop.classList.add('open');
+  }
+
+  function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  // ESC buat nutup popup/modal yang lagi kebuka (prioritas: yang paling "atas" duluan)
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape' && e.key !== 'Esc') return;
+    const confirmBackdrop = document.getElementById('confirmModalBackdrop');
+    const itNcaModal = document.getElementById('assetItNcaModalBackdrop');
+    const logModal = document.getElementById('logModalBackdrop');
+    const assetModal = document.getElementById('assetModalBackdrop');
+    const photoLightbox = document.getElementById('photoLightboxBackdrop');
+    const qrModal = document.getElementById('qrLabelModalBackdrop');
+    const historyModal = document.getElementById('assetHistoryModalBackdrop');
+    const itemHistoryModal = document.getElementById('itemHistoryModalBackdrop');
+    const sidebar = document.getElementById('appSidebar');
+
+    if (confirmBackdrop && confirmBackdrop.classList.contains('open')) {
+      const cancelBtn = document.getElementById('confirmModalCancelBtn');
+      if (cancelBtn) cancelBtn.click();
+      return;
+    }
+    if (photoLightbox && photoLightbox.classList.contains('open')) { closePhotoLightbox(); return; }
+    if (qrModal && qrModal.classList.contains('open')) { closeQrLabelModal(); return; }
+    if (historyModal && historyModal.classList.contains('open')) { closeAssetHistoryModal(); return; }
+    if (itemHistoryModal && itemHistoryModal.classList.contains('open')) { closeItemHistoryModal(); return; }
+    if (itNcaModal && itNcaModal.classList.contains('open')) { closeAssetItNcaModal(); return; }
+    if (logModal && logModal.classList.contains('open')) { closeLogModal(); return; }
+    if (assetModal && assetModal.classList.contains('open')) { closeAssetModal(); return; }
+    if (sidebar && sidebar.classList.contains('open')) { toggleAppSidebar(); return; }
+  });
+
+  // ENTER buat langsung Submit/Simpan tanpa harus klik tombol — berlaku di form
+  // "Input Penggunaan Asset/Pcs" (Log Activity Usage), dan di modal-modal Simpan
+  // (Tambah/Edit Asset Stock, Tambah/Edit Asset IT & NCA, Edit Log). Nggak berlaku
+  // di textarea, <select>, tombol, atau input
+  // tag-chip (kalau ada) karena Enter di situ udah punya fungsi sendiri (nambah
+  // baris baru / nambah tag / pilih dropdown).
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter') return;
+    const el = e.target;
+    if (!el || !el.tagName) return;
+    const tag = el.tagName;
+    if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT') return;
+    if (el.type === 'file') return;
+    if (el.classList && el.classList.contains('tag-input-field')) return; // input tag-chip (kalau ada) - Enter-nya punya fungsi sendiri
+
+    const confirmBackdrop = document.getElementById('confirmModalBackdrop');
+    const itNcaModal = document.getElementById('assetItNcaModalBackdrop');
+    const logModal = document.getElementById('logModalBackdrop');
+    const assetModal = document.getElementById('assetModalBackdrop');
+
+    if (confirmBackdrop && confirmBackdrop.classList.contains('open')) {
+      e.preventDefault();
+      const okBtn = document.getElementById('confirmModalOkBtn');
+      if (okBtn) okBtn.click();
+      return;
+    }
+    if (itNcaModal && itNcaModal.classList.contains('open')) { e.preventDefault(); saveAssetItNca(); return; }
+    if (logModal && logModal.classList.contains('open')) { e.preventDefault(); saveEditLog(); return; }
+    if (assetModal && assetModal.classList.contains('open')) { e.preventDefault(); saveAsset(); return; }
+
+    if (el.closest && el.closest('#invPanelUsage')) {
+      e.preventDefault();
+      const filterIds = ['logFilterAssetInput', 'logFilterStartInput', 'logFilterEndInput'];
+      if (filterIds.indexOf(el.id) !== -1) { applyLogFilter(); return; }
+      submitUsageLog();
+      return;
+    }
+  });
+
+  function formatDateTimeShort(d) {
+    const opts = { day: '2-digit', month: 'short', year: '2-digit' };
+    return d.toLocaleDateString('id-ID', opts) + ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ================= INIT =================
+  document.getElementById('usageDateInput').value = todayStr();
+  initUsageItemRows();
+  // Default filter chart Daily Usage: 14 hari terakhir
+  (function initDailyUsageRange() {
+    const end = new Date();
+    const start = new Date();
+    start.setDate(start.getDate() - 13);
+    const fmt = function (d) { return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+    dailyUsageStartDate = fmt(start);
+    dailyUsageEndDate = fmt(end);
+    document.getElementById('dailyRangeStart').value = dailyUsageStartDate;
+    document.getElementById('dailyRangeEnd').value = dailyUsageEndDate;
+  })();
+  switchInvSubmenu('usage');
+
+  // Devisi (SOC/EHA) baru bisa dihitung akurat setelah window.__authUserEmail
+  // ke-set sama shell/parent halaman — kadang ini kejadian ASYNC, sesudah render
+  // form pertama kali. Makanya di-polling ringan tiap 500ms: begitu emailnya
+  // kebaca (atau berubah), badge Devisi otomatis ke-refresh.
+  (function watchAuthEmailForDevisi() {
+    let lastSeenEmail = window.__authUserEmail || null;
+    setInterval(function () {
+      if (window.__authUserEmail !== lastSeenEmail) {
+        lastSeenEmail = window.__authUserEmail;
+        updateUsageFormVisibility();
+      }
+    }, 500);
+  })();
+
+  // Baru mulai sync Firebase SETELAH status login kevalidasi (biar gak kena
+  // permission-denied karena Security Rules butuh auth != null) - pola yang sama
+  // dipakai di modul lain (outbound.html, inbound.html, dst).
+  if (window.firebase && firebase.auth) {
+    firebase.auth().onAuthStateChanged(function (user) {
+      if (user) initInventoryFirebaseSync();
+    });
+  }
+</script>
+
+<script>
+  // ==== APP-SHELL BRIDGE ====
+  // Kalau halaman ini dibuka langsung (bukan lewat index.html app-shell), link sidebar
+  // tetap jalan normal (pindah halaman biasa). Tapi kalau dibuka di dalam iframe shell,
+  // klik link ke modul lain di-intercept dan diteruskan ke shell lewat postMessage,
+  // biar shell yang toggle tab tanpa reload sama sekali.
+  (function () {
+    if (window.self === window.top) return; // diakses langsung, biarin behavior default
+
+    function hijack(id, tab, submenu) {
+      var el = document.getElementById(id);
+      if (!el) return;
+      el.addEventListener("click", function (e) {
+        e.preventDefault();
+        window.top.postMessage({ source: "pkydc", type: "switchTab", tab: tab, submenu: submenu || null }, "*");
+      });
+    }
+
+    hijack("navToRestTime", "rest-time");
+    hijack("navToPerformanceBagger", "performance-bagger");
+    hijack("navToInbound", "inbound");
+    hijack("navToOutboundAging", "outbound", "aging");
+    hijack("navToOutboundOccupancy", "outbound", "occupancy");
+
+    // Terima perintah pindah submenu dari shell (mis. link lintas-tab yang nunjuk ke
+    // Inventory Control submenu tertentu)
+    window.addEventListener("message", function (e) {
+      var data = e.data;
+      if (!data || data.source !== "pkydc") return;
+      if (data.type === "setSubmenu" && data.submenu) {
+        switchInvSubmenu(data.submenu);
+      }
+      // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
+      if (data.type === "collapseSidebarGroups") collapseAllSidebarGroups();
+    });
+  })();
+</script>
+</body>
+</html>
