@@ -663,7 +663,6 @@ STAFF_ROSTER.forEach(function (s) { pbStaffMap[s.opsId] = s; });
 let fbDb = null;
 const FB_PB_ROOT = "prDcPerformanceBagger";
 let pbMonthlyRecords = {}; 
-let pbImportLogs = [];
 let agencyChartInstance = null;
 let detailChartInstance = null;
 let lastFilteredRows = [];
@@ -721,37 +720,6 @@ function initPbFirebaseSync() {
   const range = currentMonthRange();
   document.getElementById('pbMonthPicker').value = range.monthStr;
   loadPbMonth(range.monthStr);
-
-  fbDb.ref(FB_PB_ROOT + '/importLogs').on('value', function (snapshot) {
-    const val = snapshot.val() || {};
-    pbImportLogs = Object.keys(val).map(function (k) { return Object.assign({}, val[k], { _key: k }); });
-    pbImportLogs.sort(function (a, b) { return new Date(b.importedAt) - new Date(a.importedAt); });
-    renderPbLogList();
-  }, function (err) { console.error('Gagal baca log import Performance Bagger:', err); });
-}
-
-function renderPbLogList() {
-  const container = document.getElementById('pbLogList');
-  if (!container) return;
-  if (!pbImportLogs.length) {
-    container.innerHTML = '<div class="p-3 text-center text-slate-500 text-[10px]">Belum ada riwayat import.</div>';
-    return;
-  }
-  container.innerHTML = pbImportLogs.slice(0, 20).map(function (log) {
-    const dt = log.importedAt ? new Date(log.importedAt) : null;
-    const jamStr = dt && !isNaN(dt) ? (pad2(dt.getDate()) + '/' + pad2(dt.getMonth() + 1) + ' ' + pad2(dt.getHours()) + ':' + pad2(dt.getMinutes())) : '-';
-    return '<div class="p-2.5 text-[10px] hover:bg-slate-800/50 transition">' +
-      '<div class="flex justify-between items-center">' +
-        '<p class="font-bold text-slate-200 truncate max-w-[150px]" title="' + (log.fileName || '-') + '">' + (log.fileName || '-') + '</p>' +
-        '<span class="text-[9px] bg-slate-800 text-amber-400 font-mono px-1.5 py-0.5 rounded border border-slate-700">' + (log.rowCount || 0) + ' ops</span>' +
-      '</div>' +
-      '<p class="text-slate-400 mt-0.5">Tanggal: <span class="font-mono text-amber-300">' + (log.tanggal || '-') + '</span></p>' +
-      '<p class="text-slate-500 mt-0.5 text-[9px] flex justify-between">' +
-        '<span><i class="fa-regular fa-user text-[8px]"></i> ' + (log.importedBy || '-') + '</span>' +
-        '<span>' + jamStr + '</span>' +
-      '</p>' +
-      '</div>';
-  }).join('');
 }
 
 // ==== IMPORT EXCEL HARIAN (PDVT) ====
