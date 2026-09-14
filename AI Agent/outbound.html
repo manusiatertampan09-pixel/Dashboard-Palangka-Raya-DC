@@ -666,7 +666,7 @@ tailwind.config = {
 </div>
 
 <!-- TOP HEADER -->
-<header class="bg-gradient-to-r from-lavender-dark via-lavender to-lavender-light text-white shadow-lg flex-shrink-0 z-30">
+<header class="bg-black text-white shadow-lg flex-shrink-0 z-30">
   <div class="max-w-full mx-auto px-3 py-2 flex justify-between items-center gap-2">
     <div class="flex items-center space-x-3">
       <button onclick="toggleAppSidebar()" class="hover:bg-white/10 p-1.5 rounded-lg transition text-white focus:outline-none border border-white/10" title="Buka Menu" data-i18n-title="ob.header.openMenu">
@@ -677,7 +677,7 @@ tailwind.config = {
       </div>
       <div>
         <h1 class="text-sm md:text-base font-black tracking-tight uppercase leading-none" data-i18n="ob.header.title">PALANGKARAYA DC REPORT STAGING OUTBOUND</h1>
-        <p class="text-[9px] text-lavender-light font-medium opacity-90 mt-0.5" data-i18n="ob.header.subtitle">Monitoring Staging Area Occupancy per Destination</p>
+        <p class="text-[9px] text-white/80 font-medium opacity-90 mt-0.5" data-i18n="ob.header.subtitle">Monitoring Staging Area Occupancy per Destination</p>
       </div>
     </div>
     
@@ -688,7 +688,7 @@ tailwind.config = {
       </button>
       
       <div class="flex items-center bg-black/20 px-2.5 py-1 rounded-lg border border-white/20 text-white text-[11px] shadow-sm">
-        <span class="mr-1.5 font-semibold text-lavender-light" data-i18n="ob.header.journeyLabel">Journey:</span>
+        <span class="mr-1.5 font-semibold text-white/80" data-i18n="ob.header.journeyLabel">Journey:</span>
         <select id="filterJourney" onchange="applyFilters()" class="bg-transparent text-white focus:outline-none cursor-pointer font-bold">
           <option value="ALL" class="text-slate-800" data-i18n="ob.header.journeyAll">ALL TYPE</option>
           <option value="Forward" class="text-slate-800" data-i18n="ob.header.journeyForward">FORWARD</option>
@@ -710,7 +710,7 @@ tailwind.config = {
           <i class="fa-solid fa-file-import"></i> <span data-i18n="ob.header.import">Import</span>
         </label>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" class="hidden" />
-        <span id="fileName" class="text-[10px] text-lavender-light font-mono truncate max-w-[90px]" data-i18n="ob.header.sampleData">Data Contoh</span>
+        <span id="fileName" class="text-[10px] text-white/80 font-mono truncate max-w-[90px]" data-i18n="ob.header.sampleData">Data Contoh</span>
       </div>
     </div>
   </div>
@@ -751,21 +751,21 @@ tailwind.config = {
   <section id="agingSection" class="flex flex-col gap-3">
     <!-- KPI CARDS SECTION -->
     <div class="grid grid-cols-12 gap-3 flex-shrink-0">
-      <div class="col-span-3 bg-gradient-to-br from-lavender-dark to-lavender dark:from-[#2e2650] dark:to-lavender-dark p-2.5 rounded-xl text-white shadow-md hover:shadow-lg transition-shadow duration-200 border border-lavender-light/30 space-y-1 flex flex-col justify-between">
+      <div class="col-span-3 bg-black p-2.5 rounded-xl text-white shadow-md hover:shadow-lg transition-shadow duration-200 border border-white/20 space-y-1 flex flex-col justify-between">
         <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.dcName">DC Name</span>
+          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.dcName">DC Name</span>
           <span class="font-extrabold text-sm">Palangka Raya DC</span>
         </div>
         <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.processOutbound">Process Outbound</span>
+          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.processOutbound">Process Outbound</span>
           <span class="font-bold text-sm" data-i18n="ob.kpi.staging">Staging</span>
         </div>
         <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.reportTime">Report Time</span>
+          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.reportTime">Report Time</span>
           <span id="liveClock" class="font-bold font-mono text-sm" data-i18n="ob.kpi.loading">Loading...</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.viewBy">View By</span>
+          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.viewBy">View By</span>
           <span class="font-bold text-sm" data-i18n="ob.kpi.destination">Destination</span>
         </div>
       </div>
