@@ -98,6 +98,63 @@
     }
     .app-sidebar-footer button:hover { background: #1f1f1f; }
 
+    /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
+    .app-sidebar-lang { margin-bottom: 10px; }
+    .app-sidebar-lang label {
+      display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
+      color: var(--text-sidebar-muted); text-transform: uppercase; margin-bottom: 6px;
+    }
+    .app-sidebar-lang select {
+      width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border-sidebar);
+      background: var(--bg-sidebar-card); color: var(--text-sidebar); font-size: 13px; font-weight: 600;
+      cursor: pointer; font-family: var(--tw-sans);
+    }
+    .app-sidebar-lang select:focus { outline: none; border-color: #f59e0b; }
+    .app-sidebar-feedback-btn {
+      display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+      margin-bottom: 10px; padding: 11px; border: 1px solid rgba(245, 158, 11, 0.4);
+      background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-radius: 7px; cursor: pointer;
+      font-weight: 600; font-size: 15px; font-family: var(--tw-sans);
+    }
+    .app-sidebar-feedback-btn:hover { background: rgba(245, 158, 11, 0.22); }
+    .fb-board-backdrop {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+      z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .fb-board-backdrop.open { display: flex; }
+    .fb-board-card {
+      width: 100%; max-width: 420px; max-height: 80vh; background: var(--bg-sidebar);
+      border: 1px solid var(--border-sidebar); border-radius: 12px; display: flex; flex-direction: column;
+      overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4); font-family: var(--tw-sans);
+    }
+    .fb-board-header {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: var(--bg-sidebar-card); border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0;
+    }
+    .fb-board-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: #fff; }
+    .fb-board-header button { background: transparent; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+    .fb-board-header button:hover { color: #fff; }
+    .fb-board-form { padding: 12px 16px; border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0; }
+    .fb-board-form textarea {
+      width: 100%; min-height: 70px; resize: vertical; border-radius: 8px; border: 1px solid var(--border-sidebar);
+      background: var(--bg-sidebar-card); color: #fff; padding: 10px 12px; font-size: 13px; font-family: var(--tw-sans);
+    }
+    .fb-board-form textarea:focus { outline: none; border-color: #f59e0b; }
+    .fb-board-form-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .fb-board-submit-btn {
+      padding: 8px 18px; border: none; border-radius: 7px; background: #f59e0b; color: #000;
+      font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--tw-sans);
+    }
+    .fb-board-submit-btn:hover { background: #fbbf24; }
+    .fb-board-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .fb-board-list { overflow-y: auto; flex-grow: 1; padding: 8px 0; }
+    .fb-board-item { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+    .fb-board-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+    .fb-board-item-user { font-size: 11.5px; font-weight: 700; color: #f59e0b; }
+    .fb-board-item-time { font-size: 10px; color: var(--text-sidebar-muted); flex-shrink: 0; }
+    .fb-board-item-msg { font-size: 13px; color: #e5e5e5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
+    .fb-board-empty { padding: 30px 16px; text-align: center; color: var(--text-sidebar-muted); font-size: 12.5px; }
+
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f1f5f9; margin: 0; padding: 20px 20px 20px 70px; color: #334155; }
     
@@ -295,8 +352,886 @@
 </script>
 
 
+<script>
+  // ==== I18N ENGINE (Bahasa, English, 日本語, 中文) ====
+  const APP_I18N = {
+  "lang.label": {
+    "id": "Bahasa",
+    "en": "Language",
+    "ja": "言語",
+    "zh": "语言"
+  },
+  "sidebar.group.productivity": {
+    "id": "Productivity",
+    "en": "Productivity",
+    "ja": "生産性",
+    "zh": "生产力"
+  },
+  "sidebar.link.restTime": {
+    "id": "Rest Time Monitoring",
+    "en": "Rest Time Monitoring",
+    "ja": "休憩時間モニタリング",
+    "zh": "休息时间监控"
+  },
+  "sidebar.link.perfBagger": {
+    "id": "Performance Bagger",
+    "en": "Performance Bagger",
+    "ja": "パフォーマンス（バガー）",
+    "zh": "打包员绩效"
+  },
+  "sidebar.group.inbound": {
+    "id": "Inbound",
+    "en": "Inbound",
+    "ja": "インバウンド",
+    "zh": "入库"
+  },
+  "sidebar.link.inbound": {
+    "id": "LH Tracking & Forecast MP",
+    "en": "LH Tracking & Forecast MP",
+    "ja": "LHトラッキング＆人員予測",
+    "zh": "LH跟踪与人力预测"
+  },
+  "sidebar.group.outbound": {
+    "id": "Outbound Monitoring",
+    "en": "Outbound Monitoring",
+    "ja": "アウトバウンドモニタリング",
+    "zh": "出库监控"
+  },
+  "sidebar.link.outboundAging": {
+    "id": "Aging & Packer Backlog",
+    "en": "Aging & Packer Backlog",
+    "ja": "滞留時間＆梱包滞留",
+    "zh": "滞留时间与打包积压"
+  },
+  "sidebar.link.outboundOccupancy": {
+    "id": "Occupancy & Shift",
+    "en": "Occupancy & Shift",
+    "ja": "稼働率＆シフト",
+    "zh": "占用率与班次"
+  },
+  "sidebar.group.inventory": {
+    "id": "Inventory Control",
+    "en": "Inventory Control",
+    "ja": "在庫管理",
+    "zh": "库存管理"
+  },
+  "sidebar.link.inventory": {
+    "id": "Inventory Control",
+    "en": "Inventory Control",
+    "ja": "在庫管理",
+    "zh": "库存管理"
+  },
+  "sidebar.subtitle": {
+    "id": "Inbound",
+    "en": "Inbound",
+    "ja": "インバウンド",
+    "zh": "入库"
+  },
+  "sidebar.openMenu": {
+    "id": "Buka Menu",
+    "en": "Open Menu",
+    "ja": "メニューを開く",
+    "zh": "打开菜单"
+  },
+  "feedback.title": {
+    "id": "Saran & Masukan",
+    "en": "Feedback & Suggestions",
+    "ja": "ご意見・ご要望",
+    "zh": "建议与反馈"
+  },
+  "feedback.placeholder": {
+    "id": "Tulis saran, masukan, atau curhatan kamu di sini...",
+    "en": "Write your feedback, suggestion, or thoughts here...",
+    "ja": "ご意見・ご要望をここに入力してください…",
+    "zh": "在此写下您的建议或想法…"
+  },
+  "feedback.submit": {
+    "id": "Kirim",
+    "en": "Send",
+    "ja": "送信",
+    "zh": "发送"
+  },
+  "logout.btn": {
+    "id": "Logout",
+    "en": "Logout",
+    "ja": "ログアウト",
+    "zh": "退出登录"
+  },
+  "inb.header.title": {
+    "id": "Line Haul Tracking & Manpower Planning Palangka Raya DC",
+    "en": "Line Haul Tracking & Manpower Planning Palangka Raya DC",
+    "ja": "ラインホール追跡＆人員計画 Palangka Raya DC",
+    "zh": "干线追踪与人力规划 Palangka Raya DC"
+  },
+  "inb.header.import": {
+    "id": "Import Data Inbound",
+    "en": "Import Inbound Data",
+    "ja": "インバウンドデータをインポート",
+    "zh": "导入入库数据"
+  },
+  "inb.header.resetTitle": {
+    "id": "Reset Dashboard",
+    "en": "Reset Dashboard",
+    "ja": "ダッシュボードをリセット",
+    "zh": "重置仪表板"
+  },
+  "inb.header.reset": {
+    "id": "Reset",
+    "en": "Reset",
+    "ja": "リセット",
+    "zh": "重置"
+  },
+  "inb.header.autoRefresh": {
+    "id": "Auto Refresh:",
+    "en": "Auto Refresh:",
+    "ja": "自動更新:",
+    "zh": "自动刷新:"
+  },
+  "inb.header.freshNow": {
+    "id": "🟢 Data Updated Just Now",
+    "en": "🟢 Data Updated Just Now",
+    "ja": "🟢 データはたった今更新されました",
+    "zh": "🟢 数据刚刚更新"
+  },
+  "inb.header.freshJustNow": {
+    "id": "🟢 Data Updated Just Now",
+    "en": "🟢 Data Updated Just Now",
+    "ja": "🟢 データはたった今更新されました",
+    "zh": "🟢 数据刚刚更新"
+  },
+  "inb.header.freshMinAgo": {
+    "id": "🟢 Data Update {min} menit lalu",
+    "en": "🟢 Data Updated {min} min ago",
+    "ja": "🟢 データは{min}分前に更新",
+    "zh": "🟢 数据于{min}分钟前更新"
+  },
+  "inb.header.freshOutdated": {
+    "id": "🟠 Data Update {min} menit lalu",
+    "en": "🟠 Data Updated {min} min ago",
+    "ja": "🟠 データは{min}分前に更新（古い）",
+    "zh": "🟠 数据于{min}分钟前更新（已过期）"
+  },
+  "inb.header.last": {
+    "id": "Last:",
+    "en": "Last:",
+    "ja": "最終更新:",
+    "zh": "最后更新:"
+  },
+  "inb.forecast.header": {
+    "id": "📈 Inbound Forecast & Manpower Planning",
+    "en": "📈 Inbound Forecast & Manpower Planning",
+    "ja": "📈 インバウンド予測＆人員計画",
+    "zh": "📈 入库预测与人力规划"
+  },
+  "inb.forecast.note": {
+    "id": "*(Klik/Double-click angka pada kolom DW Reg, DW OC, Operator, atau Actual Operator Dedicated untuk mengubah Manpower)*",
+    "en": "*(Click/Double-click the number in the DW Reg, DW OC, Operator, or Actual Operator Dedicated column to edit Manpower)*",
+    "ja": "*(DW Reg、DW OC、Operator、Actual Operator Dedicated 列の数値をクリック／ダブルクリックすると人員数を編集できます)*",
+    "zh": "*(点击/双击 DW Reg、DW OC、Operator 或 Actual Operator Dedicated 列的数字即可修改人力)*"
+  },
+  "inb.forecast.activeParcel.title": {
+    "id": "📦 Total Active Parcel (In-Flight)",
+    "en": "📦 Total Active Parcel (In-Flight)",
+    "ja": "📦 稼働中パーセル合計（配送中）",
+    "zh": "📦 在途包裹总数（进行中）"
+  },
+  "inb.forecast.activeParcel.desc": {
+    "id": "Proses Bongkar, Pending, Transporting & Loading",
+    "en": "Unloading, Pending, Transporting & Loading",
+    "ja": "荷降ろし中、保留、輸送中、積込中",
+    "zh": "卸货中、待处理、运输中与装载中"
+  },
+  "inb.forecast.pendingBjm.title": {
+    "id": "🏭 Pending Loading Banjarmasin 2 DC",
+    "en": "🏭 Pending Loading Banjarmasin 2 DC",
+    "ja": "🏭 積込待ち Banjarmasin 2 DC",
+    "zh": "🏭 待装载 Banjarmasin 2 DC"
+  },
+  "inb.forecast.pendingPky.title": {
+    "id": "🏢 Pending Packed Palangka Raya DC",
+    "en": "🏢 Pending Packed Palangka Raya DC",
+    "ja": "🏢 梱包待ち Palangka Raya DC",
+    "zh": "🏢 待打包 Palangka Raya DC"
+  },
+  "inb.forecast.editHintTitle": {
+    "id": "Double click untuk edit langsung",
+    "en": "Double-click to edit directly",
+    "ja": "ダブルクリックで直接編集",
+    "zh": "双击可直接编辑"
+  },
+  "inb.tab.actual": {
+    "id": "📊 By Actual Inbound",
+    "en": "📊 By Actual Inbound",
+    "ja": "📊 実績インバウンド別",
+    "zh": "📊 按实际入库"
+  },
+  "inb.tab.projection": {
+    "id": "📈 By Projection Inbound",
+    "en": "📈 By Projection Inbound",
+    "ja": "📈 予測インバウンド別",
+    "zh": "📈 按预测入库"
+  },
+  "inb.actualTable.toggle": {
+    "id": "📋 Detail Tabel Manpower per Shift",
+    "en": "📋 Manpower Detail Table per Shift",
+    "ja": "📋 シフト別 人員詳細テーブル",
+    "zh": "📋 各班次人力明细表"
+  },
+  "inb.projectionTable.toggle": {
+    "id": "📋 Detail Tabel Projection Inbound",
+    "en": "📋 Projection Inbound Detail Table",
+    "ja": "📋 インバウンド予測 詳細テーブル",
+    "zh": "📋 入库预测明细表"
+  },
+  "inb.toggle.hide": {
+    "id": "▲ Hide",
+    "en": "▲ Hide",
+    "ja": "▲ 閉じる",
+    "zh": "▲ 隐藏"
+  },
+  "inb.toggle.open": {
+    "id": "▼ Open",
+    "en": "▼ Open",
+    "ja": "▼ 開く",
+    "zh": "▼ 展开"
+  },
+  "inb.projection.filterLabel": {
+    "id": "📅 Filter Tanggal Projection",
+    "en": "📅 Filter Projection Date",
+    "ja": "📅 予測日フィルター",
+    "zh": "📅 预测日期筛选"
+  },
+  "filter.reset": {
+    "id": "🔄 Reset Filter",
+    "en": "🔄 Reset Filter",
+    "ja": "🔄 フィルターをリセット",
+    "zh": "🔄 重置筛选"
+  },
+  "proj.card.total": {
+    "id": "📦 Total Projection Inbound",
+    "en": "📦 Total Projection Inbound",
+    "ja": "📦 インバウンド予測合計",
+    "zh": "📦 入库预测总量"
+  },
+  "proj.card.plus30": {
+    "id": "➕ Projection + 30%",
+    "en": "➕ Projection + 30%",
+    "ja": "➕ 予測 + 30%",
+    "zh": "➕ 预测 + 30%"
+  },
+  "proj.card.actualOp": {
+    "id": "🧑‍🔧 Actual Operator Dedicated",
+    "en": "🧑‍🔧 Actual Operator Dedicated",
+    "ja": "🧑‍🔧 実績専任オペレーター数",
+    "zh": "🧑‍🔧 实际专职操作员"
+  },
+  "proj.card.needsDw": {
+    "id": "👥 Needs Daily Worker",
+    "en": "👥 Needs Daily Worker",
+    "ja": "👥 必要日雇い労働者数",
+    "zh": "👥 所需日工人数"
+  },
+  "ch.th.shift": {
+    "id": "Shift",
+    "en": "Shift",
+    "ja": "シフト",
+    "zh": "班次"
+  },
+  "ch.th.clockIn": {
+    "id": "Clock In",
+    "en": "Clock In",
+    "ja": "出勤時刻",
+    "zh": "上班时间"
+  },
+  "ch.th.clockOut": {
+    "id": "Clock Out",
+    "en": "Clock Out",
+    "ja": "退勤時刻",
+    "zh": "下班时间"
+  },
+  "ch.th.dwReg": {
+    "id": "DW Reguler",
+    "en": "DW Reguler",
+    "ja": "DW 定期",
+    "zh": "DW 常规"
+  },
+  "ch.th.dwOc": {
+    "id": "DW On Call",
+    "en": "DW On Call",
+    "ja": "DW オンコール",
+    "zh": "DW 待命"
+  },
+  "ch.th.opDedicated": {
+    "id": "Operator Dedicated",
+    "en": "Operator Dedicated",
+    "ja": "専任オペレーター",
+    "zh": "专职操作员"
+  },
+  "ch.th.totalMp": {
+    "id": "Total MP",
+    "en": "Total MP",
+    "ja": "総人員数",
+    "zh": "总人力"
+  },
+  "ch.th.teamSpx": {
+    "id": "Team SPX",
+    "en": "Team SPX",
+    "ja": "SPXチーム",
+    "zh": "SPX团队"
+  },
+  "ch.th.teamDw": {
+    "id": "Team Daily Workers",
+    "en": "Team Daily Workers",
+    "ja": "日雇い労働者チーム",
+    "zh": "日工团队"
+  },
+  "proj.th.week": {
+    "id": "Week",
+    "en": "Week",
+    "ja": "週",
+    "zh": "周"
+  },
+  "proj.th.month": {
+    "id": "Month",
+    "en": "Month",
+    "ja": "月",
+    "zh": "月份"
+  },
+  "proj.th.date": {
+    "id": "Date",
+    "en": "Date",
+    "ja": "日付",
+    "zh": "日期"
+  },
+  "proj.th.projInbound": {
+    "id": "Projection Inbound",
+    "en": "Projection Inbound",
+    "ja": "インバウンド予測",
+    "zh": "入库预测"
+  },
+  "proj.th.plus30": {
+    "id": "+30%",
+    "en": "+30%",
+    "ja": "+30%",
+    "zh": "+30%"
+  },
+  "proj.th.actualOp": {
+    "id": "Actual Operator Dedicated",
+    "en": "Actual Operator Dedicated",
+    "ja": "実績専任オペレーター数",
+    "zh": "实际专职操作员"
+  },
+  "proj.th.needsDw": {
+    "id": "Needs Daily Worker",
+    "en": "Needs Daily Worker",
+    "ja": "必要日雇い労働者数",
+    "zh": "所需日工人数"
+  },
+  "kpi.totalTrip": {
+    "id": "Total Trip",
+    "en": "Total Trip",
+    "ja": "総トリップ数",
+    "zh": "总趟数"
+  },
+  "kpi.early": {
+    "id": "🟢 Early Arrival",
+    "en": "🟢 Early Arrival",
+    "ja": "🟢 早着",
+    "zh": "🟢 提前到达"
+  },
+  "kpi.ontime": {
+    "id": "🔵 On Time",
+    "en": "🔵 On Time",
+    "ja": "🔵 定刻",
+    "zh": "🔵 准时到达"
+  },
+  "kpi.late": {
+    "id": "🔴 Late Arrival",
+    "en": "🔴 Late Arrival",
+    "ja": "🔴 遅延到着",
+    "zh": "🔴 迟到"
+  },
+  "kpi.transit": {
+    "id": "🚚 Transporting",
+    "en": "🚚 Transporting",
+    "ja": "🚚 輸送中",
+    "zh": "🚚 运输中"
+  },
+  "kpi.pendingBongkar": {
+    "id": "⚠️ Pending Bongkar",
+    "en": "⚠️ Pending Unload",
+    "ja": "⚠️ 荷降ろし待ち",
+    "zh": "⚠️ 待卸货"
+  },
+  "kpi.prosesBongkar": {
+    "id": "📦 Proses Bongkar",
+    "en": "📦 Unloading in Progress",
+    "ja": "📦 荷降ろし中",
+    "zh": "📦 卸货中"
+  },
+  "kpi.selesaiBongkar": {
+    "id": "✅ Selesai Bongkar",
+    "en": "✅ Unloading Complete",
+    "ja": "✅ 荷降ろし完了",
+    "zh": "✅ 卸货完成"
+  },
+  "panel.criticalAction.title": {
+    "id": "🚨 Critical Action Center",
+    "en": "🚨 Critical Action Center",
+    "ja": "🚨 クリティカルアクションセンター",
+    "zh": "🚨 紧急处理中心"
+  },
+  "panel.criticalAction.count": {
+    "id": "{n} Actions",
+    "en": "{n} Actions",
+    "ja": "{n} 件の対応",
+    "zh": "{n} 项处理"
+  },
+  "panel.criticalAction.empty": {
+    "id": "Tidak ada tindakan kritis yang diperlukan.",
+    "en": "No critical action required.",
+    "ja": "対応が必要な緊急事項はありません。",
+    "zh": "目前没有需要紧急处理的事项。"
+  },
+  "panel.predictive.title": {
+    "id": "🔮 Predictive Risk Alert",
+    "en": "🔮 Predictive Risk Alert",
+    "ja": "🔮 予測リスクアラート",
+    "zh": "🔮 预测风险预警"
+  },
+  "panel.predictive.count": {
+    "id": "{n} Predicted Risk",
+    "en": "{n} Predicted Risk",
+    "ja": "リスク予測 {n} 件",
+    "zh": "预测风险 {n} 项"
+  },
+  "panel.predictive.empty": {
+    "id": "Semua trip berjalan sesuai estimasi.",
+    "en": "All trips are running on schedule.",
+    "ja": "すべてのトリップは予定通り進行中です。",
+    "zh": "所有行程均按预期进行。"
+  },
+  "panel.sla.title": {
+    "id": "📊 SLA Compliance Center",
+    "en": "📊 SLA Compliance Center",
+    "ja": "📊 SLA遵守状況センター",
+    "zh": "📊 SLA达成中心"
+  },
+  "panel.sla.filterBtn": {
+    "id": "🔴 Filter SLA Breach",
+    "en": "🔴 Filter SLA Breach",
+    "ja": "🔴 SLA違反をフィルター",
+    "zh": "🔴 筛选SLA违规"
+  },
+  "panel.sla.arrivalTargetHtml": {
+    "id": "SLA Arrival Target: <strong>6:30 jam</strong>",
+    "en": "SLA Arrival Target: <strong>6h 30m</strong>",
+    "ja": "SLA到着目標: <strong>6時間30分</strong>",
+    "zh": "SLA到达目标: <strong>6小时30分</strong>"
+  },
+  "panel.sla.avgTravel": {
+    "id": "Avg Travel:",
+    "en": "Avg Travel:",
+    "ja": "平均輸送時間:",
+    "zh": "平均运输时间:"
+  },
+  "panel.sla.arrivalCompliance": {
+    "id": "SLA Arrival Compliance:",
+    "en": "SLA Arrival Compliance:",
+    "ja": "SLA到着遵守率:",
+    "zh": "SLA到达达成率:"
+  },
+  "panel.sla.bongkarTargetHtml": {
+    "id": "SLA Bongkar Target: <strong>2:00 jam</strong>",
+    "en": "SLA Unload Target: <strong>2h 00m</strong>",
+    "ja": "SLA荷降ろし目標: <strong>2時間00分</strong>",
+    "zh": "SLA卸货目标: <strong>2小时00分</strong>"
+  },
+  "panel.sla.compliance": {
+    "id": "Compliance:",
+    "en": "Compliance:",
+    "ja": "遵守率:",
+    "zh": "达成率:"
+  },
+  "vendor.title": {
+    "id": "🏢 Vendor / Agency Performance",
+    "en": "🏢 Vendor / Agency Performance",
+    "ja": "🏢 ベンダー／代理店パフォーマンス",
+    "zh": "🏢 供应商/代理商绩效"
+  },
+  "vendor.th.vendor": {
+    "id": "Vendor",
+    "en": "Vendor",
+    "ja": "ベンダー",
+    "zh": "供应商"
+  },
+  "vendor.th.totalTrip": {
+    "id": "Total Trip",
+    "en": "Total Trip",
+    "ja": "総トリップ数",
+    "zh": "总趟数"
+  },
+  "vendor.th.ontimePct": {
+    "id": "OnTime %",
+    "en": "OnTime %",
+    "ja": "定刻率 %",
+    "zh": "准时率 %"
+  },
+  "vendor.th.lateCount": {
+    "id": "Late Count",
+    "en": "Late Count",
+    "ja": "遅延件数",
+    "zh": "迟到次数"
+  },
+  "vendor.empty": {
+    "id": "Belum ada data",
+    "en": "No data yet",
+    "ja": "データがまだありません",
+    "zh": "暂无数据"
+  },
+  "filter.searchLabel": {
+    "id": "🔎 Search LT / Driver / Plat / Vendor",
+    "en": "🔎 Search LT / Driver / Plate / Vendor",
+    "ja": "🔎 LT・ドライバー・ナンバー・ベンダー検索",
+    "zh": "🔎 搜索LT/司机/车牌/供应商"
+  },
+  "filter.searchPlaceholder": {
+    "id": "Cari LT, Vendor, Driver, Plat...",
+    "en": "Search LT, Vendor, Driver, Plate...",
+    "ja": "LT、ベンダー、ドライバー、ナンバーを検索…",
+    "zh": "搜索LT、供应商、司机、车牌…"
+  },
+  "filter.dateLabel": {
+    "id": "Date",
+    "en": "Date",
+    "ja": "日付",
+    "zh": "日期"
+  },
+  "filter.vendorLabel": {
+    "id": "Vendor",
+    "en": "Vendor",
+    "ja": "ベンダー",
+    "zh": "供应商"
+  },
+  "filter.allVendor": {
+    "id": "All Vendor",
+    "en": "All Vendor",
+    "ja": "すべてのベンダー",
+    "zh": "所有供应商"
+  },
+  "filter.statusLabel": {
+    "id": "Status",
+    "en": "Status",
+    "ja": "ステータス",
+    "zh": "状态"
+  },
+  "filter.allStatus": {
+    "id": "All Status",
+    "en": "All Status",
+    "ja": "すべてのステータス",
+    "zh": "所有状态"
+  },
+  "filter.status.earlyArrived": {
+    "id": "Early Arrived",
+    "en": "Early Arrived",
+    "ja": "早着",
+    "zh": "提前到达"
+  },
+  "filter.status.onTime": {
+    "id": "On Time",
+    "en": "On Time",
+    "ja": "定刻",
+    "zh": "准时到达"
+  },
+  "filter.status.lateArrival": {
+    "id": "Late Arrival",
+    "en": "Late Arrival",
+    "ja": "遅延到着",
+    "zh": "迟到"
+  },
+  "filter.status.inTransit": {
+    "id": "In Transit",
+    "en": "In Transit",
+    "ja": "輸送中",
+    "zh": "运输中"
+  },
+  "filter.remarksLabel": {
+    "id": "Remarks",
+    "en": "Remarks",
+    "ja": "備考",
+    "zh": "备注"
+  },
+  "filter.allRemarks": {
+    "id": "All Remarks",
+    "en": "All Remarks",
+    "ja": "すべての備考",
+    "zh": "所有备注"
+  },
+  "filter.remarks.loadingOrigin": {
+    "id": "Loading Origin",
+    "en": "Loading Origin",
+    "ja": "積込中（出発地）",
+    "zh": "始发地装载中"
+  },
+  "filter.remarks.transporting": {
+    "id": "Transporting",
+    "en": "Transporting",
+    "ja": "輸送中",
+    "zh": "运输中"
+  },
+  "filter.remarks.pendingBongkar": {
+    "id": "Pending Bongkar",
+    "en": "Pending Unload",
+    "ja": "荷降ろし待ち",
+    "zh": "待卸货"
+  },
+  "filter.remarks.prosesBongkar": {
+    "id": "Proses Bongkar",
+    "en": "Unloading in Progress",
+    "ja": "荷降ろし中",
+    "zh": "卸货中"
+  },
+  "filter.remarks.selesaiBongkar": {
+    "id": "Selesai Bongkar",
+    "en": "Unloading Complete",
+    "ja": "荷降ろし完了",
+    "zh": "卸货完成"
+  },
+  "filter.vehicleLabel": {
+    "id": "Vehicle Type",
+    "en": "Vehicle Type",
+    "ja": "車両タイプ",
+    "zh": "车辆类型"
+  },
+  "filter.allVehicle": {
+    "id": "All Vehicle",
+    "en": "All Vehicle",
+    "ja": "すべての車両",
+    "zh": "所有车辆"
+  },
+  "th.tanggal": {
+    "id": "Tanggal",
+    "en": "Date",
+    "ja": "日付",
+    "zh": "日期"
+  },
+  "th.ltNumber": {
+    "id": "LT Number",
+    "en": "LT Number",
+    "ja": "LT番号",
+    "zh": "LT编号"
+  },
+  "th.route": {
+    "id": "Route",
+    "en": "Route",
+    "ja": "ルート",
+    "zh": "路线"
+  },
+  "th.qtyTo": {
+    "id": "Qty TO",
+    "en": "Qty TO",
+    "ja": "TO数量",
+    "zh": "TO数量"
+  },
+  "th.qtyParcel": {
+    "id": "Qty Parcel",
+    "en": "Qty Parcel",
+    "ja": "パーセル数量",
+    "zh": "包裹数量"
+  },
+  "th.vendor": {
+    "id": "Vendor",
+    "en": "Vendor",
+    "ja": "ベンダー",
+    "zh": "供应商"
+  },
+  "th.driver": {
+    "id": "Driver",
+    "en": "Driver",
+    "ja": "ドライバー",
+    "zh": "司机"
+  },
+  "th.typeUnit": {
+    "id": "Type Unit",
+    "en": "Vehicle Type",
+    "ja": "車両タイプ",
+    "zh": "车辆类型"
+  },
+  "th.vehiclePlate": {
+    "id": "Vehicle Plate Number",
+    "en": "Vehicle Plate Number",
+    "ja": "車両ナンバープレート",
+    "zh": "车牌号"
+  },
+  "th.stdOrigin": {
+    "id": "STD Origin",
+    "en": "STD Origin",
+    "ja": "STD 出発地",
+    "zh": "STD 始发地"
+  },
+  "th.atdOrigin": {
+    "id": "ATD Origin",
+    "en": "ATD Origin",
+    "ja": "ATD 出発地",
+    "zh": "ATD 始发地"
+  },
+  "th.staDest": {
+    "id": "STA Destination",
+    "en": "STA Destination",
+    "ja": "STA 目的地",
+    "zh": "STA 目的地"
+  },
+  "th.etaDest": {
+    "id": "ETA Destination (+6.30h)",
+    "en": "ETA Destination (+6.30h)",
+    "ja": "ETA 目的地 (+6.30h)",
+    "zh": "ETA 目的地 (+6.30h)"
+  },
+  "th.ataDest": {
+    "id": "ATA Destination",
+    "en": "ATA Destination",
+    "ja": "ATA 目的地",
+    "zh": "ATA 目的地"
+  },
+  "th.travelTime": {
+    "id": "Travel Time",
+    "en": "Travel Time",
+    "ja": "輸送時間",
+    "zh": "运输时长"
+  },
+  "th.agingStatus": {
+    "id": "Aging Status",
+    "en": "Aging Status",
+    "ja": "経過時間ステータス",
+    "zh": "滞留状态"
+  },
+  "th.status": {
+    "id": "Status",
+    "en": "Status",
+    "ja": "ステータス",
+    "zh": "状态"
+  },
+  "th.remarks": {
+    "id": "Remarks",
+    "en": "Remarks",
+    "ja": "備考",
+    "zh": "备注"
+  },
+  "table.emptyUpload": {
+    "id": "Silakan upload file CSV Raw Data untuk menampilkan dashboard.",
+    "en": "Please upload the Raw Data CSV file to display the dashboard.",
+    "ja": "ダッシュボードを表示するには、Raw Data CSVファイルをアップロードしてください。",
+    "zh": "请上传原始数据CSV文件以显示仪表板。"
+  },
+  "table.emptyFilter": {
+    "id": "Tidak ada trip yang memenuhi kriteria filter.",
+    "en": "No trips match the filter criteria.",
+    "ja": "フィルター条件に一致するトリップはありません。",
+    "zh": "没有符合筛选条件的行程。"
+  },
+  "confirm.resetData": {
+    "id": "Apakah Anda yakin ingin menghapus semua data di dashboard?\n\n(Data LH Tracking juga bakal kehapus di database online, jadi ikut hilang di semua device.)",
+    "en": "Are you sure you want to delete all dashboard data?\n\n(LH Tracking data will also be deleted from the online database, so it will disappear on all devices.)",
+    "ja": "ダッシュボードのすべてのデータを削除してもよろしいですか？\n\n（LHトラッキングのデータもオンラインデータベースから削除され、すべてのデバイスで消えます。）",
+    "zh": "确定要删除仪表板上的所有数据吗？\n\n（LH跟踪数据也会从在线数据库中删除，因此会在所有设备上消失。）"
+  },
+  "page.title": {
+    "id": "Inbound - Internal Palangka Raya DC",
+    "en": "Inbound - Internal Palangka Raya DC",
+    "ja": "インバウンド - Internal Palangka Raya DC",
+    "zh": "入库 - Internal Palangka Raya DC"
+  },
+  "toast.err.deleteLh": {
+    "id": "❌ Gagal hapus data LH Tracking di database online: ",
+    "en": "❌ Failed to delete LH Tracking data from the online database: ",
+    "ja": "❌ オンラインデータベースのLHトラッキングデータの削除に失敗しました: ",
+    "zh": "❌ 无法从在线数据库中删除LH跟踪数据: "
+  },
+  "toast.err.importSync": {
+    "id": "⚠️ Data ke-import di layar ini, tapi GAGAL sync ke database online: ",
+    "en": "⚠️ Data imported on this screen, but FAILED to sync to the online database: ",
+    "ja": "⚠️ この画面へのデータインポートは成功しましたが、オンラインデータベースへの同期に失敗しました: ",
+    "zh": "⚠️ 数据已导入本屏幕，但同步到在线数据库失败: "
+  },
+  "toast.err.saveForecast": {
+    "id": "❌ Gagal simpan perubahan ke database online: ",
+    "en": "❌ Failed to save changes to the online database: ",
+    "ja": "❌ オンラインデータベースへの変更の保存に失敗しました: ",
+    "zh": "❌ 无法将更改保存到在线数据库: "
+  },
+  "toast.err.saveCountHead": {
+    "id": "❌ Gagal simpan perubahan Count Head ke database online: ",
+    "en": "❌ Failed to save Count Head changes to the online database: ",
+    "ja": "❌ Count Headの変更のオンラインデータベースへの保存に失敗しました: ",
+    "zh": "❌ 无法将Count Head的更改保存到在线数据库: "
+  },
+  "toast.err.saveProjection": {
+    "id": "❌ Gagal simpan perubahan Projection Inbound ke database online: ",
+    "en": "❌ Failed to save Projection Inbound changes to the online database: ",
+    "ja": "❌ Projection Inboundの変更のオンラインデータベースへの保存に失敗しました: ",
+    "zh": "❌ 无法将Projection Inbound的更改保存到在线数据库: "
+  }
+};
+
+  let currentAppLang = localStorage.getItem('pkydcAppLang') || 'id';
+
+  function t(key, params) {
+    const entry = APP_I18N[key];
+    let str = key;
+    if (entry) {
+      str = entry[currentAppLang] != null ? entry[currentAppLang] : (entry.id != null ? entry.id : key);
+    }
+    if (params) {
+      Object.keys(params).forEach(function (p) {
+        str = str.replace('{' + p + '}', params[p]);
+      });
+    }
+    return str;
+  }
+
+  function applyStaticI18n() {
+    document.documentElement.lang = currentAppLang;
+    document.title = t('page.title');
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      el.title = t(el.getAttribute('data-i18n-title'));
+    });
+  }
+
+  const APP_I18N_LANGS = ['id', 'en', 'ja', 'zh'];
+
+  function setAppLanguage(lang) {
+    if (APP_I18N_LANGS.indexOf(lang) === -1) lang = 'id';
+    currentAppLang = lang;
+    localStorage.setItem('pkydcAppLang', lang);
+    const sel = document.getElementById('appLangSelect');
+    if (sel) sel.value = lang;
+    applyStaticI18n();
+    // Re-render semua konten dinamis (tabel, badge, dropdown filter, dll) biar ikut translate
+    if (typeof renderAll === 'function') renderAll();
+    if (typeof renderCountHeadTable === 'function') renderCountHeadTable();
+    if (typeof renderProjectionTable === 'function') renderProjectionTable();
+    if (typeof updateDropdownOptions === 'function') updateDropdownOptions();
+  }
+
+  // Terapkan bahasa tersimpan begitu DOM siap (sebelum script lain yang render data jalan)
+  document.addEventListener('DOMContentLoaded', function () {
+    applyStaticI18n();
+    const sel = document.getElementById('appLangSelect');
+    if (sel) sel.value = currentAppLang;
+  });
+</script>
+
 <!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
-<button class="hamburger-btn" onclick="toggleAppSidebar()" title="Buka Menu">☰</button>
+<button class="hamburger-btn" onclick="toggleAppSidebar()" title="Buka Menu" data-i18n-title="sidebar.openMenu">☰</button>
 <div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
 <nav class="app-sidebar" id="appSidebar">
   <div>
@@ -305,63 +1240,90 @@
         <div class="app-sidebar-icon-box">🚚</div>
         <div class="app-sidebar-title-group">
           <span class="app-sidebar-title">Palangka Raya DC</span>
-          <span class="app-sidebar-subtitle">Inbound</span>
+          <span class="app-sidebar-subtitle" data-i18n="sidebar.subtitle">Inbound</span>
         </div>
       </div>
       <button onclick="toggleAppSidebar()">✕</button>
     </div>
     <div class="app-sidebar-body">
       <div class="app-sidebar-group-label collapsible" data-group="Productivity" onclick="toggleSidebarGroup('Productivity')">
-        <span>Productivity</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.productivity">Productivity</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="Productivity">
-        <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link">⏳ Rest Time Monitoring</a>
-        <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 Performance Bagger</a>
+        <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link">⏳ <span data-i18n="sidebar.link.restTime">Rest Time Monitoring</span></a>
+        <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 <span data-i18n="sidebar.link.perfBagger">Performance Bagger</span></a>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="Inbound" onclick="toggleSidebarGroup('Inbound')">
-        <span>Inbound</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.inbound">Inbound</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="Inbound">
-        <a href="inbound.html" class="app-sidebar-link active">🚚 LH Tracking &amp; Forecast MP</a>
+        <a href="inbound.html" class="app-sidebar-link active">🚚 <span data-i18n="sidebar.link.inbound">LH Tracking &amp; Forecast MP</span></a>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="OutboundMonitoring" onclick="toggleSidebarGroup('OutboundMonitoring')">
-        <span>Outbound Monitoring</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.outbound">Outbound Monitoring</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="OutboundMonitoring">
-        <a href="outbound.html" id="navToOutboundAging" class="app-sidebar-link">📦 Aging &amp; Packer Backlog</a>
-        <a href="outbound.html#occupancy" id="navToOutboundOccupancy" class="app-sidebar-link">🏭 Occupancy &amp; Shift</a>
+        <a href="outbound.html" id="navToOutboundAging" class="app-sidebar-link">📦 <span data-i18n="sidebar.link.outboundAging">Aging &amp; Packer Backlog</span></a>
+        <a href="outbound.html#occupancy" id="navToOutboundOccupancy" class="app-sidebar-link">🏭 <span data-i18n="sidebar.link.outboundOccupancy">Occupancy &amp; Shift</span></a>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="SOC" onclick="toggleSidebarGroup('SOC')">
-        <span>Inventory Control</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.inventory">Inventory Control</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="SOC">
-        <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ Inventory Control</a>
+        <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ <span data-i18n="sidebar.link.inventory">Inventory Control</span></a>
       </div>
     </div>
   </div>
   <div class="app-sidebar-footer">
-    <button onclick="logoutApp()">🚪 Logout</button>
+    <div class="app-sidebar-lang">
+      <label for="appLangSelect">🌐 <span data-i18n="lang.label">Bahasa</span></label>
+      <select id="appLangSelect" onchange="setAppLanguage(this.value)">
+        <option value="id">🇮🇩 Bahasa Indonesia</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="zh">🇨🇳 中文</option>
+      </select>
+    </div>
+    <button class="app-sidebar-feedback-btn" onclick="openFeedbackBoard()">💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></button>
+    <button onclick="logoutApp()">🚪 <span data-i18n="logout.btn">Logout</span></button>
   </div>
 </nav>
+
+<!-- ==== PAPAN SARAN & MASUKAN (realtime, 1 papan sama buat semua modul) ==== -->
+<div class="fb-board-backdrop" id="fbBoardBackdrop" onclick="if(event.target===this) closeFeedbackBoard()">
+  <div class="fb-board-card">
+    <div class="fb-board-header">
+      <h3>💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></h3>
+      <button onclick="closeFeedbackBoard()">✕</button>
+    </div>
+    <div class="fb-board-form">
+      <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder"></textarea>
+      <div class="fb-board-form-footer">
+        <button class="fb-board-submit-btn" id="fbBoardSubmitBtn" onclick="submitFeedback()" data-i18n="feedback.submit">Kirim</button>
+      </div>
+    </div>
+    <div class="fb-board-list" id="fbBoardList"></div>
+  </div>
+</div>
 
 <div class="container">
   <!-- Header Bar -->
   <div class="header-bar">
-    <h2>🚚 Line Haul Tracking & Manpower Planning Palangka Raya DC</h2>
+    <h2>🚚 <span data-i18n="inb.header.title">Line Haul Tracking &amp; Manpower Planning Palangka Raya DC</span></h2>
     <div class="header-right">
       <div class="import-compact">
-        <label class="btn-upload-sm" for="csvInput">📁 Import Data Inbound</label>
+        <label class="btn-upload-sm" for="csvInput">📁 <span data-i18n="inb.header.import">Import Data Inbound</span></label>
         <input type="file" id="csvInput" accept=".csv">
         <span id="fileName" class="import-filename"></span>
-        <button class="btn-clear-sm" id="btnClearData" title="Reset Dashboard">🗑️ Reset</button>
+        <button class="btn-clear-sm" id="btnClearData" data-i18n-title="inb.header.resetTitle" title="Reset Dashboard">🗑️ <span data-i18n="inb.header.reset">Reset</span></button>
       </div>
       <div class="freshness-bar">
-        <span>🟢 Auto Refresh: <span id="lblNextRefresh">00:60</span></span>
-        <span class="freshness-tag fresh-green" id="lblDataFreshness">🟢 Data Updated Just Now</span>
-        <span style="color: #64748b;" id="lblLastUpdate">Last: -</span>
+        <span>🟢 <span data-i18n="inb.header.autoRefresh">Auto Refresh:</span> <span id="lblNextRefresh">00:60</span></span>
+        <span class="freshness-tag fresh-green" id="lblDataFreshness" data-i18n="inb.header.freshNow">🟢 Data Updated Just Now</span>
+        <span style="color: #64748b;" id="lblLastUpdate"><span data-i18n="inb.header.last">Last:</span> -</span>
       </div>
     </div>
   </div>
@@ -370,23 +1332,23 @@
   <!-- Forecast & Manpower Planning Panel -->
   <div class="forecast-card">
     <div class="forecast-header">
-      <span>📈 Inbound Forecast & Manpower Planning</span>
-      <span style="font-size:11px; font-weight:600; color:#0284c7;">*(Klik/Double-click angka pada kolom DW Reg, DW OC, Operator, atau Actual Operator Dedicated untuk mengubah Manpower)*</span>
+      <span data-i18n="inb.forecast.header">📈 Inbound Forecast & Manpower Planning</span>
+      <span style="font-size:11px; font-weight:600; color:#0284c7;" data-i18n="inb.forecast.note">*(Klik/Double-click angka pada kolom DW Reg, DW OC, Operator, atau Actual Operator Dedicated untuk mengubah Manpower)*</span>
     </div>
     
     <!-- Row 3 Inbound Forecast Cards -->
     <div class="forecast-grid">
       <!-- Total Active Parcel -->
       <div class="forecast-item">
-        <div class="forecast-title">📦 Total Active Parcel (In-Flight)</div>
+        <div class="forecast-title" data-i18n="inb.forecast.activeParcel.title">📦 Total Active Parcel (In-Flight)</div>
         <div class="forecast-value" id="fctActiveParcel">0</div>
-        <div style="font-size:10px; color:#64748b; margin-top:2px;">Proses Bongkar, Pending, Transporting & Loading</div>
+        <div style="font-size:10px; color:#64748b; margin-top:2px;" data-i18n="inb.forecast.activeParcel.desc">Proses Bongkar, Pending, Transporting & Loading</div>
       </div>
       
       <!-- Editable Pending Banjarmasin -->
       <div class="forecast-item">
-        <div class="forecast-title">🏭 Pending Loading Banjarmasin 2 DC</div>
-        <div class="forecast-editable" ondblclick="enableInlineEdit('pendingBanjarmasin')" title="Double click untuk edit langsung">
+        <div class="forecast-title" data-i18n="inb.forecast.pendingBjm.title">🏭 Pending Loading Banjarmasin 2 DC</div>
+        <div class="forecast-editable" ondblclick="enableInlineEdit('pendingBanjarmasin')" title="Double click untuk edit langsung" data-i18n-title="inb.forecast.editHintTitle">
           <span class="forecast-value" id="fctPendingBanjarmasin">0</span>
           <input type="number" id="inputPendingBanjarmasin" class="inline-edit-input" style="display:none;" onblur="saveInlineEdit('pendingBanjarmasin')" onkeydown="handleEditKey(event, 'pendingBanjarmasin')">
           <span id="pencilPendingBanjarmasin">✏️</span>
@@ -395,8 +1357,8 @@
       
       <!-- Editable Pending Palangka -->
       <div class="forecast-item">
-        <div class="forecast-title">🏢 Pending Packed Palangka Raya DC</div>
-        <div class="forecast-editable" ondblclick="enableInlineEdit('pendingPalangka')" title="Double click untuk edit langsung">
+        <div class="forecast-title" data-i18n="inb.forecast.pendingPky.title">🏢 Pending Packed Palangka Raya DC</div>
+        <div class="forecast-editable" ondblclick="enableInlineEdit('pendingPalangka')" title="Double click untuk edit langsung" data-i18n-title="inb.forecast.editHintTitle">
           <span class="forecast-value" id="fctPendingPalangka">0</span>
           <input type="number" id="inputPendingPalangka" class="inline-edit-input" style="display:none;" onblur="saveInlineEdit('pendingPalangka')" onkeydown="handleEditKey(event, 'pendingPalangka')">
           <span id="pencilPendingPalangka">✏️</span>
@@ -406,30 +1368,30 @@
 
     <!-- Sub Tabs: By Actual Inbound / By Projection Inbound -->
     <div class="mp-tabs">
-      <button type="button" class="mp-tab-btn active" id="tabBtnActual" onclick="switchMpTab('actual')">📊 By Actual Inbound</button>
-      <button type="button" class="mp-tab-btn" id="tabBtnProjection" onclick="switchMpTab('projection')">📈 By Projection Inbound</button>
+      <button type="button" class="mp-tab-btn active" id="tabBtnActual" onclick="switchMpTab('actual')">📊 <span data-i18n="inb.tab.actual">By Actual Inbound</span></button>
+      <button type="button" class="mp-tab-btn" id="tabBtnProjection" onclick="switchMpTab('projection')">📈 <span data-i18n="inb.tab.projection">By Projection Inbound</span></button>
     </div>
 
     <!-- Tab Panel: By Actual Inbound (Count Head Calculator Table) -->
     <div class="mp-panel active" id="mpPanelActual">
       <div class="projection-table-toggle-bar" onclick="toggleActualTable()">
-        <span>📋 Detail Tabel Manpower per Shift</span>
-        <span id="actualToggleIcon">▲ Hide</span>
+        <span data-i18n="inb.actualTable.toggle">📋 Detail Tabel Manpower per Shift</span>
+        <span id="actualToggleIcon" data-i18n="inb.toggle.hide">▲ Hide</span>
       </div>
 
       <div class="ch-wrapper" id="actualTableWrapper">
         <table class="ch-table">
           <thead>
             <tr>
-              <th style="width: 10%;">Shift</th>
-              <th style="width: 10%;">Clock In</th>
-              <th style="width: 10%;">Clock Out</th>
-              <th style="width: 12%;">DW Reguler</th>
-              <th style="width: 12%;">DW On Call</th>
-              <th style="width: 12%;">Operator Dedicated</th>
-              <th style="width: 12%;">Total MP</th>
-              <th style="width: 11%;">Team SPX</th>
-              <th style="width: 11%;">Team Daily Workers</th>
+              <th style="width: 10%;" data-i18n="ch.th.shift">Shift</th>
+              <th style="width: 10%;" data-i18n="ch.th.clockIn">Clock In</th>
+              <th style="width: 10%;" data-i18n="ch.th.clockOut">Clock Out</th>
+              <th style="width: 12%;" data-i18n="ch.th.dwReg">DW Reguler</th>
+              <th style="width: 12%;" data-i18n="ch.th.dwOc">DW On Call</th>
+              <th style="width: 12%;" data-i18n="ch.th.opDedicated">Operator Dedicated</th>
+              <th style="width: 12%;" data-i18n="ch.th.totalMp">Total MP</th>
+              <th style="width: 11%;" data-i18n="ch.th.teamSpx">Team SPX</th>
+              <th style="width: 11%;" data-i18n="ch.th.teamDw">Team Daily Workers</th>
             </tr>
           </thead>
           <tbody id="chTableBody">
@@ -443,47 +1405,47 @@
     <div class="mp-panel" id="mpPanelProjection">
       <div class="projection-filter-bar">
         <div class="filter-item">
-          <label>📅 Filter Tanggal Projection</label>
+          <label data-i18n="inb.projection.filterLabel">📅 Filter Tanggal Projection</label>
           <input type="date" id="filterProjectionDate">
         </div>
-        <button type="button" class="btn-reset-filter" id="btnResetProjectionFilter">🔄 Reset Filter</button>
+        <button type="button" class="btn-reset-filter" id="btnResetProjectionFilter">🔄 <span data-i18n="filter.reset">Reset Filter</span></button>
       </div>
 
       <div class="forecast-grid" style="margin-bottom:15px;">
         <div class="forecast-item">
-          <div class="forecast-title">📦 Total Projection Inbound</div>
+          <div class="forecast-title" data-i18n="proj.card.total">📦 Total Projection Inbound</div>
           <div class="forecast-value" id="fctProjectionTotal">-</div>
         </div>
         <div class="forecast-item">
-          <div class="forecast-title">➕ Projection + 30%</div>
+          <div class="forecast-title" data-i18n="proj.card.plus30">➕ Projection + 30%</div>
           <div class="forecast-value" id="fctProjectionPlus30">-</div>
         </div>
         <div class="forecast-item">
-          <div class="forecast-title">🧑‍🔧 Actual Operator Dedicated</div>
+          <div class="forecast-title" data-i18n="proj.card.actualOp">🧑‍🔧 Actual Operator Dedicated</div>
           <div class="forecast-value" id="fctProjectionOperator">-</div>
         </div>
         <div class="forecast-item">
-          <div class="forecast-title">👥 Needs Daily Worker</div>
+          <div class="forecast-title" data-i18n="proj.card.needsDw">👥 Needs Daily Worker</div>
           <div class="forecast-value" id="fctProjectionNeedsMp">-</div>
         </div>
       </div>
 
       <div class="projection-table-toggle-bar" onclick="toggleProjectionTable()">
-        <span>📋 Detail Tabel Projection Inbound</span>
-        <span id="projectionToggleIcon">▲ Hide</span>
+        <span data-i18n="inb.projectionTable.toggle">📋 Detail Tabel Projection Inbound</span>
+        <span id="projectionToggleIcon" data-i18n="inb.toggle.hide">▲ Hide</span>
       </div>
 
       <div class="ch-wrapper" id="projectionTableWrapper" style="max-height: 420px; overflow-y: auto;">
         <table class="ch-table">
           <thead>
             <tr>
-              <th style="width: 9%;">Week</th>
-              <th style="width: 9%;">Month</th>
-              <th style="width: 16%;">Date</th>
-              <th style="width: 18%;">Projection Inbound</th>
-              <th style="width: 13%;">+30%</th>
-              <th style="width: 17%;">Actual Operator Dedicated</th>
-              <th style="width: 18%;">Needs Daily Worker</th>
+              <th style="width: 9%;" data-i18n="proj.th.week">Week</th>
+              <th style="width: 9%;" data-i18n="proj.th.month">Month</th>
+              <th style="width: 16%;" data-i18n="proj.th.date">Date</th>
+              <th style="width: 18%;" data-i18n="proj.th.projInbound">Projection Inbound</th>
+              <th style="width: 13%;" data-i18n="proj.th.plus30">+30%</th>
+              <th style="width: 17%;" data-i18n="proj.th.actualOp">Actual Operator Dedicated</th>
+              <th style="width: 18%;" data-i18n="proj.th.needsDw">Needs Daily Worker</th>
             </tr>
           </thead>
           <tbody id="projectionTableBody">
@@ -498,35 +1460,35 @@
   <!-- KPI Cards Grid -->
   <div class="kpi-grid">
     <div class="kpi-card" onclick="filterByKpi('ALL')">
-      <div class="kpi-title">Total Trip</div>
+      <div class="kpi-title" data-i18n="kpi.totalTrip">Total Trip</div>
       <div class="kpi-value" id="kpiTotal">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('EARLY')">
-      <div class="kpi-title" style="color: #10b981;">🟢 Early Arrival</div>
+      <div class="kpi-title" style="color: #10b981;" data-i18n="kpi.early">🟢 Early Arrival</div>
       <div class="kpi-value" id="kpiEarly">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('ONTIME')">
-      <div class="kpi-title" style="color: #3b82f6;">🔵 On Time</div>
+      <div class="kpi-title" style="color: #3b82f6;" data-i18n="kpi.ontime">🔵 On Time</div>
       <div class="kpi-value" id="kpiOntime">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('LATE')">
-      <div class="kpi-title" style="color: #ef4444;">🔴 Late Arrival</div>
+      <div class="kpi-title" style="color: #ef4444;" data-i18n="kpi.late">🔴 Late Arrival</div>
       <div class="kpi-value" id="kpiLate">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('TRANSIT')">
-      <div class="kpi-title" style="color: #0284c7;">🚚 Transporting</div>
+      <div class="kpi-title" style="color: #0284c7;" data-i18n="kpi.transit">🚚 Transporting</div>
       <div class="kpi-value" id="kpiTransit">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('PENDING_BONGKAR')">
-      <div class="kpi-title" style="color: #ea580c;">⚠️ Pending Bongkar</div>
+      <div class="kpi-title" style="color: #ea580c;" data-i18n="kpi.pendingBongkar">⚠️ Pending Bongkar</div>
       <div class="kpi-value" id="kpiPendingBongkar">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('PROSES_BONGKAR')">
-      <div class="kpi-title" style="color: #ca8a04;">📦 Proses Bongkar</div>
+      <div class="kpi-title" style="color: #ca8a04;" data-i18n="kpi.prosesBongkar">📦 Proses Bongkar</div>
       <div class="kpi-value" id="kpiProsesBongkar">0</div>
     </div>
     <div class="kpi-card" onclick="filterByKpi('SELESAI_BONGKAR')">
-      <div class="kpi-title" style="color: #16a34a;">✅ Selesai Bongkar</div>
+      <div class="kpi-title" style="color: #16a34a;" data-i18n="kpi.selesaiBongkar">✅ Selesai Bongkar</div>
       <div class="kpi-value" id="kpiSelesaiBongkar">0</div>
     </div>
   </div>
@@ -536,45 +1498,45 @@
     <!-- Critical Action Center -->
     <div class="panel-box panel-action">
       <div class="panel-header" style="color: #991b1b;">
-        <span>🚨 Critical Action Center</span>
+        <span data-i18n="panel.criticalAction.title">🚨 Critical Action Center</span>
         <span id="cntCriticalAction" class="badge bg-late">0 Actions</span>
       </div>
       <div id="listCriticalAction">
-        <div style="font-size:12px; color:#64748b; text-align:center; padding: 20px;">Tidak ada tindakan kritis yang diperlukan.</div>
+        <div style="font-size:12px; color:#64748b; text-align:center; padding: 20px;" data-i18n="panel.criticalAction.empty">Tidak ada tindakan kritis yang diperlukan.</div>
       </div>
     </div>
 
     <!-- Predictive Risk Alert -->
     <div class="panel-box panel-predictive">
       <div class="panel-header" style="color: #854d0e;">
-        <span>🔮 Predictive Risk Alert</span>
+        <span data-i18n="panel.predictive.title">🔮 Predictive Risk Alert</span>
         <span id="cntPredictive" class="badge" style="background:#d97706;">0 Predicted Late</span>
       </div>
       <div id="listPredictiveAlert">
-        <div style="font-size:12px; color:#64748b; text-align:center; padding: 20px;">Semua trip berjalan sesuai jadwal.</div>
+        <div style="font-size:12px; color:#64748b; text-align:center; padding: 20px;" data-i18n="panel.predictive.empty">Semua trip berjalan sesuai jadwal.</div>
       </div>
     </div>
 
     <!-- SLA Compliance Center -->
     <div class="panel-box panel-sla">
       <div class="panel-header" style="color: #166534;">
-        <span>📊 SLA Compliance Center</span>
+        <span data-i18n="panel.sla.title">📊 SLA Compliance Center</span>
         <button onclick="filterByKpi('SLA_BREACH')" style="background:#ef4444; color:white; border:none; padding:4px 8px; border-radius:4px; cursor:pointer; font-weight:bold; font-size:11px;">
-          🔴 Filter SLA Breach (<span id="cntSlaBreach">0</span>)
+          <span data-i18n="panel.sla.filterBtn">🔴 Filter SLA Breach</span> (<span id="cntSlaBreach">0</span>)
         </button>
       </div>
       <div style="font-size: 12px; display: grid; gap: 8px;">
         <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
-          <span>SLA Arrival Target: <strong>6:30 jam</strong></span>
-          <span>Avg Travel: <strong id="lblAvgTravel">-</strong></span>
+          <span data-i18n-html="panel.sla.arrivalTargetHtml">SLA Arrival Target: <strong>6:30 jam</strong></span>
+          <span><span data-i18n="panel.sla.avgTravel">Avg Travel:</span> <strong id="lblAvgTravel">-</strong></span>
         </div>
         <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
-          <span>SLA Arrival Compliance:</span>
+          <span data-i18n="panel.sla.arrivalCompliance">SLA Arrival Compliance:</span>
           <strong id="lblSlaArrivalComp" style="color:#16a34a;">0%</strong>
         </div>
         <div style="display: flex; justify-content: space-between; border-bottom: 1px dashed #cbd5e1; padding-bottom: 4px;">
-          <span>SLA Bongkar Target: <strong>2:00 jam</strong></span>
-          <span>Compliance: <strong id="lblSlaBongkarComp" style="color:#16a34a;">0%</strong></span>
+          <span data-i18n-html="panel.sla.bongkarTargetHtml">SLA Bongkar Target: <strong>2:00 jam</strong></span>
+          <span><span data-i18n="panel.sla.compliance">Compliance:</span> <strong id="lblSlaBongkarComp" style="color:#16a34a;">0%</strong></span>
         </div>
       </div>
     </div>
@@ -583,12 +1545,12 @@
   <!-- Vendor Performance -->
   <div class="performance-grid">
     <div class="perf-card">
-      <strong style="font-size:14px; color:#1e3a8a;">🏢 Vendor / Agency Performance</strong>
+      <strong style="font-size:14px; color:#1e3a8a;" data-i18n="vendor.title">🏢 Vendor / Agency Performance</strong>
       <table class="perf-table" id="tblVendorPerf">
         <thead>
-          <tr><th>Vendor</th><th>Total Trip</th><th>OnTime %</th><th>Late Count</th></tr>
+          <tr><th data-i18n="vendor.th.vendor">Vendor</th><th data-i18n="vendor.th.totalTrip">Total Trip</th><th data-i18n="vendor.th.ontimePct">OnTime %</th><th data-i18n="vendor.th.lateCount">Late Count</th></tr>
         </thead>
-        <tbody><tr><td colspan="4" style="text-align:center; color:#94a3b8;">Belum ada data</td></tr></tbody>
+        <tbody><tr><td colspan="4" style="text-align:center; color:#94a3b8;" data-i18n="vendor.empty">Belum ada data</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -597,47 +1559,47 @@
   <!-- Filter & Search Bar -->
   <div class="filter-bar">
     <div class="filter-item" style="flex: 2; min-width: 180px;">
-      <label>🔎 Search LT / Driver / Plat / Vendor</label>
-      <input type="text" id="filterSearch" placeholder="Cari LT, Vendor, Driver, Plat...">
+      <label data-i18n="filter.searchLabel">🔎 Search LT / Driver / Plat / Vendor</label>
+      <input type="text" id="filterSearch" placeholder="Cari LT, Vendor, Driver, Plat..." data-i18n-placeholder="filter.searchPlaceholder">
     </div>
     <div class="filter-item">
-      <label>Date</label>
+      <label data-i18n="filter.dateLabel">Date</label>
       <input type="date" id="filterDate">
     </div>
     <div class="filter-item">
-      <label>Vendor</label>
+      <label data-i18n="filter.vendorLabel">Vendor</label>
       <select id="filterVendor">
-        <option value="ALL">All Vendor</option>
+        <option value="ALL" data-i18n="filter.allVendor">All Vendor</option>
       </select>
     </div>
     <div class="filter-item">
-      <label>Status</label>
+      <label data-i18n="filter.statusLabel">Status</label>
       <select id="filterStatus">
-        <option value="ALL">All Status</option>
-        <option value="Early Arrived">Early Arrived</option>
-        <option value="On Time">On Time</option>
-        <option value="Late Arrival">Late Arrival</option>
-        <option value="In Transit">In Transit</option>
+        <option value="ALL" data-i18n="filter.allStatus">All Status</option>
+        <option value="Early Arrived" data-i18n="filter.status.earlyArrived">Early Arrived</option>
+        <option value="On Time" data-i18n="filter.status.onTime">On Time</option>
+        <option value="Late Arrival" data-i18n="filter.status.lateArrival">Late Arrival</option>
+        <option value="In Transit" data-i18n="filter.status.inTransit">In Transit</option>
       </select>
     </div>
     <div class="filter-item">
-      <label>Remarks</label>
+      <label data-i18n="filter.remarksLabel">Remarks</label>
       <select id="filterRemarks">
-        <option value="ALL">All Remarks</option>
-        <option value="Loading Origin">Loading Origin</option>
-        <option value="Transporting">Transporting</option>
-        <option value="Pending Bongkar">Pending Bongkar</option>
-        <option value="Proses Bongkar">Proses Bongkar</option>
-        <option value="Selesai Bongkar">Selesai Bongkar</option>
+        <option value="ALL" data-i18n="filter.allRemarks">All Remarks</option>
+        <option value="Loading Origin" data-i18n="filter.remarks.loadingOrigin">Loading Origin</option>
+        <option value="Transporting" data-i18n="filter.remarks.transporting">Transporting</option>
+        <option value="Pending Bongkar" data-i18n="filter.remarks.pendingBongkar">Pending Bongkar</option>
+        <option value="Proses Bongkar" data-i18n="filter.remarks.prosesBongkar">Proses Bongkar</option>
+        <option value="Selesai Bongkar" data-i18n="filter.remarks.selesaiBongkar">Selesai Bongkar</option>
       </select>
     </div>
     <div class="filter-item">
-      <label>Vehicle Type</label>
+      <label data-i18n="filter.vehicleLabel">Vehicle Type</label>
       <select id="filterVehicle">
-        <option value="ALL">All Vehicle</option>
+        <option value="ALL" data-i18n="filter.allVehicle">All Vehicle</option>
       </select>
     </div>
-    <button class="btn-reset-filter" id="btnResetFilter">🔄 Reset Filter</button>
+    <button class="btn-reset-filter" id="btnResetFilter">🔄 <span data-i18n="filter.reset">Reset Filter</span></button>
   </div>
 
   <!-- Table Section -->
@@ -646,31 +1608,31 @@
       <thead>
         <tr>
           <!-- Sticky Freeze Columns -->
-          <th class="freeze-col col-0">Tanggal</th>
-          <th class="freeze-col col-1">LT Number</th>
-          <th class="freeze-col col-2">Route</th>
-          <th class="freeze-col col-3">Qty TO</th>
-          <th class="freeze-col col-4">Qty Parcel</th>
-          <th class="freeze-col col-5">Vendor</th>
-          <th class="freeze-col col-6">Driver</th>
-          <th class="freeze-col col-7">Type Unit</th>
-          <th class="freeze-col col-8 freeze-border">Vehicle Plate Number</th>
+          <th class="freeze-col col-0" data-i18n="th.tanggal">Tanggal</th>
+          <th class="freeze-col col-1" data-i18n="th.ltNumber">LT Number</th>
+          <th class="freeze-col col-2" data-i18n="th.route">Route</th>
+          <th class="freeze-col col-3" data-i18n="th.qtyTo">Qty TO</th>
+          <th class="freeze-col col-4" data-i18n="th.qtyParcel">Qty Parcel</th>
+          <th class="freeze-col col-5" data-i18n="th.vendor">Vendor</th>
+          <th class="freeze-col col-6" data-i18n="th.driver">Driver</th>
+          <th class="freeze-col col-7" data-i18n="th.typeUnit">Type Unit</th>
+          <th class="freeze-col col-8 freeze-border" data-i18n="th.vehiclePlate">Vehicle Plate Number</th>
           
           <!-- Scrollable Columns -->
-          <th>STD Origin</th>
-          <th>ATD Origin</th>
-          <th>STA Destination</th>
-          <th>ETA Destination (+6.30h)</th>
-          <th>ATA Destination</th>
-          <th>Travel Time</th>
-          <th>Aging Status</th>
-          <th>Status</th>
-          <th>Remarks</th>
+          <th data-i18n="th.stdOrigin">STD Origin</th>
+          <th data-i18n="th.atdOrigin">ATD Origin</th>
+          <th data-i18n="th.staDest">STA Destination</th>
+          <th data-i18n="th.etaDest">ETA Destination (+6.30h)</th>
+          <th data-i18n="th.ataDest">ATA Destination</th>
+          <th data-i18n="th.travelTime">Travel Time</th>
+          <th data-i18n="th.agingStatus">Aging Status</th>
+          <th data-i18n="th.status">Status</th>
+          <th data-i18n="th.remarks">Remarks</th>
         </tr>
       </thead>
       <tbody id="tableBody">
         <tr>
-          <td colspan="18" style="text-align: center; color: #64748b; padding: 20px;">
+          <td colspan="18" style="text-align: center; color: #64748b; padding: 20px;" data-i18n="table.emptyUpload">
             Silakan upload file CSV Raw Data untuk menampilkan dashboard.
           </td>
         </tr>
@@ -927,13 +1889,13 @@
   });
 
   document.getElementById('btnClearData').addEventListener('click', function() {
-    if (confirm('Apakah Anda yakin ingin menghapus semua data di dashboard?\n\n(Data LH Tracking juga bakal kehapus di database online, jadi ikut hilang di semua device.)')) {
+    if (confirm(t('confirm.resetData'))) {
       globalTripsMaster = {};
       renderAll();
       document.getElementById('fileName').textContent = '';
       if (fbDb) {
         fbDb.ref(FB_ROOT + '/lhTracking').set(null).catch(function (err) {
-          showToast('❌ Gagal hapus data LH Tracking di database online: ' + err.message, 'err');
+          showToast(t('toast.err.deleteLh') + err.message, 'err');
         });
       }
     }
@@ -978,10 +1940,10 @@
       const lbl = document.getElementById('lblDataFreshness');
       if (diffMins < 15) {
         lbl.className = 'freshness-tag fresh-green';
-        lbl.textContent = `🟢 Updated ${diffMins == 0 ? 'Just now' : diffMins + ' min ago'}`;
+        lbl.textContent = diffMins == 0 ? t('inb.header.freshJustNow') : t('inb.header.freshMinAgo', { min: diffMins });
       } else {
         lbl.className = 'freshness-tag fresh-orange';
-        lbl.textContent = `🟠 Data may be outdated (${diffMins} min ago)`;
+        lbl.textContent = t('inb.header.freshOutdated', { min: diffMins });
       }
     }
   }, 1000);
@@ -1067,7 +2029,7 @@
     if (fbDb && Object.keys(fbUpdates).length) {
       fbDb.ref().update(fbUpdates).catch(function (err) {
         console.error('Gagal sync data LH Tracking ke database online:', err);
-        showToast('⚠️ Data ke-import di layar ini, tapi GAGAL sync ke database online: ' + err.message, 'err');
+        showToast(t('toast.err.importSync') + err.message, 'err');
       });
     } else if (!fbDb) {
       console.warn('Firebase belum siap, data import LH Tracking gak ke-sync ke device lain.');
@@ -1088,7 +2050,7 @@
       if(t.vehicleType && t.vehicleType !== '-') vehicles.add(t.vehicleType);
     });
 
-    selVendor.innerHTML = '<option value="ALL">All Vendor</option>';
+    selVendor.innerHTML = '<option value="ALL">' + t('filter.allVendor') + '</option>';
     vendors.forEach(v => {
       const opt = document.createElement('option');
       opt.value = v; opt.textContent = v;
@@ -1096,7 +2058,7 @@
     });
     selVendor.value = currVendor;
 
-    selVehicle.innerHTML = '<option value="ALL">All Vehicle</option>';
+    selVehicle.innerHTML = '<option value="ALL">' + t('filter.allVehicle') + '</option>';
     vehicles.forEach(v => {
       const opt = document.createElement('option');
       opt.value = v; opt.textContent = v;
@@ -1147,7 +2109,7 @@
 
     if (fbDb) {
       fbDb.ref(FB_ROOT + '/manualForecast').update({ [key]: parsedVal }).catch(function (err) {
-        showToast('❌ Gagal simpan perubahan ke database online: ' + err.message, 'err');
+        showToast(t('toast.err.saveForecast') + err.message, 'err');
       });
     }
   }
@@ -1164,6 +2126,14 @@
   }
 
   /* Count Head Table Render & Editing Functions (8-Hour Rolling Cumulative Sum) */
+  // Translate label "Shift N" di data Count Head (data-nya tetep canonical 'Shift 1'/'Shift 2'/'Shift 3',
+  // cuma tampilannya ikut bahasa aktif)
+  function trShiftLabel(raw) {
+    if (!raw) return raw;
+    const m = /^Shift (\d+)$/.exec(raw);
+    return m ? (t('ch.th.shift') + ' ' + m[1]) : raw;
+  }
+
   function renderCountHeadTable() {
     const tbody = document.getElementById('chTableBody');
     tbody.innerHTML = '';
@@ -1191,7 +2161,7 @@
       }
 
       tr.innerHTML = `
-        <td class="${row.isShiftHeader ? 'ch-shift-label' : ''}">${row.shift}</td>
+        <td class="${row.isShiftHeader ? 'ch-shift-label' : ''}">${trShiftLabel(row.shift)}</td>
         <td>${row.clockIn}</td>
         <td>${row.clockOut}</td>
         <td class="ch-editable-cell" onclick="editChCell(${index}, 'dwReg')" title="Klik untuk edit">${row.dwReg || ''}</td>
@@ -1229,7 +2199,7 @@
       renderCountHeadTable();
       if (fbDb) {
         fbDb.ref(FB_ROOT + '/countHead').set(countHeadData).catch(function (err) {
-          showToast('❌ Gagal simpan perubahan Count Head ke database online: ' + err.message, 'err');
+          showToast(t('toast.err.saveCountHead') + err.message, 'err');
         });
       }
     };
@@ -1284,10 +2254,10 @@
 
     if (isHidden) {
       wrapper.style.display = 'block';
-      icon.textContent = '▲ Hide';
+      icon.textContent = t('inb.toggle.hide');
     } else {
       wrapper.style.display = 'none';
-      icon.textContent = '▼ Open';
+      icon.textContent = t('inb.toggle.open');
     }
   }
 
@@ -1299,10 +2269,10 @@
 
     if (isHidden) {
       wrapper.style.display = 'block';
-      icon.textContent = '▲ Hide';
+      icon.textContent = t('inb.toggle.hide');
     } else {
       wrapper.style.display = 'none';
-      icon.textContent = '▼ Open';
+      icon.textContent = t('inb.toggle.open');
     }
   }
 
@@ -1377,7 +2347,7 @@
       renderProjectionTable();
       if (fbDb) {
         fbDb.ref(FB_ROOT + '/projectionInbound').set(projectionInboundData).catch(function (err) {
-          showToast('❌ Gagal simpan perubahan Projection Inbound ke database online: ' + err.message, 'err');
+          showToast(t('toast.err.saveProjection') + err.message, 'err');
         });
       }
     };
@@ -1583,9 +2553,9 @@
 
   function renderCriticalActions(actions) {
     const container = document.getElementById('listCriticalAction');
-    document.getElementById('cntCriticalAction').textContent = `${actions.length} Actions`;
+    document.getElementById('cntCriticalAction').textContent = t('panel.criticalAction.count', { n: actions.length });
     if (actions.length === 0) {
-      container.innerHTML = `<div style="font-size:12px; color:#64748b; text-align:center; padding: 15px;">Tidak ada tindakan kritis yang diperlukan.</div>`;
+      container.innerHTML = `<div style="font-size:12px; color:#64748b; text-align:center; padding: 15px;">${t('panel.criticalAction.empty')}</div>`;
       return;
     }
     container.innerHTML = actions.map(act => `
@@ -1599,9 +2569,9 @@
 
   function renderPredictiveAlerts(alerts) {
     const container = document.getElementById('listPredictiveAlert');
-    document.getElementById('cntPredictive').textContent = `${alerts.length} Predicted Risk`;
+    document.getElementById('cntPredictive').textContent = t('panel.predictive.count', { n: alerts.length });
     if (alerts.length === 0) {
-      container.innerHTML = `<div style="font-size:12px; color:#64748b; text-align:center; padding: 15px;">Semua trip berjalan sesuai estimasi.</div>`;
+      container.innerHTML = `<div style="font-size:12px; color:#64748b; text-align:center; padding: 15px;">${t('panel.predictive.empty')}</div>`;
       return;
     }
     container.innerHTML = alerts.map(alt => `
@@ -1615,7 +2585,7 @@
   function renderPerformanceTables(vPerf) {
     const vTbody = document.querySelector('#tblVendorPerf tbody');
     const vKeys = Object.keys(vPerf);
-    if (vKeys.length === 0) vTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">Belum ada data</td></tr>`;
+    if (vKeys.length === 0) vTbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#94a3b8;">${t('vendor.empty')}</td></tr>`;
     else {
       vTbody.innerHTML = vKeys.map(k => {
         const pct = Math.round((vPerf[k].ontime / vPerf[k].total) * 100);
@@ -1631,12 +2601,34 @@
     }
   }
 
+  // Mapping teks status/remarks internal (dipakai buat logic filter) ke i18n key,
+  // supaya badge di tabel ikut translate tanpa ubah logic pembanding di atas.
+  const STATUS_TEXT_I18N_KEY = {
+    'Early Arrived': 'filter.status.earlyArrived',
+    'On Time': 'filter.status.onTime',
+    'Late Arrival': 'filter.status.lateArrival',
+    'In Transit': 'filter.status.inTransit'
+  };
+  const REMARKS_TEXT_I18N_KEY = {
+    'Loading Origin': 'filter.remarks.loadingOrigin',
+    'Transporting': 'filter.remarks.transporting',
+    'Pending Bongkar': 'filter.remarks.pendingBongkar',
+    'Proses Bongkar': 'filter.remarks.prosesBongkar',
+    'Selesai Bongkar': 'filter.remarks.selesaiBongkar'
+  };
+  function trStatusText(raw) {
+    return STATUS_TEXT_I18N_KEY[raw] ? t(STATUS_TEXT_I18N_KEY[raw]) : raw;
+  }
+  function trRemarksText(raw) {
+    return REMARKS_TEXT_I18N_KEY[raw] ? t(REMARKS_TEXT_I18N_KEY[raw]) : raw;
+  }
+
   function renderTableRows(list) {
     const tbody = document.getElementById('tableBody');
     tbody.innerHTML = '';
 
     if (list.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="18" style="text-align: center; color: #ef4444; font-weight: bold; padding: 20px;">Tidak ada trip yang memenuhi kriteria filter.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="18" style="text-align: center; color: #ef4444; font-weight: bold; padding: 20px;">${t('table.emptyFilter')}</td></tr>`;
       return;
     }
 
@@ -1660,8 +2652,8 @@
         <td>${formatDate(item.ataDest)}</td>
         <td><strong>${item.travelTimeDisplay}</strong></td>
         <td><span class="aging-tag ${item.agingClass}">${item.agingDisplay}</span></td>
-        <td><span class="badge ${item.statusClass}">${item.statusText}</span></td>
-        <td><span class="badge-remark ${item.remarksClass}">${item.remarksText}</span></td>
+        <td><span class="badge ${item.statusClass}">${trStatusText(item.statusText)}</span></td>
+        <td><span class="badge-remark ${item.remarksClass}">${trRemarksText(item.remarksText)}</span></td>
       `;
       tbody.appendChild(tr);
     });
