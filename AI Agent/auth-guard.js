@@ -29,7 +29,7 @@
     "muhammad.reza@spxexpress.com",
     "irwan.faiz@spxexpress.com",
     "muhammad.subli@spx-external.com",
-    "nurmila.wati@spx-external",
+    "nurmila.wati@spx-external.com",
     "dicky.porwanto@spx-external.com",
     "yoga.parera@spxexpress.com"
   ];
