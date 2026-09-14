@@ -2931,13 +2931,19 @@ function renderDashboard() {
   const sorted = Object.values(receiverMap).sort((a, b) => b.total - a.total);
   sorted.forEach(r => { r.occupancyPct = getOccupancyPct(r.total); r.status = getAgingStatus(r).priority; });
 
-  if(sorted.length > 0) {
-    document.getElementById('sbTopHub').innerHTML = `${sorted[0].name} (${sorted[0].total.toLocaleString('id-ID')} Parcel)${occupancyBadgeHtml(sorted[0].occupancyPct)}`;
-  } else {
-    document.getElementById('sbTopHub').innerText = `-`;
+  const sbTopHubEl = document.getElementById('sbTopHub');
+  if (sbTopHubEl) {
+    if (sorted.length > 0) {
+      sbTopHubEl.innerHTML = `${sorted[0].name} (${sorted[0].total.toLocaleString('id-ID')} Parcel)${occupancyBadgeHtml(sorted[0].occupancyPct)}`;
+    } else {
+      sbTopHubEl.innerText = `-`;
+    }
   }
 
-  document.getElementById('sbCriticalCount').innerText = `${criticalParcels.toLocaleString('id-ID')} Parcel Critical`;
+  const sbCriticalCountEl = document.getElementById('sbCriticalCount');
+  if (sbCriticalCountEl) {
+    sbCriticalCountEl.innerText = `${criticalParcels.toLocaleString('id-ID')} Parcel Critical`;
+  }
   const sbCriticalDeltaEl = document.getElementById('sbCriticalCountDelta');
   if (sbCriticalDeltaEl) {
     sbCriticalDeltaEl.innerHTML = prevDCSnapshot ? deltaBadgeHtml(criticalParcels - prevDCSnapshot.dcCritical, 'down') : '';
@@ -2945,9 +2951,12 @@ function renderDashboard() {
 
   const capPctRaw = (total / MAX_STAGING_CAPACITY) * 100;
   const capPct = Math.min(Math.round(capPctRaw), 100);
-  document.getElementById('sbCapPercent').innerText = `${capPct}%`;
-  document.getElementById('sbCapBar').style.width = `${capPct}%`;
-  document.getElementById('sbCapDetail').innerText = `${total.toLocaleString('id-ID')} / ${MAX_STAGING_CAPACITY.toLocaleString('id-ID')} Parcel`;
+  const sbCapPercentEl = document.getElementById('sbCapPercent');
+  if (sbCapPercentEl) sbCapPercentEl.innerText = `${capPct}%`;
+  const sbCapBarEl = document.getElementById('sbCapBar');
+  if (sbCapBarEl) sbCapBarEl.style.width = `${capPct}%`;
+  const sbCapDetailEl = document.getElementById('sbCapDetail');
+  if (sbCapDetailEl) sbCapDetailEl.innerText = `${total.toLocaleString('id-ID')} / ${MAX_STAGING_CAPACITY.toLocaleString('id-ID')} Parcel`;
 
   lastSortedReceivers = sorted;
   renderGrids();
