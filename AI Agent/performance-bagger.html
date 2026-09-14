@@ -133,6 +133,63 @@ tailwind.config = {
   }
   .app-sidebar-footer button:hover { background: #1f1f1f; }
 
+  /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
+  .app-sidebar-lang { margin-bottom: 10px; }
+  .app-sidebar-lang label {
+    display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
+    color: var(--text-sidebar-muted); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .app-sidebar-lang select {
+    width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border-sidebar);
+    background: var(--bg-sidebar-card); color: var(--text-sidebar); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: var(--tw-sans);
+  }
+  .app-sidebar-lang select:focus { outline: none; border-color: #f59e0b; }
+  .app-sidebar-feedback-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    margin-bottom: 10px; padding: 11px; border: 1px solid rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-radius: 7px; cursor: pointer;
+    font-weight: 600; font-size: 15px; font-family: var(--tw-sans);
+  }
+  .app-sidebar-feedback-btn:hover { background: rgba(245, 158, 11, 0.22); }
+  .fb-board-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+    z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .fb-board-backdrop.open { display: flex; }
+  .fb-board-card {
+    width: 100%; max-width: 420px; max-height: 80vh; background: var(--bg-sidebar);
+    border: 1px solid var(--border-sidebar); border-radius: 12px; display: flex; flex-direction: column;
+    overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4); font-family: var(--tw-sans);
+  }
+  .fb-board-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: var(--bg-sidebar-card); border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0;
+  }
+  .fb-board-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: #fff; }
+  .fb-board-header button { background: transparent; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+  .fb-board-header button:hover { color: #fff; }
+  .fb-board-form { padding: 12px 16px; border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0; }
+  .fb-board-form textarea {
+    width: 100%; min-height: 70px; resize: vertical; border-radius: 8px; border: 1px solid var(--border-sidebar);
+    background: var(--bg-sidebar-card); color: #fff; padding: 10px 12px; font-size: 13px; font-family: var(--tw-sans);
+  }
+  .fb-board-form textarea:focus { outline: none; border-color: #f59e0b; }
+  .fb-board-form-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .fb-board-submit-btn {
+    padding: 8px 18px; border: none; border-radius: 7px; background: #f59e0b; color: #000;
+    font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--tw-sans);
+  }
+  .fb-board-submit-btn:hover { background: #fbbf24; }
+  .fb-board-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .fb-board-list { overflow-y: auto; flex-grow: 1; padding: 8px 0; }
+  .fb-board-item { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .fb-board-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .fb-board-item-user { font-size: 11.5px; font-weight: 700; color: #f59e0b; }
+  .fb-board-item-time { font-size: 10px; color: var(--text-sidebar-muted); flex-shrink: 0; }
+  .fb-board-item-msg { font-size: 13px; color: #e5e5e5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
+  .fb-board-empty { padding: 30px 16px; text-align: center; color: var(--text-sidebar-muted); font-size: 12.5px; }
+
   #pbDetailModal {
     opacity: 0;
     visibility: hidden;
@@ -267,9 +324,37 @@ tailwind.config = {
     </div>
   </div>
   <div class="app-sidebar-footer">
-    <button onclick="logoutApp()">🚪 Logout</button>
+    <div class="app-sidebar-lang">
+      <label for="appLangSelect">🌐 <span data-i18n="lang.label">Bahasa</span></label>
+      <select id="appLangSelect" onchange="setAppLanguage(this.value)">
+        <option value="id">🇮🇩 Indonesia</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="zh">🇨🇳 中文</option>
+      </select>
+    </div>
+    <button class="app-sidebar-feedback-btn" onclick="openFeedbackBoard()">💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></button>
+    <button onclick="logoutApp()">🚪 <span data-i18n="logout.btn">Logout</span></button>
   </div>
 </nav>
+
+<div class="fb-board-backdrop" id="fbBoardBackdrop" onclick="if(event.target===this) closeFeedbackBoard()">
+  <div class="fb-board-card">
+    <div class="fb-board-header">
+      <h3>💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></h3>
+      <button onclick="closeFeedbackBoard()" aria-label="Tutup">✕</button>
+    </div>
+    <div class="fb-board-form">
+      <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder"></textarea>
+      <div class="fb-board-form-footer">
+        <button class="fb-board-submit-btn" id="fbBoardSubmitBtn" onclick="submitFeedback()" data-i18n="feedback.submit">Kirim</button>
+      </div>
+    </div>
+    <div class="fb-board-list" id="fbBoardList">
+      <div class="fb-board-empty" data-i18n="feedback.loading">Memuat...</div>
+    </div>
+  </div>
+</div>
 
 <!-- TOP HEADER -->
 <header class="bg-gradient-to-r from-shopee-dark via-shopee to-shopee-light text-white shadow-lg flex-shrink-0 z-30">
@@ -282,20 +367,20 @@ tailwind.config = {
         <i class="fa-solid fa-trophy text-xl text-white"></i>
       </div>
       <div>
-        <h1 class="text-sm md:text-base font-black tracking-tight uppercase leading-none">Performance Bagger</h1>
-        <p class="text-[9px] text-amber-100 font-medium opacity-90 mt-0.5">Monitoring Produktivitas Packer / Bagger Harian</p>
+        <h1 data-i18n="pb.header.title" class="text-sm md:text-base font-black tracking-tight uppercase leading-none">Performance Bagger</h1>
+        <p data-i18n="pb.header.subtitle" class="text-[9px] text-amber-100 font-medium opacity-90 mt-0.5">Monitoring Produktivitas Packer / Bagger Harian</p>
       </div>
     </div>
 
     <div class="flex items-center gap-2">
       <button onclick="toggleDarkMode()" class="bg-black/25 hover:bg-black/40 p-1.5 px-2.5 rounded-lg border border-white/20 text-white text-xs transition flex items-center gap-1.5" title="Ganti Mode Gelap/Terang">
         <i id="darkModeIcon" class="fa-solid fa-moon text-amber-300"></i>
-        <span class="hidden md:inline font-semibold">Mode</span>
+        <span data-i18n="pb.header.mode" class="hidden md:inline font-semibold">Mode</span>
       </button>
 
       <button onclick="triggerPrintView()" class="bg-black/25 hover:bg-black/40 p-1.5 px-2.5 rounded-lg border border-white/20 text-white text-xs transition flex items-center gap-1.5" title="Cetak Laporan">
         <i class="fa-solid fa-print"></i>
-        <span class="hidden md:inline font-semibold">Cetak</span>
+        <span data-i18n="pb.header.print" class="hidden md:inline font-semibold">Cetak</span>
       </button>
 
       <div class="flex items-center gap-1.5 bg-black/25 p-1.5 rounded-lg border border-white/20 flex-wrap">
@@ -303,17 +388,17 @@ tailwind.config = {
         
         <!-- IMPORT PDVT -->
         <label for="pbExcelFile" class="cursor-pointer bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-2.5 py-1 rounded text-[11px] transition shadow-sm whitespace-nowrap" title="Import Data Packer PDVT">
-          <i class="fa-solid fa-file-import"></i> Import PDVT
+          <i class="fa-solid fa-file-import"></i> <span data-i18n="pb.header.importPdvt">Import PDVT</span>
         </label>
         <input type="file" id="pbExcelFile" accept=".xlsx, .xls, .csv" class="hidden" />
 
         <!-- IMPORT ROSTER (NEW) -->
         <label for="pbRosterFile" class="cursor-pointer bg-sky-500 hover:bg-sky-400 text-slate-950 font-extrabold px-2.5 py-1 rounded text-[11px] transition shadow-sm whitespace-nowrap" title="Import Data Roster (Auto-Fill Status)">
-          <i class="fa-solid fa-calendar-days"></i> Import Roster
+          <i class="fa-solid fa-calendar-days"></i> <span data-i18n="pb.header.importRoster">Import Roster</span>
         </label>
         <input type="file" id="pbRosterFile" accept=".xlsx, .xls, .csv" class="hidden" />
 
-        <span id="pbFileName" class="text-[10px] text-amber-100 font-mono truncate max-w-[140px]">Belum ada import</span>
+        <span id="pbFileName" data-i18n="pb.header.noImport" class="text-[10px] text-amber-100 font-mono truncate max-w-[140px]">Belum ada import</span>
       </div>
     </div>
   </div>
@@ -329,37 +414,37 @@ tailwind.config = {
         <i class="fa-solid fa-crown text-xl"></i>
       </div>
       <div>
-        <h3 class="font-black text-sm uppercase tracking-wider text-amber-600 dark:text-amber-400">Hall of Fame - Top Performers</h3>
-        <p class="text-xs text-slate-500 dark:text-slate-400">Packer dengan achievement tertinggi bulan ini</p>
+        <h3 data-i18n="pb.hof.title" class="font-black text-sm uppercase tracking-wider text-amber-600 dark:text-amber-400">Hall of Fame - Top Performers</h3>
+        <p data-i18n="pb.hof.subtitle" class="text-xs text-slate-500 dark:text-slate-400">Packer dengan achievement tertinggi bulan ini</p>
       </div>
     </div>
     <div id="pbLeaderboard" class="flex items-center gap-3 w-full md:w-auto overflow-x-auto pb-1 md:pb-0 justify-start md:justify-end">
-      <div class="text-xs text-slate-400 italic">Memuat Top Bagger...</div>
+      <div data-i18n="pb.hof.loading" class="text-xs text-slate-400 italic">Memuat Top Bagger...</div>
     </div>
   </div>
 
   <!-- SUMMARY CARDS -->
   <div class="grid grid-cols-2 md:grid-cols-5 gap-2 flex-shrink-0">
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Bulan Berjalan</span>
+      <span data-i18n="pb.summary.month" class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Bulan Berjalan</span>
       <p id="pbSummaryMonth" class="hidden">-</p>
       <input type="month" id="pbMonthPicker" onchange="loadPbMonth(this.value)" class="mt-1 w-full bg-transparent border border-slate-200 dark:border-slate-600 rounded-md text-base font-black text-slate-800 dark:text-slate-100 px-1.5 py-1 focus:outline-none focus:border-shopee" />
     </div>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Operator Terdata</span>
+      <span data-i18n="pb.summary.staff" class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Operator Terdata</span>
       <p id="pbSummaryStaff" class="text-sm font-black text-slate-800 dark:text-slate-100 mt-0.5">0</p>
     </div>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Achievement Rate</span>
+      <span data-i18n="pb.summary.rate" class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Achievement Rate</span>
       <p id="pbSummaryRate" class="text-sm font-black text-emerald-600 mt-0.5">0%</p>
       <span id="pbSummaryRateDetail" class="text-[9px] text-slate-400"></span>
     </div>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-3 shadow-sm">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Top Performer</span>
+      <span data-i18n="pb.summary.top" class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide">Top Performer</span>
       <p id="pbSummaryTop" class="text-xs font-extrabold text-shopee dark:text-rose-400 mt-0.5 leading-snug">-</p>
     </div>
     <div class="bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700 p-2.5 shadow-sm col-span-2 md:col-span-1 flex flex-col justify-center">
-      <span class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Agency Breakdown</span>
+      <span data-i18n="pb.summary.agency" class="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wide mb-1.5">Agency Breakdown</span>
       <div id="agencyBreakdownList" class="space-y-1.5 w-full"></div>
     </div>
   </div>
@@ -369,48 +454,48 @@ tailwind.config = {
     <div class="flex flex-wrap gap-2 items-center flex-1">
       <div class="relative flex-1 min-w-[160px]">
         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]"></i>
-        <input id="pbSearch" oninput="renderPbTable()" placeholder="Cari nama / OpsID..." class="w-full pl-7 pr-2 py-1.5 border border-slate-200 dark:border-slate-700 bg-transparent rounded-lg text-[12px] focus:outline-none focus:border-shopee" />
+        <input id="pbSearch" oninput="renderPbTable()" data-i18n-placeholder="pb.filter.searchPlaceholder" placeholder="Cari nama / OpsID..." class="w-full pl-7 pr-2 py-1.5 border border-slate-200 dark:border-slate-700 bg-transparent rounded-lg text-[12px] focus:outline-none focus:border-shopee" />
       </div>
       <select id="pbAgencyFilter" onchange="renderPbTable()" class="border border-slate-200 dark:border-slate-700 bg-transparent rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:border-shopee dark:text-slate-200">
-        <option value="ALL" class="dark:bg-slate-800">Semua Agency</option>
+        <option value="ALL" data-i18n="pb.filter.allAgency" class="dark:bg-slate-800">Semua Agency</option>
         <option value="MYROBIN" class="dark:bg-slate-800">MYROBIN</option>
         <option value="UGBM" class="dark:bg-slate-800">UGBM</option>
         <option value="IPI" class="dark:bg-slate-800">IPI</option>
       </select>
       <select id="pbStatusFilter" onchange="renderPbTable()" class="border border-slate-200 dark:border-slate-700 bg-transparent rounded-lg px-2 py-1.5 text-[12px] focus:outline-none focus:border-shopee dark:text-slate-200">
-        <option value="ALL" class="dark:bg-slate-800">Semua Status</option>
-        <option value="Dedicated Operator" class="dark:bg-slate-800">Dedicated Operator</option>
-        <option value="DW Reguler Pria" class="dark:bg-slate-800">DW Reguler Pria</option>
-        <option value="DW Reguler Wanita" class="dark:bg-slate-800">DW Reguler Wanita</option>
-        <option value="DW On Call" class="dark:bg-slate-800">DW On Call</option>
+        <option value="ALL" data-i18n="pb.filter.allStatus" class="dark:bg-slate-800">Semua Status</option>
+        <option value="Dedicated Operator" data-i18n="pb.filter.statusDedicated" class="dark:bg-slate-800">Dedicated Operator</option>
+        <option value="DW Reguler Pria" data-i18n="pb.filter.statusRegPria" class="dark:bg-slate-800">DW Reguler Pria</option>
+        <option value="DW Reguler Wanita" data-i18n="pb.filter.statusRegWanita" class="dark:bg-slate-800">DW Reguler Wanita</option>
+        <option value="DW On Call" data-i18n="pb.filter.statusOnCall" class="dark:bg-slate-800">DW On Call</option>
       </select>
 
       <button id="btnD1ViewFilter" onclick="toggleD1ViewFilter()" class="bg-indigo-100 hover:bg-indigo-200 border border-indigo-300 text-indigo-800 dark:bg-indigo-950/60 dark:border-indigo-800 dark:text-indigo-300 font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition flex items-center gap-1.5">
         <i class="fa-solid fa-calendar-check text-indigo-600 dark:text-indigo-400"></i>
-        <span id="lblD1Filter">Quick View D+1</span>
+        <span id="lblD1Filter" data-i18n="pb.filter.quickViewD1">Quick View D+1</span>
       </button>
 
       <button id="btnRedFlagFilter" onclick="toggleRedFlagFilter()" class="bg-rose-100 hover:bg-rose-200 border border-rose-300 text-rose-700 dark:bg-rose-950/60 dark:border-rose-800 dark:text-rose-300 font-bold px-2.5 py-1.5 rounded-lg text-[11px] transition flex items-center gap-1.5">
         <i class="fa-solid fa-triangle-exclamation text-rose-600 dark:text-rose-400"></i>
-        <span>Needs Coaching / Red Flag</span>
+        <span data-i18n="pb.filter.redFlag">Needs Coaching / Red Flag</span>
       </button>
     </div>
 
     <div class="flex items-center gap-1.5 flex-wrap">
       <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-700 p-1 rounded-lg border border-slate-200 dark:border-slate-600">
-        <span class="text-[10px] text-slate-500 dark:text-slate-300 pl-1 font-semibold" title="Range ini cuma dipakai buat Excel/PDF export, bukan buat pindah bulan tabel utama">Range Export:</span>
+        <span data-i18n="pb.filter.rangeExport" class="text-[10px] text-slate-500 dark:text-slate-300 pl-1 font-semibold" title="Range ini cuma dipakai buat Excel/PDF export, bukan buat pindah bulan tabel utama">Range Export:</span>
         <input type="date" id="exportStartDate" class="bg-transparent text-[10px] border-none focus:outline-none dark:text-white" />
         <span class="text-[10px] text-slate-400">-</span>
         <input type="date" id="exportEndDate" class="bg-transparent text-[10px] border-none focus:outline-none dark:text-white" />
       </div>
-      <button onclick="setQuickDateRange('d1')" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-semibold text-[10px] px-2 py-1.5 rounded-lg transition" title="Set range filter ke Kemarin (D+1 View)">
+      <button onclick="setQuickDateRange('d1')" data-i18n="pb.filter.quickD1Btn" class="bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-800 dark:text-slate-100 font-semibold text-[10px] px-2 py-1.5 rounded-lg transition" title="Set range filter ke Kemarin (D+1 View)">
         Quick D+1
       </button>
       <button onclick="exportToExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-[11px] px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
-        <i class="fa-solid fa-file-excel"></i> Excel
+        <i class="fa-solid fa-file-excel"></i> <span data-i18n="pb.export.excel">Excel</span>
       </button>
       <button onclick="exportToPDF()" class="bg-rose-600 hover:bg-rose-700 text-white font-semibold text-[11px] px-2.5 py-1.5 rounded-lg transition flex items-center gap-1 shadow-sm">
-        <i class="fa-solid fa-file-pdf"></i> PDF
+        <i class="fa-solid fa-file-pdf"></i> <span data-i18n="pb.export.pdf">PDF</span>
       </button>
     </div>
   </div>
@@ -421,18 +506,18 @@ tailwind.config = {
       <table class="dynamic-table">
         <thead>
           <tr class="bg-shopee text-white">
-            <th class="w-12">Rank</th>
-            <th onclick="sortPbTable('name')" data-col="name">Nama <i class="fa-solid fa-sort sort-icon"></i></th>
-            <th onclick="sortPbTable('opsId')" data-col="opsId">OpsID <i class="fa-solid fa-sort sort-icon"></i></th>
-            <th onclick="sortPbTable('agency')" data-col="agency">Agency <i class="fa-solid fa-sort sort-icon"></i></th>
-            <th onclick="sortPbTable('status')" data-col="status">Status <i class="fa-solid fa-sort sort-icon"></i></th>
-            <th onclick="sortPbTable('total')" data-col="total" id="thTotalCol">Total Packed / Target <i class="fa-solid fa-sort sort-icon"></i></th>
-            <th onclick="sortPbTable('avg')" data-col="avg">Rata-rata/Hari <i class="fa-solid fa-sort sort-icon"></i></th>
-            <th>Growth & Trend</th>
+            <th class="w-12" data-i18n="pb.table.rank">Rank</th>
+            <th onclick="sortPbTable('name')" data-col="name"><span data-i18n="pb.table.name">Nama</span> <i class="fa-solid fa-sort sort-icon"></i></th>
+            <th onclick="sortPbTable('opsId')" data-col="opsId"><span data-i18n="pb.table.opsId">OpsID</span> <i class="fa-solid fa-sort sort-icon"></i></th>
+            <th onclick="sortPbTable('agency')" data-col="agency"><span data-i18n="pb.table.agency">Agency</span> <i class="fa-solid fa-sort sort-icon"></i></th>
+            <th onclick="sortPbTable('status')" data-col="status"><span data-i18n="pb.table.status">Status</span> <i class="fa-solid fa-sort sort-icon"></i></th>
+            <th onclick="sortPbTable('total')" data-col="total" id="thTotalCol"><span data-i18n="pb.table.totalTarget">Total Packed / Target</span> <i class="fa-solid fa-sort sort-icon"></i></th>
+            <th onclick="sortPbTable('avg')" data-col="avg"><span data-i18n="pb.table.avgDay">Rata-rata/Hari</span> <i class="fa-solid fa-sort sort-icon"></i></th>
+            <th data-i18n="pb.table.growthTrend">Growth & Trend</th>
           </tr>
         </thead>
         <tbody id="pbTableBody">
-          <tr><td colspan="8" class="text-center py-6 text-slate-400">Memuat data...</td></tr>
+          <tr><td colspan="8" class="text-center py-6 text-slate-400" data-i18n="pb.table.loading">Memuat data...</td></tr>
         </tbody>
       </table>
     </div>
@@ -1195,7 +1280,7 @@ function renderLeaderboard(rows) {
   const container = document.getElementById('pbLeaderboard');
   
   if (!sorted.length || sorted[0].total === 0) {
-    container.innerHTML = '<span class="text-xs text-slate-400 italic">Belum ada peringkat.</span>';
+    container.innerHTML = '<span class="text-xs text-slate-400 italic">' + t('pb.hof.empty') + '</span>';
     return;
   }
 
@@ -1211,26 +1296,34 @@ function renderLeaderboard(rows) {
       <span class="text-2xl">${medals[idx]}</span>
       <div class="flex flex-col text-left">
         <p class="font-extrabold text-xs md:text-sm leading-tight truncate max-w-[130px] md:max-w-[160px]">${item.name}</p>
-        <p class="text-xs font-mono font-bold opacity-90 mt-0.5">${item.total.toLocaleString('id-ID')} <span class="text-[10px] font-normal">pcs</span></p>
+        <p class="text-xs font-mono font-bold opacity-90 mt-0.5">${item.total.toLocaleString('id-ID')} <span class="text-[10px] font-normal">${t('pb.unit.pcs')}</span></p>
       </div>
     </div>
   `).join('');
 }
 
+function renderThTotalHeader() {
+  const thTotal = document.getElementById('thTotalCol');
+  if (!thTotal) return;
+  if (d1ViewFilterActive) {
+    thTotal.innerHTML = `<span data-i18n="pb.table.d1Packed">${t('pb.table.d1Packed')}</span> (${getYesterdayDateStr()}) <i class="fa-solid fa-sort sort-icon"></i>`;
+  } else {
+    thTotal.innerHTML = `<span data-i18n="pb.table.totalTarget">${t('pb.table.totalTarget')}</span> <i class="fa-solid fa-sort sort-icon"></i>`;
+  }
+}
+
 function toggleD1ViewFilter() {
   d1ViewFilterActive = !d1ViewFilterActive;
   const btn = document.getElementById('btnD1ViewFilter');
-  const thTotal = document.getElementById('thTotalCol');
 
   if (d1ViewFilterActive) {
     btn.classList.remove('bg-indigo-100', 'text-indigo-800', 'border-indigo-300');
     btn.classList.add('bg-indigo-600', 'text-white', 'border-indigo-700', 'shadow-md');
-    thTotal.innerHTML = `D+1 Packed (${getYesterdayDateStr()}) <i class="fa-solid fa-sort sort-icon"></i>`;
   } else {
     btn.classList.remove('bg-indigo-600', 'text-white', 'border-indigo-700', 'shadow-md');
     btn.classList.add('bg-indigo-100', 'text-indigo-800', 'border-indigo-300');
-    thTotal.innerHTML = `Total Packed / Target <i class="fa-solid fa-sort sort-icon"></i>`;
   }
+  renderThTotalHeader();
   renderPbTable();
 }
 
@@ -1301,7 +1394,7 @@ function renderPbTable() {
 
   const tbody = document.getElementById('pbTableBody');
   if (!filtered.length) {
-    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">Gak ada data yang cocok.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400">' + t('pb.table.noMatch') + '</td></tr>';
   } else {
     tbody.innerHTML = filtered.map(function (r, idx) {
       const achRate = r.days > 0 ? (r.achievedDays / r.days) : 1;
@@ -1318,14 +1411,14 @@ function renderPbTable() {
       const targetMonthly = d1ViewFilterActive ? dailyTarget : (dailyTarget * (r.days || 1));
       const targetPct = Math.min(100, Math.round((displayVolume / targetMonthly) * 100));
 
-      const subtext = d1ViewFilterActive 
-        ? (r.d1Packed >= dailyTarget ? ' Achieved Target D+1' : ' Under Target D+1') 
-        : (r.days > 0 ? (r.achievedDays + '/' + r.days + ' hari tercapai') : 'Belum ada data');
+      const subtext = d1ViewFilterActive
+        ? (r.d1Packed >= dailyTarget ? ' ' + t('pb.table.achievedD1') : ' ' + t('pb.table.underD1'))
+        : (r.days > 0 ? t('pb.table.daysAchieved', { done: r.achievedDays, total: r.days }) : t('pb.table.noDataYet'));
 
       let visualBadges = '';
-      if (r.isSpeedDemon) visualBadges += '<span title="Speed Demon (Avg Tertinggi)" class="ml-1 text-[11px] cursor-help">🚀</span>';
-      if (r.days >= 3 && r.achievedDays === r.days) visualBadges += '<span title="Most Consistent (100% Achievement)" class="ml-1 text-[11px] cursor-help">🛡️</span>';
-      if (r.overStreak >= 3) visualBadges += '<span title="On Fire (3 Hari Beruntun Di Atas Target)" class="ml-1 text-[11px] cursor-help">🔥</span>';
+      if (r.isSpeedDemon) visualBadges += '<span title="' + t('pb.badge.speedDemon') + '" class="ml-1 text-[11px] cursor-help">🚀</span>';
+      if (r.days >= 3 && r.achievedDays === r.days) visualBadges += '<span title="' + t('pb.badge.mostConsistent') + '" class="ml-1 text-[11px] cursor-help">🛡️</span>';
+      if (r.overStreak >= 3) visualBadges += '<span title="' + t('pb.badge.onFire') + '" class="ml-1 text-[11px] cursor-help">🔥</span>';
 
       let growthBadge = '<span class="text-slate-400 text-[10px]">-</span>';
       if (r.growth > 0) {
@@ -1336,10 +1429,10 @@ function renderPbTable() {
 
       return '<tr class="' + rowBg + ' transition-colors">' +
         '<td class="text-base">' + rankBadge + '</td>' +
-        '<td class="font-semibold text-left dark:text-slate-200">' + r.name + visualBadges + (r.underStreak >= 3 ? ' <span title="' + r.underStreak + ' hari under target!" class="text-rose-500 ml-1">⚠️</span>' : '') + '</td>' +
+        '<td class="font-semibold text-left dark:text-slate-200">' + r.name + visualBadges + (r.underStreak >= 3 ? ' <span title="' + t('pb.badge.underTargetWarn', { n: r.underStreak }) + '" class="text-rose-500 ml-1">⚠️</span>' : '') + '</td>' +
         '<td class="font-mono font-semibold dark:text-slate-300">' + r.opsId + '</td>' +
         '<td class="dark:text-slate-300">' + r.agency + '</td>' +
-        '<td><span class="text-[11px] font-bold px-2 py-0.5 rounded-full ' + statusBadgeClass(r.status) + '">' + r.status + '</span></td>' +
+        '<td><span class="text-[11px] font-bold px-2 py-0.5 rounded-full ' + statusBadgeClass(r.status) + '">' + statusLabel(r.status) + '</span></td>' +
         '<td>' +
           '<button onclick="openPbDetail(\'' + r.opsId + '\')" class="font-mono font-extrabold text-shopee dark:text-rose-400 hover:underline text-[13px]">' + displayVolume.toLocaleString('id-ID') + '</button>' +
           '<div class="w-24 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full mx-auto mt-1 overflow-hidden">' +
@@ -1347,7 +1440,7 @@ function renderPbTable() {
           '</div>' +
           '<div class="text-[9px] text-slate-400 mt-0.5">' + subtext + '</div>' +
         '</td>' +
-        '<td class="font-mono font-bold text-slate-700 dark:text-slate-200">' + r.avg.toLocaleString('id-ID') + '/hari</td>' +
+        '<td class="font-mono font-bold text-slate-700 dark:text-slate-200">' + r.avg.toLocaleString('id-ID') + t('pb.table.perDay') + '</td>' +
         '<td><div class="flex items-center justify-center gap-2">' + generateSparklineSVG(r.dailyData) + growthBadge + '</div></td>' +
       '</tr>';
     }).join('');
@@ -1365,7 +1458,7 @@ function updatePbSummary(allRows) {
   withData.forEach(function (r) { totalDays += r.days; totalAchieved += r.achievedDays; });
   const rate = totalDays > 0 ? Math.round((totalAchieved / totalDays) * 100) : 0;
   document.getElementById('pbSummaryRate').innerText = rate + '%';
-  document.getElementById('pbSummaryRateDetail').innerText = totalDays > 0 ? (totalAchieved + ' dari ' + totalDays + ' data harian') : 'Belum ada data';
+  document.getElementById('pbSummaryRateDetail').innerText = totalDays > 0 ? t('pb.summary.rateDetail', { done: totalAchieved, total: totalDays }) : t('pb.table.noDataYet');
 
   if (withData.length) {
     const top = withData.slice().sort(function (a, b) { return b.total - a.total; })[0];
@@ -1395,7 +1488,7 @@ function renderAgencyChart(allRows) {
     return '<div>' +
       '<div class="flex items-center justify-between text-[9px] leading-none mb-0.5">' +
         '<span class="font-bold text-slate-500 dark:text-slate-400">' + agency + '</span>' +
-        '<span class="text-slate-400 dark:text-slate-500">' + val.toLocaleString('id-ID') + ' pcs &middot; ' + sharePct + '%</span>' +
+        '<span class="text-slate-400 dark:text-slate-500">' + val.toLocaleString('id-ID') + ' ' + t('pb.unit.pcs') + ' &middot; ' + sharePct + '%</span>' +
       '</div>' +
       '<div class="h-1.5 w-full bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">' +
         '<div class="h-full rounded-full" style="width:' + widthPct + '%; background-color:' + agencyColors[agency] + ';"></div>' +
@@ -1407,7 +1500,7 @@ function renderAgencyChart(allRows) {
 // ==== POPUP DETAIL HARIAN & CHART ====
 function formatTanggalId(dateStr) {
   const parts = dateStr.split('-').map(Number);
-  const monthNames = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"];
+  const monthNames = getMonthNames();
   return parts[2] + '-' + monthNames[parts[1] - 1] + '-' + parts[0];
 }
 
@@ -1419,11 +1512,11 @@ function openPbDetail(opsId) {
   const threshold = ACHIEVEMENT_THRESHOLD[staff.status] || ACHIEVEMENT_THRESHOLD['DW On Call'];
 
   document.getElementById('pbDetailName').innerText = staff.name;
-  document.getElementById('pbDetailMeta').innerText = opsId + ' • ' + staff.agency + ' • ' + staff.status + ' (Target >' + threshold.toLocaleString('id-ID') + '/hari)';
+  document.getElementById('pbDetailMeta').innerText = opsId + ' • ' + staff.agency + ' • ' + statusLabel(staff.status) + ' ' + t('pb.detail.targetSuffix', { n: threshold.toLocaleString('id-ID') });
 
   const streakEl = document.getElementById('pbDetailStreak');
   if (staff.underStreak >= 3) {
-    streakEl.innerText = staff.underStreak + ' Hari Beruntun Under Target!';
+    streakEl.innerText = t('pb.detail.streakWarn', { n: staff.underStreak });
     streakEl.classList.remove('hidden');
   } else {
     streakEl.classList.add('hidden');
@@ -1438,7 +1531,7 @@ function openPbDetail(opsId) {
   const presetOptions = ['Normal / Bekerja', 'Off Duty', 'Rest Day', 'Cuti', 'Sakit', 'Izin', 'Lainnya...'];
 
   if (!dateKeys.length) {
-    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Belum ada data harian buat operator ini bulan ini.</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">' + t('pb.detail.noData') + '</td></tr>';
   } else {
     tbody.innerHTML = dateKeys.map(function (d) {
       const rec = pbMonthlyRecords[d][opsId];
@@ -1451,7 +1544,7 @@ function openPbDetail(opsId) {
       const avg = (packed / 8);
       const achieved = packed >= threshold;
       const achCls = achieved ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400';
-      const achText = achieved ? 'Achieved' : 'Not Achieved';
+      const achText = achieved ? t('pb.detail.achieved') : t('pb.detail.notAchieved');
 
       const isPreset = presetOptions.includes(statusInfo);
       const selectedPreset = isPreset ? statusInfo : 'Lainnya...';
@@ -1470,7 +1563,7 @@ function openPbDetail(opsId) {
           '</div>' +
         '</td>' +
         '<td class="font-mono font-bold dark:text-slate-200">' + packed.toLocaleString('id-ID') + '</td>' +
-        '<td class="font-mono dark:text-slate-300">' + avg.toFixed(1) + '/jam</td>' +
+        '<td class="font-mono dark:text-slate-300">' + avg.toFixed(1) + t('pb.detail.perHour') + '</td>' +
         '<td class="font-bold ' + achCls + '">' + achText + '</td>' +
       '</tr>';
     }).join('');
@@ -1816,8 +1909,460 @@ document.addEventListener('DOMContentLoaded', function() {
     if (icon) icon.className = 'fa-solid fa-sun text-amber-400';
   }
   initPbFirebaseSync();
+  initAppLanguageSwitcher();
 });
 </script>
+
+<script>
+// ==== LANGUAGE SWITCHER (ID/EN/JA/ZH) — sinkron sama pola di modul Rest Time ====
+const APP_LANG_KEY = "pr_dc_app_language";
+const I18N_DICT = {
+  id: {
+    "pb.header.title": "Performance Bagger",
+    "pb.header.subtitle": "Monitoring Produktivitas Packer / Bagger Harian",
+    "pb.header.mode": "Mode",
+    "pb.header.print": "Cetak",
+    "pb.header.importPdvt": "Import PDVT",
+    "pb.header.importRoster": "Import Roster",
+    "pb.header.noImport": "Belum ada import",
+    "pb.hof.title": "Hall of Fame - Top Performers",
+    "pb.hof.subtitle": "Packer dengan achievement tertinggi bulan ini",
+    "pb.hof.loading": "Memuat Top Bagger...",
+    "pb.hof.empty": "Belum ada peringkat.",
+    "pb.summary.month": "Bulan Berjalan",
+    "pb.summary.staff": "Operator Terdata",
+    "pb.summary.rate": "Achievement Rate",
+    "pb.summary.top": "Top Performer",
+    "pb.summary.agency": "Agency Breakdown",
+    "pb.filter.searchPlaceholder": "Cari nama / OpsID...",
+    "pb.filter.allAgency": "Semua Agency",
+    "pb.filter.allStatus": "Semua Status",
+    "pb.filter.statusDedicated": "Dedicated Operator",
+    "pb.filter.statusRegPria": "DW Reguler Pria",
+    "pb.filter.statusRegWanita": "DW Reguler Wanita",
+    "pb.filter.statusOnCall": "DW On Call",
+    "pb.filter.quickViewD1": "Quick View D+1",
+    "pb.filter.redFlag": "Needs Coaching / Red Flag",
+    "pb.filter.rangeExport": "Range Export:",
+    "pb.filter.quickD1Btn": "Quick D+1",
+    "pb.export.excel": "Excel",
+    "pb.export.pdf": "PDF",
+    "pb.table.rank": "Rank",
+    "pb.table.name": "Nama",
+    "pb.table.opsId": "OpsID",
+    "pb.table.agency": "Agency",
+    "pb.table.status": "Status",
+    "pb.table.totalTarget": "Total Packed / Target",
+    "pb.table.d1Packed": "D+1 Packed",
+    "pb.table.avgDay": "Rata-rata/Hari",
+    "pb.table.growthTrend": "Growth & Trend",
+    "pb.table.loading": "Memuat data...",
+    "pb.table.noMatch": "Gak ada data yang cocok.",
+    "lang.label": "Bahasa",
+    "feedback.title": "Saran & Masukan",
+    "feedback.placeholder": "Tulis saran, masukan, atau curhatan kamu di sini...",
+    "feedback.submit": "Kirim",
+    "feedback.loading": "Memuat...",
+    "feedback.empty": "Belum ada saran & masukan. Jadi yang pertama nulis!",
+    "feedback.errorLoad": "Gagal memuat data. Coba lagi nanti.",
+    "feedback.errorConn": "Koneksi belum siap, coba beberapa saat lagi.",
+    "feedback.errorSend": "Gagal mengirim, coba lagi.",
+    "feedback.anon": "Anonim",
+    "logout.btn": "Logout",
+    "pb.table.achievedD1": "Achieved Target D+1",
+    "pb.table.underD1": "Under Target D+1",
+    "pb.table.daysAchieved": "{done}/{total} hari tercapai",
+    "pb.table.noDataYet": "Belum ada data",
+    "pb.table.perDay": "/hari",
+    "pb.summary.rateDetail": "{done} dari {total} data harian",
+    "pb.badge.speedDemon": "Speed Demon (Avg Tertinggi)",
+    "pb.badge.mostConsistent": "Paling Konsisten (Achievement 100%)",
+    "pb.badge.onFire": "On Fire (3 Hari Beruntun Di Atas Target)",
+    "pb.badge.underTargetWarn": "{n} hari under target!",
+    "pb.detail.targetSuffix": "(Target >{n}/hari)",
+    "pb.detail.streakWarn": "{n} Hari Beruntun Under Target!",
+    "pb.detail.noData": "Belum ada data harian buat operator ini bulan ini.",
+    "pb.detail.achieved": "Tercapai",
+    "pb.detail.notAchieved": "Belum Tercapai",
+    "pb.detail.perHour": "/jam",
+    "pb.unit.pcs": "pcs"
+  },
+  en: {
+    "pb.header.title": "Performance Bagger",
+    "pb.header.subtitle": "Daily Packer/Bagger Productivity Monitoring",
+    "pb.header.mode": "Mode",
+    "pb.header.print": "Print",
+    "pb.header.importPdvt": "Import PDVT",
+    "pb.header.importRoster": "Import Roster",
+    "pb.header.noImport": "No import yet",
+    "pb.hof.title": "Hall of Fame - Top Performers",
+    "pb.hof.subtitle": "Packers with the highest achievement this month",
+    "pb.hof.loading": "Loading Top Bagger...",
+    "pb.hof.empty": "No ranking yet.",
+    "pb.summary.month": "Current Month",
+    "pb.summary.staff": "Recorded Operators",
+    "pb.summary.rate": "Achievement Rate",
+    "pb.summary.top": "Top Performer",
+    "pb.summary.agency": "Agency Breakdown",
+    "pb.filter.searchPlaceholder": "Search name / OpsID...",
+    "pb.filter.allAgency": "All Agencies",
+    "pb.filter.allStatus": "All Status",
+    "pb.filter.statusDedicated": "Dedicated Operator",
+    "pb.filter.statusRegPria": "DW Regular Male",
+    "pb.filter.statusRegWanita": "DW Regular Female",
+    "pb.filter.statusOnCall": "DW On Call",
+    "pb.filter.quickViewD1": "Quick View D+1",
+    "pb.filter.redFlag": "Needs Coaching / Red Flag",
+    "pb.filter.rangeExport": "Export Range:",
+    "pb.filter.quickD1Btn": "Quick D+1",
+    "pb.export.excel": "Excel",
+    "pb.export.pdf": "PDF",
+    "pb.table.rank": "Rank",
+    "pb.table.name": "Name",
+    "pb.table.opsId": "OpsID",
+    "pb.table.agency": "Agency",
+    "pb.table.status": "Status",
+    "pb.table.totalTarget": "Total Packed / Target",
+    "pb.table.d1Packed": "D+1 Packed",
+    "pb.table.avgDay": "Average/Day",
+    "pb.table.growthTrend": "Growth & Trend",
+    "pb.table.loading": "Loading data...",
+    "pb.table.noMatch": "No matching data.",
+    "lang.label": "Language",
+    "feedback.title": "Suggestions & Feedback",
+    "feedback.placeholder": "Write your suggestion, feedback, or thoughts here...",
+    "feedback.submit": "Send",
+    "feedback.loading": "Loading...",
+    "feedback.empty": "No suggestions yet. Be the first to write one!",
+    "feedback.errorLoad": "Failed to load data. Please try again later.",
+    "feedback.errorConn": "Connection not ready, please try again in a moment.",
+    "feedback.errorSend": "Failed to send, please try again.",
+    "feedback.anon": "Anonymous",
+    "logout.btn": "Logout",
+    "pb.table.achievedD1": "Achieved Target D+1",
+    "pb.table.underD1": "Under Target D+1",
+    "pb.table.daysAchieved": "{done}/{total} days achieved",
+    "pb.table.noDataYet": "No data yet",
+    "pb.table.perDay": "/day",
+    "pb.summary.rateDetail": "{done} of {total} daily records",
+    "pb.badge.speedDemon": "Speed Demon (Highest Avg)",
+    "pb.badge.mostConsistent": "Most Consistent (100% Achievement)",
+    "pb.badge.onFire": "On Fire (3 Consecutive Days Above Target)",
+    "pb.badge.underTargetWarn": "{n} days under target!",
+    "pb.detail.targetSuffix": "(Target >{n}/day)",
+    "pb.detail.streakWarn": "{n} Consecutive Days Under Target!",
+    "pb.detail.noData": "No daily data yet for this operator this month.",
+    "pb.detail.achieved": "Achieved",
+    "pb.detail.notAchieved": "Not Achieved",
+    "pb.detail.perHour": "/hr",
+    "pb.unit.pcs": "pcs"
+  },
+  ja: {
+    "pb.header.title": "Performance Bagger",
+    "pb.header.subtitle": "パッカー/バッガー日次生産性モニタリング",
+    "pb.header.mode": "モード",
+    "pb.header.print": "印刷",
+    "pb.header.importPdvt": "PDVTインポート",
+    "pb.header.importRoster": "ロスターインポート",
+    "pb.header.noImport": "インポート未実施",
+    "pb.hof.title": "殿堂入り - トップパフォーマー",
+    "pb.hof.subtitle": "今月最高の実績を持つパッカー",
+    "pb.hof.loading": "トップバッガーを読み込み中...",
+    "pb.hof.empty": "まだランキングがありません。",
+    "pb.summary.month": "当月",
+    "pb.summary.staff": "登録オペレーター数",
+    "pb.summary.rate": "達成率",
+    "pb.summary.top": "トップパフォーマー",
+    "pb.summary.agency": "エージェンシー内訳",
+    "pb.filter.searchPlaceholder": "名前・OpsIDで検索...",
+    "pb.filter.allAgency": "全エージェンシー",
+    "pb.filter.allStatus": "全ステータス",
+    "pb.filter.statusDedicated": "専属オペレーター",
+    "pb.filter.statusRegPria": "DW 正規男性",
+    "pb.filter.statusRegWanita": "DW 正規女性",
+    "pb.filter.statusOnCall": "DW オンコール",
+    "pb.filter.quickViewD1": "クイックビュー D+1",
+    "pb.filter.redFlag": "要指導・レッドフラグ",
+    "pb.filter.rangeExport": "エクスポート範囲：",
+    "pb.filter.quickD1Btn": "クイック D+1",
+    "pb.export.excel": "Excel",
+    "pb.export.pdf": "PDF",
+    "pb.table.rank": "ランク",
+    "pb.table.name": "名前",
+    "pb.table.opsId": "OpsID",
+    "pb.table.agency": "エージェンシー",
+    "pb.table.status": "ステータス",
+    "pb.table.totalTarget": "総梱包数 / 目標",
+    "pb.table.d1Packed": "D+1 梱包数",
+    "pb.table.avgDay": "1日平均",
+    "pb.table.growthTrend": "成長とトレンド",
+    "pb.table.loading": "データ読み込み中...",
+    "pb.table.noMatch": "一致するデータがありません。",
+    "lang.label": "言語",
+    "feedback.title": "ご意見・ご要望",
+    "feedback.placeholder": "ご意見、ご要望、感想などをここに書いてください...",
+    "feedback.submit": "送信",
+    "feedback.loading": "読み込み中...",
+    "feedback.empty": "まだ投稿がありません。最初の投稿をしてみましょう!",
+    "feedback.errorLoad": "データの読み込みに失敗しました。後でもう一度お試しください。",
+    "feedback.errorConn": "接続の準備ができていません。しばらくしてからお試しください。",
+    "feedback.errorSend": "送信に失敗しました。もう一度お試しください。",
+    "feedback.anon": "匿名",
+    "logout.btn": "ログアウト",
+    "pb.table.achievedD1": "D+1 目標達成",
+    "pb.table.underD1": "D+1 目標未達",
+    "pb.table.daysAchieved": "{total}日中{done}日達成",
+    "pb.table.noDataYet": "データなし",
+    "pb.table.perDay": "/日",
+    "pb.summary.rateDetail": "{total}件中{done}件達成",
+    "pb.badge.speedDemon": "スピードデーモン（最高平均）",
+    "pb.badge.mostConsistent": "最も安定（達成率100%）",
+    "pb.badge.onFire": "絶好調（3日連続目標超え）",
+    "pb.badge.underTargetWarn": "{n}日連続で目標未達！",
+    "pb.detail.targetSuffix": "（目標 >{n}/日）",
+    "pb.detail.streakWarn": "{n}日連続で目標未達！",
+    "pb.detail.noData": "今月、このオペレーターの日次データはまだありません。",
+    "pb.detail.achieved": "達成",
+    "pb.detail.notAchieved": "未達成",
+    "pb.detail.perHour": "/時間",
+    "pb.unit.pcs": "個"
+  },
+  zh: {
+    "pb.header.title": "Performance Bagger",
+    "pb.header.subtitle": "打包员/装袋员日生产力监控",
+    "pb.header.mode": "模式",
+    "pb.header.print": "打印",
+    "pb.header.importPdvt": "导入PDVT",
+    "pb.header.importRoster": "导入排班表",
+    "pb.header.noImport": "尚未导入",
+    "pb.hof.title": "名人堂 - 最佳表现者",
+    "pb.hof.subtitle": "本月成就最高的打包员",
+    "pb.hof.loading": "正在加载最佳装袋员...",
+    "pb.hof.empty": "暂无排名。",
+    "pb.summary.month": "当前月份",
+    "pb.summary.staff": "已记录操作员",
+    "pb.summary.rate": "达成率",
+    "pb.summary.top": "最佳表现者",
+    "pb.summary.agency": "代理商细分",
+    "pb.filter.searchPlaceholder": "搜索姓名/OpsID...",
+    "pb.filter.allAgency": "全部代理商",
+    "pb.filter.allStatus": "全部状态",
+    "pb.filter.statusDedicated": "专属操作员",
+    "pb.filter.statusRegPria": "DW正式男性",
+    "pb.filter.statusRegWanita": "DW正式女性",
+    "pb.filter.statusOnCall": "DW 随叫随到",
+    "pb.filter.quickViewD1": "快速查看 D+1",
+    "pb.filter.redFlag": "需辅导/红旗标记",
+    "pb.filter.rangeExport": "导出范围：",
+    "pb.filter.quickD1Btn": "快速 D+1",
+    "pb.export.excel": "Excel",
+    "pb.export.pdf": "PDF",
+    "pb.table.rank": "排名",
+    "pb.table.name": "姓名",
+    "pb.table.opsId": "OpsID",
+    "pb.table.agency": "代理商",
+    "pb.table.status": "状态",
+    "pb.table.totalTarget": "总打包量/目标",
+    "pb.table.d1Packed": "D+1 打包量",
+    "pb.table.avgDay": "日均",
+    "pb.table.growthTrend": "增长与趋势",
+    "pb.table.loading": "正在加载数据...",
+    "pb.table.noMatch": "没有匹配的数据。",
+    "lang.label": "语言",
+    "feedback.title": "建议与反馈",
+    "feedback.placeholder": "在此写下你的建议、反馈或想法...",
+    "feedback.submit": "发送",
+    "feedback.loading": "加载中...",
+    "feedback.empty": "还没有反馈。快来抢占第一条吧!",
+    "feedback.errorLoad": "数据加载失败，请稍后再试。",
+    "feedback.errorConn": "连接尚未就绪，请稍后再试。",
+    "feedback.errorSend": "发送失败，请重试。",
+    "feedback.anon": "匿名",
+    "logout.btn": "退出登录",
+    "pb.table.achievedD1": "D+1 已达标",
+    "pb.table.underD1": "D+1 未达标",
+    "pb.table.daysAchieved": "{total}天中{done}天达标",
+    "pb.table.noDataYet": "暂无数据",
+    "pb.table.perDay": "/天",
+    "pb.summary.rateDetail": "{total}条中{done}条已达标",
+    "pb.badge.speedDemon": "速度恶魔（最高平均）",
+    "pb.badge.mostConsistent": "最稳定（达成率100%）",
+    "pb.badge.onFire": "势头正猛（连续3天超过目标）",
+    "pb.badge.underTargetWarn": "连续{n}天未达标！",
+    "pb.detail.targetSuffix": "（目标 >{n}/天）",
+    "pb.detail.streakWarn": "连续{n}天未达标！",
+    "pb.detail.noData": "本月该操作员暂无每日数据。",
+    "pb.detail.achieved": "已达标",
+    "pb.detail.notAchieved": "未达标",
+    "pb.detail.perHour": "/小时",
+    "pb.unit.pcs": "件"
+  }
+};
+
+function t(key, params) {
+  const lang = localStorage.getItem(APP_LANG_KEY) || "id";
+  const dict = I18N_DICT[lang] || I18N_DICT.id;
+  let val = dict[key] !== undefined ? dict[key] : (I18N_DICT.id[key] || key);
+  if (params) {
+    Object.keys(params).forEach(function (k) {
+      val = val.split("{" + k + "}").join(params[k]);
+    });
+  }
+  return val;
+}
+
+// Peta status mentah (value data) -> key i18n label yang udah ada di filter dropdown,
+// dipakai buat nampilin label status di tabel/detail biar ikut ganti bahasa juga.
+const STATUS_I18N_KEY = {
+  "Dedicated Operator": "pb.filter.statusDedicated",
+  "DW Reguler Pria": "pb.filter.statusRegPria",
+  "DW Reguler Wanita": "pb.filter.statusRegWanita",
+  "DW On Call": "pb.filter.statusOnCall"
+};
+function statusLabel(status) {
+  const key = STATUS_I18N_KEY[status];
+  return key ? t(key) : status;
+}
+
+// Nama bulan buat format tanggal, ikut bahasa aktif
+const MONTH_NAMES_I18N = {
+  id: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"],
+  en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+  ja: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"],
+  zh: ["1月", "2月", "3月", "4月", "5月", "6月", "7月", "8月", "9月", "10月", "11月", "12月"]
+};
+function getMonthNames() {
+  const lang = localStorage.getItem(APP_LANG_KEY) || "id";
+  return MONTH_NAMES_I18N[lang] || MONTH_NAMES_I18N.id;
+}
+
+function applyI18n(lang) {
+  const dict = I18N_DICT[lang] || I18N_DICT.id;
+  document.querySelectorAll("[data-i18n]").forEach(function (el) {
+    const key = el.getAttribute("data-i18n");
+    if (dict[key] !== undefined) el.textContent = dict[key];
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+    const key = el.getAttribute("data-i18n-placeholder");
+    if (dict[key] !== undefined) el.placeholder = dict[key];
+  });
+}
+
+function initAppLanguageSwitcher() {
+  const sel = document.getElementById("appLangSelect");
+  const lang = localStorage.getItem(APP_LANG_KEY) || "id";
+  if (sel) sel.value = lang;
+  applyI18n(lang);
+}
+function setAppLanguage(lang) {
+  localStorage.setItem(APP_LANG_KEY, lang);
+  applyI18n(lang);
+
+  // Semua konten yang dirender lewat JS (bukan elemen data-i18n statis) harus
+  // di-render ulang manual, karena teksnya "dibekukan" saat pertama kali dirender.
+  if (document.getElementById("thTotalCol")) renderThTotalHeader();
+  if (document.getElementById("pbTableBody")) renderPbTable(); // ini juga cascade ke summary, agency chart, leaderboard
+
+  // Kalau modal detail harian sedang kebuka, refresh juga isinya
+  const detailModal = document.getElementById("pbDetailModal");
+  if (detailModal && detailModal.classList.contains("active") && currentDetailOpsId) {
+    openPbDetail(currentDetailOpsId);
+  }
+
+  // Kalau papan Saran & Masukan sedang kebuka, refresh state kosong/error/list-nya
+  if (lastFeedbackSnapshot !== null) {
+    renderFeedbackList(lastFeedbackSnapshot);
+  }
+}
+
+// ==== SARAN & MASUKAN (papan terbuka realtime — sama root Firebase dgn modul lain, jadi 1 papan buat semua modul) ====
+const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
+let fbFeedbackRef = null;
+let lastFeedbackSnapshot = null;
+
+function escapeFeedbackHtml(str) {
+  const div = document.createElement("div");
+  div.textContent = str == null ? "" : String(str);
+  return div.innerHTML;
+}
+
+function openFeedbackBoard() {
+  document.getElementById("fbBoardBackdrop").classList.add("open");
+  initFeedbackBoardSync();
+}
+function closeFeedbackBoard() {
+  document.getElementById("fbBoardBackdrop").classList.remove("open");
+}
+
+function initFeedbackBoardSync() {
+  if (fbFeedbackRef) return; // udah nyala dari sebelumnya, gak perlu attach listener dobel
+  try {
+    const db = firebase.database();
+    fbFeedbackRef = db.ref(FB_FEEDBACK_ROOT).orderByChild("createdAt").limitToLast(100);
+    fbFeedbackRef.on("value", function (snapshot) {
+      lastFeedbackSnapshot = snapshot.val() || {};
+      renderFeedbackList(lastFeedbackSnapshot);
+    }, function (err) {
+      console.error("Gagal baca Saran & Masukan:", err);
+      const list = document.getElementById("fbBoardList");
+      if (list) list.innerHTML = '<div class="fb-board-empty">' + t('feedback.errorLoad') + '</div>';
+    });
+  } catch (e) {
+    console.error("Firebase belum siap buat Saran & Masukan:", e);
+    const list = document.getElementById("fbBoardList");
+    if (list) list.innerHTML = '<div class="fb-board-empty">' + t('feedback.errorConn') + '</div>';
+  }
+}
+
+function renderFeedbackList(data) {
+  const list = document.getElementById("fbBoardList");
+  if (!list) return;
+  const items = Object.keys(data).map(function (k) { return Object.assign({}, data[k], { _key: k }); });
+  if (!items.length) {
+    list.innerHTML = '<div class="fb-board-empty">' + t('feedback.empty') + '</div>';
+    return;
+  }
+  items.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+  list.innerHTML = items.map(function (item) {
+    const dt = item.createdAt ? new Date(item.createdAt) : null;
+    const timeStr = dt && !isNaN(dt) ? (String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0')) : '-';
+    const userLabel = item.userEmail ? item.userEmail.split('@')[0] : t('feedback.anon');
+    return '<div class="fb-board-item">' +
+      '<div class="fb-board-item-head">' +
+      '<span class="fb-board-item-user">' + escapeFeedbackHtml(userLabel) + '</span>' +
+      '<span class="fb-board-item-time">' + timeStr + '</span>' +
+      '</div>' +
+      '<p class="fb-board-item-msg">' + escapeFeedbackHtml(item.message) + '</p>' +
+      '</div>';
+  }).join('');
+}
+
+function submitFeedback() {
+  const input = document.getElementById("fbBoardInput");
+  const btn = document.getElementById("fbBoardSubmitBtn");
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!window.firebase || !firebase.apps || !firebase.apps.length) {
+    alert(t('feedback.errorConn'));
+    return;
+  }
+  btn.disabled = true;
+  const db = firebase.database();
+  db.ref(FB_FEEDBACK_ROOT).push().set({
+    message: msg,
+    userEmail: window.__authUserEmail || null,
+    createdAt: Date.now()
+  }).then(function () {
+    input.value = "";
+  }).catch(function (err) {
+    console.error("Gagal kirim Saran & Masukan:", err);
+    alert(t('feedback.errorSend'));
+  }).finally(function () {
+    btn.disabled = false;
+  });
+}
+</script>
+
 <script>
 // ==== APP-SHELL BRIDGE ====
 // Kalau halaman ini dibuka langsung (bukan lewat index.html app-shell), link sidebar
