@@ -451,6 +451,18 @@
     "ja": "送信",
     "zh": "发送"
   },
+  "feedback.empty": {
+    "id": "Belum ada saran & masukan.",
+    "en": "No feedback yet.",
+    "ja": "まだご意見・ご要望はありません。",
+    "zh": "暂无建议与反馈。"
+  },
+  "toast.err.saveFeedback": {
+    "id": "❌ Gagal kirim Saran & Masukan: ",
+    "en": "❌ Failed to send feedback: ",
+    "ja": "❌ ご意見・ご要望の送信に失敗しました: ",
+    "zh": "❌ 发送建议与反馈失败: "
+  },
   "logout.btn": {
     "id": "Logout",
     "en": "Logout",
@@ -2767,6 +2779,122 @@
       if (data.type === "collapseSidebarGroups") collapseAllSidebarGroups();
     });
   })();
+</script>
+
+<script>
+  // ==== PAPAN SARAN & MASUKAN ====
+  // Sengaja pake node root Firebase TERPISAH (bukan di bawah FB_ROOT punya Inbound),
+  // soalnya papan ini "1 buat semua modul" (Rest Time, Performance Bagger, Outbound,
+  // Inventory Control, dst) - jadi harus root level biar kebaca sama di semua modul.
+  const FB_FEEDBACK_ROOT = "prDcSharedFeedback";
+  let fbFeedbackDb = null;
+  let fbFeedbackListenerAttached = false;
+
+  function getFeedbackUserName() {
+    try {
+      const u = firebase.auth().currentUser;
+      if (!u) return "Unknown";
+      return u.displayName || u.email || "Unknown";
+    } catch (e) {
+      return "Unknown";
+    }
+  }
+
+  function initFeedbackBoardSync() {
+    if (fbFeedbackListenerAttached) return;
+    try {
+      fbFeedbackDb = firebase.database();
+    } catch (e) {
+      console.error("Gagal connect Firebase Database (Feedback Board):", e);
+      return;
+    }
+    fbFeedbackListenerAttached = true;
+
+    // limitToLast biar gak narik SEMUA histori tiap buka (cukup 200 terbaru)
+    fbFeedbackDb.ref(FB_FEEDBACK_ROOT).limitToLast(200).on("value", function (snap) {
+      const val = snap.val() || {};
+      const items = Object.keys(val).map(function (k) {
+        return Object.assign({ _key: k }, val[k]);
+      });
+      items.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); }); // terbaru di atas
+      renderFeedbackBoard(items);
+    }, function (err) {
+      console.error("Gagal baca data Saran & Masukan dari Firebase:", err);
+    });
+  }
+
+  function renderFeedbackBoard(items) {
+    const list = document.getElementById("fbBoardList");
+    if (!list) return;
+    if (!items.length) {
+      list.innerHTML = '<div class="fb-board-empty">' + escapeHtml(t("feedback.empty")) + "</div>";
+      return;
+    }
+    list.innerHTML = items.map(function (it) {
+      const timeStr = it.ts ? new Date(it.ts).toLocaleString() : "-";
+      return (
+        '<div class="fb-board-item">' +
+          '<div class="fb-board-item-head">' +
+            '<span class="fb-board-item-user">' + escapeHtml(it.user || "Unknown") + "</span>" +
+            '<span class="fb-board-item-time">' + escapeHtml(timeStr) + "</span>" +
+          "</div>" +
+          '<p class="fb-board-item-msg">' + escapeHtml(it.message || "") + "</p>" +
+        "</div>"
+      );
+    }).join("");
+  }
+
+  function openFeedbackBoard() {
+    const backdrop = document.getElementById("fbBoardBackdrop");
+    if (!backdrop) return;
+    backdrop.classList.add("open");
+    initFeedbackBoardSync();
+    const input = document.getElementById("fbBoardInput");
+    if (input) input.focus();
+  }
+
+  function closeFeedbackBoard() {
+    const backdrop = document.getElementById("fbBoardBackdrop");
+    if (backdrop) backdrop.classList.remove("open");
+  }
+
+  function submitFeedback() {
+    const input = document.getElementById("fbBoardInput");
+    const btn = document.getElementById("fbBoardSubmitBtn");
+    if (!input) return;
+
+    const message = input.value.trim();
+    if (!message) return;
+
+    if (!fbFeedbackDb) {
+      try { fbFeedbackDb = firebase.database(); } catch (e) { /* noop, ditangani di bawah */ }
+    }
+    if (!fbFeedbackDb) {
+      showToast(t("toast.err.saveFeedback") + "Firebase belum siap", "err");
+      return;
+    }
+
+    if (btn) btn.disabled = true;
+    fbFeedbackDb.ref(FB_FEEDBACK_ROOT).push({
+      user: getFeedbackUserName(),
+      message: message,
+      ts: Date.now(),
+      module: window.__PAGE_TAB || "unknown"
+    }).then(function () {
+      input.value = "";
+      if (btn) btn.disabled = false;
+    }).catch(function (err) {
+      if (btn) btn.disabled = false;
+      showToast(t("toast.err.saveFeedback") + err.message, "err");
+    });
+  }
+
+  // ESC buat nutup papan Saran & Masukan juga (konsisten sama pola Esc buat Sidebar)
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "Escape" && e.key !== "Esc") return;
+    const backdrop = document.getElementById("fbBoardBackdrop");
+    if (backdrop && backdrop.classList.contains("open")) closeFeedbackBoard();
+  });
 </script>
 
 </body>
