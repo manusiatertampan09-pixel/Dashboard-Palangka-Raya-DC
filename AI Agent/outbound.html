@@ -152,7 +152,64 @@ tailwind.config = {
     font-family: var(--tw-sans);
   }
   .app-sidebar-footer button:hover { background: #1f1f1f; }
-  
+
+  /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
+  .app-sidebar-lang { margin-bottom: 10px; }
+  .app-sidebar-lang label {
+    display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
+    color: var(--text-sidebar-muted); text-transform: uppercase; margin-bottom: 6px;
+  }
+  .app-sidebar-lang select {
+    width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border-sidebar);
+    background: var(--bg-sidebar-card); color: var(--text-sidebar); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: var(--tw-sans);
+  }
+  .app-sidebar-lang select:focus { outline: none; border-color: #f59e0b; }
+  .app-sidebar-feedback-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+    margin-bottom: 10px; padding: 11px; border: 1px solid rgba(245, 158, 11, 0.4);
+    background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-radius: 7px; cursor: pointer;
+    font-weight: 600; font-size: 15px; font-family: var(--tw-sans);
+  }
+  .app-sidebar-feedback-btn:hover { background: rgba(245, 158, 11, 0.22); }
+  .fb-board-backdrop {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(2px);
+    z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px;
+  }
+  .fb-board-backdrop.open { display: flex; }
+  .fb-board-card {
+    width: 100%; max-width: 420px; max-height: 80vh; background: var(--bg-sidebar);
+    border: 1px solid var(--border-sidebar); border-radius: 12px; display: flex; flex-direction: column;
+    overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.4); font-family: var(--tw-sans);
+  }
+  .fb-board-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; background: var(--bg-sidebar-card); border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0;
+  }
+  .fb-board-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: #fff; }
+  .fb-board-header button { background: transparent; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+  .fb-board-header button:hover { color: #fff; }
+  .fb-board-form { padding: 12px 16px; border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0; }
+  .fb-board-form textarea {
+    width: 100%; min-height: 70px; resize: vertical; border-radius: 8px; border: 1px solid var(--border-sidebar);
+    background: var(--bg-sidebar-card); color: #fff; padding: 10px 12px; font-size: 13px; font-family: var(--tw-sans);
+  }
+  .fb-board-form textarea:focus { outline: none; border-color: #f59e0b; }
+  .fb-board-form-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+  .fb-board-submit-btn {
+    padding: 8px 18px; border: none; border-radius: 7px; background: #f59e0b; color: #000;
+    font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--tw-sans);
+  }
+  .fb-board-submit-btn:hover { background: #fbbf24; }
+  .fb-board-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .fb-board-list { overflow-y: auto; flex-grow: 1; padding: 8px 0; }
+  .fb-board-item { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .fb-board-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+  .fb-board-item-user { font-size: 11.5px; font-weight: 700; color: #f59e0b; }
+  .fb-board-item-time { font-size: 10px; color: var(--text-sidebar-muted); flex-shrink: 0; }
+  .fb-board-item-msg { font-size: 13px; color: #e5e5e5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
+  .fb-board-empty { padding: 30px 16px; text-align: center; color: var(--text-sidebar-muted); font-size: 12.5px; }
+
   /* Dynamic Route Cell Styling */
   .route-cell {
     white-space: nowrap;
@@ -238,6 +295,297 @@ tailwind.config = {
   }
 </script>
 
+<script>
+  // ==== I18N ENGINE (Bahasa, English, 日本語, 中文) — sama persis pola & key sidebar/feedback
+  // kayak modul Inbound, biar bahasa yg dipilih user ke-share ke semua modul lewat localStorage. ====
+  const APP_I18N = {
+    "lang.label": { "id": "Bahasa", "en": "Language", "ja": "言語", "zh": "语言" },
+    "sidebar.group.productivity": { "id": "Productivity", "en": "Productivity", "ja": "生産性", "zh": "生产力" },
+    "sidebar.link.restTime": { "id": "Rest Time Monitoring", "en": "Rest Time Monitoring", "ja": "休憩時間モニタリング", "zh": "休息时间监控" },
+    "sidebar.link.perfBagger": { "id": "Performance Bagger", "en": "Performance Bagger", "ja": "パフォーマンス（バガー）", "zh": "打包员绩效" },
+    "sidebar.group.inbound": { "id": "Inbound", "en": "Inbound", "ja": "インバウンド", "zh": "入库" },
+    "sidebar.link.inbound": { "id": "LH Tracking & Forecast MP", "en": "LH Tracking & Forecast MP", "ja": "LHトラッキング＆人員予測", "zh": "LH跟踪与人力预测" },
+    "sidebar.group.outbound": { "id": "Outbound Monitoring", "en": "Outbound Monitoring", "ja": "アウトバウンドモニタリング", "zh": "出库监控" },
+    "sidebar.link.outboundAging": { "id": "Aging & Packer Backlog", "en": "Aging & Packer Backlog", "ja": "滞留時間＆梱包滞留", "zh": "滞留时间与打包积压" },
+    "sidebar.link.outboundOccupancy": { "id": "Occupancy & Shift", "en": "Occupancy & Shift", "ja": "稼働率＆シフト", "zh": "占用率与班次" },
+    "sidebar.group.inventory": { "id": "Inventory Control", "en": "Inventory Control", "ja": "在庫管理", "zh": "库存管理" },
+    "sidebar.link.inventory": { "id": "Inventory Control", "en": "Inventory Control", "ja": "在庫管理", "zh": "库存管理" },
+    "sidebar.subtitle": { "id": "Outbound Monitoring", "en": "Outbound Monitoring", "ja": "アウトバウンドモニタリング", "zh": "出库监控" },
+    "sidebar.openMenu": { "id": "Buka Menu", "en": "Open Menu", "ja": "メニューを開く", "zh": "打开菜单" },
+    "feedback.title": { "id": "Saran & Masukan", "en": "Feedback & Suggestions", "ja": "ご意見・ご要望", "zh": "建议与反馈" },
+    "feedback.placeholder": { "id": "Tulis saran, masukan, atau curhatan kamu di sini...", "en": "Write your feedback, suggestion, or thoughts here...", "ja": "ご意見・ご要望をここに入力してください…", "zh": "在此写下您的建议或想法…" },
+    "feedback.submit": { "id": "Kirim", "en": "Send", "ja": "送信", "zh": "发送" },
+    "feedback.empty": { "id": "Belum ada saran & masukan.", "en": "No feedback yet.", "ja": "まだご意見・ご要望はありません。", "zh": "暂无建议与反馈。" },
+    "logout.btn": { "id": "Logout", "en": "Logout", "ja": "ログアウト", "zh": "退出登录" },
+    "toast.err.saveFeedback": { "id": "❌ Gagal kirim Saran & Masukan: ", "en": "❌ Failed to send feedback: ", "ja": "❌ ご意見・ご要望の送信に失敗しました: ", "zh": "❌ 发送建议与反馈失败: " },
+
+    "page.title": { "id": "Internal Palangka Raya DC", "en": "Internal Palangka Raya DC", "ja": "Internal Palangka Raya DC", "zh": "Internal Palangka Raya DC" },
+    "ob.header.title": { "id": "PALANGKARAYA DC REPORT STAGING OUTBOUND", "en": "PALANGKARAYA DC REPORT STAGING OUTBOUND", "ja": "PALANGKARAYA DC アウトバウンド・ステージングレポート", "zh": "PALANGKARAYA DC 出库暂存报告" },
+    "ob.header.subtitle": { "id": "Monitoring Staging Area Occupancy per Destination", "en": "Monitoring Staging Area Occupancy per Destination", "ja": "宛先別ステージングエリア占有率モニタリング", "zh": "按目的地监控暂存区占用情况" },
+    "ob.header.openMenu": { "id": "Buka Menu", "en": "Open Menu", "ja": "メニューを開く", "zh": "打开菜单" },
+    "ob.header.themeSwitch": { "id": "Switch Theme Mode", "en": "Switch Theme Mode", "ja": "テーマ切替", "zh": "切换主题模式" },
+    "ob.header.themeDark": { "id": "Dark", "en": "Dark", "ja": "ダーク", "zh": "深色" },
+    "ob.header.themeLight": { "id": "Light", "en": "Light", "ja": "ライト", "zh": "浅色" },
+    "ob.header.journeyLabel": { "id": "Journey:", "en": "Journey:", "ja": "ジャーニー:", "zh": "旅程:" },
+    "ob.header.journeyAll": { "id": "ALL TYPE", "en": "ALL TYPE", "ja": "すべて", "zh": "所有类型" },
+    "ob.header.journeyForward": { "id": "FORWARD", "en": "FORWARD", "ja": "フォワード", "zh": "正向" },
+    "ob.header.journeyReturn": { "id": "RETURN", "en": "RETURN", "ja": "リターン", "zh": "退回" },
+    "ob.header.downloadImage": { "id": "Download Gambar", "en": "Download Image", "ja": "画像をダウンロード", "zh": "下载图片" },
+    "ob.header.import": { "id": "Import", "en": "Import", "ja": "インポート", "zh": "导入" },
+    "ob.header.sampleData": { "id": "Data Contoh", "en": "Sample Data", "ja": "サンプルデータ", "zh": "示例数据" },
+    "ob.badge.agingMode": { "id": "Aging & Packer Backlog Mode", "en": "Aging & Packer Backlog Mode", "ja": "滞留時間＆梱包滞留モード", "zh": "滞留与打包积压模式" },
+    "ob.badge.occupancyMode": { "id": "Occupancy & Shift Departure Mode", "en": "Occupancy & Shift Departure Mode", "ja": "稼働率＆シフト出発モード", "zh": "占用率与班次发车模式" },
+
+    "ob.exec.title": { "id": "Executive Summary", "en": "Executive Summary", "ja": "エグゼクティブサマリー", "zh": "执行摘要" },
+    "ob.exec.emptyNarrative": { "id": "Belum ada data. Silakan import file Excel untuk melihat ringkasan otomatis.", "en": "No data yet. Please import an Excel file to see the automatic summary.", "ja": "データがまだありません。自動要約を見るにはExcelファイルをインポートしてください。", "zh": "暂无数据。请导入Excel文件以查看自动摘要。" },
+    "ob.exec.waitingSla": { "id": "Menunggu data untuk hitung status SLA...", "en": "Waiting for data to calculate SLA status...", "ja": "SLAステータス計算のためデータを待機中…", "zh": "正在等待数据以计算SLA状态…" },
+
+    "ob.kpi.dcName": { "id": "DC Name", "en": "DC Name", "ja": "DC名", "zh": "DC名称" },
+    "ob.kpi.processOutbound": { "id": "Process Outbound", "en": "Process Outbound", "ja": "アウトバウンド処理", "zh": "出库流程" },
+    "ob.kpi.staging": { "id": "Staging", "en": "Staging", "ja": "ステージング", "zh": "暂存" },
+    "ob.kpi.reportTime": { "id": "Report Time", "en": "Report Time", "ja": "レポート時刻", "zh": "报告时间" },
+    "ob.kpi.loading": { "id": "Loading...", "en": "Loading...", "ja": "読み込み中…", "zh": "加载中…" },
+    "ob.kpi.viewBy": { "id": "View By", "en": "View By", "ja": "表示単位", "zh": "查看方式" },
+    "ob.kpi.destination": { "id": "Destination", "en": "Destination", "ja": "宛先", "zh": "目的地" },
+    "ob.kpi.totalPacked": { "id": "Total Parcel Packed", "en": "Total Parcel Packed", "ja": "梱包済み合計パーセル数", "zh": "已打包包裹总数" },
+    "ob.kpi.parcelPacked": { "id": "Parcel Packed", "en": "Parcel Packed", "ja": "梱包済みパーセル", "zh": "已打包包裹" },
+    "ob.kpi.bulkyPacked": { "id": "Bulky Packed", "en": "Bulky Packed", "ja": "梱包済みバルキー", "zh": "已打包大件" },
+    "ob.kpi.highValuePacked": { "id": "High Value Packed", "en": "High Value Packed", "ja": "梱包済み高額品", "zh": "已打包高价值件" },
+    "ob.kpi.liquidPacked": { "id": "Liquid Packed", "en": "Liquid Packed", "ja": "梱包済み液体", "zh": "已打包液体" },
+
+    "ob.grid.searchPlaceholder": { "id": "Cari Sort Code / Receiver Name...", "en": "Search Sort Code / Receiver Name...", "ja": "ソートコード／受取人名で検索…", "zh": "搜索分拣代码/收件人名称…" },
+    "ob.grid.show": { "id": "Tampilkan:", "en": "Show:", "ja": "表示件数:", "zh": "显示:" },
+    "ob.grid.all": { "id": "Semua", "en": "All", "ja": "すべて", "zh": "全部" },
+    "ob.grid.exportExcel": { "id": "Export Excel", "en": "Export Excel", "ja": "Excelにエクスポート", "zh": "导出Excel" },
+    "ob.grid.page": { "id": "Halaman {p} / {t}", "en": "Page {p} / {t}", "ja": "ページ {p} / {t}", "zh": "第 {p} / {t} 页" },
+    "ob.grid.pageShort": { "id": "Hal {p}/{t} • {n} Destination", "en": "Page {p}/{t} • {n} Destinations", "ja": "ページ {p}/{t} • 宛先 {n} 件", "zh": "第 {p}/{t} 页 • {n} 个目的地" },
+    "ob.grid1.title": { "id": "Grid 1: High Volume Destination", "en": "Grid 1: High Volume Destination", "ja": "グリッド1: 高ボリューム宛先", "zh": "表格1: 高量目的地" },
+    "ob.grid2.title": { "id": "Grid 2: Mid-Low Volume Destination", "en": "Grid 2: Mid-Low Volume Destination", "ja": "グリッド2: 中～低ボリューム宛先", "zh": "表格2: 中低量目的地" },
+    "ob.th.sortCode": { "id": "Sort Code", "en": "Sort Code", "ja": "ソートコード", "zh": "分拣代码" },
+    "ob.th.agingStatusTitle": { "id": "Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 DANGER", "en": "Alert based on Aging: D-1 GOOD, D-2 WARNING, D-3 to D-5 DANGER", "ja": "滞留日数によるアラート: D-1 GOOD、D-2 WARNING、D-3～D-5 DANGER", "zh": "基于滞留天数的提醒：D-1 良好，D-2 警告，D-3至D-5 危险" },
+    "ob.th.agingStatus": { "id": "Aging Status", "en": "Aging Status", "ja": "滞留ステータス", "zh": "滞留状态" },
+    "ob.th.receiverName": { "id": "Receiver Name", "en": "Receiver Name", "ja": "受取人名", "zh": "收件人名称" },
+    "ob.th.hv": { "id": "HV", "en": "HV", "ja": "HV", "zh": "HV" },
+    "ob.th.liquid": { "id": "Liquid", "en": "Liquid", "ja": "液体", "zh": "液体" },
+    "ob.th.totalParcel": { "id": "Total Parcel", "en": "Total Parcel", "ja": "パーセル合計", "zh": "包裹总数" },
+    "ob.th.no": { "id": "No", "en": "No", "ja": "No", "zh": "序号" },
+    "ob.emptyImportNew": { "id": "Silakan import data Excel baru.", "en": "Please import new Excel data.", "ja": "新しいExcelデータをインポートしてください。", "zh": "请导入新的Excel数据。" },
+    "ob.emptyNoMatch": { "id": "Tidak ada Destination yang cocok.", "en": "No matching destinations.", "ja": "該当する宛先はありません。", "zh": "没有匹配的目的地。" },
+
+    "ob.packer.totalOperator": { "id": "Total Operator Active", "en": "Total Operator Active", "ja": "稼働オペレーター総数", "zh": "活跃操作员总数" },
+    "ob.packer.topOperator": { "id": "Top Packer Operator", "en": "Top Packer Operator", "ja": "トップ梱包オペレーター", "zh": "最佳打包操作员" },
+    "ob.packer.avgOutput": { "id": "Rata-Rata Output/Packer", "en": "Average Output/Packer", "ja": "オペレーター平均出力", "zh": "平均产出/打包员" },
+    "ob.packer.criticalBacklog": { "id": "Operator Critical Backlog (>D4)", "en": "Operator Critical Backlog (>D4)", "ja": "重大滞留オペレーター (>D4)", "zh": "严重积压操作员 (>D4)" },
+    "ob.packer.personUnit": { "id": "{n} Person", "en": "{n} Person", "ja": "{n} 名", "zh": "{n} 人" },
+    "ob.packer.parcelUnit": { "id": "{n} Parcel", "en": "{n} Parcel", "ja": "{n} 個", "zh": "{n} 件" },
+    "ob.packer.operatorUnit": { "id": "{n} Operator", "en": "{n} Operator", "ja": "{n} 名", "zh": "{n} 名" },
+    "ob.leaderboard.title": { "id": "Leaderboard Packer & Distribution Analysis", "en": "Leaderboard Packer & Distribution Analysis", "ja": "梱包リーダーボード＆分布分析", "zh": "打包排行榜与分布分析" },
+    "ob.leaderboard.sortedBy": { "id": "Sorted by Total Parcel Packed", "en": "Sorted by Total Parcel Packed", "ja": "梱包済み合計パーセル数順", "zh": "按已打包包裹总数排序" },
+    "ob.th.rank": { "id": "Rank", "en": "Rank", "ja": "順位", "zh": "排名" },
+    "ob.th.operatorName": { "id": "Operator Name", "en": "Operator Name", "ja": "オペレーター名", "zh": "操作员姓名" },
+    "ob.th.totalPacked": { "id": "Total Packed", "en": "Total Packed", "ja": "梱包済み合計", "zh": "已打包总数" },
+    "ob.th.criticalD4": { "id": "Critical (>D4)", "en": "Critical (>D4)", "ja": "重大 (>D4)", "zh": "严重 (>D4)" },
+    "ob.th.criticalContribTitle": { "id": "Kontribusi operator ini terhadap total backlog kritis (>D4) seluruh DC", "en": "This operator's contribution to the DC's total critical backlog (>D4)", "ja": "DC全体の重大滞留（>D4）に対するこのオペレーターの寄与度", "zh": "该操作员对全DC严重积压(>D4)总量的贡献占比" },
+    "ob.th.criticalContrib": { "id": "Kontribusi Backlog Kritis", "en": "Critical Backlog Contribution", "ja": "重大滞留への寄与度", "zh": "严重积压贡献度" },
+    "ob.th.shareVolume": { "id": "Share Volume", "en": "Share Volume", "ja": "ボリューム比率", "zh": "占比" },
+    "ob.emptyImportExcel": { "id": "Import data Excel untuk menampilkan rangkuman Packer.", "en": "Import Excel data to display the Packer summary.", "ja": "梱包サマリーを表示するにはExcelデータをインポートしてください。", "zh": "导入Excel数据以显示打包员汇总。" },
+    "ob.leaderboard.rootCause": { "id": "Root Cause: {name} menyumbang {count} parcel ({pct}%) dari total {total} backlog kritis (>D4) DC ini — prioritaskan follow up ke operator ini.", "en": "Root Cause: {name} contributed {count} parcels ({pct}%) of this DC's total {total} critical (>D4) backlog — prioritize follow-up with this operator.", "ja": "根本原因: {name} がこのDCの重大滞留(>D4)合計{total}件のうち{count}件（{pct}%）を占めています。このオペレーターへのフォローアップを優先してください。", "zh": "根本原因：{name} 贡献了本DC严重积压(>D4)总数{total}件中的{count}件（{pct}%）——请优先跟进该操作员。" },
+
+    "ob.chart.agingDistTitle": { "id": "Distribusi Aging Backlog (D-Day s/d D-6+)", "en": "Aging Backlog Distribution (D-Day to D-6+)", "ja": "滞留分布 (D-Day～D-6+)", "zh": "滞留分布 (D-Day 至 D-6+)" },
+    "ob.chart.parcelUnit": { "id": "{n} Parcel", "en": "{n} Parcel", "ja": "{n} 個", "zh": "{n} 件" },
+    "ob.chart.trendTitle": { "id": "Tren Historis DC — Volume & Backlog Kritis Antar Import", "en": "DC Historical Trend — Volume & Critical Backlog Across Imports", "ja": "DC推移 — 各インポート間のボリューム＆重大滞留", "zh": "DC历史趋势 — 各次导入间的量与严重积压" },
+    "ob.chart.noHistory": { "id": "Belum ada histori", "en": "No history yet", "ja": "履歴はまだありません", "zh": "暂无历史记录" },
+    "ob.chart.needMinSnapshot": { "id": "Butuh min. 2 snapshot import", "en": "Needs at least 2 import snapshots", "ja": "最低2回分のインポートスナップショットが必要", "zh": "至少需要2次导入快照" },
+    "ob.chart.lastSnapshots": { "id": "{n} Snapshot Terakhir", "en": "Last {n} Snapshots", "ja": "直近 {n} 件のスナップショット", "zh": "最近 {n} 个快照" },
+    "ob.chart.jumlahParcel": { "id": "Jumlah Parcel", "en": "Parcel Count", "ja": "パーセル数", "zh": "包裹数量" },
+    "ob.chart.totalVolume": { "id": "Total Volume Parcel", "en": "Total Parcel Volume", "ja": "パーセル総量", "zh": "包裹总量" },
+    "ob.chart.backlogKritis": { "id": "Backlog Kritis (>D4)", "en": "Critical Backlog (>D4)", "ja": "重大滞留 (>D4)", "zh": "严重积压 (>D4)" },
+
+    "ob.occ.innerTitle": { "id": "Breakdown Volume & Aging Days Inner Island", "en": "Inner Island Volume & Aging Days Breakdown", "ja": "インナーアイランド ボリューム＆滞留日数内訳", "zh": "内岛量与滞留天数明细" },
+    "ob.occ.totalJalur": { "id": "Total Jalur: {n}", "en": "Total Routes: {n}", "ja": "総ルート数: {n}", "zh": "总路线数: {n}" },
+    "ob.th.listRoute": { "id": "List Route", "en": "Route List", "ja": "ルート一覧", "zh": "路线列表" },
+    "ob.th.parcel": { "id": "Parcel", "en": "Parcel", "ja": "パーセル", "zh": "包裹" },
+    "ob.th.bulky": { "id": "Bulky", "en": "Bulky", "ja": "バルキー", "zh": "大件" },
+    "ob.th.total": { "id": "Total", "en": "Total", "ja": "合計", "zh": "总计" },
+    "ob.th.capPct": { "id": "Cap (%)", "en": "Cap (%)", "ja": "容量 (%)", "zh": "容量 (%)" },
+    "ob.emptyPleaseImport": { "id": "Silakan import data.", "en": "Please import data.", "ja": "データをインポートしてください。", "zh": "请导入数据。" },
+    "ob.occ.outerTitle": { "id": "Breakdown Volume Outer Island", "en": "Outer Island Volume Breakdown", "ja": "アウターアイランド ボリューム内訳", "zh": "外岛量明细" },
+    "ob.occ.totalLabel": { "id": "Total: {n}", "en": "Total: {n}", "ja": "合計: {n}", "zh": "总计: {n}" },
+    "ob.occ.capTitle": { "id": "Estimasi Occupancy terhadap kapasitas per destination", "en": "Estimated occupancy relative to per-destination capacity", "ja": "宛先別キャパシティに対する稼働率の推定値", "zh": "相对于各目的地容量的估计占用率" },
+    "ob.emptyNoOuterIsland": { "id": "Tidak ada data Outer Island.", "en": "No Outer Island data.", "ja": "アウターアイランドのデータはありません。", "zh": "暂无外岛数据。" },
+    "ob.occ.actionCenterTitle": { "id": "Priority Action Center — Top 5 Rute Occupancy Tertinggi", "en": "Priority Action Center — Top 5 Highest Occupancy Routes", "ja": "優先対応センター — 稼働率トップ5ルート", "zh": "优先处理中心 — 占用率最高的5条路线" },
+    "ob.occ.liveMonitoring": { "id": "Live Monitoring", "en": "Live Monitoring", "ja": "ライブモニタリング", "zh": "实时监控" },
+    "ob.occ.emptyAnalysis": { "id": "Belum ada data untuk dianalisis.", "en": "No data to analyze yet.", "ja": "分析対象のデータはまだありません。", "zh": "暂无可分析数据。" },
+    "ob.occ.shiftVolumeTitle": { "id": "Perbandingan Volume Parcel per Shift", "en": "Parcel Volume Comparison per Shift", "ja": "シフト別パーセルボリューム比較", "zh": "各班次包裹量对比" },
+    "ob.occ.shiftScheduleTitle": { "id": "Shift Departure Schedule & Heatmap Monitoring", "en": "Shift Departure Schedule & Heatmap Monitoring", "ja": "シフト出発スケジュール＆ヒートマップモニタリング", "zh": "班次发车时间表与热力监控" },
+    "ob.occ.legendScheduled": { "id": "Terjadwal", "en": "Scheduled", "ja": "予定", "zh": "已排期" },
+    "ob.occ.legendSoon": { "id": "Segera (<30m)", "en": "Soon (<30m)", "ja": "まもなく (30分未満)", "zh": "即将 (<30分钟)" },
+    "ob.occ.legendOverdue": { "id": "Lewat Jadwal", "en": "Overdue", "ja": "予定超過", "zh": "已超期" },
+    "ob.occ.filterView": { "id": "Filter View:", "en": "Filter View:", "ja": "表示フィルター:", "zh": "筛选视图:" },
+    "ob.occ.allShifts": { "id": "ALL SHIFTS", "en": "ALL SHIFTS", "ja": "全シフト", "zh": "所有班次" },
+    "ob.occ.totalLinehaul": { "id": "Total Keberangkatan Linehaul:", "en": "Total Linehaul Departures:", "ja": "ラインホール出発総数:", "zh": "干线发车总数:" },
+    "ob.occ.unitLabel": { "id": "{n} Unit", "en": "{n} Unit", "ja": "{n} 台", "zh": "{n} 辆" },
+    "ob.th.slot": { "id": "Slot", "en": "Slot", "ja": "スロット", "zh": "时段" },
+    "ob.th.timeDeparted": { "id": "Time Departed", "en": "Time Departed", "ja": "出発時刻", "zh": "发车时间" },
+    "ob.th.status": { "id": "Status", "en": "Status", "ja": "ステータス", "zh": "状态" },
+    "ob.emptyImportData": { "id": "Import Data.", "en": "Import Data.", "ja": "データをインポート。", "zh": "请导入数据。" },
+    "ob.shift.keberangkatan": { "id": "Keberangkatan: {n} Unit Linehaul", "en": "Departures: {n} Linehaul Units", "ja": "出発: ラインホール {n} 台", "zh": "发车: {n} 辆干线车" },
+
+    "ob.to.modalTitle": { "id": "List TO Number & Parcel", "en": "TO Number & Parcel List", "ja": "TO番号＆パーセル一覧", "zh": "TO编号与包裹列表" },
+    "ob.to.categoryAging": { "id": "Kategori Aging: {cat} ({n} Total Parcel)", "en": "Aging Category: {cat} ({n} Total Parcel)", "ja": "滞留カテゴリ: {cat} (合計パーセル {n} 個)", "zh": "滞留类别: {cat} (共 {n} 件包裹)" },
+    "ob.to.totalUniqueParcel": { "id": "Total: {u} Unique TO ({n} Total Parcel)", "en": "Total: {u} Unique TO ({n} Total Parcel)", "ja": "合計: ユニークTO {u} 件 (合計パーセル {n} 個)", "zh": "总计: {u} 个唯一TO (共 {n} 件包裹)" },
+    "ob.to.copyUnique": { "id": "Copy Unique TO", "en": "Copy Unique TO", "ja": "ユニークTOをコピー", "zh": "复制唯一TO" },
+    "ob.to.copySuccess": { "id": "Berhasil!", "en": "Copied!", "ja": "コピーしました！", "zh": "已复制！" },
+    "ob.th.listToNumber": { "id": "LIST TO NUMBER", "en": "TO NUMBER LIST", "ja": "TO番号一覧", "zh": "TO编号列表" },
+    "ob.th.toType": { "id": "TO TYPE", "en": "TO TYPE", "ja": "TOタイプ", "zh": "TO类型" },
+    "ob.th.jumlahParcel": { "id": "JUMLAH PARCEL", "en": "PARCEL QTY", "ja": "パーセル数", "zh": "包裹数量" },
+    "ob.th.operator": { "id": "OPERATOR", "en": "OPERATOR", "ja": "オペレーター", "zh": "操作员" },
+    "ob.th.completeTime": { "id": "COMPLETE TIME", "en": "COMPLETE TIME", "ja": "完了時刻", "zh": "完成时间" },
+    "ob.to.parcelUnit": { "id": "{n} Parcel", "en": "{n} Parcel", "ja": "{n} 個", "zh": "{n} 件" },
+    "ob.badge.hv": { "id": "HV", "en": "HV", "ja": "HV", "zh": "HV" },
+    "ob.badge.liquid": { "id": "Liquid", "en": "Liquid", "ja": "液体", "zh": "液体" },
+    "ob.badge.ttoHub": { "id": "TTO Hub", "en": "TTO Hub", "ja": "TTOハブ", "zh": "TTO Hub" },
+    "ob.badge.bag": { "id": "Bag", "en": "Bag", "ja": "バッグ", "zh": "袋装" },
+    "ob.badge.bulky": { "id": "Bulky", "en": "Bulky", "ja": "バルキー", "zh": "大件" },
+    "ob.badge.nonHv": { "id": "Non-HV", "en": "Non-HV", "ja": "Non-HV", "zh": "Non-HV" },
+    "ob.badge.na": { "id": "N/A", "en": "N/A", "ja": "N/A", "zh": "N/A" },
+    "ob.btn.close": { "id": "Tutup", "en": "Close", "ja": "閉じる", "zh": "关闭" },
+    "ob.btn.previous": { "id": "Previous", "en": "Previous", "ja": "前へ", "zh": "上一步" },
+    "ob.btn.detail": { "id": "Detail", "en": "Detail", "ja": "詳細", "zh": "详情" },
+
+    "ob.dest.totalParcel": { "id": "Total Parcel", "en": "Total Parcel", "ja": "パーセル合計", "zh": "包裹总数" },
+    "ob.dest.occupancy": { "id": "Occupancy", "en": "Occupancy", "ja": "稼働率", "zh": "占用率" },
+    "ob.dest.lastPacked": { "id": "Terakhir Di-Packing", "en": "Last Packed", "ja": "最終梱包", "zh": "最后打包时间" },
+    "ob.dest.agingChartTitle": { "id": "Distribusi Aging Destination Ini", "en": "This Destination's Aging Distribution", "ja": "この宛先の滞留分布", "zh": "该目的地的滞留分布" },
+    "ob.dest.packerHeldTitle": { "id": "Packer Yang Pernah Pegang", "en": "Packers Who Handled This", "ja": "過去に担当した梱包者", "zh": "曾处理过的打包员" },
+    "ob.dest.historicalTrend": { "id": "Historical Trend (per Import)", "en": "Historical Trend (per Import)", "ja": "推移履歴（インポート毎）", "zh": "历史趋势（按导入）" },
+    "ob.dest.noPackerData": { "id": "Tidak ada data packer.", "en": "No packer data.", "ja": "梱包者データはありません。", "zh": "暂无打包员数据。" },
+    "ob.dest.sortCode": { "id": "Sort Code: {code}", "en": "Sort Code: {code}", "ja": "ソートコード: {code}", "zh": "分拣代码: {code}" },
+    "ob.dest.pcsUnit": { "id": "{n} pcs", "en": "{n} pcs", "ja": "{n} 個", "zh": "{n} 件" },
+    "ob.dest.noHistory": { "id": "Belum ada histori tersimpan untuk destination ini. Histori otomatis tercatat tiap kali import Excel baru.", "en": "No history saved for this destination yet. History is recorded automatically each time a new Excel file is imported.", "ja": "この宛先の履歴はまだ保存されていません。新しいExcelファイルをインポートするたびに履歴が自動で記録されます。", "zh": "该目的地暂无保存的历史记录。每次导入新Excel文件时会自动记录历史。" },
+    "ob.dest.trendSnapshot": { "id": "Snapshot Import", "en": "Import Snapshot", "ja": "インポートスナップショット", "zh": "导入快照" },
+    "ob.dest.trendTotal": { "id": "Total", "en": "Total", "ja": "合計", "zh": "总计" },
+    "ob.dest.trendD4": { "id": "D4+", "en": "D4+", "ja": "D4+", "zh": "D4+" },
+    "ob.dest.trendTrendD4": { "id": "Tren D4+", "en": "D4+ Trend", "ja": "D4+推移", "zh": "D4+趋势" },
+    "ob.badge.penuh": { "id": "PENUH", "en": "FULL", "ja": "満杯", "zh": "已满" },
+    "ob.badge.warn": { "id": "WARN", "en": "WARN", "ja": "警告", "zh": "警告" },
+    "ob.badge.occupancyTitle": { "id": "Occupancy {pct}% dari kapasitas {cap} parcel", "en": "Occupancy {pct}% of {cap} parcel capacity", "ja": "稼働率 {pct}%（キャパシティ{cap}個中）", "zh": "占用率 {pct}%（容量{cap}件中）" },
+    "ob.badge.aman": { "id": "AMAN", "en": "SAFE", "ja": "安全", "zh": "安全" },
+    "ob.emptyNoData": { "id": "Belum ada data", "en": "No data yet", "ja": "データはまだありません", "zh": "暂无数据" },
+
+    "ob.route.hubActiveParcel": { "id": "{h} Hub Aktif • {n} Parcel", "en": "{h} Active Hubs • {n} Parcel", "ja": "稼働ハブ {h} • パーセル {n} 個", "zh": "{h} 个活跃枢纽 • {n} 件包裹" },
+    "ob.route.clickForHub": { "id": "Klik salah satu Hub di bawah untuk lihat detail lengkapnya (packer, trend, dsb).", "en": "Click one of the Hubs below to see full details (packer, trend, etc).", "ja": "下のハブをクリックすると詳細（梱包者・推移など）が見られます。", "zh": "点击下方任意枢纽查看完整详情（打包员、趋势等）。" },
+    "ob.th.namaHub": { "id": "Nama Hub", "en": "Hub Name", "ja": "ハブ名", "zh": "枢纽名称" },
+    "ob.th.action": { "id": "Action", "en": "Action", "ja": "操作", "zh": "操作" },
+    "ob.route.emptyHub": { "id": "Belum ada data Hub untuk rute ini.", "en": "No Hub data for this route yet.", "ja": "このルートのハブデータはまだありません。", "zh": "该路线暂无枢纽数据。" },
+    "ob.route.clickBreakdown": { "id": "Klik untuk lihat breakdown per Hub di rute {r}", "en": "Click to see per-Hub breakdown for route {r}", "ja": "ルート「{r}」のハブ別内訳を表示", "zh": "点击查看路线「{r}」的各枢纽明细" },
+    "ob.dest.clickDetail": { "id": "Klik untuk lihat detail lengkap {n}", "en": "Click to see full detail for {n}", "ja": "「{n}」の詳細を表示", "zh": "点击查看「{n}」的完整详情" },
+
+    "ob.log.title": { "id": "Log Update — Riwayat Import File", "en": "Update Log — File Import History", "ja": "更新ログ — ファイルインポート履歴", "zh": "更新日志 — 文件导入历史" },
+    "ob.log.subtitle": { "id": "Daftar file yang pernah diimport, jam berapa, dan siapa yang import", "en": "List of files ever imported, when, and by whom", "ja": "これまでにインポートされたファイル、時刻、担当者の一覧", "zh": "已导入文件的清单、时间及导入人" },
+    "ob.th.namaFile": { "id": "Nama File", "en": "File Name", "ja": "ファイル名", "zh": "文件名" },
+    "ob.th.jamImport": { "id": "Jam Import", "en": "Import Time", "ja": "インポート時刻", "zh": "导入时间" },
+    "ob.th.diimportOleh": { "id": "Diimport Oleh", "en": "Imported By", "ja": "インポート担当者", "zh": "导入人" },
+    "ob.th.aksi": { "id": "Aksi", "en": "Action", "ja": "操作", "zh": "操作" },
+    "ob.log.loading": { "id": "Memuat riwayat import...", "en": "Loading import history...", "ja": "インポート履歴を読み込み中…", "zh": "正在加载导入历史…" },
+    "ob.log.empty": { "id": "Belum ada riwayat import.", "en": "No import history yet.", "ja": "インポート履歴はまだありません。", "zh": "暂无导入历史。" },
+    "ob.log.deleteTitle": { "id": "Hapus log ini", "en": "Delete this log", "ja": "このログを削除", "zh": "删除此日志" },
+    "ob.log.footerNote": { "id": "Menghapus log di sini cuma menghapus riwayat/audit trail-nya. Kalau yang dihapus adalah import paling terakhir (yang lagi aktif ditampilkan), data yang lagi tampil di dashboard ini ikut ke-reset juga.", "en": "Deleting a log here only removes its history/audit trail. If the one deleted is the most recent import (currently displayed), the data shown on this dashboard will also reset.", "ja": "ここでログを削除しても履歴／監査証跡が消えるだけです。削除したものが最新のインポート（現在表示中）の場合、このダッシュボードに表示中のデータもリセットされます。", "zh": "在此删除日志只会移除其历史/审计记录。如果删除的是最近一次导入（当前正在显示的），本仪表板上显示的数据也会随之重置。" },
+    "ob.log.confirmDelete": { "id": "Hapus log import \"{f}\"? Ini bakal ke-hapus juga di Firebase / semua device.", "en": "Delete import log \"{f}\"? This will also be removed from Firebase / all devices.", "ja": "インポートログ「{f}」を削除しますか？Firebase／すべてのデバイスからも削除されます。", "zh": "删除导入日志「{f}」？这也会从Firebase/所有设备中删除。" },
+    "toast.err.notConnected": { "id": "⚠️ Belum terhubung ke database online.", "en": "⚠️ Not yet connected to the online database.", "ja": "⚠️ オンラインデータベースにまだ接続されていません。", "zh": "⚠️ 尚未连接到在线数据库。" },
+    "toast.err.deleteLog": { "id": "❌ Gagal hapus log dari database online: ", "en": "❌ Failed to delete log from the online database: ", "ja": "❌ オンラインデータベースからのログ削除に失敗しました: ", "zh": "❌ 无法从在线数据库删除日志: " },
+    "toast.err.noExportData": { "id": "Belum ada data untuk di-export. Import data dulu ya.", "en": "No data to export yet. Please import data first.", "ja": "エクスポートするデータがまだありません。先にデータをインポートしてください。", "zh": "暂无可导出的数据。请先导入数据。" },
+
+    "ob.agingStatus.danger": { "id": "DANGER", "en": "DANGER", "ja": "危険", "zh": "危险" },
+    "ob.agingStatus.warning": { "id": "WARNING", "en": "WARNING", "ja": "警告", "zh": "警告" },
+    "ob.agingStatus.good": { "id": "GOOD", "en": "GOOD", "ja": "良好", "zh": "良好" },
+    "ob.heat.highTraffic": { "id": "HIGH TRAFFIC", "en": "HIGH TRAFFIC", "ja": "高負荷", "zh": "高流量" },
+    "ob.heat.medium": { "id": "MEDIUM", "en": "MEDIUM", "ja": "中程度", "zh": "中等" },
+    "ob.heat.normal": { "id": "NORMAL", "en": "NORMAL", "ja": "通常", "zh": "正常" },
+    "ob.routeAlert.criticalText": { "id": "Need Early Load + Slot Tambahan (Follow Up Team MM)", "en": "Need Early Load + Extra Slot (Follow Up Team MM)", "ja": "早期積込＋追加スロットが必要（MMチームへフォローアップ）", "zh": "需要提前装载+增加时段（跟进MM团队）" },
+    "ob.routeAlert.urgentText": { "id": "Need Early Loading Segera (Follow Up Team MM)", "en": "Need Early Loading Immediately (Follow Up Team MM)", "ja": "至急早期積込が必要（MMチームへフォローアップ）", "zh": "需要立即提前装载（跟进MM团队）" },
+    "ob.routeAlert.watchText": { "id": "Need Early Loading (Follow Up Team MM)", "en": "Need Early Loading (Follow Up Team MM)", "ja": "早期積込が必要（MMチームへフォローアップ）", "zh": "需要提前装载（跟进MM团队）" },
+    "ob.routeAlert.amanText": { "id": "Kondisi Normal, Belum Perlu Tindakan", "en": "Normal Condition, No Action Needed Yet", "ja": "正常な状態、対応はまだ不要です", "zh": "状态正常，暂无需处理" },
+    "ob.routeAlert.paketUnit": { "id": "{n} Paket", "en": "{n} Package", "ja": "{n} 個", "zh": "{n} 件" },
+
+    "ob.exec.verdictAman": { "id": "AMAN", "en": "SAFE", "ja": "安全", "zh": "安全" },
+    "ob.exec.verdictWaspada": { "id": "WASPADA", "en": "CAUTION", "ja": "注意", "zh": "警惕" },
+    "ob.exec.verdictKritis": { "id": "KRITIS", "en": "CRITICAL", "ja": "危機的", "zh": "危急" },
+    "ob.exec.slaOccLabel": { "id": "Occupancy DC", "en": "DC Occupancy", "ja": "DC稼働率", "zh": "DC占用率" },
+    "ob.exec.slaBacklogLabel": { "id": "Backlog Kritis", "en": "Critical Backlog", "ja": "重大滞留", "zh": "严重积压" },
+    "ob.exec.slaDetail": { "id": "{v}% / target ≤{t}%", "en": "{v}% / target ≤{t}%", "ja": "{v}% / 目標 ≤{t}%", "zh": "{v}% / 目标 ≤{t}%" },
+    "ob.exec.pass": { "id": "PASS", "en": "PASS", "ja": "合格", "zh": "达标" },
+    "ob.exec.fail": { "id": "FAIL", "en": "FAIL", "ja": "不合格", "zh": "未达标" },
+    "ob.exec.stableFromPrev": { "id": "Stabil dari import sebelumnya", "en": "Stable from previous import", "ja": "前回のインポートから変化なし", "zh": "与上次导入持平" },
+    "ob.exec.fromPrevImport": { "id": "dari import sebelumnya", "en": "from previous import", "ja": "前回のインポートから", "zh": "较上次导入" },
+    "ob.exec.firstImportNoComparison": { "id": "Import pertama, belum ada pembanding", "en": "First import, nothing to compare yet", "ja": "初回インポートのため比較対象なし", "zh": "首次导入，暂无对比数据" },
+    "ob.exec.firstImport": { "id": "Import pertama", "en": "First import", "ja": "初回インポート", "zh": "首次导入" },
+    "ob.exec.volumeVsPrev": { "id": "Volume {sign}{n} vs import lalu", "en": "Volume {sign}{n} vs last import", "ja": "ボリューム {sign}{n}（前回インポート比）", "zh": "量 {sign}{n}（较上次导入）" },
+    "ob.exec.backlogVsPrev": { "id": "Backlog Kritis {sign}{n} vs import lalu", "en": "Critical Backlog {sign}{n} vs last import", "ja": "重大滞留 {sign}{n}（前回インポート比）", "zh": "严重积压 {sign}{n}（较上次导入）" },
+    "ob.exec.narrativeMain": { "id": "Total <b>{total} parcel</b> di staging area ({capPct}% dari kapasitas {maxCap} parcel), dengan backlog kritis (>D4) sebanyak <b>{critical} parcel</b> ({critPct}% dari total).", "en": "Total <b>{total} parcels</b> in the staging area ({capPct}% of the {maxCap} parcel capacity), with a critical backlog (>D4) of <b>{critical} parcels</b> ({critPct}% of total).", "ja": "ステージングエリアの合計は<b>{total}個のパーセル</b>（キャパシティ{maxCap}個中の{capPct}%）で、重大滞留（>D4）は<b>{critical}個</b>（全体の{critPct}%）です。", "zh": "暂存区共有<b>{total}件包裹</b>（占容量{maxCap}件中的{capPct}%），其中严重积压(>D4)为<b>{critical}件</b>（占总数{critPct}%）。" },
+    "ob.exec.narrativeRoute": { "id": " Rute paling perlu perhatian: <b>{route}</b> ({category}) di {pct}% kapasitas — {alertText}.", "en": " Route needing the most attention: <b>{route}</b> ({category}) at {pct}% capacity — {alertText}.", "ja": " 最も注意が必要なルート: <b>{route}</b>（{category}）、容量の{pct}% — {alertText}。", "zh": " 最需关注的路线：<b>{route}</b>（{category}），容量占比{pct}% — {alertText}。" },
+    "ob.exec.narrativeTopPacker": { "id": " Kontributor utama backlog kritis: <b>{name}</b> ({pct}% dari total backlog kritis).", "en": " Main contributor to the critical backlog: <b>{name}</b> ({pct}% of total critical backlog).", "ja": " 重大滞留の主な要因: <b>{name}</b>（重大滞留全体の{pct}%）。", "zh": " 严重积压的主要贡献者：<b>{name}</b>（占严重积压总数的{pct}%）。" },
+    "ob.packer.unassigned": { "id": "Unassigned / Unknown", "en": "Unassigned / Unknown", "ja": "未割当／不明", "zh": "未分配／未知" },
+
+    "ob.confirm.resetHint": { "id": "Reset Dashboard", "en": "Reset Dashboard", "ja": "ダッシュボードをリセット", "zh": "重置仪表板" }
+  };
+
+  let currentAppLang = localStorage.getItem('pkydcAppLang') || 'id';
+
+  function t(key, params) {
+    const entry = APP_I18N[key];
+    let str = key;
+    if (entry) {
+      str = entry[currentAppLang] != null ? entry[currentAppLang] : (entry.id != null ? entry.id : key);
+    }
+    if (params) {
+      Object.keys(params).forEach(function (p) {
+        str = str.replace('{' + p + '}', params[p]);
+      });
+    }
+    return str;
+  }
+
+  function applyStaticI18n() {
+    document.documentElement.lang = currentAppLang;
+    document.title = t('page.title');
+    document.querySelectorAll('[data-i18n]').forEach(function (el) {
+      el.textContent = t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(function (el) {
+      el.innerHTML = t(el.getAttribute('data-i18n-html'));
+    });
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(function (el) {
+      el.placeholder = t(el.getAttribute('data-i18n-placeholder'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function (el) {
+      el.title = t(el.getAttribute('data-i18n-title'));
+    });
+  }
+
+  const APP_I18N_LANGS = ['id', 'en', 'ja', 'zh'];
+
+  function setAppLanguage(lang) {
+    if (APP_I18N_LANGS.indexOf(lang) === -1) lang = 'id';
+    currentAppLang = lang;
+    localStorage.setItem('pkydcAppLang', lang);
+    const sel = document.getElementById('appLangSelect');
+    if (sel) sel.value = lang;
+    applyStaticI18n();
+    // Re-render semua konten dinamis biar ikut translate
+    if (filteredData && filteredData.length > 0) {
+      if (typeof renderDashboard === 'function') renderDashboard();
+    }
+    if (typeof renderShiftTable === 'function') renderShiftTable();
+    if (typeof renderLogUpdateList === 'function') renderLogUpdateList();
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    applyStaticI18n();
+    const sel = document.getElementById('appLangSelect');
+    if (sel) sel.value = currentAppLang;
+  });
+</script>
 
 <!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
 <div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
@@ -248,94 +596,121 @@ tailwind.config = {
         <div class="app-sidebar-icon-box">📦</div>
         <div class="app-sidebar-title-group">
           <span class="app-sidebar-title">Palangka Raya DC</span>
-          <span class="app-sidebar-subtitle">Outbound Monitoring</span>
+          <span class="app-sidebar-subtitle" data-i18n="sidebar.subtitle">Outbound Monitoring</span>
         </div>
       </div>
       <button onclick="toggleAppSidebar()">✕</button>
     </div>
     <div class="app-sidebar-body">
       <div class="app-sidebar-group-label collapsible" data-group="Productivity" onclick="toggleSidebarGroup('Productivity')">
-        <span>Productivity</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.productivity">Productivity</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="Productivity">
-        <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link">⏳ Rest Time Monitoring</a>
-        <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 Performance Bagger</a>
+        <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link">⏳ <span data-i18n="sidebar.link.restTime">Rest Time Monitoring</span></a>
+        <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 <span data-i18n="sidebar.link.perfBagger">Performance Bagger</span></a>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="Inbound" onclick="toggleSidebarGroup('Inbound')">
-        <span>Inbound</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.inbound">Inbound</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="Inbound">
-        <a href="inbound.html" id="navToInbound" class="app-sidebar-link">🚚 LH Tracking &amp; Forecast MP</a>
+        <a href="inbound.html" id="navToInbound" class="app-sidebar-link">🚚 <span data-i18n="sidebar.link.inbound">LH Tracking &amp; Forecast MP</span></a>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="OutboundMonitoring" onclick="toggleSidebarGroup('OutboundMonitoring')">
-        <span>Outbound Monitoring</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.outbound">Outbound Monitoring</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="OutboundMonitoring">
-        <button class="app-sidebar-link active" id="menuAging" data-tab="aging" onclick="switchSubmenu('aging')">📦 Aging &amp; Packer Backlog</button>
-        <button class="app-sidebar-link" id="menuOccupancy" data-tab="occupancy" onclick="switchSubmenu('occupancy')">🏭 Occupancy &amp; Shift</button>
+        <button class="app-sidebar-link active" id="menuAging" data-tab="aging" onclick="switchSubmenu('aging')">📦 <span data-i18n="sidebar.link.outboundAging">Aging &amp; Packer Backlog</span></button>
+        <button class="app-sidebar-link" id="menuOccupancy" data-tab="occupancy" onclick="switchSubmenu('occupancy')">🏭 <span data-i18n="sidebar.link.outboundOccupancy">Occupancy &amp; Shift</span></button>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="SOC" onclick="toggleSidebarGroup('SOC')">
-        <span>Inventory Control</span><span class="chevron">▾</span>
+        <span data-i18n="sidebar.group.inventory">Inventory Control</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="SOC">
-        <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ Inventory Control</a>
+        <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ <span data-i18n="sidebar.link.inventory">Inventory Control</span></a>
       </div>
     </div>
   </div>
   <div class="app-sidebar-footer">
-    <button onclick="logoutApp()">🚪 Logout</button>
+    <div class="app-sidebar-lang">
+      <label for="appLangSelect">🌐 <span data-i18n="lang.label">Bahasa</span></label>
+      <select id="appLangSelect" onchange="setAppLanguage(this.value)">
+        <option value="id">🇮🇩 Bahasa Indonesia</option>
+        <option value="en">🇬🇧 English</option>
+        <option value="ja">🇯🇵 日本語</option>
+        <option value="zh">🇨🇳 中文</option>
+      </select>
+    </div>
+    <button class="app-sidebar-feedback-btn" onclick="openFeedbackBoard()">💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></button>
+    <button onclick="logoutApp()">🚪 <span data-i18n="logout.btn">Logout</span></button>
   </div>
 </nav>
+
+<!-- ==== PAPAN SARAN & MASUKAN (realtime, 1 papan sama buat semua modul) ==== -->
+<div class="fb-board-backdrop" id="fbBoardBackdrop" onclick="if(event.target===this) closeFeedbackBoard()">
+  <div class="fb-board-card">
+    <div class="fb-board-header">
+      <h3>💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></h3>
+      <button onclick="closeFeedbackBoard()">✕</button>
+    </div>
+    <div class="fb-board-form">
+      <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder"></textarea>
+      <div class="fb-board-form-footer">
+        <button class="fb-board-submit-btn" id="fbBoardSubmitBtn" onclick="submitFeedback()" data-i18n="feedback.submit">Kirim</button>
+      </div>
+    </div>
+    <div class="fb-board-list" id="fbBoardList"></div>
+  </div>
+</div>
 
 <!-- TOP HEADER -->
 <header class="bg-gradient-to-r from-lavender-dark via-lavender to-lavender-light text-white shadow-lg flex-shrink-0 z-30">
   <div class="max-w-full mx-auto px-3 py-2 flex justify-between items-center gap-2">
     <div class="flex items-center space-x-3">
-      <button onclick="toggleAppSidebar()" class="hover:bg-white/10 p-1.5 rounded-lg transition text-white focus:outline-none border border-white/10" title="Buka Menu">
+      <button onclick="toggleAppSidebar()" class="hover:bg-white/10 p-1.5 rounded-lg transition text-white focus:outline-none border border-white/10" title="Buka Menu" data-i18n-title="ob.header.openMenu">
         <i class="fa-solid fa-bars text-lg"></i>
       </button>
       <div class="p-1.5 bg-white/10 rounded-lg backdrop-blur-sm border border-white/15">
         <i class="fa-solid fa-truck-fast text-xl text-white"></i>
       </div>
       <div>
-        <h1 class="text-sm md:text-base font-black tracking-tight uppercase leading-none">PALANGKARAYA DC REPORT STAGING OUTBOUND</h1>
-        <p class="text-[9px] text-lavender-light font-medium opacity-90 mt-0.5">Monitoring Staging Area Occupancy per Destination</p>
+        <h1 class="text-sm md:text-base font-black tracking-tight uppercase leading-none" data-i18n="ob.header.title">PALANGKARAYA DC REPORT STAGING OUTBOUND</h1>
+        <p class="text-[9px] text-lavender-light font-medium opacity-90 mt-0.5" data-i18n="ob.header.subtitle">Monitoring Staging Area Occupancy per Destination</p>
       </div>
     </div>
     
     <div class="flex items-center gap-2">
-      <button id="themeToggleBtn" onclick="toggleThemeMode()" class="bg-black/20 hover:bg-black/30 text-white font-semibold px-2.5 py-1 rounded-lg text-[11px] transition flex items-center gap-1.5 border border-white/20 shadow-sm" title="Switch Theme Mode">
+      <button id="themeToggleBtn" onclick="toggleThemeMode()" class="bg-black/20 hover:bg-black/30 text-white font-semibold px-2.5 py-1 rounded-lg text-[11px] transition flex items-center gap-1.5 border border-white/20 shadow-sm" title="Switch Theme Mode" data-i18n-title="ob.header.themeSwitch">
         <i id="themeToggleIcon" class="fa-solid fa-moon"></i>
-        <span id="themeToggleText">Dark</span>
+        <span id="themeToggleText" data-i18n="ob.header.themeDark">Dark</span>
       </button>
       
       <div class="flex items-center bg-black/20 px-2.5 py-1 rounded-lg border border-white/20 text-white text-[11px] shadow-sm">
-        <span class="mr-1.5 font-semibold text-lavender-light">Journey:</span>
+        <span class="mr-1.5 font-semibold text-lavender-light" data-i18n="ob.header.journeyLabel">Journey:</span>
         <select id="filterJourney" onchange="applyFilters()" class="bg-transparent text-white focus:outline-none cursor-pointer font-bold">
-          <option value="ALL" class="text-slate-800">ALL TYPE</option>
-          <option value="Forward" class="text-slate-800">FORWARD</option>
-          <option value="Return" class="text-slate-800">RETURN</option>
+          <option value="ALL" class="text-slate-800" data-i18n="ob.header.journeyAll">ALL TYPE</option>
+          <option value="Forward" class="text-slate-800" data-i18n="ob.header.journeyForward">FORWARD</option>
+          <option value="Return" class="text-slate-800" data-i18n="ob.header.journeyReturn">RETURN</option>
         </select>
       </div>
       
-      <div id="activeMenuBadge" class="bg-white/15 px-3 py-1 rounded-lg border border-white/20 font-bold text-white text-[11px] backdrop-blur-sm shadow-sm hidden sm:block">
-        Aging Overview Mode
+      <div id="activeMenuBadge" class="bg-white/15 px-3 py-1 rounded-lg border border-white/20 font-bold text-white text-[11px] backdrop-blur-sm shadow-sm hidden sm:block" data-i18n="ob.badge.agingMode">
+        Aging & Packer Backlog Mode
       </div>
       
       <button id="downloadImageBtn" onclick="downloadReportImage()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg text-[11px] transition flex items-center gap-1.5 shadow border border-emerald-400/30">
         <i class="fa-solid fa-camera"></i>
-        <span class="hidden md:inline">Download Gambar</span>
+        <span class="hidden md:inline" data-i18n="ob.header.downloadImage">Download Gambar</span>
       </button>
 
       <div class="flex items-center space-x-1.5 bg-black/25 p-1 rounded-lg border border-white/20">
         <label for="excelFile" class="cursor-pointer bg-amber-400 hover:bg-amber-300 text-slate-950 font-extrabold px-2.5 py-0.5 rounded text-[11px] transition shadow-sm">
-          <i class="fa-solid fa-file-import"></i> Import
+          <i class="fa-solid fa-file-import"></i> <span data-i18n="ob.header.import">Import</span>
         </label>
         <input type="file" id="excelFile" accept=".xlsx, .xls, .csv" class="hidden" />
-        <span id="fileName" class="text-[10px] text-lavender-light font-mono truncate max-w-[90px]">Data Contoh</span>
+        <span id="fileName" class="text-[10px] text-lavender-light font-mono truncate max-w-[90px]" data-i18n="ob.header.sampleData">Data Contoh</span>
       </div>
     </div>
   </div>
@@ -351,23 +726,23 @@ tailwind.config = {
       <div class="flex-1 flex items-start gap-3 min-w-0">
         <div id="execVerdictBadge" class="shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center font-black text-white shadow-inner bg-slate-400">
           <i id="execVerdictIcon" class="fa-solid fa-circle-question text-xl"></i>
-          <span id="execVerdictLabel" class="text-[8px] mt-0.5 tracking-wide">N/A</span>
+          <span id="execVerdictLabel" class="text-[8px] mt-0.5 tracking-wide" data-i18n="ob.badge.na">N/A</span>
         </div>
         <div class="flex-1 min-w-0">
           <div class="flex items-center gap-2 mb-1 flex-wrap">
             <span class="text-[10px] font-extrabold uppercase tracking-wider text-shopee dark:text-orange-400">
-              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Executive Summary
+              <i class="fa-solid fa-wand-magic-sparkles mr-1"></i><span data-i18n="ob.exec.title">Executive Summary</span>
             </span>
             <span id="execDeltaTotal"></span>
             <span id="execDeltaCritical"></span>
           </div>
-          <p id="execNarrativeText" class="text-[11px] leading-relaxed font-sans text-slate-700 dark:text-slate-200">Belum ada data. Silakan import file Excel untuk melihat ringkasan otomatis.</p>
+          <p id="execNarrativeText" class="text-[11px] leading-relaxed font-sans text-slate-700 dark:text-slate-200" data-i18n="ob.exec.emptyNarrative">Belum ada data. Silakan import file Excel untuk melihat ringkasan otomatis.</p>
         </div>
       </div>
 
       <!-- SLA GAUGES -->
       <div class="grid grid-cols-2 gap-2 xl:w-[420px] shrink-0" id="slaGaugeContainer">
-        <div class="col-span-2 text-center text-[10px] text-slate-400 dark:text-slate-500 py-2 font-sans">Menunggu data untuk hitung status SLA...</div>
+        <div class="col-span-2 text-center text-[10px] text-slate-400 dark:text-slate-500 py-2 font-sans" data-i18n="ob.exec.waitingSla">Menunggu data untuk hitung status SLA...</div>
       </div>
     </div>
   </div>
@@ -378,27 +753,27 @@ tailwind.config = {
     <div class="grid grid-cols-12 gap-3 flex-shrink-0">
       <div class="col-span-3 bg-gradient-to-br from-lavender-dark to-lavender dark:from-[#2e2650] dark:to-lavender-dark p-2.5 rounded-xl text-white shadow-md hover:shadow-lg transition-shadow duration-200 border border-lavender-light/30 space-y-1 flex flex-col justify-between">
         <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-lavender-light text-xs font-semibold">DC Name</span>
+          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.dcName">DC Name</span>
           <span class="font-extrabold text-sm">Palangka Raya DC</span>
         </div>
         <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-lavender-light text-xs font-semibold">Process Outbound</span>
-          <span class="font-bold text-sm">Staging</span>
+          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.processOutbound">Process Outbound</span>
+          <span class="font-bold text-sm" data-i18n="ob.kpi.staging">Staging</span>
         </div>
         <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-lavender-light text-xs font-semibold">Report Time</span>
-          <span id="liveClock" class="font-bold font-mono text-sm">Loading...</span>
+          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.reportTime">Report Time</span>
+          <span id="liveClock" class="font-bold font-mono text-sm" data-i18n="ob.kpi.loading">Loading...</span>
         </div>
         <div class="flex justify-between items-center">
-          <span class="text-lavender-light text-xs font-semibold">View By</span>
-          <span class="font-bold text-sm">Destination</span>
+          <span class="text-lavender-light text-xs font-semibold" data-i18n="ob.kpi.viewBy">View By</span>
+          <span class="font-bold text-sm" data-i18n="ob.kpi.destination">Destination</span>
         </div>
       </div>
 
       <div class="col-span-9 grid grid-cols-5 gap-2">
         <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Total Parcel Packed</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.totalPacked">Total Parcel Packed</p>
             <h3 id="kpiTotalUnits" class="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono mt-1">0</h3>
             <span id="kpiTotalUnitsDelta" class="block mt-0.5"></span>
           </div>
@@ -408,7 +783,7 @@ tailwind.config = {
         </div>
         <div id="kpiColorAssisted" class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-emerald-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Parcel Packed</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.parcelPacked">Parcel Packed</p>
             <h3 id="kpiParcel" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">0</h3>
           </div>
           <div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover:scale-105 transition-transform">
@@ -417,7 +792,7 @@ tailwind.config = {
         </div>
         <div id="kpiColorIndividual" class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-indigo-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Bulky Packed</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.bulkyPacked">Bulky Packed</p>
             <h3 id="kpiBulky" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-1">0</h3>
           </div>
           <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 group-hover:scale-105 transition-transform">
@@ -426,7 +801,7 @@ tailwind.config = {
         </div>
         <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-amber-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">High Value Packed</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.highValuePacked">High Value Packed</p>
             <h3 id="kpiHighValue" class="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono mt-1">0</h3>
           </div>
           <div class="p-2 bg-amber-500/10 rounded-xl text-amber-500 group-hover:scale-105 transition-transform">
@@ -435,7 +810,7 @@ tailwind.config = {
         </div>
         <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-sky-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Liquid Packed</p>
+            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.liquidPacked">Liquid Packed</p>
             <h3 id="kpiLiquid" class="text-2xl font-black text-sky-600 dark:text-sky-400 font-mono mt-1">0</h3>
           </div>
           <div class="p-2 bg-sky-500/10 rounded-xl text-sky-500 group-hover:scale-105 transition-transform">
@@ -449,17 +824,17 @@ tailwind.config = {
     <div class="flex flex-wrap items-center gap-2 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 rounded-xl p-2 px-3 shadow-sm">
       <div class="relative flex-1 min-w-[180px]">
         <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-[11px]"></i>
-        <input id="gridSearchInput" type="text" placeholder="Cari Sort Code / Receiver Name..." oninput="onGridSearchInput(this.value)" class="w-full pl-7 pr-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-sans focus:outline-none focus:ring-2 focus:ring-shopee/40" />
+        <input id="gridSearchInput" type="text" placeholder="Cari Sort Code / Receiver Name..." data-i18n-placeholder="ob.grid.searchPlaceholder" oninput="onGridSearchInput(this.value)" class="w-full pl-7 pr-2 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-[11px] font-sans focus:outline-none focus:ring-2 focus:ring-shopee/40" />
       </div>
 
       <div class="flex items-center gap-1.5 text-[11px] font-sans">
-        <span class="text-slate-500 dark:text-slate-400 font-semibold hidden sm:inline">Tampilkan:</span>
+        <span class="text-slate-500 dark:text-slate-400 font-semibold hidden sm:inline" data-i18n="ob.grid.show">Tampilkan:</span>
         <select id="gridPageSizeSelect" onchange="onGridPageSizeChange(this.value)" class="bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1.5 text-slate-700 dark:text-slate-200 font-bold focus:outline-none">
           <option value="50">50</option>
           <option value="100" selected>100</option>
           <option value="200">200</option>
           <option value="500">500</option>
-          <option value="all">Semua</option>
+          <option value="all" data-i18n="ob.grid.all">Semua</option>
         </select>
       </div>
 
@@ -475,7 +850,7 @@ tailwind.config = {
 
       <button onclick="exportGridToExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg text-[11px] transition flex items-center gap-1.5 shadow border border-emerald-400/30">
         <i class="fa-solid fa-file-excel"></i>
-        <span class="hidden md:inline">Export Excel</span>
+        <span class="hidden md:inline" data-i18n="ob.grid.exportExcel">Export Excel</span>
       </button>
     </div>
 
@@ -484,18 +859,18 @@ tailwind.config = {
       <!-- GRID 1 -->
       <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
         <div class="p-2 px-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-bold text-slate-700 dark:text-slate-200 flex justify-between items-center flex-shrink-0">
-          <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-shopee"></i> Grid 1: High Volume Destination</span>
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-shopee"></i> <span data-i18n="ob.grid1.title">Grid 1: High Volume Destination</span></span>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-[10px] dynamic-table">
             <thead class="text-white bg-slate-800 dark:bg-slate-950 font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-[9%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode">Sort Code<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 DANGER">Aging Status<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[19%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name">Receiver Name<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[7%] bg-amber-600 border-x border-amber-700 cursor-pointer select-none hover:bg-amber-700 transition" data-sort-field="hv">HV<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid">Liquid<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] bg-shopee cursor-pointer select-none hover:brightness-110 transition" data-sort-field="total">Total Parcel<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode"><span data-i18n="ob.th.sortCode">Sort Code</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" data-i18n-title="ob.th.agingStatusTitle" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 DANGER"><span data-i18n="ob.th.agingStatus">Aging Status</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[19%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name"><span data-i18n="ob.th.receiverName">Receiver Name</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[7%] bg-amber-600 border-x border-amber-700 cursor-pointer select-none hover:bg-amber-700 transition" data-sort-field="hv"><span data-i18n="ob.th.hv">HV</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid"><span data-i18n="ob.th.liquid">Liquid</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] bg-shopee cursor-pointer select-none hover:brightness-110 transition" data-sort-field="total"><span data-i18n="ob.th.totalParcel">Total Parcel</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d0">D-Day<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d1">D-1<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d2">D-2<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
@@ -505,7 +880,7 @@ tailwind.config = {
               </tr>
             </thead>
             <tbody id="grid1TableBody" class="font-mono divide-y divide-slate-100 dark:divide-slate-800">
-              <tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Silakan import data Excel baru.</td></tr>
+              <tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportNew">Silakan import data Excel baru.</td></tr>
             </tbody>
           </table>
         </div>
@@ -514,18 +889,18 @@ tailwind.config = {
       <!-- GRID 2 -->
       <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
         <div class="p-2 px-3 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 font-bold text-slate-700 dark:text-slate-200 flex justify-between items-center flex-shrink-0">
-          <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-shopee"></i> Grid 2: Mid-Low Volume Destination</span>
+          <span class="flex items-center gap-1.5"><i class="fa-solid fa-list-ol text-shopee"></i> <span data-i18n="ob.grid2.title">Grid 2: Mid-Low Volume Destination</span></span>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-[10px] dynamic-table">
             <thead class="text-white bg-slate-800 dark:bg-slate-950 font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-[9%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode">Sort Code<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 Danger">Aging Status<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[19%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name">Receiver Name<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[7%] bg-amber-600 border-x border-amber-700 cursor-pointer select-none hover:bg-amber-700 transition" data-sort-field="hv">HV<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid">Liquid<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] bg-shopee cursor-pointer select-none hover:brightness-110 transition" data-sort-field="total">Total Parcel<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode"><span data-i18n="ob.th.sortCode">Sort Code</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" data-i18n-title="ob.th.agingStatusTitle" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 Danger"><span data-i18n="ob.th.agingStatus">Aging Status</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[19%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name"><span data-i18n="ob.th.receiverName">Receiver Name</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[7%] bg-amber-600 border-x border-amber-700 cursor-pointer select-none hover:bg-amber-700 transition" data-sort-field="hv"><span data-i18n="ob.th.hv">HV</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid"><span data-i18n="ob.th.liquid">Liquid</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] bg-shopee cursor-pointer select-none hover:brightness-110 transition" data-sort-field="total"><span data-i18n="ob.th.totalParcel">Total Parcel</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d0">D-Day<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d1">D-1<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d2">D-2<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
@@ -535,7 +910,7 @@ tailwind.config = {
               </tr>
             </thead>
             <tbody id="grid2TableBody" class="font-mono divide-y divide-slate-100 dark:divide-slate-800">
-              <tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Silakan import data Excel baru.</td></tr>
+              <tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportNew">Silakan import data Excel baru.</td></tr>
             </tbody>
           </table>
         </div>
@@ -546,7 +921,7 @@ tailwind.config = {
     <div class="grid grid-cols-4 gap-3 flex-shrink-0">
       <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
         <div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Total Operator Active</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.packer.totalOperator">Total Operator Active</p>
           <h3 id="kpiTotalPackers" class="text-xl font-black text-slate-800 dark:text-slate-100 font-mono mt-0.5">0 Person</h3>
         </div>
         <div class="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-400 group-hover:scale-105 transition-transform">
@@ -556,7 +931,7 @@ tailwind.config = {
       
       <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
         <div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Top Packer Operator</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.packer.topOperator">Top Packer Operator</p>
           <h3 id="kpiTopPackerName" class="text-sm font-black text-emerald-600 dark:text-emerald-400 truncate max-w-[180px] mt-0.5">-</h3>
         </div>
         <div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 group-hover:scale-105 transition-transform">
@@ -566,7 +941,7 @@ tailwind.config = {
       
       <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
         <div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Rata-Rata Output/Packer</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.packer.avgOutput">Rata-Rata Output/Packer</p>
           <h3 id="kpiAvgPackerOutput" class="text-xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-0.5">0 Parcel</h3>
         </div>
         <div class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500 group-hover:scale-105 transition-transform">
@@ -576,7 +951,7 @@ tailwind.config = {
       
       <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
         <div>
-          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">Operator Critical Backlog (>D4)</p>
+          <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.packer.criticalBacklog">Operator Critical Backlog (>D4)</p>
           <h3 id="kpiCriticalPackerCount" class="text-xl font-black text-rose-600 dark:text-rose-400 font-mono mt-0.5">0 Person</h3>
         </div>
         <div class="p-2.5 bg-rose-500/10 rounded-xl text-rose-500 group-hover:scale-105 transition-transform">
@@ -590,9 +965,9 @@ tailwind.config = {
       <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0">
         <span class="flex items-center gap-2">
           <i class="fa-solid fa-ranking-star text-amber-400 text-sm"></i>
-          <span>Leaderboard Packer & Distribution Analysis</span>
+          <span data-i18n="ob.leaderboard.title">Leaderboard Packer &amp; Distribution Analysis</span>
         </span>
-        <span class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">Sorted by Total Parcel Packed</span>
+        <span class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono" data-i18n="ob.leaderboard.sortedBy">Sorted by Total Parcel Packed</span>
       </div>
       <!-- ROOT CAUSE CALLOUT: penyumbang terbesar backlog kritis -->
       <div id="packerRootCauseCallout" class="hidden px-3 py-1.5 bg-rose-50 dark:bg-rose-950/30 border-b border-rose-200 dark:border-rose-900/60 text-[10px] font-sans text-rose-700 dark:text-rose-300 font-semibold flex items-center gap-1.5">
@@ -603,9 +978,9 @@ tailwind.config = {
         <table class="w-full text-[11px] text-slate-700 dark:text-slate-200 dynamic-table">
           <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold sticky top-0 z-10 border-b dark:border-slate-700">
             <tr>
-              <th class="w-10">Rank</th>
-              <th class="text-left pl-3">Operator Name</th>
-              <th class="w-24 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">Total Packed</th>
+              <th class="w-10" data-i18n="ob.th.rank">Rank</th>
+              <th class="text-left pl-3" data-i18n="ob.th.operatorName">Operator Name</th>
+              <th class="w-24 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.totalPacked">Total Packed</th>
               <th class="w-14 bg-slate-50 dark:bg-slate-800/60">D-Day</th>
               <th class="w-14">D-1</th>
               <th class="w-14">D-2</th>
@@ -613,13 +988,13 @@ tailwind.config = {
               <th class="w-14">D-4</th>
               <th class="w-14">D-5</th>
               <th class="w-14">D-6</th>
-              <th class="w-24 text-rose-600 dark:text-rose-400">Critical (>D4)</th>
-              <th class="w-32 text-rose-600 dark:text-rose-400 text-left pl-2" title="Kontribusi operator ini terhadap total backlog kritis (>D4) seluruh DC">Kontribusi Backlog Kritis</th>
-              <th class="w-40 text-left pl-2">Share Volume</th>
+              <th class="w-24 text-rose-600 dark:text-rose-400" data-i18n="ob.th.criticalD4">Critical (>D4)</th>
+              <th class="w-32 text-rose-600 dark:text-rose-400 text-left pl-2" data-i18n-title="ob.th.criticalContribTitle" title="Kontribusi operator ini terhadap total backlog kritis (>D4) seluruh DC" data-i18n="ob.th.criticalContrib">Kontribusi Backlog Kritis</th>
+              <th class="w-40 text-left pl-2" data-i18n="ob.th.shareVolume">Share Volume</th>
             </tr>
           </thead>
           <tbody id="packerTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-            <tr><td colspan="13" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Import data Excel untuk menampilkan rangkuman Packer.</td></tr>
+            <tr><td colspan="13" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportExcel">Import data Excel untuk menampilkan rangkuman Packer.</td></tr>
           </tbody>
         </table>
       </div>
@@ -630,7 +1005,7 @@ tailwind.config = {
       <!-- AGING DISTRIBUTION CHART -->
       <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
         <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0">
-          <span class="flex items-center gap-2"><i class="fa-solid fa-chart-column text-amber-400 text-sm"></i> Distribusi Aging Backlog (D-Day s/d D-6+)</span>
+          <span class="flex items-center gap-2"><i class="fa-solid fa-chart-column text-amber-400 text-sm"></i> <span data-i18n="ob.chart.agingDistTitle">Distribusi Aging Backlog (D-Day s/d D-6+)</span></span>
           <span id="agingChartTotalBadge" class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">0 Parcel</span>
         </div>
         <div class="p-2.5 h-[220px] relative">
@@ -641,8 +1016,8 @@ tailwind.config = {
       <!-- TREND HISTORIS DC (ANTAR SNAPSHOT IMPORT) -->
       <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
         <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0">
-          <span class="flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-400 text-sm"></i> Tren Historis DC — Volume &amp; Backlog Kritis Antar Import</span>
-          <span id="trendChartInfoBadge" class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">Belum ada histori</span>
+          <span class="flex items-center gap-2"><i class="fa-solid fa-chart-line text-emerald-400 text-sm"></i> <span data-i18n="ob.chart.trendTitle">Tren Historis DC — Volume &amp; Backlog Kritis Antar Import</span></span>
+          <span id="trendChartInfoBadge" class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono" data-i18n="ob.chart.noHistory">Belum ada histori</span>
         </div>
         <div class="p-2.5 h-[220px] relative">
           <canvas id="dcTrendChart"></canvas>
@@ -658,19 +1033,19 @@ tailwind.config = {
       <!-- INNER ISLAND ROUTE (VOLUME + AGING DAYS DALAM 1 TABEL) -->
       <div class="col-span-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
         <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 px-3">
-          <span class="flex items-center gap-2"><i class="fa-solid fa-route text-amber-400"></i> Breakdown Volume &amp; Aging Days Inner Island</span>
+          <span class="flex items-center gap-2"><i class="fa-solid fa-route text-amber-400"></i> <span data-i18n="ob.occ.innerTitle">Breakdown Volume &amp; Aging Days Inner Island</span></span>
           <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-mono" id="routeTotalInfo">Total Jalur: 25</span>
         </div>
         <div class="overflow-x-auto custom-scrollbar">
           <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
             <thead class="bg-orange-50 dark:bg-slate-800 text-orange-900 dark:text-orange-300 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
               <tr>
-                <th class="w-10">No</th>
-                <th class="text-left pl-2">List Route</th>
-                <th class="w-16 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">Parcel</th>
-                <th class="w-16 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300">Bulky</th>
-                <th class="w-16 bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300">Total</th>
-                <th class="w-16">Cap (%)</th>
+                <th class="w-10" data-i18n="ob.th.no">No</th>
+                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
+                <th class="w-16 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.parcel">Parcel</th>
+                <th class="w-16 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300" data-i18n="ob.th.bulky">Bulky</th>
+                <th class="w-16 bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300" data-i18n="ob.th.total">Total</th>
+                <th class="w-16" data-i18n="ob.th.capPct">Cap (%)</th>
                 <th class="w-12 bg-slate-50 dark:bg-slate-800/60">D-Day</th>
                 <th class="w-12">D-1</th>
                 <th class="w-12">D-2</th>
@@ -682,7 +1057,7 @@ tailwind.config = {
               </tr>
             </thead>
             <tbody id="routeTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Silakan import data.</td></tr>
+              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyPleaseImport">Silakan import data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -692,22 +1067,22 @@ tailwind.config = {
       <div class="col-span-2 flex flex-col gap-2">
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
           <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 px-3">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-plane-departure text-sky-400"></i> Breakdown Volume Outer Island</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-plane-departure text-sky-400"></i> <span data-i18n="ob.occ.outerTitle">Breakdown Volume Outer Island</span></span>
             <span class="text-[9px] bg-sky-600 px-2 py-0.5 rounded-full font-mono font-bold" id="outerIslandTotalHeader">Total: 0</span>
           </div>
           <div class="overflow-x-auto custom-scrollbar">
             <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
               <thead class="bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-sky-300 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
                 <tr>
-                  <th class="w-10">No</th>
-                  <th class="text-left pl-2">Receiver Name</th>
-                  <th class="w-20 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300">Parcel</th>
-                  <th class="w-20 bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300">Total</th>
-                  <th class="w-20" title="Estimasi Occupancy terhadap kapasitas per destination">Cap (%)</th>
+                  <th class="w-10" data-i18n="ob.th.no">No</th>
+                  <th class="text-left pl-2" data-i18n="ob.th.receiverName">Receiver Name</th>
+                  <th class="w-20 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.parcel">Parcel</th>
+                  <th class="w-20 bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300" data-i18n="ob.th.total">Total</th>
+                  <th class="w-20" data-i18n-title="ob.occ.capTitle" title="Estimasi Occupancy terhadap kapasitas per destination" data-i18n="ob.th.capPct">Cap (%)</th>
                 </tr>
               </thead>
               <tbody id="outerIslandTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-                <tr><td colspan="5" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Tidak ada data Outer Island.</td></tr>
+                <tr><td colspan="5" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyNoOuterIsland">Tidak ada data Outer Island.</td></tr>
             </tbody>
           </table>
         </div>
@@ -716,11 +1091,11 @@ tailwind.config = {
         <!-- CARD ACTION PLAN (DIPINDAH KE BAWAH OUTER ISLAND, ISI RUANG KOSONG) -->
         <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden flex-1">
           <div class="p-2 px-3 bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 dark:from-rose-800 dark:via-red-800 dark:to-amber-800 font-bold text-white flex justify-between items-center flex-shrink-0">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> Priority Action Center — Top 5 Rute Occupancy Tertinggi</span>
-            <span class="text-[9px] bg-black/30 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5 border border-white/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live Monitoring</span>
+            <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> <span data-i18n="ob.occ.actionCenterTitle">Priority Action Center — Top 5 Rute Occupancy Tertinggi</span></span>
+            <span class="text-[9px] bg-black/30 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5 border border-white/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span data-i18n="ob.occ.liveMonitoring">Live Monitoring</span></span>
           </div>
           <div class="p-2 grid grid-cols-1 gap-1.5 overflow-y-auto custom-scrollbar flex-1" id="topActionPlanContainer">
-            <div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans">Belum ada data untuk dianalisis.</div>
+            <div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans" data-i18n="ob.occ.emptyAnalysis">Belum ada data untuk dianalisis.</div>
           </div>
         </div>
       </div>
@@ -729,7 +1104,7 @@ tailwind.config = {
     <!-- VOLUME PER SHIFT CHART -->
     <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
       <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0">
-        <span class="flex items-center gap-2"><i class="fa-solid fa-chart-simple text-sky-400 text-sm"></i> Perbandingan Volume Parcel per Shift
+        <span class="flex items-center gap-2"><i class="fa-solid fa-chart-simple text-sky-400 text-sm"></i> <span data-i18n="ob.occ.shiftVolumeTitle">Perbandingan Volume Parcel per Shift</span>
         <span id="shiftChartTotalBadge" class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">0 Parcel</span>
       </div>
       <div class="p-2.5 h-[160px] relative">
@@ -741,17 +1116,17 @@ tailwind.config = {
     <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 rounded-xl shadow-sm">
       <div class="flex items-center gap-2">
         <i class="fa-solid fa-truck-departure text-emerald-400"></i>
-        <span>Shift Departure Schedule & Heatmap Monitoring</span>
+        <span data-i18n="ob.occ.shiftScheduleTitle">Shift Departure Schedule &amp; Heatmap Monitoring</span>
       </div>
       <div class="flex items-center gap-2">
         <div class="hidden sm:flex items-center gap-2 text-[9px] text-slate-400 font-semibold">
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-500"></span>Terjadwal</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span>Segera (&lt;30m)</span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span>Lewat Jadwal</span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-500"></span><span data-i18n="ob.occ.legendScheduled">Terjadwal</span></span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span><span data-i18n="ob.occ.legendSoon">Segera (&lt;30m)</span></span>
+          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span><span data-i18n="ob.occ.legendOverdue">Lewat Jadwal</span></span>
         </div>
         <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-lg border border-slate-700/80">
-          <span class="text-[10px] text-slate-400 font-semibold px-1.5">Filter View:</span>
-          <button onclick="filterShiftTable('ALL')" id="btnShiftFilterALL" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-400 text-slate-950 transition">ALL SHIFTS</button>
+          <span class="text-[10px] text-slate-400 font-semibold px-1.5" data-i18n="ob.occ.filterView">Filter View:</span>
+          <button onclick="filterShiftTable('ALL')" id="btnShiftFilterALL" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-400 text-slate-950 transition" data-i18n="ob.occ.allShifts">ALL SHIFTS</button>
           <button onclick="filterShiftTable('Shift 1')" id="btnShiftFilterS1" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">Shift 1</button>
           <button onclick="filterShiftTable('Shift 2')" id="btnShiftFilterS2" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">Shift 2</button>
           <button onclick="filterShiftTable('Shift 3')" id="btnShiftFilterS3" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">Shift 3</button>
@@ -762,7 +1137,7 @@ tailwind.config = {
     <!-- TOTAL KEBERANGKATAN LINEHAUL -->
     <div class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center gap-2 flex-shrink-0 rounded-xl shadow-sm">
       <i class="fa-solid fa-truck-ramp-box text-emerald-500 text-sm"></i>
-      <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide">Total Keberangkatan Linehaul:</span>
+      <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide" data-i18n="ob.occ.totalLinehaul">Total Keberangkatan Linehaul:</span>
       <span id="kpiTotalLinehaul" class="text-xs font-black text-slate-800 dark:text-slate-100 font-mono">0 Unit</span>
     </div>
 
@@ -775,7 +1150,7 @@ tailwind.config = {
           <div class="space-y-0.5 z-10">
             <div class="flex items-center gap-1.5">
               <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Shift 1 (00:00 - 09:00)</span>
-              <span id="hwBadge1" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">NORMAL</span>
+              <span id="hwBadge1" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase" data-i18n="ob.heat.normal">NORMAL</span>
             </div>
             <h3 id="kpiShift1Slots" class="text-sm font-black text-amber-500 font-mono">0 Slot Linehaul</h3>
           </div>
@@ -786,14 +1161,14 @@ tailwind.config = {
           <table class="w-full text-[10px] dynamic-table">
             <thead class="bg-slate-800 text-white font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-8">Slot</th>
-                <th class="text-left pl-2">List Route</th>
-                <th class="col-time-departed bg-amber-600">Time Departed</th>
-                <th class="w-24">Status</th>
+                <th class="w-8" data-i18n="ob.th.slot">Slot</th>
+                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
+                <th class="col-time-departed bg-amber-600" data-i18n="ob.th.timeDeparted">Time Departed</th>
+                <th class="w-24" data-i18n="ob.th.status">Status</th>
               </tr>
             </thead>
             <tbody id="shift1TableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="4" class="text-center py-4 text-slate-400">Import Data.</td></tr>
+              <tr><td colspan="4" class="text-center py-4 text-slate-400" data-i18n="ob.emptyImportData">Import Data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -806,7 +1181,7 @@ tailwind.config = {
           <div class="space-y-0.5 z-10">
             <div class="flex items-center gap-1.5">
               <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Shift 2 (08:00 - 17:00)</span>
-              <span id="hwBadge2" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">NORMAL</span>
+              <span id="hwBadge2" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase" data-i18n="ob.heat.normal">NORMAL</span>
             </div>
             <h3 id="kpiShift2Slots" class="text-sm font-black text-indigo-500 font-mono">0 Slot Linehaul</h3>
           </div>
@@ -817,14 +1192,14 @@ tailwind.config = {
           <table class="w-full text-[10px] dynamic-table">
             <thead class="bg-slate-800 text-white font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-8">Slot</th>
-                <th class="text-left pl-2">List Route</th>
-                <th class="col-time-departed bg-indigo-600">Time Departed</th>
-                <th class="w-24">Status</th>
+                <th class="w-8" data-i18n="ob.th.slot">Slot</th>
+                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
+                <th class="col-time-departed bg-indigo-600" data-i18n="ob.th.timeDeparted">Time Departed</th>
+                <th class="w-24" data-i18n="ob.th.status">Status</th>
               </tr>
             </thead>
             <tbody id="shift2TableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="4" class="text-center py-4 text-slate-400">Import Data.</td></tr>
+              <tr><td colspan="4" class="text-center py-4 text-slate-400" data-i18n="ob.emptyImportData">Import Data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -837,7 +1212,7 @@ tailwind.config = {
           <div class="space-y-0.5 z-10">
             <div class="flex items-center gap-1.5">
               <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Shift 3 (16:00 - 01:00)</span>
-              <span id="hwBadge3" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase">NORMAL</span>
+              <span id="hwBadge3" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase" data-i18n="ob.heat.normal">NORMAL</span>
             </div>
             <h3 id="kpiShift3Slots" class="text-sm font-black text-rose-500 font-mono">0 Slot Linehaul</h3>
           </div>
@@ -848,14 +1223,14 @@ tailwind.config = {
           <table class="w-full text-[10px] dynamic-table">
             <thead class="bg-slate-800 text-white font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-8">Slot</th>
-                <th class="text-left pl-2">List Route</th>
-                <th class="col-time-departed bg-rose-600">Time Departed</th>
-                <th class="w-24">Status</th>
+                <th class="w-8" data-i18n="ob.th.slot">Slot</th>
+                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
+                <th class="col-time-departed bg-rose-600" data-i18n="ob.th.timeDeparted">Time Departed</th>
+                <th class="w-24" data-i18n="ob.th.status">Status</th>
               </tr>
             </thead>
             <tbody id="shift3TableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="4" class="text-center py-4 text-slate-400">Import Data.</td></tr>
+              <tr><td colspan="4" class="text-center py-4 text-slate-400" data-i18n="ob.emptyImportData">Import Data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1388,8 +1763,8 @@ function occupancyBadgeHtml(pct) {
   if (level === 'safe') return '';
   const cls = level === 'critical' ? 'bg-rose-600 text-white' : 'bg-amber-400 text-slate-950';
   const icon = level === 'critical' ? 'fa-solid fa-triangle-exclamation' : 'fa-regular fa-clock';
-  const label = level === 'critical' ? 'PENUH' : 'WARN';
-  return `<span class="ml-1.5 inline-flex items-center gap-0.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full align-middle ${cls}" title="Occupancy ${pct.toFixed(0)}% dari kapasitas ${DESTINATION_CAPACITY.toLocaleString('id-ID')} parcel"><i class="${icon}"></i>${label}</span>`;
+  const label = level === 'critical' ? t('ob.badge.penuh') : t('ob.badge.warn');
+  return `<span class="ml-1.5 inline-flex items-center gap-0.5 text-[8px] font-extrabold px-1.5 py-0.5 rounded-full align-middle ${cls}" title="${t('ob.occ.capTitle')} — ${pct.toFixed(0)}% / ${DESTINATION_CAPACITY.toLocaleString('id-ID')} parcel"><i class="${icon}"></i>${label}</span>`;
 }
 
 function getAgingStatus(row) {
@@ -1402,9 +1777,15 @@ function getAgingStatus(row) {
   return { label: 'GOOD', priority: 1, cls: 'bg-emerald-500 text-white', icon: 'fa-solid fa-circle-check' };
 }
 
+function agingStatusDisplayLabel(label) {
+  if (label === 'DANGER') return t('ob.agingStatus.danger');
+  if (label === 'WARNING') return t('ob.agingStatus.warning');
+  return t('ob.agingStatus.good');
+}
+
 function statusBadgeHtml(row) {
   const st = getAgingStatus(row);
-  return `<span class="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${st.cls}"><i class="${st.icon}"></i>${st.label}</span>`;
+  return `<span class="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${st.cls}"><i class="${st.icon}"></i>${agingStatusDisplayLabel(st.label)}</span>`;
 }
 
 function setDestinationCapacity(val) {
@@ -1449,7 +1830,7 @@ function focusGridSearchInput() {
     btnOccupancy.classList.remove('active');
     sectionOccupancy.classList.add('hidden');
     sectionAging.classList.remove('hidden');
-    badge.innerText = "Aging & Packer Backlog Mode";
+    badge.innerText = t('ob.badge.agingMode');
     if (filteredData.length > 0) renderBacklogCharts();
   }
 
@@ -1587,11 +1968,11 @@ function switchSubmenu(menuType) {
   if (menuType === 'occupancy') {
     btnOccupancy.classList.add('active');
     sectionOccupancy.classList.remove('hidden');
-    badge.innerText = "Occupancy & Shift Departure Mode";
+    badge.innerText = t('ob.badge.occupancyMode');
   } else {
     btnAging.classList.add('active');
     sectionAging.classList.remove('hidden');
-    badge.innerText = "Aging & Packer Backlog Mode";
+    badge.innerText = t('ob.badge.agingMode');
   }
   document.getElementById('appSidebar').classList.remove('open');
   document.getElementById('appSidebarBackdrop').classList.remove('open');
@@ -1639,12 +2020,12 @@ function setThemeMode(mode) {
   if (mode === 'dark') {
     htmlEl.classList.add('dark');
     iconEl.className = 'fa-solid fa-sun text-amber-300';
-    textEl.innerText = 'Light';
+    textEl.innerText = t('ob.header.themeLight');
     if (sidebarSelect) sidebarSelect.value = 'dark';
   } else {
     htmlEl.classList.remove('dark');
     iconEl.className = 'fa-solid fa-moon';
-    textEl.innerText = 'Dark';
+    textEl.innerText = t('ob.header.themeDark');
     if (sidebarSelect) sidebarSelect.value = 'light';
   }
   if (filteredData.length > 0) renderDashboard();
@@ -1954,7 +2335,7 @@ function showTONumbers(hubName, agingType) {
 
 function showPackerTONumbers(packerName, agingType) {
   let matches = filteredData.filter(d => {
-    const p = d.lastPacker && d.lastPacker !== '-' ? d.lastPacker : 'Unassigned / Unknown';
+    const p = d.lastPacker && d.lastPacker !== '-' ? d.lastPacker : t('ob.packer.unassigned');
     return p === packerName;
   });
 
@@ -1996,7 +2377,7 @@ function computeDestinationStats(receiverName) {
       stats.lastPackedDate = item.completeDateObj;
     }
 
-    const packer = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : 'Unassigned / Unknown';
+    const packer = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : t('ob.packer.unassigned');
     if (!stats.packerMap[packer]) stats.packerMap[packer] = 0;
     stats.packerMap[packer]++;
   });
@@ -2383,9 +2764,9 @@ function renderShiftTable() {
     const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(parts[0], 10), parseInt(parts[1], 10) || 0);
     const diffMinutes = (target - now) / 60000;
 
-    if (diffMinutes < 0) return `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-300 border border-rose-300 dark:border-rose-800 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation mr-0.5"></i>Lewat Jadwal</span>`;
+    if (diffMinutes < 0) return `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-300 border border-rose-300 dark:border-rose-800 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation mr-0.5"></i>${t('ob.occ.legendOverdue')}</span>`;
     if (diffMinutes <= 30) return `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>Segera</span>`;
-    return `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">Terjadwal</span>`;
+    return `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">${t('ob.occ.legendScheduled')}</span>`;
   };
 
   const renderShiftBody = (targetShift) => {
@@ -2413,7 +2794,7 @@ function renderPackerLeaderboard() {
   let totalParcelsTracked = 0;
 
   filteredData.forEach(item => {
-    const packer = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : 'Unassigned / Unknown';
+    const packer = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : t('ob.packer.unassigned');
     if (!packerMap[packer]) {
       packerMap[packer] = {
         name: packer,
@@ -2445,19 +2826,19 @@ function renderPackerLeaderboard() {
   const sortedPackers = Object.values(packerMap).sort((a, b) => b.total - a.total);
   const totalPackersCount = sortedPackers.length;
 
-  document.getElementById('kpiTotalPackers').innerText = `${totalPackersCount} Operator`;
+  document.getElementById('kpiTotalPackers').innerText = t('ob.packer.operatorUnit', { n: totalPackersCount });
 
   if (sortedPackers.length > 0) {
     document.getElementById('kpiTopPackerName').innerText = `${sortedPackers[0].name} (${sortedPackers[0].total.toLocaleString('id-ID')})`;
     const avg = Math.round(totalParcelsTracked / totalPackersCount);
-    document.getElementById('kpiAvgPackerOutput').innerText = `${avg.toLocaleString('id-ID')} Parcel`;
+    document.getElementById('kpiAvgPackerOutput').innerText = t('ob.packer.parcelUnit', { n: avg.toLocaleString('id-ID') });
   } else {
     document.getElementById('kpiTopPackerName').innerText = '-';
-    document.getElementById('kpiAvgPackerOutput').innerText = '0 Parcel';
+    document.getElementById('kpiAvgPackerOutput').innerText = t('ob.packer.parcelUnit', { n: 0 });
   }
 
   const criticalPackers = sortedPackers.filter(p => p.criticalD6 > 0).length;
-  document.getElementById('kpiCriticalPackerCount').innerText = `${criticalPackers} Operator`;
+  document.getElementById('kpiCriticalPackerCount').innerText = t('ob.packer.operatorUnit', { n: criticalPackers });
 
   const maxPackerQty = sortedPackers.length > 0 ? sortedPackers[0].total : 1;
   const container = document.getElementById('packerTableBody');
@@ -2626,12 +3007,12 @@ function renderTrendChart() {
   const ctx = document.getElementById('dcTrendChart');
 
   if (series.length < 2) {
-    if (badge) badge.innerText = series.length === 0 ? 'Belum ada histori' : 'Butuh min. 2 snapshot import';
+    if (badge) badge.innerText = series.length === 0 ? t('ob.chart.noHistory') : t('ob.chart.needMinSnapshot');
     if (dcTrendChartInstance) { dcTrendChartInstance.destroy(); dcTrendChartInstance = null; }
     return;
   }
 
-  if (badge) badge.innerText = `${series.length} Snapshot Terakhir`;
+  if (badge) badge.innerText = t('ob.chart.lastSnapshots', { n: series.length });
 
   const labels = series.map(s => s.dateLabel);
   const totalSeries = series.map(s => s.dcTotal);
@@ -2644,13 +3025,13 @@ function renderTrendChart() {
       labels: labels,
       datasets: [
         {
-          label: 'Total Volume Parcel',
+          label: t('ob.chart.totalVolume'),
           data: totalSeries,
           borderColor: '#f59e0b', backgroundColor: 'rgba(245,158,11,0.12)',
           tension: 0.3, fill: true, yAxisID: 'y', pointRadius: 3, pointHoverRadius: 5
         },
         {
-          label: 'Backlog Kritis (>D4)',
+          label: t('ob.chart.backlogKritis'),
           data: criticalSeries,
           borderColor: '#f43f5e', backgroundColor: 'rgba(244,63,94,0.12)',
           tension: 0.3, fill: true, yAxisID: 'y1', pointRadius: 3, pointHoverRadius: 5
@@ -2666,8 +3047,8 @@ function renderTrendChart() {
       },
       scales: {
         x: { grid: { display: false }, ticks: { color: colors.tick, font: { size: 8 }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
-        y: { position: 'left', beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.tick, font: { size: 9 } }, title: { display: true, text: 'Total Volume', color: colors.tick, font: { size: 8 } } },
-        y1: { position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: colors.tick, font: { size: 9 } }, title: { display: true, text: 'Backlog Kritis', color: colors.tick, font: { size: 8 } } }
+        y: { position: 'left', beginAtZero: true, grid: { color: colors.grid }, ticks: { color: colors.tick, font: { size: 9 } }, title: { display: true, text: t('ob.chart.totalVolume'), color: colors.tick, font: { size: 8 } } },
+        y1: { position: 'right', beginAtZero: true, grid: { display: false }, ticks: { color: colors.tick, font: { size: 9 } }, title: { display: true, text: t('ob.chart.backlogKritis'), color: colors.tick, font: { size: 8 } } }
       }
     }
   });
@@ -2774,12 +3155,12 @@ function renderGrids() {
     </tr>`;
   }).join('');
 
-  const emptyRow = `<tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">${term ? 'Tidak ada Destination yang cocok.' : 'Silakan import data Excel baru.'}</td></tr>`;
+  const emptyRow = `<tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">${term ? t('ob.emptyNoMatch') : t('ob.emptyImportNew')}</td></tr>`;
 
   document.getElementById('grid1TableBody').innerHTML = grid1Data.length ? makeTable(grid1Data) : emptyRow;
   document.getElementById('grid2TableBody').innerHTML = grid2Data.length ? makeTable(grid2Data) : emptyRow;
 
-  document.getElementById('gridPageInfo').innerText = `Hal ${gridCurrentPage}/${totalPages} • ${totalFiltered.toLocaleString('id-ID')} Destination`;
+  document.getElementById('gridPageInfo').innerText = t('ob.grid.pageShort', { p: gridCurrentPage, t: totalPages, n: totalFiltered.toLocaleString('id-ID') });
   document.getElementById('gridPrevBtn').disabled = gridCurrentPage <= 1;
   document.getElementById('gridNextBtn').disabled = gridCurrentPage >= totalPages;
 
@@ -2864,9 +3245,9 @@ function renderDashboard() {
   const s2Slots = linehaulSchedule.filter(s => getShiftFromTimeStr(s.time) === 'Shift 2').length;
   const s3Slots = linehaulSchedule.filter(s => getShiftFromTimeStr(s.time) === 'Shift 3').length;
 
-  document.getElementById('kpiShift1Slots').innerText = `Keberangkatan: ${s1Slots} Unit Linehaul`;
-  document.getElementById('kpiShift2Slots').innerText = `Keberangkatan: ${s2Slots} Unit Linehaul`;
-  document.getElementById('kpiShift3Slots').innerText = `Keberangkatan: ${s3Slots} Unit Linehaul`;
+  document.getElementById('kpiShift1Slots').innerText = t('ob.shift.keberangkatan', { n: s1Slots });
+  document.getElementById('kpiShift2Slots').innerText = t('ob.shift.keberangkatan', { n: s2Slots });
+  document.getElementById('kpiShift3Slots').innerText = t('ob.shift.keberangkatan', { n: s3Slots });
 
   // HIGHEST OUTBOUND HEAT WAVE BADGE DETECTOR
   const shiftSlotsArr = [
@@ -2879,13 +3260,13 @@ function renderDashboard() {
     const el = document.getElementById('hwBadge' + s.id);
     if (idx === 0) {
       el.className = "text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-rose-600 text-white animate-pulse shadow-sm";
-      el.innerText = "HIGH TRAFFIC";
+      el.innerText = t('ob.heat.highTraffic');
     } else if (idx === 1) {
       el.className = "text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950";
-      el.innerText = "MEDIUM";
+      el.innerText = t('ob.heat.medium');
     } else {
       el.className = "text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500 text-white";
-      el.innerText = "NORMAL";
+      el.innerText = t('ob.heat.normal');
     }
   });
 
@@ -3041,11 +3422,11 @@ function renderDashboard() {
   }).join('');
 
   const outerSorted = Object.values(outerIslandMap).sort((a, b) => b.total - a.total);
-  document.getElementById('outerIslandTotalHeader').innerText = `Total: ${totalOuterIslandCount.toLocaleString('id-ID')}`;
+  document.getElementById('outerIslandTotalHeader').innerText = t('ob.occ.totalLabel', { n: totalOuterIslandCount.toLocaleString('id-ID') });
 
   let idxOuter = 1;
   if (outerSorted.length === 0) {
-    document.getElementById('outerIslandTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Tidak ada data Outer Island.</td></tr>`;
+    document.getElementById('outerIslandTableBody').innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">${t('ob.emptyNoOuterIsland')}</td></tr>`;
   } else {
     document.getElementById('outerIslandTableBody').innerHTML = outerSorted.map(row => {
       const occPct = getOccupancyPct(row.total);
@@ -3082,7 +3463,7 @@ function renderDashboard() {
   const planContainer = document.getElementById('topActionPlanContainer');
 
   if (top5.length === 0 || top5.every(r => r.total === 0)) {
-    planContainer.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans">Belum ada data untuk dianalisis.</div>`;
+    planContainer.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans">${t('ob.occ.emptyAnalysis')}</div>`;
   } else {
     planContainer.innerHTML = top5.map((item, index) => {
       const alert = getRouteAlert(item.pct);
@@ -3133,12 +3514,12 @@ function renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, pre
   const slaContainer = document.getElementById('slaGaugeContainer');
 
   if (total === 0) {
-    narrativeEl.innerText = 'Belum ada data. Silakan import file Excel untuk melihat ringkasan otomatis.';
+    narrativeEl.innerText = t('ob.exec.emptyNarrative');
     verdictBadge.className = 'shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center font-black text-white shadow-inner bg-slate-400';
     verdictIcon.className = 'fa-solid fa-circle-question text-xl';
-    verdictLabel.innerText = 'N/A';
+    verdictLabel.innerText = t('ob.badge.na');
     deltaTotalEl.innerHTML = ''; deltaCriticalEl.innerHTML = '';
-    slaContainer.innerHTML = `<div class="col-span-2 text-center text-[10px] text-slate-400 dark:text-slate-500 py-2 font-sans">Menunggu data untuk hitung status SLA...</div>`;
+    slaContainer.innerHTML = `<div class="col-span-2 text-center text-[10px] text-slate-400 dark:text-slate-500 py-2 font-sans">${t('ob.exec.waitingSla')}</div>`;
     return;
   }
 
@@ -3149,7 +3530,7 @@ function renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, pre
   const packerCriticalMap = {};
   filteredData.forEach(item => {
     if (item.agingDays > 4) {
-      const p = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : 'Unassigned / Unknown';
+      const p = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : t('ob.packer.unassigned');
       packerCriticalMap[p] = (packerCriticalMap[p] || 0) + 1;
     }
   });
@@ -3158,53 +3539,61 @@ function renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, pre
   const topPackerCount = packerCriticalArr.length > 0 ? packerCriticalArr[0][1] : 0;
   const topPackerPct = criticalParcels > 0 ? ((topPackerCount / criticalParcels) * 100).toFixed(0) : 0;
 
-  let verdict = 'AMAN', verdictCls = 'bg-emerald-500', icon = 'fa-solid fa-circle-check';
+  let verdict = t('ob.exec.verdictAman'), verdictCls = 'bg-emerald-500', icon = 'fa-solid fa-circle-check', verdictKey = 'aman';
   const capOverTarget = capPctRaw >= SLA_OCC_TARGET;
   const agingOverTarget = criticalPctOfTotal > SLA_AGING_TARGET;
   const routeCritical = worstAlert && (worstAlert.level === 'CRITICAL' || worstAlert.level === 'URGENT');
   const routeWatch = worstAlert && worstAlert.level === 'WATCH';
 
   if (capPctRaw >= 100 || routeCritical || criticalPctOfTotal > SLA_AGING_TARGET * 2) {
-    verdict = 'KRITIS'; verdictCls = 'bg-rose-600'; icon = 'fa-solid fa-fire';
+    verdict = t('ob.exec.verdictKritis'); verdictCls = 'bg-rose-600'; icon = 'fa-solid fa-fire'; verdictKey = 'kritis';
   } else if (capOverTarget || agingOverTarget || routeWatch) {
-    verdict = 'WASPADA'; verdictCls = 'bg-amber-400'; icon = 'fa-solid fa-triangle-exclamation';
+    verdict = t('ob.exec.verdictWaspada'); verdictCls = 'bg-amber-400'; icon = 'fa-solid fa-triangle-exclamation'; verdictKey = 'waspada';
   }
 
-  verdictBadge.className = `shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center font-black text-white shadow-inner ${verdictCls} ${verdict === 'WASPADA' ? 'text-slate-950' : ''}`;
+  verdictBadge.className = `shrink-0 w-16 h-16 rounded-xl flex flex-col items-center justify-center font-black text-white shadow-inner ${verdictCls} ${verdictKey === 'waspada' ? 'text-slate-950' : ''}`;
   verdictIcon.className = `${icon} text-xl`;
   verdictLabel.innerText = verdict;
 
-  let narrative = `Total <b>${total.toLocaleString('id-ID')} parcel</b> di staging area (${capPct}% dari kapasitas ${MAX_STAGING_CAPACITY.toLocaleString('id-ID')} parcel), dengan backlog kritis (>D4) sebanyak <b>${criticalParcels.toLocaleString('id-ID')} parcel</b> (${criticalPctOfTotal.toFixed(1)}% dari total).`;
+  let narrative = t('ob.exec.narrativeMain', {
+    total: total.toLocaleString('id-ID'),
+    capPct: capPct,
+    maxCap: MAX_STAGING_CAPACITY.toLocaleString('id-ID'),
+    critical: criticalParcels.toLocaleString('id-ID'),
+    critPct: criticalPctOfTotal.toFixed(1)
+  });
   if (worst) {
-    narrative += ` Rute paling perlu perhatian: <b>${worst.label}</b> (${worst.category}) di ${worst.pct.toFixed(1)}% kapasitas — ${worstAlert.text}.`;
+    narrative += t('ob.exec.narrativeRoute', {
+      route: worst.label, category: worst.category, pct: worst.pct.toFixed(1), alertText: worstAlert.text
+    });
   }
   if (topPackerName && topPackerCount > 0) {
-    narrative += ` Kontributor utama backlog kritis: <b>${topPackerName}</b> (${topPackerPct}% dari total backlog kritis).`;
+    narrative += t('ob.exec.narrativeTopPacker', { name: topPackerName, pct: topPackerPct });
   }
   narrativeEl.innerHTML = narrative;
 
   if (prevDCSnapshot) {
     const dTotal = total - prevDCSnapshot.dcTotal;
     const dCritical = criticalParcels - prevDCSnapshot.dcCritical;
-    deltaTotalEl.innerHTML = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">Volume ${dTotal >= 0 ? '+' : ''}${dTotal.toLocaleString('id-ID')} vs import lalu</span>`;
+    deltaTotalEl.innerHTML = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300">${t('ob.exec.volumeVsPrev', { sign: dTotal >= 0 ? '+' : '', n: dTotal.toLocaleString('id-ID') })}</span>`;
     const critCls = dCritical > 0 ? 'bg-rose-100 dark:bg-rose-950/50 text-rose-600 dark:text-rose-300' : dCritical < 0 ? 'bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-300' : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300';
-    deltaCriticalEl.innerHTML = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${critCls}">Backlog Kritis ${dCritical >= 0 ? '+' : ''}${dCritical.toLocaleString('id-ID')} vs import lalu</span>`;
+    deltaCriticalEl.innerHTML = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full ${critCls}">${t('ob.exec.backlogVsPrev', { sign: dCritical >= 0 ? '+' : '', n: dCritical.toLocaleString('id-ID') })}</span>`;
   } else {
-    deltaTotalEl.innerHTML = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">Import pertama</span>`;
+    deltaTotalEl.innerHTML = `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">${t('ob.exec.firstImport')}</span>`;
     deltaCriticalEl.innerHTML = '';
   }
 
   // SLA GAUGES
   const slaItems = [
     {
-      label: 'Occupancy DC', icon: 'fa-warehouse',
+      label: t('ob.exec.slaOccLabel'), icon: 'fa-warehouse',
       value: capPctRaw, target: SLA_OCC_TARGET, unit: '%', pass: capPctRaw <= SLA_OCC_TARGET,
-      detail: `${capPctRaw.toFixed(1)}% / target ≤${SLA_OCC_TARGET}%`
+      detail: t('ob.exec.slaDetail', { v: capPctRaw.toFixed(1), t: SLA_OCC_TARGET })
     },
     {
-      label: 'Backlog Kritis', icon: 'fa-triangle-exclamation',
+      label: t('ob.exec.slaBacklogLabel'), icon: 'fa-triangle-exclamation',
       value: criticalPctOfTotal, target: SLA_AGING_TARGET, unit: '%', pass: criticalPctOfTotal <= SLA_AGING_TARGET,
-      detail: `${criticalPctOfTotal.toFixed(1)}% / target ≤${SLA_AGING_TARGET}%`
+      detail: t('ob.exec.slaDetail', { v: criticalPctOfTotal.toFixed(1), t: SLA_AGING_TARGET })
     }
   ];
 
@@ -3220,7 +3609,7 @@ function renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, pre
     return `<div class="rounded-lg border ${passCls} p-2 flex flex-col justify-between">
       <div class="flex items-center justify-between gap-1">
         <span class="text-[9px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 truncate"><i class="fa-solid ${s.icon}"></i>${s.label}</span>
-        <span class="text-[8px] font-extrabold px-1.5 py-0.3 rounded-full ${badgeCls} shrink-0">${s.pass ? 'PASS' : 'FAIL'}</span>
+        <span class="text-[8px] font-extrabold px-1.5 py-0.3 rounded-full ${badgeCls} shrink-0">${s.pass ? t('ob.exec.pass') : t('ob.exec.fail')}</span>
       </div>
       <span class="text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-mono">${s.detail}</span>
     </div>`;
@@ -3252,7 +3641,7 @@ if (window.location.hash === '#occupancy') {
   document.getElementById('menuOccupancy').classList.add('active');
   document.getElementById('agingSection').classList.add('hidden');
   document.getElementById('occupancySection').classList.remove('hidden');
-  document.getElementById('activeMenuBadge').innerText = "Occupancy & Shift Departure Mode";
+  document.getElementById('activeMenuBadge').innerText = t('ob.badge.occupancyMode');
   history.replaceState(null, '', window.location.pathname);
 }
 </script>
