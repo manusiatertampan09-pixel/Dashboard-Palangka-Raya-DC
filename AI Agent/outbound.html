@@ -656,7 +656,7 @@ tailwind.config = {
       <button onclick="closeFeedbackBoard()">✕</button>
     </div>
     <div class="fb-board-form">
-      <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder"></textarea>
+      <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder" onkeydown="if((event.ctrlKey||event.metaKey)&&event.key==='Enter'){event.preventDefault();submitFeedback();}"></textarea>
       <div class="fb-board-form-footer">
         <button class="fb-board-submit-btn" id="fbBoardSubmitBtn" onclick="submitFeedback()" data-i18n="feedback.submit">Kirim</button>
       </div>
@@ -1686,11 +1686,89 @@ function closeLogUpdateModal() {
   document.getElementById('logUpdateModal').classList.add('hidden');
 }
 
+// ==== FEEDBACK BOARD (Saran & Masukan) — shared board via Firebase, real-time di semua device/modul ====
+const FB_FEEDBACK_ROOT = "prDcGlobalFeedback";
+let fbFeedbackEntries = [];
+let fbFeedbackListenerAttached = false;
+
+function initFeedbackSync() {
+  if (!fbDb || fbFeedbackListenerAttached) return;
+  fbFeedbackListenerAttached = true;
+  fbDb.ref(FB_FEEDBACK_ROOT).on('value', function (snapshot) {
+    const val = snapshot.val() || {};
+    fbFeedbackEntries = Object.keys(val).map(function (k) {
+      return Object.assign({}, val[k], { _key: k });
+    }).sort(function (a, b) {
+      return (b.createdAt || '').localeCompare(a.createdAt || '');
+    });
+    renderFeedbackList();
+  });
+}
+
+function renderFeedbackList() {
+  const container = document.getElementById('fbBoardList');
+  if (!container) return;
+  if (fbFeedbackEntries.length === 0) {
+    container.innerHTML = `<div class="fb-board-empty">${t('feedback.empty')}</div>`;
+    return;
+  }
+  container.innerHTML = fbFeedbackEntries.map(function (item) {
+    const dt = item.createdAt ? new Date(item.createdAt) : null;
+    const timeStr = dt && !isNaN(dt) ? formatDateTimeShort(dt) : '-';
+    return `<div class="fb-board-item">
+      <div class="fb-board-item-head">
+        <span class="fb-board-item-user">${escapeHtml(item.user || 'unknown')}</span>
+        <span class="fb-board-item-time">${timeStr}</span>
+      </div>
+      <p class="fb-board-item-msg">${escapeHtml(item.message || '')}</p>
+    </div>`;
+  }).join('');
+}
+
+function openFeedbackBoard() {
+  const backdrop = document.getElementById('fbBoardBackdrop');
+  if (!backdrop) return;
+  backdrop.classList.add('open');
+  initFeedbackSync();
+  renderFeedbackList();
+  const input = document.getElementById('fbBoardInput');
+  if (input) setTimeout(function () { input.focus(); }, 50);
+}
+
+function closeFeedbackBoard() {
+  const backdrop = document.getElementById('fbBoardBackdrop');
+  if (backdrop) backdrop.classList.remove('open');
+}
+
+function submitFeedback() {
+  const input = document.getElementById('fbBoardInput');
+  const btn = document.getElementById('fbBoardSubmitBtn');
+  if (!input) return;
+  const msg = input.value.trim();
+  if (!msg) return;
+  if (!fbDb) { showToast('⚠️ Belum terhubung ke database online.', 'info'); return; }
+
+  if (btn) btn.disabled = true;
+  const userStr = window.__authUserEmail || 'unknown';
+  fbDb.ref(FB_FEEDBACK_ROOT).push({
+    message: msg,
+    user: userStr,
+    createdAt: new Date().toISOString()
+  }).then(function () {
+    input.value = '';
+  }).catch(function (e) {
+    showToast(t('toast.err.saveFeedback') + (e && e.message ? e.message : e), 'err');
+  }).finally(function () {
+    if (btn) btn.disabled = false;
+  });
+}
+
 if (window.firebase && firebase.auth) {
   firebase.auth().onAuthStateChanged(function (user) {
     if (user) {
       initOutboundFirebaseSync();
       initLogUpdateSync();
+      initFeedbackSync();
     }
   });
 }
@@ -1801,6 +1879,7 @@ document.addEventListener('keydown', function(event) {
     closeModal();
     closeDestModal();
     closeRouteModal();
+    closeFeedbackBoard();
     const logUpdateModal = document.getElementById('logUpdateModal');
     if (logUpdateModal && !logUpdateModal.classList.contains('hidden')) closeLogUpdateModal();
     const sidebar = document.getElementById('appSidebar');
