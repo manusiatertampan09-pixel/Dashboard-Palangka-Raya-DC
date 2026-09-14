@@ -141,6 +141,65 @@
           font-family: var(--tw-sans);
         }
         .app-sidebar-footer button:hover { background: #1f1f1f; }
+
+        /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
+        .app-sidebar-lang { margin-bottom: 10px; }
+        .app-sidebar-lang label {
+          display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
+          color: var(--text-sidebar-muted); text-transform: uppercase; margin-bottom: 6px;
+        }
+        .app-sidebar-lang select {
+          width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border-sidebar);
+          background: var(--bg-sidebar-card); color: var(--text-sidebar); font-size: 13px; font-weight: 600;
+          cursor: pointer; font-family: var(--tw-sans);
+        }
+        .app-sidebar-lang select:focus { outline: none; border-color: #f59e0b; }
+        .app-sidebar-feedback-btn {
+          display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+          margin-bottom: 10px; padding: 11px; border: 1px solid rgba(245, 158, 11, 0.4);
+          background: rgba(245, 158, 11, 0.12); color: #f59e0b; border-radius: 7px; cursor: pointer;
+          font-weight: 700; font-size: 14px; font-family: var(--tw-sans); transition: background 0.15s ease;
+        }
+        .app-sidebar-feedback-btn:hover { background: rgba(245, 158, 11, 0.22); }
+
+        .fb-board-backdrop {
+          display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 10000;
+          align-items: center; justify-content: center; padding: 16px;
+        }
+        .fb-board-backdrop.open { display: flex; }
+        .fb-board-card {
+          background: #111111; border: 1px solid var(--border-sidebar); border-radius: 12px;
+          width: 100%; max-width: 480px; max-height: 85vh; display: flex; flex-direction: column;
+          overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); font-family: var(--tw-sans);
+        }
+        .fb-board-header {
+          padding: 14px 16px; border-bottom: 1px solid var(--border-sidebar); display: flex;
+          align-items: center; justify-content: space-between; flex-shrink: 0; background: var(--bg-sidebar-card);
+        }
+        .fb-board-header h3 { margin: 0; font-size: 15px; font-weight: 700; color: #fff; }
+        .fb-board-header button { background: transparent; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; padding: 2px 6px; }
+        .fb-board-header button:hover { color: #fff; }
+        .fb-board-form { padding: 12px 16px; border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0; }
+        .fb-board-form textarea {
+          width: 100%; min-height: 64px; resize: vertical; background: #0a0a0a; border: 1px solid var(--border-sidebar);
+          border-radius: 8px; color: #fff; padding: 9px 10px; font-size: 13px; font-family: var(--tw-sans); box-sizing: border-box;
+        }
+        .fb-board-form textarea:focus { outline: none; border-color: #f59e0b; }
+        .fb-board-form-footer { display: flex; justify-content: flex-end; margin-top: 8px; }
+        .fb-board-submit-btn {
+          background: #f59e0b; color: #111; border: none; border-radius: 7px; padding: 8px 16px;
+          font-weight: 700; font-size: 13px; cursor: pointer; font-family: var(--tw-sans);
+        }
+        .fb-board-submit-btn:hover { background: #fbbf24; }
+        .fb-board-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .fb-board-list { overflow-y: auto; flex-grow: 1; padding: 8px 0; }
+        .fb-board-item { padding: 10px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .fb-board-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+        .fb-board-item-user { font-size: 11.5px; font-weight: 700; color: #f59e0b; }
+        .fb-board-item-time { font-size: 10px; color: var(--text-sidebar-muted); flex-shrink: 0; }
+        .fb-board-item-msg { font-size: 13px; color: #e5e5e5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
+        .fb-board-empty { padding: 30px 16px; text-align: center; color: var(--text-sidebar-muted); font-size: 12.5px; }
+
         .main-content { flex-grow: 1; display: flex; flex-direction: column; padding: 20px 20px 20px 70px; overflow-y: auto; min-width: 0; }
         h1 { font-family: 'Poppins', sans-serif; font-size: 24px; color: #e67e22; text-align: center; margin: 0; font-weight: 700; letter-spacing: 0.5px; }
         h2 { font-size: 13px; text-align: center; margin: 3px 0 10px 0; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
@@ -383,13 +442,13 @@
 
 <div id="firebaseSetupModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">
-        <h3>🔗 Hubungkan ke Database Online</h3>
-        <p>Tempel <b>Firebase Config</b> di bawah ini. Cukup dilakukan <b>1x per device</b>.</p>
+        <h3 data-i18n="fb.modalTitle">🔗 Hubungkan ke Database Online</h3>
+        <p data-i18n-html="fb.modalDesc">Tempel <b>Firebase Config</b> di bawah ini. Cukup dilakukan <b>1x per device</b>.</p>
         <textarea id="firebaseConfigInput" placeholder='{"apiKey": "...", ...}'></textarea>
         <div class="modal-error" id="firebaseConfigError"></div>
         <div class="modal-actions">
-            <button class="btn-warning" onclick="closeFirebaseModal()" id="firebaseModalCancelBtn" style="display:none;">Batal</button>
-            <button class="btn-primary" onclick="saveFirebaseConfig()">💾 Simpan & Hubungkan</button>
+            <button class="btn-warning" onclick="closeFirebaseModal()" id="firebaseModalCancelBtn" style="display:none;" data-i18n="btn.cancel">Batal</button>
+            <button class="btn-primary" onclick="saveFirebaseConfig()">💾 <span data-i18n="btn.saveConnect">Simpan & Hubungkan</span></button>
         </div>
     </div>
 </div>
@@ -398,16 +457,16 @@
 <div id="databaseAssetModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 640px; max-width: 95vw; max-height: 85vh; display:flex; flex-direction:column;">
         <h3 style="display:flex; align-items:center; justify-content:space-between;">
-            <span>🗄️ Database Asset PDA</span>
+            <span>🗄️ <span data-i18n="btn.databaseAsset">Database Asset</span> PDA</span>
             <button onclick="closeDatabaseAssetModal()" style="background:none; box-shadow:none; color:var(--text-muted); font-size:18px; padding:0 6px;">✕</button>
         </h3>
-        <p id="databaseAssetPermNote">Daftar SN PDA terdaftar beserta station-nya.</p>
+        <p id="databaseAssetPermNote" data-i18n="dbAsset.permNoteView">Daftar SN PDA terdaftar beserta station-nya.</p>
 
         <!-- Form tambah SN baru: cuma keliatan buat email yang punya akses -->
         <div id="databaseAssetAddForm" style="display:none; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
-            <input type="text" id="newAssetSn" placeholder="Serial Number lengkap" style="flex:1; min-width:180px; font-family:monospace; text-transform:uppercase;">
+            <input type="text" id="newAssetSn" placeholder="Serial Number lengkap" data-i18n-placeholder="dbAsset.snPlaceholder" style="flex:1; min-width:180px; font-family:monospace; text-transform:uppercase;">
             <select id="newAssetStation" style="width:150px;"></select>
-            <button class="btn-primary" onclick="addPdaStationEntry()">+ Tambah</button>
+            <button class="btn-primary" onclick="addPdaStationEntry()">+ <span data-i18n="btn.tambah">Tambah</span></button>
         </div>
         <div class="modal-error" id="databaseAssetError"></div>
 
@@ -415,9 +474,9 @@
             <table style="width:100%; border-collapse:collapse; font-size:12.5px;">
                 <thead style="position:sticky; top:0; background: var(--table-header-bg);">
                     <tr>
-                        <th style="text-align:left; padding:8px;">Serial Number</th>
-                        <th style="text-align:left; padding:8px; width:160px;">Station</th>
-                        <th style="text-align:center; padding:8px; width:70px;">Action</th>
+                        <th style="text-align:left; padding:8px;" data-i18n="dbAsset.serialNumber">Serial Number</th>
+                        <th style="text-align:left; padding:8px; width:160px;" data-i18n="filter.station">Station</th>
+                        <th style="text-align:center; padding:8px; width:70px;" data-i18n="table.action">Action</th>
                     </tr>
                 </thead>
                 <tbody id="databaseAssetTableBody"></tbody>
@@ -533,76 +592,104 @@
         </div>
         <div class="app-sidebar-body">
           <div class="app-sidebar-group-label collapsible" data-group="Productivity" onclick="toggleSidebarGroup('Productivity')">
-            <span>Productivity</span><span class="chevron">▾</span>
+            <span data-i18n="grp.productivity">Productivity</span><span class="chevron">▾</span>
           </div>
           <div class="app-sidebar-group" data-group-body="Productivity">
-            <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link active">⏳ Rest Time Monitoring</a>
-            <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 Performance Bagger</a>
+            <a href="rest-time.html" id="navToRestTime" class="app-sidebar-link active">⏳ <span data-i18n="nav.restTime">Rest Time Monitoring</span></a>
+            <a href="performance-bagger.html" id="navToPerformanceBagger" class="app-sidebar-link">🏆 <span data-i18n="nav.perfBagger">Performance Bagger</span></a>
           </div>
 
           <div class="app-sidebar-group-label collapsible" data-group="Inbound" onclick="toggleSidebarGroup('Inbound')">
-            <span>Inbound</span><span class="chevron">▾</span>
+            <span data-i18n="grp.inbound">Inbound</span><span class="chevron">▾</span>
           </div>
           <div class="app-sidebar-group" data-group-body="Inbound">
-            <a href="inbound.html" id="navToInbound" class="app-sidebar-link">🚚 LH Tracking &amp; Forecast MP</a>
+            <a href="inbound.html" id="navToInbound" class="app-sidebar-link">🚚 <span data-i18n="nav.lhTracking">LH Tracking &amp; Forecast MP</span></a>
           </div>
 
           <div class="app-sidebar-group-label collapsible" data-group="OutboundMonitoring" onclick="toggleSidebarGroup('OutboundMonitoring')">
-            <span>Outbound Monitoring</span><span class="chevron">▾</span>
+            <span data-i18n="grp.outbound">Outbound Monitoring</span><span class="chevron">▾</span>
           </div>
           <div class="app-sidebar-group" data-group-body="OutboundMonitoring">
-            <a href="outbound.html" id="navToOutboundAging" class="app-sidebar-link">📦 Aging &amp; Packer Backlog</a>
-            <a href="outbound.html#occupancy" id="navToOutboundOccupancy" class="app-sidebar-link">🏭 Occupancy &amp; Shift</a>
+            <a href="outbound.html" id="navToOutboundAging" class="app-sidebar-link">📦 <span data-i18n="nav.aging">Aging &amp; Packer Backlog</span></a>
+            <a href="outbound.html#occupancy" id="navToOutboundOccupancy" class="app-sidebar-link">🏭 <span data-i18n="nav.occupancy">Occupancy &amp; Shift</span></a>
           </div>
 
           <div class="app-sidebar-group-label collapsible" data-group="SOC" onclick="toggleSidebarGroup('SOC')">
-            <span>Inventory Control</span><span class="chevron">▾</span>
+            <span data-i18n="grp.soc">Inventory Control</span><span class="chevron">▾</span>
           </div>
           <div class="app-sidebar-group" data-group-body="SOC">
-            <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ Inventory Control</a>
+            <a href="inventory-control.html" id="navToInventoryControl" class="app-sidebar-link">🗃️ <span data-i18n="nav.invControl">Inventory Control</span></a>
           </div>
         </div>
       </div>
       <div class="app-sidebar-footer">
-        <button onclick="logoutApp()">🚪 Logout</button>
+        <div class="app-sidebar-lang">
+          <label for="appLangSelect">🌐 <span data-i18n="lang.label">Bahasa</span></label>
+          <select id="appLangSelect" onchange="setAppLanguage(this.value)">
+            <option value="id">🇮🇩 Indonesia</option>
+            <option value="en">🇬🇧 English</option>
+            <option value="ja">🇯🇵 日本語</option>
+            <option value="zh">🇨🇳 中文</option>
+          </select>
+        </div>
+        <button class="app-sidebar-feedback-btn" onclick="openFeedbackBoard()">💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></button>
+        <button onclick="logoutApp()">🚪 <span data-i18n="logout.btn">Logout</span></button>
       </div>
     </nav>
+
+    <div class="fb-board-backdrop" id="fbBoardBackdrop" onclick="if(event.target===this) closeFeedbackBoard()">
+      <div class="fb-board-card">
+        <div class="fb-board-header">
+          <h3>💬 <span data-i18n="feedback.title">Saran &amp; Masukan</span></h3>
+          <button onclick="closeFeedbackBoard()" aria-label="Tutup">✕</button>
+        </div>
+        <div class="fb-board-form">
+          <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder"></textarea>
+          <div class="fb-board-form-footer">
+            <button class="fb-board-submit-btn" id="fbBoardSubmitBtn" onclick="submitFeedback()" data-i18n="feedback.submit">Kirim</button>
+          </div>
+        </div>
+        <div class="fb-board-list" id="fbBoardList">
+          <div class="fb-board-empty" data-i18n="feedback.loading">Memuat...</div>
+        </div>
+      </div>
+    </div>
 
     <main class="main-content">
         <!-- MODAL SWITCHER PANEL -->
         <div class="module-switcher">
-            <button class="tab-btn active" id="tabRestBtn" onclick="switchModule('rest')">⏳ Rest Time Monitoring</button>
-            <button class="tab-btn" id="tabAssetBtn" onclick="switchModule('asset')">📱 Asset Usage Monitoring</button>
+            <button class="tab-btn active" id="tabRestBtn" onclick="switchModule('rest')">⏳ <span data-i18n="nav.restTime">Rest Time Monitoring</span></button>
+            <button class="tab-btn" id="tabAssetBtn" onclick="switchModule('asset')">📱 <span data-i18n="nav.assetUsage">Asset Usage Monitoring</span></button>
             <input type="file" id="filePicker" accept=".txt,.csv,.xlsx,.xls" style="display: none;" onchange="handleFileImport(this)">
-            <button class="btn-success" onclick="document.getElementById('filePicker').click()">📥 Import Excel (.xlsx) / CSV</button>
+            <button class="btn-success" onclick="document.getElementById('filePicker').click()">📥 <span data-i18n="btn.importExcel">Import Excel (.xlsx) / CSV</span></button>
         </div>
 
         <div class="input-panel">
             <h3>
-                <span id="formTitle">⚡ Form Input Aktivitas Operator (Scan / Input OpsID)</span>
+                <span id="formTitle" data-i18n="form.titleRest">⚡ Form Input Aktivitas Operator (Scan / Input OpsID)</span>
                 <div id="inlineFilterBar" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:11px;">
-                    <span style="color:#e67e22; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.3px;">🔍 Filter Data Table:</span>
+                    <span style="color:#e67e22; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.3px;" data-i18n="filter.title">🔍 Filter Data Table:</span>
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;">Shift:</label>
+                        <label style="font-size:11px; margin:0;" data-i18n="filter.shift">Shift:</label>
                         <select id="filterShift" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All">All Shift</option>
-                            <option value="1">Shift 1 (00:00 - 09:00)</option>
-                            <option value="2">Shift 2 (08:00 - 17:00)</option>
-                            <option value="3">Shift 3 (16:00 - 01:00)</option>
+                            <option value="All" data-i18n="filter.allShift">All Shift</option>
+                            <option value="1" data-i18n="filter.shift1">Shift 1 (00:00 - 09:00)</option>
+                            <option value="2" data-i18n="filter.shift2">Shift 2 (08:00 - 17:00)</option>
+                            <option value="3" data-i18n="filter.shift3">Shift 3 (16:00 - 01:00)</option>
                         </select>
                     </div>
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;">Status:</label>
+                        <label style="font-size:11px; margin:0;" data-i18n="filter.status">Status:</label>
                         <select id="filterBreakType" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All">All Status</option>
-                            <option value="Break Out">Sedang Istirahat / Dipinjam</option>
-                            <option value="Break In">Selesai Istirahat / Kembali</option>
+                            <option value="All" data-i18n="filter.allStatus">All Status</option>
+                            <option value="Break Out" data-i18n="filter.statusBreakOut">Sedang Istirahat / Dipinjam</option>
+                            <option value="Break In" data-i18n="filter.statusBreakIn">Selesai Istirahat / Kembali</option>
                         </select>
                     </div>
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;">Dept:</label>
+                        <label style="font-size:11px; margin:0;" data-i18n="filter.dept">Dept:</label>
                         <select id="filterDept" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All">All Dept</option>
+                            <option value="All" data-i18n="filter.allDept">All Dept</option>
                             <option value="SOC Operator">SOC Operator</option>
                             <option value="EHA Operator">EHA Operator</option>
                             <option value="Admin">Admin</option>
@@ -612,16 +699,16 @@
                         </select>
                     </div>
                     <div style="display:none; align-items:center; gap:5px;" id="filterStationGroup">
-                        <label style="font-size:11px; margin:0;">Station:</label>
+                        <label style="font-size:11px; margin:0;" data-i18n="filter.station">Station:</label>
                         <select id="filterStation" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All">All Station</option>
+                            <option value="All" data-i18n="filter.allStation">All Station</option>
                         </select>
                     </div>
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;">Cari:</label>
-                        <input type="text" id="searchGlobal" placeholder="Nama / OpsID / SN..." style="width: 128px; padding: 5px; font-size:11.5px;" oninput="renderAll()">
+                        <label style="font-size:11px; margin:0;" data-i18n="filter.cari">Cari:</label>
+                        <input type="text" id="searchGlobal" placeholder="Nama / OpsID / SN..." data-i18n-placeholder="filter.cariPlaceholder" style="width: 128px; padding: 5px; font-size:11.5px;" oninput="renderAll()">
                     </div>
-                    <button type="button" onclick="resetTableFilters()" style="padding: 5px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:1px solid var(--border-color); background:var(--table-header-bg); color:var(--text-main); cursor:pointer; white-space:nowrap;">↺ Reset Filter</button>
+                    <button type="button" onclick="resetTableFilters()" style="padding: 5px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:1px solid var(--border-color); background:var(--table-header-bg); color:var(--text-main); cursor:pointer; white-space:nowrap;" data-i18n="filter.resetBtn">↺ Reset Filter</button>
                 </div>
             </h3>
 
@@ -629,37 +716,37 @@
             <!-- beberapa hari (2-3 hari dst) tinggal beda-in Start Date & End Date. -->
             <div style="display:flex; align-items:flex-end; gap:15px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--border-color);">
                 <div class="form-group">
-                    <label>📅 Start Date :</label>
+                    <label data-i18n="date.start">📅 Start Date :</label>
                     <input type="date" id="filterTanggalStart" style="width: 150px;">
                 </div>
                 <div class="form-group">
-                    <label>📅 End Date :</label>
+                    <label data-i18n="date.end">📅 End Date :</label>
                     <input type="date" id="filterTanggalEnd" style="width: 150px;">
                 </div>
                 <div class="form-group" style="flex-direction: row; gap: 8px;">
-                    <button class="btn-primary" style="background-color:#64748b;" onclick="setDateRangeToday()">Hari Ini</button>
+                    <button class="btn-primary" style="background-color:#64748b;" onclick="setDateRangeToday()" data-i18n="date.today">Hari Ini</button>
                 </div>
-                <div style="font-size:11px; color:var(--text-muted); padding-bottom:8px;"><Ubah Tanggal></div>
+                <div style="font-size:11px; color:var(--text-muted); padding-bottom:8px;" data-i18n="date.hint"><Ubah Tanggal></div>
             </div>
 
             <div class="form-row">
                 <div class="form-group">
-                    <label>OpsID :</label>
-                    <input type="text" id="inputOpsId" placeholder="Ketik/Scan OpsID..." required autocomplete="off" style="width: 140px;">
+                    <label data-i18n="form.opsId">OpsID :</label>
+                    <input type="text" id="inputOpsId" placeholder="Ketik/Scan OpsID..." data-i18n-placeholder="form.opsIdPlaceholder" required autocomplete="off" style="width: 140px;">
                 </div>
                 
                 <!-- INPUT TAMBAHAN KHUSUS ASSET USAGE -->
                 <div class="form-group" id="groupAssetSn" style="display: none;">
-                    <label>5 Digit Last SN PDA :</label>
-                    <input type="text" id="inputAssetSn" placeholder="cth: 01455" maxlength="5" autocomplete="off" style="width: 130px; font-weight:700; color:#e67e22;">
+                    <label data-i18n="form.snLabel">5 Digit Last SN PDA :</label>
+                    <input type="text" id="inputAssetSn" placeholder="cth: 01455" data-i18n-placeholder="form.snPlaceholder" maxlength="5" autocomplete="off" style="width: 130px; font-weight:700; color:#e67e22;">
                 </div>
 
                 <div class="form-group">
-                    <label>Nama Operator :</label>
-                    <input type="text" id="inputNama" placeholder="Nama Lengkap" readonly style="width: 180px; font-weight:600;">
+                    <label data-i18n="form.namaOperator">Nama Operator :</label>
+                    <input type="text" id="inputNama" placeholder="Nama Lengkap" data-i18n-placeholder="form.namaPlaceholder" readonly style="width: 180px; font-weight:600;">
                 </div>
                 <div class="form-group">
-                    <label>Departement :</label>
+                    <label data-i18n="form.departement">Departement :</label>
                     <select id="inputDept" style="width: 155px; font-weight:600;">
                         <option value="SOC Operator">SOC Operator</option>
                         <option value="EHA Operator">EHA Operator</option>
@@ -670,14 +757,14 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>Aktivitas Log Otomatis :</label>
-                    <div id="predictedAction" class="next-action-badge" style="background: var(--table-header-bg); color: var(--text-main); min-width: 130px;">Scan OpsID...</div>
+                    <label data-i18n="form.aktivitasLabel">Aktivitas Log Otomatis :</label>
+                    <div id="predictedAction" class="next-action-badge" style="background: var(--table-header-bg); color: var(--text-main); min-width: 130px;" data-i18n="predicted.scan">Scan OpsID...</div>
                 </div>
                 <div class="form-group" style="flex-direction: row; gap: 10px;">
-                    <button class="btn-primary" onclick="submitLog()">Submit (Enter)</button>
-                    <button class="btn-success" onclick="exportToExcel()">📊 Export Excel</button>
-                    <button class="btn-info" id="btnDatabaseAsset" onclick="openDatabaseAssetModal()" style="display:none; background:#7c3aed; color:#fff;">🗄️ Database Asset</button>
-                    <button class="btn-danger" id="btnResetData" onclick="clearAllData()">Reset Data</button>
+                    <button class="btn-primary" onclick="submitLog()" data-i18n="btn.submit">Submit (Enter)</button>
+                    <button class="btn-success" onclick="exportToExcel()">📊 <span data-i18n="btn.exportExcel">Export Excel</span></button>
+                    <button class="btn-info" id="btnDatabaseAsset" onclick="openDatabaseAssetModal()" style="display:none; background:#7c3aed; color:#fff;">🗄️ <span data-i18n="btn.databaseAsset">Database Asset</span></button>
+                    <button class="btn-danger" id="btnResetData" onclick="clearAllData()" data-i18n="btn.resetData">Reset Data</button>
                 </div>
             </div>
         </div>
@@ -686,40 +773,40 @@
             <div class="grid-header">
                 <div class="title-section">
                     <h1>PALANGKA RAYA DC</h1>
-                    <h2 id="subHeaderTitle">Daily Monitoring Dedicated Operator & Daily Worker Rest Time</h2>
-                    <div id="connStatus" class="conn-status conn-connecting"><span class="conn-dot"></span><span id="connStatusText">Menghubungkan...</span></div>
+                    <h2 id="subHeaderTitle" data-i18n="header.subtitleRest">Daily Monitoring Dedicated Operator & Daily Worker Rest Time</h2>
+                    <div id="connStatus" class="conn-status conn-connecting"><span class="conn-dot"></span><span id="connStatusText" data-i18n="conn.menghubungkan">Menghubungkan...</span></div>
                     <div style="text-align: center; font-size:13px; font-weight:700;" id="clockDisplay">-</div>
 
-                    <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="toggleSummaryBoxes()">🔼 Sembunyikan Ringkasan</button>
+                    <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="toggleSummaryBoxes()">🔼 <span data-i18n="summary.hide">Sembunyikan Ringkasan</span></button>
 
                     <div id="summaryBoxesArea">
                     <!-- BOX METRIK REST TIME -->
                     <div class="center-box-wrapper" id="restBoxWrapper">
                         <div class="center-box">
-                            <div class="box-title" style="color: #0f766e;">Total MP Masuk</div>
+                            <div class="box-title" style="color: #0f766e;" data-i18n="summary.totalMasuk">Total MP Masuk</div>
                             <div class="actual-rest" style="background: #ccfbf1; color: #0f766e;">
-                                <div>(Check In)</div>
+                                <div data-i18n="summary.checkInSub">(Check In)</div>
                                 <div id="mpTotalMasuk" class="counter-num">0</div>
                             </div>
                         </div>
                         <div class="center-box">
-                            <div class="box-title" style="color: #c2410c;">Actual MP Rest</div>
+                            <div class="box-title" style="color: #c2410c;" data-i18n="summary.actualRest">Actual MP Rest</div>
                             <div class="actual-rest" style="background: #ffedd5; color: #c2410c;">
-                                <div>(Istirahat)</div>
+                                <div data-i18n="summary.istirahatSub">(Istirahat)</div>
                                 <div id="actualRestCount" class="counter-num">0</div>
                             </div>
                         </div>
                         <div class="center-box">
-                            <div class="box-title" style="color: #047857;">Done Rest</div>
+                            <div class="box-title" style="color: #047857;" data-i18n="summary.doneRest">Done Rest</div>
                             <div class="actual-rest" style="background: #d1fae5; color: #047857;">
-                                <div>(Selesai)</div>
+                                <div data-i18n="summary.selesaiSub">(Selesai)</div>
                                 <div id="mpDoneRestCount" class="counter-num">0</div>
                             </div>
                         </div>
                         <div class="center-box">
-                            <div class="box-title" style="color: #a16207;">Total MP Sisa</div>
+                            <div class="box-title" style="color: #a16207;" data-i18n="summary.totalSisa">Total MP Sisa</div>
                             <div class="actual-rest" style="background: #fef9c3; color: #a16207;">
-                                <div>(Belum)</div>
+                                <div data-i18n="summary.belumSub">(Belum)</div>
                                 <div id="mpBelumRest" class="counter-num">0</div>
                             </div>
                         </div>
@@ -728,28 +815,28 @@
                     <!-- BOX METRIK ASSET USAGE -->
                     <div class="center-box-wrapper" id="assetBoxWrapper" style="display: none;">
                         <div class="center-box">
-                            <div class="box-title" style="color: #0f766e;">Total Peminjam</div>
+                            <div class="box-title" style="color: #0f766e;" data-i18n="asset.totalPeminjam">Total Peminjam</div>
                             <div class="actual-rest" style="background: #ccfbf1; color: #0f766e;">
-                                <div>(Hari Ini)</div>
+                                <div data-i18n="asset.hariIniSub">(Hari Ini)</div>
                                 <div id="assetTotalPinjam" class="counter-num">0</div>
                             </div>
                         </div>
                         <div class="center-box">
-                            <div class="box-title" style="color: #c2410c;">Sedang Meminjam</div>
+                            <div class="box-title" style="color: #c2410c;" data-i18n="asset.sedangMeminjam">Sedang Meminjam</div>
                             <div class="actual-rest" style="background: #ffedd5; color: #c2410c;">
-                                <div>(Belum Kembali)</div>
+                                <div data-i18n="asset.belumKembaliSub">(Belum Kembali)</div>
                                 <div id="assetActivePinjam" class="counter-num">0</div>
                             </div>
                         </div>
                         <div class="center-box">
-                            <div class="box-title" style="color: #047857;">Sudah Kembali</div>
+                            <div class="box-title" style="color: #047857;" data-i18n="asset.sudahKembali">Sudah Kembali</div>
                             <div class="actual-rest" style="background: #d1fae5; color: #047857;">
-                                <div>(Selesai)</div>
+                                <div data-i18n="summary.selesaiSub">(Selesai)</div>
                                 <div id="assetDoneKembali" class="counter-num">0</div>
                             </div>
                         </div>
                         <div class="center-box" style="width: 210px; text-align: left;">
-                            <div class="box-title" style="color: #7c3aed; text-align:center;">📦 PDA Idle per Station</div>
+                            <div class="box-title" style="color: #7c3aed; text-align:center;">📦 <span data-i18n="asset.pdaIdle">PDA Idle per Station</span></div>
                             <div class="mini-log-list">
                                 <table style="width:100%; font-size:11.5px; border-collapse:collapse; margin-top:4px;">
                                     <tbody id="assetIdleTableBody"></tbody>
@@ -757,11 +844,11 @@
                             </div>
                         </div>
                         <div class="center-box" style="width: 230px; text-align: left;">
-                            <div class="box-title" style="color: #b91c1c; text-align:center;">🔴 Operator Belum Kembali</div>
+                            <div class="box-title" style="color: #b91c1c; text-align:center;">🔴 <span data-i18n="asset.operatorBelumKembali">Operator Belum Kembali</span></div>
                             <div id="assetBelumKembaliBody" class="mini-log-list"></div>
                         </div>
                         <div class="center-box" style="width: 260px; text-align: left;">
-                            <div class="box-title" style="color: #0369a1; text-align:center;">🕒 Aktivitas Log Input</div>
+                            <div class="box-title" style="color: #0369a1; text-align:center;">🕒 <span data-i18n="asset.aktivitasLogInput">Aktivitas Log Input</span></div>
                             <div id="assetActivityLogBody" class="mini-log-list"></div>
                         </div>
                     </div>
@@ -774,19 +861,19 @@
                 <table class="data-table" id="dataTableToExport">
                     <thead>
                         <tr>
-                            <th style="width: 8%;">Date</th>
-                            <th style="width: 7%;">OpsID</th>
-                            <th style="width: 15%;">Name</th>
-                            <th style="width: 14%;">Agency</th> 
-                            <th style="width: 13%;">Departement</th> 
-                            <th style="width: 7%;">Check In</th>
-                            <th style="width: 7%;">Break Out</th>
-                            <th style="width: 7%;">Break In</th>
-                            <th style="width: 5%;">Est. Masuk</th>
-                            <th style="width: 8%;" class="th-sortable" id="thSortDuration" onclick="sortRestTable('duration')"><span class="th-flex">Duration<span class="sort-arrow" id="sortArrowDuration">⇅</span></span></th>
-                            <th style="width: 13%;" class="th-sortable" id="thSortAlert" onclick="sortRestTable('alert')"><span class="th-flex">Alert Status<span class="sort-arrow" id="sortArrowAlert">⇅</span></span></th>
-                            <th style="width: 7%;">Work End</th>
-                            <th style="width: 6%;">Action</th>
+                            <th style="width: 8%;" data-i18n="table.date">Date</th>
+                            <th style="width: 7%;" data-i18n="table.opsId">OpsID</th>
+                            <th style="width: 15%;" data-i18n="table.name">Name</th>
+                            <th style="width: 14%;" data-i18n="table.agency">Agency</th> 
+                            <th style="width: 13%;" data-i18n="table.departement">Departement</th> 
+                            <th style="width: 7%;" data-i18n="table.checkIn">Check In</th>
+                            <th style="width: 7%;" data-i18n="table.breakOut">Break Out</th>
+                            <th style="width: 7%;" data-i18n="table.breakIn">Break In</th>
+                            <th style="width: 5%;" data-i18n="table.estMasuk">Est. Masuk</th>
+                            <th style="width: 8%;" class="th-sortable" id="thSortDuration" onclick="sortRestTable('duration')"><span class="th-flex"><span data-i18n="table.duration">Duration</span><span class="sort-arrow" id="sortArrowDuration">⇅</span></span></th>
+                            <th style="width: 13%;" class="th-sortable" id="thSortAlert" onclick="sortRestTable('alert')"><span class="th-flex"><span data-i18n="table.alertStatus">Alert Status</span><span class="sort-arrow" id="sortArrowAlert">⇅</span></span></th>
+                            <th style="width: 7%;" data-i18n="table.workEnd">Work End</th>
+                            <th style="width: 6%;" data-i18n="table.action">Action</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
@@ -798,19 +885,19 @@
                 <table class="data-table" id="assetDataTableToExport">
                     <thead>
                         <tr>
-                            <th style="width: 7%;">Date</th>
-                            <th style="width: 7%;">OpsID</th>
-                            <th style="width: 12%;">Name Operator</th>
-                            <th style="width: 6%;">Sesi</th>
-                            <th style="width: 9%;">Departement</th> 
-                            <th style="width: 9%;">Serial Number Full PDA</th> 
-                            <th style="width: 7%;">Station</th>
-                            <th style="width: 7%;">Jam Pinjam</th>
-                            <th style="width: 7%;">Jam Kembali</th>
-                            <th style="width: 7%;">Durasi</th>
-                            <th style="width: 7%;">Status</th>
-                            <th style="width: 10%;">PIC Input</th>
-                            <th style="width: 5%;">Action</th>
+                            <th style="width: 7%;" data-i18n="table.date">Date</th>
+                            <th style="width: 7%;" data-i18n="table.opsId">OpsID</th>
+                            <th style="width: 12%;" data-i18n="asset.table.nameOperator">Name Operator</th>
+                            <th style="width: 6%;" data-i18n="asset.table.sesi">Sesi</th>
+                            <th style="width: 9%;" data-i18n="table.departement">Departement</th> 
+                            <th style="width: 9%;" data-i18n="asset.table.snFull">Serial Number Full PDA</th> 
+                            <th style="width: 7%;" data-i18n="filter.station">Station</th>
+                            <th style="width: 7%;" data-i18n="asset.table.jamPinjam">Jam Pinjam</th>
+                            <th style="width: 7%;" data-i18n="asset.table.jamKembali">Jam Kembali</th>
+                            <th style="width: 7%;" data-i18n="asset.table.durasi">Durasi</th>
+                            <th style="width: 7%;" data-i18n="asset.table.status">Status</th>
+                            <th style="width: 10%;" data-i18n="asset.table.picInput">PIC Input</th>
+                            <th style="width: 5%;" data-i18n="table.action">Action</th>
                         </tr>
                     </thead>
                     <tbody id="assetTableBody"></tbody>
@@ -1051,12 +1138,21 @@
     };
     const FB_CONFIG_KEY = "firebase_config_pr_dc"; 
 
-    function setConnStatus(state, text) {
+    let lastConnState = null, lastConnKey = null;
+    function setConnStatus(state, textOrKey) {
         const el = document.getElementById("connStatus");
         const txt = document.getElementById("connStatusText");
         if (!el) return;
         el.className = "conn-status " + (state === "online" ? "conn-online" : state === "offline" ? "conn-offline" : "conn-connecting");
-        txt.innerText = text;
+        // Kalau textOrKey adalah salah satu i18n key resmi kita, terjemahin. Kalau bukan (misal
+        // pesan error dinamis lama), tampilin apa adanya biar gak ada yang kececer.
+        const knownKeys = ["conn.menghubungkan", "conn.gagalConfig", "conn.online", "conn.offlineReconnect"];
+        lastConnState = state; lastConnKey = textOrKey;
+        txt.innerText = knownKeys.indexOf(textOrKey) !== -1 ? t(textOrKey) : textOrKey;
+    }
+    // Dipanggil ulang tiap ganti bahasa biar teks status koneksi ikut ke-translate tanpa nunggu event baru
+    function refreshConnStatusLabel() {
+        if (lastConnState && lastConnKey) setConnStatus(lastConnState, lastConnKey);
     }
 
     function openFirebaseModal(allowCancel) {
@@ -1107,19 +1203,19 @@
             if (fbApp) { firebase.app().delete().then(() => startFirebaseApp(config)); return; }
             startFirebaseApp(config);
         } catch (e) {
-            setConnStatus("offline", "Gagal konek — cek config");
+            setConnStatus("offline", "conn.gagalConfig");
             console.error(e);
         }
     }
 
     function startFirebaseApp(config) {
-        setConnStatus("connecting", "Menghubungkan...");
+        setConnStatus("connecting", "conn.menghubungkan");
         fbApp = firebase.apps.length ? firebase.app() : firebase.initializeApp(config);
         fbDb = firebase.database();
 
         fbDb.ref(".info/connected").on("value", function (snap) {
-            if (snap.val() === true) setConnStatus("online", "Online • Sinkron Realtime");
-            else setConnStatus("offline", "Offline / Menghubungkan ulang...");
+            if (snap.val() === true) setConnStatus("online", "conn.online");
+            else setConnStatus("offline", "conn.offlineReconnect");
         });
 
         fbDb.ref(FB_ROOT + "/master").on("value", function (snap) {
@@ -1175,7 +1271,6 @@
         const assetContainer = document.getElementById("assetTableContainer");
         const restBoxWrapper = document.getElementById("restBoxWrapper");
         const assetBoxWrapper = document.getElementById("assetBoxWrapper");
-        const restMetricBox = document.getElementById("restMetricBox");
         const groupAssetSn = document.getElementById("groupAssetSn");
         const formTitle = document.getElementById("formTitle");
         const subHeaderTitle = document.getElementById("subHeaderTitle");
@@ -1190,13 +1285,12 @@
             assetContainer.style.display = "none";
             restBoxWrapper.style.display = "flex";
             assetBoxWrapper.style.display = "none";
-            restMetricBox.style.display = "block";
             groupAssetSn.style.display = "none";
             filterStationGroup.style.display = "none";
-            searchGlobal.placeholder = "Nama / OpsID / SN...";
+            searchGlobal.placeholder = t('filter.cariPlaceholder');
             btnDatabaseAsset.style.display = "none";
-            formTitle.innerText = "⚡ Form Input Aktivitas Operator (Scan / Input OpsID)";
-            subHeaderTitle.innerText = "Daily Monitoring Dedicated Operator & Daily Worker Rest Time";
+            formTitle.innerText = t('form.titleRest');
+            subHeaderTitle.innerText = t('header.subtitleRest');
         } else {
             btnAsset.classList.add("active");
             btnRest.classList.remove("active");
@@ -1204,13 +1298,12 @@
             assetContainer.style.display = "block";
             restBoxWrapper.style.display = "none";
             assetBoxWrapper.style.display = "flex";
-            restMetricBox.style.display = "none";
             groupAssetSn.style.display = "flex";
             filterStationGroup.style.display = "flex";
-            searchGlobal.placeholder = "Nama / OpsID / SN / Station...";
+            searchGlobal.placeholder = t('filter.cariPlaceholderAsset');
             btnDatabaseAsset.style.display = "flex";
-            formTitle.innerText = "📱 Form Input Peminjaman Asset PDA (OpsID + 5 Digit SN)";
-            subHeaderTitle.innerText = "Daily Monitoring Asset PDA Borrowing & Usage Operator";
+            formTitle.innerText = t('form.titleAsset');
+            subHeaderTitle.innerText = t('header.subtitleAsset');
         }
         handleOpsIdInputAutomated();
         renderAll();
@@ -1583,7 +1676,7 @@
         const btn = document.getElementById("summaryToggleBtn");
         if (!area || !btn) return;
         area.style.display = collapsed ? "none" : "block";
-        btn.innerHTML = collapsed ? "🔽 Tampilkan Ringkasan" : "🔼 Sembunyikan Ringkasan";
+        btn.innerHTML = collapsed ? ("🔽 " + t('summary.show')) : ("🔼 " + t('summary.hide'));
     }
 
     function toggleSummaryBoxes() {
@@ -1998,7 +2091,7 @@
         let badge = document.getElementById("predictedAction");
 
         if (!formattedOpsId) {
-            badge.innerText = "Scan OpsID...";
+            badge.innerText = t("predicted.scan");
             badge.style.background = "var(--table-header-bg)";
             badge.style.color = "var(--text-main)";
             return;
@@ -2156,7 +2249,7 @@
 
         inputEl.value = ""; document.getElementById("inputNama").value = "";
         document.getElementById("inputNama").setAttribute("readonly", true);
-        document.getElementById("predictedAction").innerText = "Scan OpsID...";
+        document.getElementById("predictedAction").innerText = t("predicted.scan");
         document.getElementById("predictedAction").style.background = "var(--table-header-bg)";
         inputEl.focus();
     }
@@ -2225,9 +2318,9 @@
     // tombolnya disabled & abu-abu, gak bisa diklik.
     function renderDeleteAction(opsId, dateStr) {
         if (window.__authCanDelete) {
-            return `<button class="btn-action-del" onclick="removeOpsIdLog('${opsId}', '${dateStr}')">Hapus</button>`;
+            return `<button class="btn-action-del" onclick="removeOpsIdLog('${opsId}', '${dateStr}')">${t('btn.hapus')}</button>`;
         }
-        return `<button class="btn-action-del" disabled title="Kamu gak punya akses hapus data" style="opacity:0.4; cursor:not-allowed;">Hapus</button>`;
+        return `<button class="btn-action-del" disabled title="${t('btn.hapusNoAccess')}" style="opacity:0.4; cursor:not-allowed;">${t('btn.hapus')}</button>`;
     }
 
     function removeOpsIdLog(opsId, dateStr) {
@@ -2286,8 +2379,8 @@
         const canEdit = !!window.__authCanDelete;
         document.getElementById("databaseAssetAddForm").style.display = canEdit ? "flex" : "none";
         document.getElementById("databaseAssetPermNote").innerText = canEdit
-            ? "Daftar SN PDA terdaftar beserta station-nya. Bisa ditambah/diedit/dihapus di bawah."
-            : "🔒 Daftar SN PDA terdaftar beserta station-nya (read-only — hubungi admin buat ubah data).";
+            ? t('dbAsset.permNoteEdit')
+            : t('dbAsset.permNoteReadonly');
 
         const stationSel = document.getElementById("newAssetStation");
         stationSel.innerHTML = STATION_LIST.map(st => `<option value="${st}">${st}</option>`).join("");
@@ -2308,7 +2401,7 @@
         const sortedSN = Object.keys(pdaStationMap).sort();
 
         if (sortedSN.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:16px; color:var(--text-muted);">Belum ada data.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; padding:16px; color:var(--text-muted);">${t('dbAsset.noData')}</td></tr>`;
             return;
         }
 
@@ -2318,9 +2411,9 @@
                 ? `<select onchange="updatePdaStationEntry('${sn}', this.value)" style="width:100%; font-size:12px; padding:4px;">
                        ${STATION_LIST.map(st => `<option value="${st}" ${st === station ? "selected" : ""}>${st}</option>`).join("")}
                    </select>`
-                : `<span class="badge ${getStationBadgeClass(station)}">${station || "Belum Diassign"}</span>`;
+                : `<span class="badge ${getStationBadgeClass(station)}">${station || t('dbAsset.notAssigned')}</span>`;
             const actionCell = canEdit
-                ? `<button class="btn-action-del" onclick="deletePdaStationEntry('${sn}')">Hapus</button>`
+                ? `<button class="btn-action-del" onclick="deletePdaStationEntry('${sn}')">${t('btn.hapus')}</button>`
                 : "";
             return `<tr>
                 <td style="padding:6px 8px; font-family:monospace;">${sn}</td>
@@ -2856,7 +2949,7 @@
         if (!container) return;
 
         if (list.length === 0) {
-            container.innerHTML = '<div style="padding:8px 4px; color:var(--text-muted); text-align:center; font-size:11px;">Belum ada aktivitas</div>';
+            container.innerHTML = '<div style="padding:8px 4px; color:var(--text-muted); text-align:center; font-size:11px;">' + t('asset.belumAdaAktivitas') + '</div>';
             return;
         }
 
@@ -2876,6 +2969,678 @@
                 </div>
             </div>`;
         }).join("");
+    }
+
+    // ==== I18N DICTIONARY (shell/sidebar & Saran-Masukan — modul lain nyusul bertahap) ====
+    const APP_LANG_KEY = "pr_dc_app_language";
+    const I18N_DICT = {
+      id: {
+        "grp.productivity": "Productivity",
+        "grp.inbound": "Inbound",
+        "grp.outbound": "Outbound Monitoring",
+        "grp.soc": "Inventory Control",
+        "nav.restTime": "Rest Time Monitoring",
+        "nav.perfBagger": "Performance Bagger",
+        "nav.lhTracking": "LH Tracking & Forecast MP",
+        "nav.aging": "Aging & Packer Backlog",
+        "nav.occupancy": "Occupancy & Shift",
+        "nav.invControl": "Inventory Control",
+        "nav.invUsage": "Log Activity Usage",
+        "nav.invDashboard": "Highlight Usage",
+        "nav.invStock": "Stock",
+        "nav.invAssetItNca": "Database Asset IT & NCA",
+        "nav.invAuditLog": "Audit Log",
+        "lang.label": "Bahasa",
+        "feedback.title": "Saran & Masukan",
+        "feedback.placeholder": "Tulis saran, masukan, atau curhatan kamu di sini...",
+        "feedback.submit": "Kirim",
+        "feedback.loading": "Memuat...",
+        "feedback.empty": "Belum ada saran & masukan. Jadi yang pertama nulis!",
+        "feedback.errorLoad": "Gagal memuat data. Coba lagi nanti.",
+        "feedback.errorConn": "Koneksi belum siap, coba beberapa saat lagi.",
+        "feedback.errorSend": "Gagal mengirim, coba lagi.",
+        "feedback.anon": "Anonim",
+        "logout.btn": "Logout",
+
+        "nav.assetUsage": "Asset Usage Monitoring",
+        "btn.importExcel": "Import Excel (.xlsx) / CSV",
+        "form.titleRest": "⚡ Form Input Aktivitas Operator (Scan / Input OpsID)",
+        "form.titleAsset": "📱 Form Input Peminjaman Asset PDA (OpsID + 5 Digit SN)",
+        "filter.title": "🔍 Filter Data Table:",
+        "filter.shift": "Shift:",
+        "filter.allShift": "Semua Shift",
+        "filter.shift1": "Shift 1 (00:00 - 09:00)",
+        "filter.shift2": "Shift 2 (08:00 - 17:00)",
+        "filter.shift3": "Shift 3 (16:00 - 01:00)",
+        "filter.status": "Status:",
+        "filter.allStatus": "Semua Status",
+        "filter.statusBreakOut": "Sedang Istirahat / Dipinjam",
+        "filter.statusBreakIn": "Selesai Istirahat / Kembali",
+        "filter.dept": "Dept:",
+        "filter.allDept": "Semua Dept",
+        "filter.station": "Station",
+        "filter.allStation": "Semua Station",
+        "filter.cari": "Cari:",
+        "filter.cariPlaceholder": "Nama / OpsID / SN...",
+        "filter.cariPlaceholderAsset": "Nama / OpsID / SN / Station...",
+        "filter.resetBtn": "↺ Reset Filter",
+        "date.start": "📅 Start Date :",
+        "date.end": "📅 End Date :",
+        "date.today": "Hari Ini",
+        "date.hint": "<Ubah Tanggal>",
+        "form.opsId": "OpsID :",
+        "form.opsIdPlaceholder": "Ketik/Scan OpsID...",
+        "form.snLabel": "5 Digit Last SN PDA :",
+        "form.snPlaceholder": "cth: 01455",
+        "form.namaOperator": "Nama Operator :",
+        "form.namaPlaceholder": "Nama Lengkap",
+        "form.departement": "Departement :",
+        "form.aktivitasLabel": "Aktivitas Log Otomatis :",
+        "predicted.scan": "Scan OpsID...",
+        "btn.submit": "Submit (Enter)",
+        "btn.exportExcel": "Export Excel",
+        "btn.databaseAsset": "Database Asset",
+        "btn.resetData": "Reset Data",
+        "btn.cancel": "Batal",
+        "btn.saveConnect": "Simpan & Hubungkan",
+        "btn.tambah": "Tambah",
+        "btn.hapus": "Hapus",
+        "btn.hapusNoAccess": "Kamu gak punya akses hapus data",
+        "header.subtitleRest": "Daily Monitoring Dedicated Operator & Daily Worker Rest Time",
+        "header.subtitleAsset": "Daily Monitoring Asset PDA Borrowing & Usage Operator",
+        "conn.menghubungkan": "Menghubungkan...",
+        "conn.gagalConfig": "Gagal konek — cek config",
+        "conn.online": "Online • Sinkron Realtime",
+        "conn.offlineReconnect": "Offline / Menghubungkan ulang...",
+        "summary.hide": "Sembunyikan Ringkasan",
+        "summary.show": "Tampilkan Ringkasan",
+        "summary.totalMasuk": "Total MP Masuk",
+        "summary.checkInSub": "(Check In)",
+        "summary.actualRest": "Actual MP Rest",
+        "summary.istirahatSub": "(Istirahat)",
+        "summary.doneRest": "Done Rest",
+        "summary.selesaiSub": "(Selesai)",
+        "summary.totalSisa": "Total MP Sisa",
+        "summary.belumSub": "(Belum)",
+        "asset.totalPeminjam": "Total Peminjam",
+        "asset.hariIniSub": "(Hari Ini)",
+        "asset.sedangMeminjam": "Sedang Meminjam",
+        "asset.belumKembaliSub": "(Belum Kembali)",
+        "asset.sudahKembali": "Sudah Kembali",
+        "asset.pdaIdle": "PDA Idle per Station",
+        "asset.operatorBelumKembali": "Operator Belum Kembali",
+        "asset.aktivitasLogInput": "Aktivitas Log Input",
+        "asset.belumAdaAktivitas": "Belum ada aktivitas",
+        "table.date": "Date",
+        "table.opsId": "OpsID",
+        "table.name": "Name",
+        "table.agency": "Agency",
+        "table.departement": "Departement",
+        "table.checkIn": "Check In",
+        "table.breakOut": "Break Out",
+        "table.breakIn": "Break In",
+        "table.estMasuk": "Est. Masuk",
+        "table.duration": "Duration",
+        "table.alertStatus": "Alert Status",
+        "table.workEnd": "Work End",
+        "table.action": "Action",
+        "asset.table.nameOperator": "Name Operator",
+        "asset.table.sesi": "Sesi",
+        "asset.table.snFull": "Serial Number Full PDA",
+        "asset.table.jamPinjam": "Jam Pinjam",
+        "asset.table.jamKembali": "Jam Kembali",
+        "asset.table.durasi": "Durasi",
+        "asset.table.status": "Status",
+        "asset.table.picInput": "PIC Input",
+        "fb.modalTitle": "🔗 Hubungkan ke Database Online",
+        "fb.modalDesc": "Tempel <b>Firebase Config</b> di bawah ini. Cukup dilakukan <b>1x per device</b>.",
+        "dbAsset.permNoteView": "Daftar SN PDA terdaftar beserta station-nya.",
+        "dbAsset.permNoteEdit": "Daftar SN PDA terdaftar beserta station-nya. Bisa ditambah/diedit/dihapus di bawah.",
+        "dbAsset.permNoteReadonly": "🔒 Daftar SN PDA terdaftar beserta station-nya (read-only — hubungi admin buat ubah data).",
+        "dbAsset.snPlaceholder": "Serial Number lengkap",
+        "dbAsset.serialNumber": "Serial Number",
+        "dbAsset.noData": "Belum ada data.",
+        "dbAsset.notAssigned": "Belum Diassign"
+      },
+      en: {
+        "grp.productivity": "Productivity",
+        "grp.inbound": "Inbound",
+        "grp.outbound": "Outbound Monitoring",
+        "grp.soc": "Inventory Control",
+        "nav.restTime": "Rest Time Monitoring",
+        "nav.perfBagger": "Performance Bagger",
+        "nav.lhTracking": "LH Tracking & Forecast MP",
+        "nav.aging": "Aging & Packer Backlog",
+        "nav.occupancy": "Occupancy & Shift",
+        "nav.invControl": "Inventory Control",
+        "nav.invUsage": "Log Activity Usage",
+        "nav.invDashboard": "Highlight Usage",
+        "nav.invStock": "Stock",
+        "nav.invAssetItNca": "IT & NCA Asset Database",
+        "nav.invAuditLog": "Audit Log",
+        "lang.label": "Language",
+        "feedback.title": "Suggestions & Feedback",
+        "feedback.placeholder": "Write your suggestion, feedback, or thoughts here...",
+        "feedback.submit": "Send",
+        "feedback.loading": "Loading...",
+        "feedback.empty": "No suggestions yet. Be the first to write one!",
+        "feedback.errorLoad": "Failed to load data. Please try again later.",
+        "feedback.errorConn": "Connection not ready, please try again in a moment.",
+        "feedback.errorSend": "Failed to send, please try again.",
+        "feedback.anon": "Anonymous",
+        "logout.btn": "Logout",
+
+        "nav.assetUsage": "Asset Usage Monitoring",
+        "btn.importExcel": "Import Excel (.xlsx) / CSV",
+        "form.titleRest": "⚡ Operator Activity Input Form (Scan / Enter OpsID)",
+        "form.titleAsset": "📱 PDA Asset Borrowing Input Form (OpsID + Last 5-digit SN)",
+        "filter.title": "🔍 Filter Data Table:",
+        "filter.shift": "Shift:",
+        "filter.allShift": "All Shift",
+        "filter.shift1": "Shift 1 (00:00 - 09:00)",
+        "filter.shift2": "Shift 2 (08:00 - 17:00)",
+        "filter.shift3": "Shift 3 (16:00 - 01:00)",
+        "filter.status": "Status:",
+        "filter.allStatus": "All Status",
+        "filter.statusBreakOut": "On Break / Borrowed",
+        "filter.statusBreakIn": "Break Finished / Returned",
+        "filter.dept": "Dept:",
+        "filter.allDept": "All Dept",
+        "filter.station": "Station",
+        "filter.allStation": "All Station",
+        "filter.cari": "Search:",
+        "filter.cariPlaceholder": "Name / OpsID / SN...",
+        "filter.cariPlaceholderAsset": "Name / OpsID / SN / Station...",
+        "filter.resetBtn": "↺ Reset Filter",
+        "date.start": "📅 Start Date :",
+        "date.end": "📅 End Date :",
+        "date.today": "Today",
+        "date.hint": "<Change Date>",
+        "form.opsId": "OpsID :",
+        "form.opsIdPlaceholder": "Type/Scan OpsID...",
+        "form.snLabel": "Last 5-digit PDA SN :",
+        "form.snPlaceholder": "e.g.: 01455",
+        "form.namaOperator": "Operator Name :",
+        "form.namaPlaceholder": "Full Name",
+        "form.departement": "Department :",
+        "form.aktivitasLabel": "Automatic Activity Log :",
+        "predicted.scan": "Scan OpsID...",
+        "btn.submit": "Submit (Enter)",
+        "btn.exportExcel": "Export Excel",
+        "btn.databaseAsset": "Asset Database",
+        "btn.resetData": "Reset Data",
+        "btn.cancel": "Cancel",
+        "btn.saveConnect": "Save & Connect",
+        "btn.tambah": "Add",
+        "btn.hapus": "Delete",
+        "btn.hapusNoAccess": "You don't have access to delete data",
+        "header.subtitleRest": "Daily Monitoring Dedicated Operator & Daily Worker Rest Time",
+        "header.subtitleAsset": "Daily Monitoring Asset PDA Borrowing & Usage Operator",
+        "conn.menghubungkan": "Connecting...",
+        "conn.gagalConfig": "Failed to connect — check config",
+        "conn.online": "Online • Realtime Sync",
+        "conn.offlineReconnect": "Offline / Reconnecting...",
+        "summary.hide": "Hide Summary",
+        "summary.show": "Show Summary",
+        "summary.totalMasuk": "Total MP In",
+        "summary.checkInSub": "(Check In)",
+        "summary.actualRest": "Actual MP Rest",
+        "summary.istirahatSub": "(On Break)",
+        "summary.doneRest": "Done Rest",
+        "summary.selesaiSub": "(Finished)",
+        "summary.totalSisa": "Total MP Remaining",
+        "summary.belumSub": "(Not Yet)",
+        "asset.totalPeminjam": "Total Borrowers",
+        "asset.hariIniSub": "(Today)",
+        "asset.sedangMeminjam": "Currently Borrowed",
+        "asset.belumKembaliSub": "(Not Returned)",
+        "asset.sudahKembali": "Returned",
+        "asset.pdaIdle": "PDA Idle per Station",
+        "asset.operatorBelumKembali": "Operators Not Returned",
+        "asset.aktivitasLogInput": "Activity Log Input",
+        "asset.belumAdaAktivitas": "No activity yet",
+        "table.date": "Date",
+        "table.opsId": "OpsID",
+        "table.name": "Name",
+        "table.agency": "Agency",
+        "table.departement": "Department",
+        "table.checkIn": "Check In",
+        "table.breakOut": "Break Out",
+        "table.breakIn": "Break In",
+        "table.estMasuk": "Est. In",
+        "table.duration": "Duration",
+        "table.alertStatus": "Alert Status",
+        "table.workEnd": "Work End",
+        "table.action": "Action",
+        "asset.table.nameOperator": "Name Operator",
+        "asset.table.sesi": "Session",
+        "asset.table.snFull": "Full PDA Serial Number",
+        "asset.table.jamPinjam": "Borrow Time",
+        "asset.table.jamKembali": "Return Time",
+        "asset.table.durasi": "Duration",
+        "asset.table.status": "Status",
+        "asset.table.picInput": "PIC Input",
+        "fb.modalTitle": "🔗 Connect to Online Database",
+        "fb.modalDesc": "Paste your <b>Firebase Config</b> below. Only needs to be done <b>once per device</b>.",
+        "dbAsset.permNoteView": "List of registered PDA serial numbers and their stations.",
+        "dbAsset.permNoteEdit": "List of registered PDA serial numbers and their stations. Can be added/edited/deleted below.",
+        "dbAsset.permNoteReadonly": "🔒 List of registered PDA serial numbers and their stations (read-only — contact admin to change data).",
+        "dbAsset.snPlaceholder": "Full Serial Number",
+        "dbAsset.serialNumber": "Serial Number",
+        "dbAsset.noData": "No data yet.",
+        "dbAsset.notAssigned": "Not Assigned"
+      },
+      ja: {
+        "grp.productivity": "生産性",
+        "grp.inbound": "インバウンド",
+        "grp.outbound": "アウトバウンド管理",
+        "grp.soc": "在庫管理",
+        "nav.restTime": "休憩時間モニタリング",
+        "nav.perfBagger": "パフォーマンス・バガー",
+        "nav.lhTracking": "LHトラッキング＆要員予測",
+        "nav.aging": "エイジング＆パッカー滞留",
+        "nav.occupancy": "稼働状況＆シフト",
+        "nav.invControl": "在庫管理",
+        "nav.invUsage": "使用ログ記録",
+        "nav.invDashboard": "使用状況ハイライト",
+        "nav.invStock": "在庫",
+        "nav.invAssetItNca": "IT・NCA資産データベース",
+        "nav.invAuditLog": "監査ログ",
+        "lang.label": "言語",
+        "feedback.title": "ご意見・ご要望",
+        "feedback.placeholder": "ご意見、ご要望、感想などをここに書いてください...",
+        "feedback.submit": "送信",
+        "feedback.loading": "読み込み中...",
+        "feedback.empty": "まだ投稿がありません。最初の投稿をしてみましょう!",
+        "feedback.errorLoad": "データの読み込みに失敗しました。後でもう一度お試しください。",
+        "feedback.errorConn": "接続の準備ができていません。しばらくしてからお試しください。",
+        "feedback.errorSend": "送信に失敗しました。もう一度お試しください。",
+        "feedback.anon": "匿名",
+        "logout.btn": "ログアウト",
+
+        "nav.assetUsage": "資産使用状況モニタリング",
+        "btn.importExcel": "Excel (.xlsx) / CSVをインポート",
+        "form.titleRest": "⚡ オペレーター活動入力フォーム（スキャン／OpsID入力）",
+        "form.titleAsset": "📱 PDA資産貸出入力フォーム（OpsID＋SN下5桁）",
+        "filter.title": "🔍 テーブルデータをフィルター:",
+        "filter.shift": "シフト:",
+        "filter.allShift": "全シフト",
+        "filter.shift1": "シフト1 (00:00 - 09:00)",
+        "filter.shift2": "シフト2 (08:00 - 17:00)",
+        "filter.shift3": "シフト3 (16:00 - 01:00)",
+        "filter.status": "ステータス:",
+        "filter.allStatus": "全ステータス",
+        "filter.statusBreakOut": "休憩中／貸出中",
+        "filter.statusBreakIn": "休憩終了／返却済み",
+        "filter.dept": "部門:",
+        "filter.allDept": "全部門",
+        "filter.station": "ステーション",
+        "filter.allStation": "全ステーション",
+        "filter.cari": "検索:",
+        "filter.cariPlaceholder": "名前／OpsID／SN...",
+        "filter.cariPlaceholderAsset": "名前／OpsID／SN／ステーション...",
+        "filter.resetBtn": "↺ フィルターをリセット",
+        "date.start": "📅 開始日 :",
+        "date.end": "📅 終了日 :",
+        "date.today": "今日",
+        "date.hint": "<日付を変更>",
+        "form.opsId": "OpsID :",
+        "form.opsIdPlaceholder": "OpsIDを入力／スキャン...",
+        "form.snLabel": "PDA SN下5桁 :",
+        "form.snPlaceholder": "例: 01455",
+        "form.namaOperator": "オペレーター氏名 :",
+        "form.namaPlaceholder": "氏名（フルネーム）",
+        "form.departement": "部門 :",
+        "form.aktivitasLabel": "自動活動ログ :",
+        "predicted.scan": "OpsIDをスキャン...",
+        "btn.submit": "送信（Enter）",
+        "btn.exportExcel": "Excelにエクスポート",
+        "btn.databaseAsset": "資産データベース",
+        "btn.resetData": "データをリセット",
+        "btn.cancel": "キャンセル",
+        "btn.saveConnect": "保存して接続",
+        "btn.tambah": "追加",
+        "btn.hapus": "削除",
+        "btn.hapusNoAccess": "データ削除の権限がありません",
+        "header.subtitleRest": "専属オペレーター及び日雇い作業員の休憩時間モニタリング",
+        "header.subtitleAsset": "PDA資産の貸出・使用状況モニタリング",
+        "conn.menghubungkan": "接続中...",
+        "conn.gagalConfig": "接続失敗 — 設定を確認してください",
+        "conn.online": "オンライン • リアルタイム同期",
+        "conn.offlineReconnect": "オフライン／再接続中...",
+        "summary.hide": "サマリーを隠す",
+        "summary.show": "サマリーを表示",
+        "summary.totalMasuk": "出勤MP合計",
+        "summary.checkInSub": "（出勤）",
+        "summary.actualRest": "実休憩中MP",
+        "summary.istirahatSub": "（休憩中）",
+        "summary.doneRest": "休憩完了",
+        "summary.selesaiSub": "（完了）",
+        "summary.totalSisa": "残りMP合計",
+        "summary.belumSub": "（未完了）",
+        "asset.totalPeminjam": "貸出者合計",
+        "asset.hariIniSub": "（本日）",
+        "asset.sedangMeminjam": "貸出中",
+        "asset.belumKembaliSub": "（未返却）",
+        "asset.sudahKembali": "返却済み",
+        "asset.pdaIdle": "ステーション別 未使用PDA",
+        "asset.operatorBelumKembali": "未返却のオペレーター",
+        "asset.aktivitasLogInput": "活動ログ入力",
+        "asset.belumAdaAktivitas": "まだ活動がありません",
+        "table.date": "日付",
+        "table.opsId": "OpsID",
+        "table.name": "氏名",
+        "table.agency": "代理店",
+        "table.departement": "部門",
+        "table.checkIn": "出勤",
+        "table.breakOut": "休憩開始",
+        "table.breakIn": "休憩終了",
+        "table.estMasuk": "復帰予定",
+        "table.duration": "所要時間",
+        "table.alertStatus": "アラート状況",
+        "table.workEnd": "退勤",
+        "table.action": "操作",
+        "asset.table.nameOperator": "オペレーター氏名",
+        "asset.table.sesi": "セッション",
+        "asset.table.snFull": "PDAシリアル番号（フル）",
+        "asset.table.jamPinjam": "貸出時刻",
+        "asset.table.jamKembali": "返却時刻",
+        "asset.table.durasi": "所要時間",
+        "asset.table.status": "ステータス",
+        "asset.table.picInput": "入力担当者",
+        "fb.modalTitle": "🔗 オンラインデータベースに接続",
+        "fb.modalDesc": "以下に<b>Firebase Config</b>を貼り付けてください。<b>デバイスごとに1回のみ</b>行います。",
+        "dbAsset.permNoteView": "登録済みPDAシリアル番号とそのステーションの一覧です。",
+        "dbAsset.permNoteEdit": "登録済みPDAシリアル番号とそのステーションの一覧です。以下で追加・編集・削除できます。",
+        "dbAsset.permNoteReadonly": "🔒 登録済みPDAシリアル番号とそのステーションの一覧です（閲覧のみ — データ変更は管理者にご連絡ください）。",
+        "dbAsset.snPlaceholder": "シリアル番号（フル）",
+        "dbAsset.serialNumber": "シリアル番号",
+        "dbAsset.noData": "データがまだありません。",
+        "dbAsset.notAssigned": "未割り当て"
+      },
+      zh: {
+        "grp.productivity": "生产力",
+        "grp.inbound": "入库",
+        "grp.outbound": "出库监控",
+        "grp.soc": "库存管理",
+        "nav.restTime": "休息时间监控",
+        "nav.perfBagger": "打包员绩效",
+        "nav.lhTracking": "干线跟踪与人力预测",
+        "nav.aging": "账龄与打包积压",
+        "nav.occupancy": "占用与班次",
+        "nav.invControl": "库存管理",
+        "nav.invUsage": "使用日志记录",
+        "nav.invDashboard": "使用情况概览",
+        "nav.invStock": "库存",
+        "nav.invAssetItNca": "IT与NCA资产数据库",
+        "nav.invAuditLog": "审计日志",
+        "lang.label": "语言",
+        "feedback.title": "建议与反馈",
+        "feedback.placeholder": "在此写下你的建议、反馈或想法...",
+        "feedback.submit": "发送",
+        "feedback.loading": "加载中...",
+        "feedback.empty": "还没有反馈。快来抢占第一条吧!",
+        "feedback.errorLoad": "数据加载失败，请稍后再试。",
+        "feedback.errorConn": "连接尚未就绪，请稍后再试。",
+        "feedback.errorSend": "发送失败，请重试。",
+        "feedback.anon": "匿名",
+        "logout.btn": "退出登录",
+
+        "nav.assetUsage": "资产使用监控",
+        "btn.importExcel": "导入 Excel (.xlsx) / CSV",
+        "form.titleRest": "⚡ 操作员活动录入表（扫描／输入OpsID）",
+        "form.titleAsset": "📱 PDA资产借用录入表（OpsID＋SN后5位）",
+        "filter.title": "🔍 筛选数据表:",
+        "filter.shift": "班次:",
+        "filter.allShift": "全部班次",
+        "filter.shift1": "班次1 (00:00 - 09:00)",
+        "filter.shift2": "班次2 (08:00 - 17:00)",
+        "filter.shift3": "班次3 (16:00 - 01:00)",
+        "filter.status": "状态:",
+        "filter.allStatus": "全部状态",
+        "filter.statusBreakOut": "休息中／借用中",
+        "filter.statusBreakIn": "休息结束／已归还",
+        "filter.dept": "部门:",
+        "filter.allDept": "全部部门",
+        "filter.station": "工位",
+        "filter.allStation": "全部工位",
+        "filter.cari": "搜索:",
+        "filter.cariPlaceholder": "姓名／OpsID／SN...",
+        "filter.cariPlaceholderAsset": "姓名／OpsID／SN／工位...",
+        "filter.resetBtn": "↺ 重置筛选",
+        "date.start": "📅 开始日期 :",
+        "date.end": "📅 结束日期 :",
+        "date.today": "今天",
+        "date.hint": "<更改日期>",
+        "form.opsId": "OpsID :",
+        "form.opsIdPlaceholder": "输入／扫描OpsID...",
+        "form.snLabel": "PDA SN后5位 :",
+        "form.snPlaceholder": "例: 01455",
+        "form.namaOperator": "操作员姓名 :",
+        "form.namaPlaceholder": "全名",
+        "form.departement": "部门 :",
+        "form.aktivitasLabel": "自动活动日志 :",
+        "predicted.scan": "扫描OpsID...",
+        "btn.submit": "提交（Enter）",
+        "btn.exportExcel": "导出Excel",
+        "btn.databaseAsset": "资产数据库",
+        "btn.resetData": "重置数据",
+        "btn.cancel": "取消",
+        "btn.saveConnect": "保存并连接",
+        "btn.tambah": "添加",
+        "btn.hapus": "删除",
+        "btn.hapusNoAccess": "你没有删除数据的权限",
+        "header.subtitleRest": "专职操作员及日工休息时间日常监控",
+        "header.subtitleAsset": "PDA资产借用与使用日常监控",
+        "conn.menghubungkan": "连接中...",
+        "conn.gagalConfig": "连接失败 — 请检查配置",
+        "conn.online": "在线 • 实时同步",
+        "conn.offlineReconnect": "离线／正在重新连接...",
+        "summary.hide": "隐藏摘要",
+        "summary.show": "显示摘要",
+        "summary.totalMasuk": "入场MP总数",
+        "summary.checkInSub": "（签到）",
+        "summary.actualRest": "实际休息MP",
+        "summary.istirahatSub": "（休息中）",
+        "summary.doneRest": "休息完成",
+        "summary.selesaiSub": "（完成）",
+        "summary.totalSisa": "剩余MP总数",
+        "summary.belumSub": "（未完成）",
+        "asset.totalPeminjam": "借用人数总计",
+        "asset.hariIniSub": "（今天）",
+        "asset.sedangMeminjam": "借用中",
+        "asset.belumKembaliSub": "（未归还）",
+        "asset.sudahKembali": "已归还",
+        "asset.pdaIdle": "各工位闲置PDA",
+        "asset.operatorBelumKembali": "未归还的操作员",
+        "asset.aktivitasLogInput": "活动日志录入",
+        "asset.belumAdaAktivitas": "暂无活动",
+        "table.date": "日期",
+        "table.opsId": "OpsID",
+        "table.name": "姓名",
+        "table.agency": "代理商",
+        "table.departement": "部门",
+        "table.checkIn": "签到",
+        "table.breakOut": "开始休息",
+        "table.breakIn": "结束休息",
+        "table.estMasuk": "预计返回",
+        "table.duration": "时长",
+        "table.alertStatus": "警报状态",
+        "table.workEnd": "下班",
+        "table.action": "操作",
+        "asset.table.nameOperator": "操作员姓名",
+        "asset.table.sesi": "场次",
+        "asset.table.snFull": "PDA完整序列号",
+        "asset.table.jamPinjam": "借用时间",
+        "asset.table.jamKembali": "归还时间",
+        "asset.table.durasi": "时长",
+        "asset.table.status": "状态",
+        "asset.table.picInput": "录入负责人",
+        "fb.modalTitle": "🔗 连接到在线数据库",
+        "fb.modalDesc": "在下方粘贴 <b>Firebase Config</b>。每台设备只需操作 <b>一次</b>。",
+        "dbAsset.permNoteView": "已注册的PDA序列号及其工位列表。",
+        "dbAsset.permNoteEdit": "已注册的PDA序列号及其工位列表。可在下方添加／编辑／删除。",
+        "dbAsset.permNoteReadonly": "🔒 已注册的PDA序列号及其工位列表（只读 — 如需修改请联系管理员）。",
+        "dbAsset.snPlaceholder": "完整序列号",
+        "dbAsset.serialNumber": "序列号",
+        "dbAsset.noData": "暂无数据。",
+        "dbAsset.notAssigned": "未分配"
+      }
+    };
+
+    function t(key) {
+      const lang = localStorage.getItem(APP_LANG_KEY) || "id";
+      const dict = I18N_DICT[lang] || I18N_DICT.id;
+      return dict[key] !== undefined ? dict[key] : (I18N_DICT.id[key] || key);
+    }
+
+    function applyI18n(lang) {
+      const dict = I18N_DICT[lang] || I18N_DICT.id;
+      document.querySelectorAll("[data-i18n]").forEach(function (el) {
+        const key = el.getAttribute("data-i18n");
+        if (dict[key] !== undefined) el.textContent = dict[key];
+      });
+      document.querySelectorAll("[data-i18n-html]").forEach(function (el) {
+        const key = el.getAttribute("data-i18n-html");
+        if (dict[key] !== undefined) el.innerHTML = dict[key];
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+        const key = el.getAttribute("data-i18n-placeholder");
+        if (dict[key] !== undefined) el.placeholder = dict[key];
+      });
+    }
+
+    // Refresh bagian-bagian modul Rest Time yang teksnya digenerate lewat JS (bukan
+    // cuma textContent statis), biar ikut ke-translate seketika pas bahasa diganti —
+    // tanpa nunggu reload atau nunggu event lain nembak duluan.
+    function refreshDynamicModuleTexts() {
+      // Placeholder kolom pencarian & judul form ikut modul yang lagi aktif
+      const searchGlobal = document.getElementById("searchGlobal");
+      if (searchGlobal) searchGlobal.placeholder = t(currentActiveModule === 'rest' ? 'filter.cariPlaceholder' : 'filter.cariPlaceholderAsset');
+      const formTitle = document.getElementById("formTitle");
+      if (formTitle) formTitle.innerText = t(currentActiveModule === 'rest' ? 'form.titleRest' : 'form.titleAsset');
+      const subHeaderTitle = document.getElementById("subHeaderTitle");
+      if (subHeaderTitle) subHeaderTitle.innerText = t(currentActiveModule === 'rest' ? 'header.subtitleRest' : 'header.subtitleAsset');
+
+      // Status koneksi Firebase (teksnya disimpen state-nya di lastConnState/lastConnKey)
+      if (typeof refreshConnStatusLabel === 'function') refreshConnStatusLabel();
+
+      // Badge prediksi aksi kalau lagi nampilin placeholder default "Scan OpsID..."
+      const badge = document.getElementById("predictedAction");
+      if (badge && !document.getElementById("inputOpsId").value.trim()) badge.innerText = t('predicted.scan');
+
+      // Tombol toggle ringkasan (nyimpen state collapsed di localStorage)
+      const collapsed = localStorage.getItem(SUMMARY_COLLAPSE_KEY) === "1";
+      if (typeof applySummaryBoxesState === 'function') applySummaryBoxesState(collapsed);
+
+      // Kalau modal Database Asset lagi kebuka, render ulang isinya (tombol Hapus, "Belum Diassign", dst)
+      const dbModal = document.getElementById("databaseAssetModal");
+      if (dbModal && dbModal.style.display !== "none" && typeof renderDatabaseAssetTable === 'function') {
+        const canEdit = !!window.__authCanDelete;
+        document.getElementById("databaseAssetPermNote").innerText = canEdit ? t('dbAsset.permNoteEdit') : t('dbAsset.permNoteReadonly');
+        renderDatabaseAssetTable();
+      }
+
+      // Tabel utama & tabel asset dirender ulang biar tombol "Hapus" ikut ke-translate
+      if (typeof renderAll === 'function') renderAll();
+    }
+
+    function initAppLanguageSwitcher() {
+      const sel = document.getElementById("appLangSelect");
+      const lang = localStorage.getItem(APP_LANG_KEY) || "id";
+      if (sel) sel.value = lang;
+      applyI18n(lang);
+    }
+    function setAppLanguage(lang) {
+      localStorage.setItem(APP_LANG_KEY, lang);
+      applyI18n(lang);
+      refreshDynamicModuleTexts();
+    }
+    initAppLanguageSwitcher();
+
+    // ==== SARAN & MASUKAN (papan terbuka realtime — semua user submit & baca) ====
+    const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
+    let fbFeedbackRef = null;
+
+    function escapeFeedbackHtml(str) {
+        const div = document.createElement("div");
+        div.textContent = str == null ? "" : String(str);
+        return div.innerHTML;
+    }
+
+    function openFeedbackBoard() {
+        document.getElementById("fbBoardBackdrop").classList.add("open");
+        initFeedbackBoardSync();
+    }
+    function closeFeedbackBoard() {
+        document.getElementById("fbBoardBackdrop").classList.remove("open");
+    }
+
+    function initFeedbackBoardSync() {
+        if (fbFeedbackRef) return; // udah nyala dari sebelumnya, gak perlu attach listener dobel
+        try {
+            const db = firebase.database();
+            fbFeedbackRef = db.ref(FB_FEEDBACK_ROOT).orderByChild("createdAt").limitToLast(100);
+            fbFeedbackRef.on("value", function (snapshot) {
+                renderFeedbackList(snapshot.val() || {});
+            }, function (err) {
+                console.error("Gagal baca Saran & Masukan:", err);
+                const list = document.getElementById("fbBoardList");
+                if (list) list.innerHTML = '<div class="fb-board-empty">' + t('feedback.errorLoad') + '</div>';
+            });
+        } catch (e) {
+            console.error("Firebase belum siap buat Saran & Masukan:", e);
+            const list = document.getElementById("fbBoardList");
+            if (list) list.innerHTML = '<div class="fb-board-empty">' + t('feedback.errorConn') + '</div>';
+        }
+    }
+
+    function renderFeedbackList(data) {
+        const list = document.getElementById("fbBoardList");
+        if (!list) return;
+        const items = Object.keys(data).map(function (k) { return Object.assign({}, data[k], { _key: k }); });
+        if (!items.length) {
+            list.innerHTML = '<div class="fb-board-empty">' + t('feedback.empty') + '</div>';
+            return;
+        }
+        items.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
+        list.innerHTML = items.map(function (item) {
+            const dt = item.createdAt ? new Date(item.createdAt) : null;
+            const timeStr = dt && !isNaN(dt) ? (String(dt.getDate()).padStart(2, '0') + '/' + String(dt.getMonth() + 1).padStart(2, '0') + ' ' + String(dt.getHours()).padStart(2, '0') + ':' + String(dt.getMinutes()).padStart(2, '0')) : '-';
+            const userLabel = item.userEmail ? item.userEmail.split('@')[0] : t('feedback.anon');
+            return '<div class="fb-board-item">' +
+                '<div class="fb-board-item-head">' +
+                    '<span class="fb-board-item-user">' + escapeFeedbackHtml(userLabel) + '</span>' +
+                    '<span class="fb-board-item-time">' + timeStr + '</span>' +
+                '</div>' +
+                '<p class="fb-board-item-msg">' + escapeFeedbackHtml(item.message) + '</p>' +
+                '</div>';
+        }).join('');
+    }
+
+    function submitFeedback() {
+        const input = document.getElementById("fbBoardInput");
+        const btn = document.getElementById("fbBoardSubmitBtn");
+        const msg = input.value.trim();
+        if (!msg) return;
+        if (!window.firebase || !firebase.apps || !firebase.apps.length) {
+            alert(t('feedback.errorConn'));
+            return;
+        }
+        btn.disabled = true;
+        const db = firebase.database();
+        db.ref(FB_FEEDBACK_ROOT).push().set({
+            message: msg,
+            userEmail: window.__authUserEmail || null,
+            createdAt: Date.now()
+        }).then(function () {
+            input.value = "";
+        }).catch(function (err) {
+            console.error("Gagal kirim Saran & Masukan:", err);
+            alert(t('feedback.errorSend'));
+        }).finally(function () {
+            btn.disabled = false;
+        });
     }
 </script>
 
