@@ -31,7 +31,8 @@
     "muhammad.subli@spx-external.com",
     "nurmila.wati@spx-external.com",
     "dicky.porwanto@spx-external.com",
-    "yoga.parera@spxexpress.com"
+    "yoga.parera@spxexpress.com",
+    "eka.prayogi@spxexpress.com",
   ];
 
   function getCanDelete(email) {
