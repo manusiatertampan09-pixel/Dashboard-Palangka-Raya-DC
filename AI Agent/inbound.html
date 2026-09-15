@@ -135,6 +135,22 @@
     .fb-board-header button { background: transparent; border: none; color: #9ca3af; font-size: 18px; cursor: pointer; padding: 2px 6px; }
     .fb-board-header button:hover { color: #fff; }
     .fb-board-form { padding: 12px 16px; border-bottom: 1px solid var(--border-sidebar); flex-shrink: 0; }
+    .fb-board-form-row { display: flex; gap: 8px; margin-bottom: 10px; }
+    .fb-board-form-field { flex: 1; min-width: 0; }
+    .fb-board-form-field label {
+      display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px;
+      color: var(--text-sidebar-muted); text-transform: uppercase; margin-bottom: 5px;
+    }
+    .fb-board-form-field select {
+      width: 100%; padding: 8px 10px; border-radius: 7px; border: 1px solid var(--border-sidebar);
+      background: var(--bg-sidebar-card); color: #fff; font-size: 12.5px; font-weight: 600;
+      cursor: pointer; font-family: var(--tw-sans);
+    }
+    .fb-board-form-field select:focus { outline: none; border-color: #f59e0b; }
+    .fb-board-form-detail-label {
+      display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.3px;
+      color: var(--text-sidebar-muted); text-transform: uppercase; margin-bottom: 5px;
+    }
     .fb-board-form textarea {
       width: 100%; min-height: 70px; resize: vertical; border-radius: 8px; border: 1px solid var(--border-sidebar);
       background: var(--bg-sidebar-card); color: #fff; padding: 10px 12px; font-size: 13px; font-family: var(--tw-sans);
@@ -152,8 +168,36 @@
     .fb-board-item-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; margin-bottom: 4px; }
     .fb-board-item-user { font-size: 11.5px; font-weight: 700; color: #f59e0b; }
     .fb-board-item-time { font-size: 10px; color: var(--text-sidebar-muted); flex-shrink: 0; }
+    .fb-board-item-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 6px; }
+    .fb-board-item-tag {
+      font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px;
+      background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.35); color: #f59e0b;
+    }
+    .fb-board-item-tag.is-bug { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); color: #ef4444; }
+    .fb-board-item-tag.is-fitur { background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #22c55e; }
     .fb-board-item-msg { font-size: 13px; color: #e5e5e5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
     .fb-board-empty { padding: 30px 16px; text-align: center; color: var(--text-sidebar-muted); font-size: 12.5px; }
+
+    /* ===== Preview Saran & Masukan di halaman utama — pakai template card yang sama
+       kayak di popup, tapi di-override jadi tema terang biar nyatu sama panel lain ===== */
+    .fb-dashboard-preview-card {
+      background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 15px; margin-bottom: 20px;
+    }
+    .fb-dashboard-preview-head {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;
+    }
+    .fb-dashboard-preview-head span { font-weight: 700; font-size: 14px; color: #334155; }
+    .fb-dashboard-preview-head button {
+      padding: 6px 14px; border: none; border-radius: 6px; background: #f59e0b; color: #000;
+      font-weight: 700; font-size: 12px; cursor: pointer;
+    }
+    .fb-dashboard-preview-head button:hover { background: #fbbf24; }
+    .fb-dashboard-preview-list { max-height: 260px; overflow-y: auto; }
+    .fb-dashboard-preview-list .fb-board-item { background: #fff; border: 1px solid #fde68a; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; }
+    .fb-dashboard-preview-list .fb-board-item-user { color: #b45309; }
+    .fb-dashboard-preview-list .fb-board-item-time { color: #94a3b8; }
+    .fb-dashboard-preview-list .fb-board-item-msg { color: #334155; }
+    .fb-dashboard-preview-list .fb-board-empty { color: #94a3b8; padding: 16px 0; }
 
     * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     body { background-color: #f1f5f9; margin: 0; padding: 20px 20px 20px 70px; color: #334155; }
@@ -440,10 +484,10 @@
     "zh": "建议与反馈"
   },
   "feedback.placeholder": {
-    "id": "Tulis saran, masukan, atau curhatan kamu di sini...",
-    "en": "Write your feedback, suggestion, or thoughts here...",
-    "ja": "ご意見・ご要望をここに入力してください…",
-    "zh": "在此写下您的建议或想法…"
+    "id": "Jelasin masalah atau saran kamu di sini...",
+    "en": "Explain your issue or suggestion here...",
+    "ja": "問題やご要望の詳細をここに入力してください…",
+    "zh": "在此说明您的问题或建议…"
   },
   "feedback.submit": {
     "id": "Kirim",
@@ -456,6 +500,102 @@
     "en": "No feedback yet.",
     "ja": "まだご意見・ご要望はありません。",
     "zh": "暂无建议与反馈。"
+  },
+  "feedback.module.label": {
+    "id": "Jenis Module",
+    "en": "Module Type",
+    "ja": "モジュール種別",
+    "zh": "模块类型"
+  },
+  "feedback.module.placeholder": {
+    "id": "Pilih Module",
+    "en": "Select Module",
+    "ja": "モジュールを選択",
+    "zh": "选择模块"
+  },
+  "feedback.module.inbound": {
+    "id": "Inbound",
+    "en": "Inbound",
+    "ja": "Inbound",
+    "zh": "Inbound"
+  },
+  "feedback.module.restTime": {
+    "id": "Rest Time",
+    "en": "Rest Time",
+    "ja": "Rest Time",
+    "zh": "Rest Time"
+  },
+  "feedback.module.assetUsageMonitoring": {
+    "id": "Asset Usage Monitoring",
+    "en": "Asset Usage Monitoring",
+    "ja": "Asset Usage Monitoring",
+    "zh": "Asset Usage Monitoring"
+  },
+  "feedback.module.performanceBagger": {
+    "id": "Performance Bagger",
+    "en": "Performance Bagger",
+    "ja": "Performance Bagger",
+    "zh": "Performance Bagger"
+  },
+  "feedback.module.outboundMonitoring": {
+    "id": "Outbound Monitoring",
+    "en": "Outbound Monitoring",
+    "ja": "Outbound Monitoring",
+    "zh": "Outbound Monitoring"
+  },
+  "feedback.module.inventoryControl": {
+    "id": "Inventory Control",
+    "en": "Inventory Control",
+    "ja": "Inventory Control",
+    "zh": "Inventory Control"
+  },
+  "feedback.category.label": {
+    "id": "Jenis Pengaduan",
+    "en": "Report Type",
+    "ja": "報告種別",
+    "zh": "反馈类型"
+  },
+  "feedback.category.placeholder": {
+    "id": "Pilih Jenis Pengaduan",
+    "en": "Select Report Type",
+    "ja": "報告種別を選択",
+    "zh": "选择反馈类型"
+  },
+  "feedback.category.bug": {
+    "id": "Bug",
+    "en": "Bug",
+    "ja": "不具合(Bug)",
+    "zh": "错误(Bug)"
+  },
+  "feedback.category.feature": {
+    "id": "Fitur",
+    "en": "Feature",
+    "ja": "機能要望",
+    "zh": "功能建议"
+  },
+  "feedback.detail.label": {
+    "id": "Detail",
+    "en": "Detail",
+    "ja": "詳細",
+    "zh": "详情"
+  },
+  "feedback.err.selectModuleCategory": {
+    "id": "Pilih Jenis Module & Jenis Pengaduan dulu.",
+    "en": "Please select the Module Type & Report Type first.",
+    "ja": "先にモジュール種別と報告種別を選択してください。",
+    "zh": "请先选择模块类型和反馈类型。"
+  },
+  "feedback.dashboardPreview.title": {
+    "id": "💬 Saran & Masukan Terbaru",
+    "en": "💬 Recent Feedback & Suggestions",
+    "ja": "💬 最新のご意見・ご要望",
+    "zh": "💬 最新建议与反馈"
+  },
+  "feedback.dashboardPreview.viewAll": {
+    "id": "Lihat Semua & Kirim",
+    "en": "View All & Send",
+    "ja": "すべて見る・送信",
+    "zh": "查看全部并发送"
   },
   "toast.err.saveFeedback": {
     "id": "❌ Gagal kirim Saran & Masukan: ",
@@ -1312,7 +1452,30 @@
       <button onclick="closeFeedbackBoard()">✕</button>
     </div>
     <div class="fb-board-form">
-      <textarea id="fbBoardInput" maxlength="500" placeholder="Tulis saran, masukan, atau curhatan kamu di sini..." data-i18n-placeholder="feedback.placeholder"></textarea>
+      <div class="fb-board-form-row">
+        <div class="fb-board-form-field">
+          <label data-i18n="feedback.module.label">Jenis Module</label>
+          <select id="fbBoardModule">
+            <option value="" data-i18n="feedback.module.placeholder">Pilih Module</option>
+            <option value="Inbound" data-i18n="feedback.module.inbound">Inbound</option>
+            <option value="Rest Time" data-i18n="feedback.module.restTime">Rest Time</option>
+            <option value="Asset Usage Monitoring" data-i18n="feedback.module.assetUsageMonitoring">Asset Usage Monitoring</option>
+            <option value="Performance Bagger" data-i18n="feedback.module.performanceBagger">Performance Bagger</option>
+            <option value="Outbound Monitoring" data-i18n="feedback.module.outboundMonitoring">Outbound Monitoring</option>
+            <option value="Inventory Control" data-i18n="feedback.module.inventoryControl">Inventory Control</option>
+          </select>
+        </div>
+        <div class="fb-board-form-field">
+          <label data-i18n="feedback.category.label">Jenis Pengaduan</label>
+          <select id="fbBoardCategory">
+            <option value="" data-i18n="feedback.category.placeholder">Pilih Jenis Pengaduan</option>
+            <option value="Bug" data-i18n="feedback.category.bug">Bug</option>
+            <option value="Fitur" data-i18n="feedback.category.feature">Fitur</option>
+          </select>
+        </div>
+      </div>
+      <label class="fb-board-form-detail-label" data-i18n="feedback.detail.label">Detail</label>
+      <textarea id="fbBoardInput" maxlength="500" placeholder="Jelasin masalah atau saran kamu di sini..." data-i18n-placeholder="feedback.placeholder" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitFeedback();}"></textarea>
       <div class="fb-board-form-footer">
         <button class="fb-board-submit-btn" id="fbBoardSubmitBtn" onclick="submitFeedback()" data-i18n="feedback.submit">Kirim</button>
       </div>
@@ -1337,6 +1500,17 @@
         <span class="freshness-tag fresh-green" id="lblDataFreshness" data-i18n="inb.header.freshNow">🟢 Data Updated Just Now</span>
         <span style="color: #64748b;" id="lblLastUpdate"><span data-i18n="inb.header.last">Last:</span> -</span>
       </div>
+    </div>
+  </div>
+
+  <!-- ==================== PREVIEW SARAN & MASUKAN (semua orang bisa lihat) ==================== -->
+  <div class="fb-dashboard-preview-card">
+    <div class="fb-dashboard-preview-head">
+      <span data-i18n="feedback.dashboardPreview.title">💬 Saran & Masukan Terbaru</span>
+      <button onclick="openFeedbackBoard()" data-i18n="feedback.dashboardPreview.viewAll">Lihat Semua &amp; Kirim</button>
+    </div>
+    <div class="fb-dashboard-preview-list" id="fbDashboardPreviewList">
+      <div class="fb-board-empty" data-i18n="feedback.empty">Belum ada saran &amp; masukan.</div>
     </div>
   </div>
 
@@ -2704,7 +2878,7 @@
   // dipakai di outbound.html.
   if (window.firebase && firebase.auth) {
     firebase.auth().onAuthStateChanged(function (user) {
-      if (user) initInboundFirebaseSync();
+      if (user) { initInboundFirebaseSync(); initFeedbackBoardSync(); }
     });
   }
 </script>
@@ -2783,10 +2957,11 @@
 
 <script>
   // ==== PAPAN SARAN & MASUKAN ====
-  // Sengaja pake node root Firebase TERPISAH (bukan di bawah FB_ROOT punya Inbound),
-  // soalnya papan ini "1 buat semua modul" (Rest Time, Performance Bagger, Outbound,
-  // Inventory Control, dst) - jadi harus root level biar kebaca sama di semua modul.
-  const FB_FEEDBACK_ROOT = "prDcSharedFeedback";
+  // Pakai node prDcGlobal/feedback — path INI yang beneran ada di Firebase Rules
+  // (read/write udah diizinin buat semua user login kecuali akun yang di-blacklist),
+  // dan ini juga node yang sama dipakai modul Inventory Control, jadi papannya
+  // beneran "1 buat semua modul" (bukan cuma niatnya doang).
+  const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
   let fbFeedbackDb = null;
   let fbFeedbackListenerAttached = false;
 
@@ -2816,32 +2991,52 @@
       const items = Object.keys(val).map(function (k) {
         return Object.assign({ _key: k }, val[k]);
       });
-      items.sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); }); // terbaru di atas
+      items.sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); }); // terbaru di atas
       renderFeedbackBoard(items);
     }, function (err) {
       console.error("Gagal baca data Saran & Masukan dari Firebase:", err);
     });
   }
 
+  function buildFeedbackItemHtml(it) {
+    const timeStr = it.createdAt ? new Date(it.createdAt).toLocaleString() : "-";
+    const catCls = it.category === "Bug" ? "is-bug" : (it.category === "Fitur" ? "is-fitur" : "");
+    const tagsHtml = (it.module || it.category)
+      ? '<div class="fb-board-item-tags">' +
+        (it.module ? '<span class="fb-board-item-tag">' + escapeHtml(it.module) + '</span>' : '') +
+        (it.category ? '<span class="fb-board-item-tag ' + catCls + '">' + escapeHtml(it.category) + '</span>' : '') +
+        '</div>'
+      : '';
+    return (
+      '<div class="fb-board-item">' +
+        '<div class="fb-board-item-head">' +
+          '<span class="fb-board-item-user">' + escapeHtml(it.user || "Unknown") + "</span>" +
+          '<span class="fb-board-item-time">' + escapeHtml(timeStr) + "</span>" +
+        "</div>" +
+        tagsHtml +
+        '<p class="fb-board-item-msg">' + escapeHtml(it.message || "") + "</p>" +
+      "</div>"
+    );
+  }
+
   function renderFeedbackBoard(items) {
     const list = document.getElementById("fbBoardList");
-    if (!list) return;
-    if (!items.length) {
-      list.innerHTML = '<div class="fb-board-empty">' + escapeHtml(t("feedback.empty")) + "</div>";
-      return;
+    if (list) {
+      list.innerHTML = items.length
+        ? items.map(buildFeedbackItemHtml).join("")
+        : '<div class="fb-board-empty">' + escapeHtml(t("feedback.empty")) + "</div>";
     }
-    list.innerHTML = items.map(function (it) {
-      const timeStr = it.ts ? new Date(it.ts).toLocaleString() : "-";
-      return (
-        '<div class="fb-board-item">' +
-          '<div class="fb-board-item-head">' +
-            '<span class="fb-board-item-user">' + escapeHtml(it.user || "Unknown") + "</span>" +
-            '<span class="fb-board-item-time">' + escapeHtml(timeStr) + "</span>" +
-          "</div>" +
-          '<p class="fb-board-item-msg">' + escapeHtml(it.message || "") + "</p>" +
-        "</div>"
-      );
-    }).join("");
+    renderFeedbackDashboardPreview(items);
+  }
+
+  // Preview ringkas (5 terbaru) yang nampil langsung di halaman utama, biar semua
+  // orang bisa lihat Saran & Masukan tanpa perlu buka popup dulu.
+  function renderFeedbackDashboardPreview(items) {
+    const container = document.getElementById("fbDashboardPreviewList");
+    if (!container) return;
+    container.innerHTML = items.length
+      ? items.slice(0, 5).map(buildFeedbackItemHtml).join("")
+      : '<div class="fb-board-empty">' + escapeHtml(t("feedback.empty")) + "</div>";
   }
 
   function openFeedbackBoard() {
@@ -2860,10 +3055,15 @@
 
   function submitFeedback() {
     const input = document.getElementById("fbBoardInput");
+    const moduleSel = document.getElementById("fbBoardModule");
+    const categorySel = document.getElementById("fbBoardCategory");
     const btn = document.getElementById("fbBoardSubmitBtn");
     if (!input) return;
 
     const message = input.value.trim();
+    const moduleVal = moduleSel ? moduleSel.value : "";
+    const categoryVal = categorySel ? categorySel.value : "";
+    if (!moduleVal || !categoryVal) { showToast(t("feedback.err.selectModuleCategory"), "err"); return; }
     if (!message) return;
 
     if (!fbFeedbackDb) {
@@ -2878,10 +3078,13 @@
     fbFeedbackDb.ref(FB_FEEDBACK_ROOT).push({
       user: getFeedbackUserName(),
       message: message,
-      ts: Date.now(),
-      module: window.__PAGE_TAB || "unknown"
+      createdAt: new Date().toISOString(),
+      module: moduleVal,
+      category: categoryVal
     }).then(function () {
       input.value = "";
+      if (moduleSel) moduleSel.value = "";
+      if (categorySel) categorySel.value = "";
       if (btn) btn.disabled = false;
     }).catch(function (err) {
       if (btn) btn.disabled = false;
