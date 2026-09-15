@@ -392,6 +392,17 @@
     .fb-board-item-tag.is-bug { background: rgba(239, 68, 68, 0.14); border-color: rgba(239, 68, 68, 0.35); color: #ef4444; }
     .fb-board-item-tag.is-fitur { background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #22c55e; }
     .fb-board-item-msg { margin: 0; color: #e5e5e5; font-size: 12.5px; line-height: 1.5; white-space: pre-line; }
+
+    /* ===== Preview Saran & Masukan di tab Dashboard (Highlight Usage) — pakai template
+       card yang sama kayak di popup, tapi di-override jadi tema terang biar nyatu sama panel-box ===== */
+    .fb-dashboard-preview-list { max-height: 280px; overflow-y: auto; }
+    .fb-dashboard-preview-list .fb-board-item {
+      background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
+    }
+    .fb-dashboard-preview-list .fb-board-item-user { color: #d97706; }
+    .fb-dashboard-preview-list .fb-board-item-time { color: #737373; }
+    .fb-dashboard-preview-list .fb-board-item-msg { color: #171717; }
+    .fb-dashboard-preview-list .fb-board-empty { color: #737373; }
   </style>
 </head>
 <body>
@@ -443,6 +454,8 @@
     "feedback.detail.label": { "id": "Detail", "en": "Detail", "ja": "詳細", "zh": "详情" },
     "feedback.err.selectModuleCategory": { "id": "Pilih Jenis Module & Jenis Pengaduan dulu.", "en": "Please select the Module Type & Report Type first.", "ja": "先にモジュール種別と報告種別を選択してください。", "zh": "请先选择模块类型和反馈类型。" },
     "feedback.item.moduleCategory": { "id": "{module} · {category}", "en": "{module} · {category}", "ja": "{module} · {category}", "zh": "{module} · {category}" },
+    "feedback.dashboardPreview.title": { "id": "💬 Saran & Masukan Terbaru", "en": "💬 Recent Feedback & Suggestions", "ja": "💬 最新のご意見・ご要望", "zh": "💬 最新建议与反馈" },
+    "feedback.dashboardPreview.viewAll": { "id": "Lihat Semua & Kirim", "en": "View All & Send", "ja": "すべて見る・送信", "zh": "查看全部并发送" },
     "logout.btn": { "id": "Logout", "en": "Logout", "ja": "ログアウト", "zh": "退出登录" },
     "toast.err.saveFeedback": { "id": "❌ Gagal kirim Saran & Masukan: ", "en": "❌ Failed to send feedback: ", "ja": "❌ ご意見・ご要望の送信に失敗しました: ", "zh": "❌ 发送建议与反馈失败: " },
 
@@ -953,6 +966,16 @@
 
   <!-- ================= SUBMENU 2: HIGHLIGHT DAILY & MONTHLY USAGE (Dashboard) ================= -->
   <section id="invPanelDashboard" class="inv-panel">
+
+    <div class="panel-box" style="margin-bottom:18px;">
+      <div class="panel-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
+        <span data-i18n="feedback.dashboardPreview.title">💬 Saran & Masukan Terbaru</span>
+        <button class="range-tab-btn" onclick="openFeedbackBoard()" data-i18n="feedback.dashboardPreview.viewAll">Lihat Semua & Kirim</button>
+      </div>
+      <div class="fb-dashboard-preview-list" id="fbDashboardPreviewList">
+        <div class="fb-board-empty" data-i18n="feedback.empty">Belum ada saran &amp; masukan.</div>
+      </div>
+    </div>
 
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
       <span style="font-size:12px; font-weight:800; color:#525252;" data-i18n="inv.dash.breakdownLabel">Breakdown Divisi:</span>
@@ -3163,7 +3186,28 @@
         return (b.createdAt || '').localeCompare(a.createdAt || '');
       });
       renderFeedbackList();
+      renderFeedbackDashboardPreview();
     });
+  }
+
+  function buildFeedbackItemHtml(item) {
+    const dt = item.createdAt ? new Date(item.createdAt) : null;
+    const timeStr = dt && !isNaN(dt) ? formatDateTimeShort(dt) : '-';
+    const catCls = item.category === 'Bug' ? 'is-bug' : (item.category === 'Fitur' ? 'is-fitur' : '');
+    const tagsHtml = (item.module || item.category)
+      ? `<div class="fb-board-item-tags">` +
+        (item.module ? `<span class="fb-board-item-tag">${escapeHtml(item.module)}</span>` : '') +
+        (item.category ? `<span class="fb-board-item-tag ${catCls}">${escapeHtml(item.category)}</span>` : '') +
+        `</div>`
+      : '';
+    return `<div class="fb-board-item">
+        <div class="fb-board-item-head">
+          <span class="fb-board-item-user">${escapeHtml(item.user || 'unknown')}</span>
+          <span class="fb-board-item-time">${timeStr}</span>
+        </div>
+        ${tagsHtml}
+        <p class="fb-board-item-msg">${escapeHtml(item.message || '')}</p>
+      </div>`;
   }
 
   function renderFeedbackList() {
@@ -3173,25 +3217,19 @@
       container.innerHTML = `<div class="fb-board-empty">${t('feedback.empty')}</div>`;
       return;
     }
-    container.innerHTML = fbFeedbackEntries.map(function (item) {
-      const dt = item.createdAt ? new Date(item.createdAt) : null;
-      const timeStr = dt && !isNaN(dt) ? formatDateTimeShort(dt) : '-';
-      const catCls = item.category === 'Bug' ? 'is-bug' : (item.category === 'Fitur' ? 'is-fitur' : '');
-      const tagsHtml = (item.module || item.category)
-        ? `<div class="fb-board-item-tags">` +
-          (item.module ? `<span class="fb-board-item-tag">${escapeHtml(item.module)}</span>` : '') +
-          (item.category ? `<span class="fb-board-item-tag ${catCls}">${escapeHtml(item.category)}</span>` : '') +
-          `</div>`
-        : '';
-      return `<div class="fb-board-item">
-        <div class="fb-board-item-head">
-          <span class="fb-board-item-user">${escapeHtml(item.user || 'unknown')}</span>
-          <span class="fb-board-item-time">${timeStr}</span>
-        </div>
-        ${tagsHtml}
-        <p class="fb-board-item-msg">${escapeHtml(item.message || '')}</p>
-      </div>`;
-    }).join('');
+    container.innerHTML = fbFeedbackEntries.map(buildFeedbackItemHtml).join('');
+  }
+
+  // Preview ringkas (5 terbaru) yang nampil langsung di tab Dashboard (Highlight Usage),
+  // biar semua orang bisa lihat Saran & Masukan tanpa perlu buka popup dulu.
+  function renderFeedbackDashboardPreview() {
+    const container = document.getElementById('fbDashboardPreviewList');
+    if (!container) return;
+    if (fbFeedbackEntries.length === 0) {
+      container.innerHTML = `<div class="fb-board-empty">${t('feedback.empty')}</div>`;
+      return;
+    }
+    container.innerHTML = fbFeedbackEntries.slice(0, 5).map(buildFeedbackItemHtml).join('');
   }
 
   function openFeedbackBoard() {
@@ -3350,7 +3388,7 @@
   // dipakai di modul lain (outbound.html, inbound.html, dst).
   if (window.firebase && firebase.auth) {
     firebase.auth().onAuthStateChanged(function (user) {
-      if (user) initInventoryFirebaseSync();
+      if (user) { initInventoryFirebaseSync(); initFeedbackSync(); }
     });
   }
 </script>
