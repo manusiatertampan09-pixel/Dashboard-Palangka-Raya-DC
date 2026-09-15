@@ -2965,6 +2965,15 @@
   let fbFeedbackDb = null;
   let fbFeedbackListenerAttached = false;
 
+  // createdAt bisa berupa number (epoch ms, dari rest-time.html) ATAU string ISO
+  // (dari modul ini/inventory-control.html) karena papannya digabung dari beberapa modul.
+  // Normalisasi dulu ke angka biar sortir gak crash pas ketemu tipe campuran.
+  function feedbackCreatedAtToTime(v) {
+    if (typeof v === 'number') return v;
+    if (typeof v === 'string') { const t = new Date(v).getTime(); return isNaN(t) ? 0 : t; }
+    return 0;
+  }
+
   function getFeedbackUserName() {
     try {
       const u = firebase.auth().currentUser;
@@ -2991,7 +3000,7 @@
       const items = Object.keys(val).map(function (k) {
         return Object.assign({ _key: k }, val[k]);
       });
-      items.sort(function (a, b) { return (b.createdAt || '').localeCompare(a.createdAt || ''); }); // terbaru di atas
+      items.sort(function (a, b) { return feedbackCreatedAtToTime(b.createdAt) - feedbackCreatedAtToTime(a.createdAt); }); // terbaru di atas
       renderFeedbackBoard(items);
     }, function (err) {
       console.error("Gagal baca data Saran & Masukan dari Firebase:", err);
