@@ -1,7 +1,7 @@
 [build]
-functions = "netlify/functions"
-publish = "."
+  command = "npm install --prefix netlify/functions"
+  functions = "netlify/functions"
+  publish = "."
 
 [functions."check-low-stock"]
   schedule = "*/15 * * * *"
-
