@@ -12,18 +12,18 @@ const admin = require("firebase-admin");
 const SEATALK_API_BASE = "https://openapi.seatalk.io";
 
 // ================= FIREBASE ADMIN INIT =================
-// Env var FIREBASE_SERVICE_ACCOUNT_B64 harus diisi hasil base64 dari
-// file JSON service account (Firebase Console > Project Settings >
-// Service Accounts > Generate new private key), biar gak kena masalah
-// newline pas disimpen sebagai env var biasa.
+// Env var FIREBASE_SERVICE_ACCOUNT_JSON diisi ISI MENTAH file JSON service
+// account (Firebase Console > Project Settings > Service Accounts >
+// Generate new private key) - copy-paste langsung isinya, gak perlu
+// di-encode base64 dulu.
 function getFirebaseApp() {
   if (admin.apps.length) return admin.app();
 
-  const b64 = process.env.FIREBASE_SERVICE_ACCOUNT_B64;
-  if (!b64) {
-    throw new Error("Env var FIREBASE_SERVICE_ACCOUNT_B64 belum diset.");
+  const raw = process.env.FIREBASE_SERVICE_ACCOUNT_JSON;
+  if (!raw) {
+    throw new Error("Env var FIREBASE_SERVICE_ACCOUNT_JSON belum diset.");
   }
-  const serviceAccount = JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+  const serviceAccount = JSON.parse(raw);
 
   return admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
