@@ -6,7 +6,9 @@
  *
  * Menangani 2 hal:
  *   1. Verification request (event_type: "event_verification")
- *   2. Pesan masuk dari user -> jawab pakai data Stock actual
+ *   2. Pesan masuk dari user -> jawab pakai data LIVE dari semua modul
+ *      dashboard (Inbound, Outbound, Rest Time/PDA, Performance Bagger,
+ *      Inventory Control) lewat router answerModuleQuestion.
  */
 
 const crypto = require("crypto");
@@ -14,7 +16,7 @@ const {
   getSeatalkAccessToken,
   sendSeatalkGroupMessage,
   sendSeatalkPrivateMessage,
-  answerInventoryQuestion,
+  answerModuleQuestion,
 } = require("./_seatalk-common");
 
 function isValidSignature(rawBody, signatureHeader) {
@@ -75,10 +77,10 @@ exports.handler = async (event) => {
   let answer;
   try {
     answer =
-      (await answerInventoryQuestion(messageText)) ||
-      "Maaf, aku belum ngerti pertanyaan itu. Coba tanya soal Stock atau Consumable di Inventory Control ya.";
+      (await answerModuleQuestion(messageText)) ||
+      "Maaf, aku belum ngerti pertanyaan itu. Coba tanya soal Stock/Consumable (Inventory), trip/Late Arrival/In Transit (Inbound), aging/backlog (Outbound), PDA/istirahat (Rest Time), atau performa/packing (Performance Bagger) ya.";
   } catch (err) {
-    console.error("Gagal ambil data Inventory:", err);
+    console.error("Gagal ambil data dashboard:", err);
     answer = "Lagi ada gangguan ambil data dari dashboard, coba lagi sebentar ya.";
   }
 
