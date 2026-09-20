@@ -1,3 +1,7 @@
 [build]
 functions = "netlify/functions"
 publish = "."
+
+[functions."check-low-stock"]
+  schedule = "*/15 * * * *"
+
