@@ -11,3 +11,11 @@
   },
   "private": true
 }
+
+{
+  "_comment": "Tambahkan 'firebase-admin' ke dependencies di package.json functions/ yang udah ada di repo lo (yang dipakai gemini-proxy.js). Jangan timpa file yang ada, cukup tambah baris ini ke object 'dependencies'.",
+  "dependencies": {
+    "firebase-admin": "^12.0.0"
+  }
+}
+
