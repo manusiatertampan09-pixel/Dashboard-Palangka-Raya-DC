@@ -1,36 +1,8 @@
-/**
- * _seatalk-common.js
- * ------------------------------------------------------------------
- * Helper bersama dipakai oleh seatalk-webhook.js, check-low-stock.js,
- * check-ops-alerts.js & daily-briefing.js. File ini BUKAN endpoint
- * sendiri (gak diawali handler), jadi Netlify gak akan nge-generate
- * URL publik buat file ini — aman ditaruh di folder functions yang
- * sama.
- *
- * ISI (per modul dashboard):
- *   - Inventory Control (Stock)          -> getStockItems / answerInventoryQuestion
- *   - Inbound (LH Tracking)              -> getInboundTrips / answerInboundQuestion
- *   - Outbound Monitoring (Aging)        -> getOutboundRows / answerOutboundQuestion
- *   - Rest Time & Asset Usage (PDA)      -> getRestAssetData / answerRestTimeQuestion
- *   - Performance Bagger                 -> getTodayBaggerRecords / answerPerformanceBaggerQuestion
- *   - Router lintas modul                -> answerModuleQuestion (dipanggil dari seatalk-webhook.js)
- *
- * Logika hitung status/alert di sini SENGAJA niru PERSIS fungsi yang
- * sama di dashboard (inbound.html, outbound.html) & report-agent.html
- * (Odyssey) — biar jawaban bot selalu konsisten sama yang ditampilin
- * dashboard, bukan ngitung ulang dengan cara sendiri.
- */
-
 const admin = require("firebase-admin");
 const zlib = require("zlib");
 
 const SEATALK_API_BASE = "https://openapi.seatalk.io";
 
-// ================= FIREBASE ADMIN INIT =================
-// Env var FIREBASE_SERVICE_ACCOUNT_JSON diisi ISI MENTAH file JSON service
-// account (Firebase Console > Project Settings > Service Accounts >
-// Generate new private key) - copy-paste langsung isinya, gak perlu
-// di-encode base64 dulu.
 function getFirebaseApp() {
   if (admin.apps.length) return admin.app();
 
@@ -42,7 +14,7 @@ function getFirebaseApp() {
 
   return admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: process.env.FIREBASE_DATABASE_URL, // contoh: https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
   });
 }
 
@@ -50,10 +22,6 @@ function db() {
   return getFirebaseApp().database();
 }
 
-// ================= HELPER TANGGAL (WIB) =================
-// Netlify Functions jalan di UTC, sedangkan semua workingDate/tanggal di
-// dashboard dicatat pakai jam lokal WIB (UTC+7). Geser manual biar "hari
-// ini" versi bot cocok sama "hari ini" versi dashboard.
 function nowWIB() {
   return new Date(Date.now() + 7 * 3600000);
 }
@@ -61,7 +29,6 @@ function todayStr() {
   return nowWIB().toISOString().slice(0, 10);
 }
 
-// ================= SEATALK BOT API =================
 
 async function getSeatalkAccessToken() {
   const res = await fetch(`${SEATALK_API_BASE}/auth/app_access_token`, {
@@ -109,10 +76,6 @@ async function sendSeatalkPrivateMessage(accessToken, employeeCode, text) {
   return res.json();
 }
 
-// ================= INVENTORY CONTROL (Stock) =================
-// NOTE: masih hardcode facility "SOC" (sama kayak check-low-stock.js yang
-// udah jalan). Kalau nanti mau multi-facility, tinggal parameterisasi ini.
-
 async function getStockItems() {
   const snap = await db().ref("inventoryControl/SOC/stock").get();
   const stock = snap.val() || {};
@@ -150,12 +113,10 @@ async function answerInventoryQuestion(text) {
   return `Daftar Stock Asset:\n${lines.join("\n")}${items.length > 20 ? "\n…dan lainnya" : ""}`;
 }
 
-// ================= INBOUND (LH Tracking) =================
 const INBOUND_LH_PATH = "prDcInboundTracking/lhTracking";
 const INBOUND_LATE_THRESHOLD_HOURS = 6.5;
 const INBOUND_EARLY_THRESHOLD_HOURS = 6.0;
 
-// Niru PERSIS computeStatus() di inbound.html / report-agent.html.
 function computeTripStatus(t) {
   const std = t.stdOrigin ? new Date(t.stdOrigin) : null;
   const sta = t.staDest ? new Date(t.staDest) : null;
@@ -219,16 +180,6 @@ async function answerInboundQuestion(text) {
   );
 }
 
-// ================= OUTBOUND MONITORING (Aging Backlog) =================
-// CATATAN KETERBATASAN: outbound.html nyimpen data import di Firebase dalam
-// format COLUMNAR + GZIP base64 (field "dataGz") biar payload gede (puluhan
-// ribu parcel) tetep hemat. Bot ini bisa decompress & baca row mentahnya
-// (Node.js zlib kompatibel sama gzip yang dipakai browser CompressionStream
-// di outbound.html), TAPI perhitungan "Occupancy %" di dashboard butuh
-// setting kapasitas per-destination yang cuma kesimpen di localStorage
-// BROWSER (bukan Firebase) — jadi itu BELUM BISA dijawab bot sampai
-// settingnya dipindah ke database. Yang reliable dihitung dari data mentah:
-// total parcel & jumlah backlog kritis (aging D-3 ke atas) secara total.
 
 function fromColumnar(columnar) {
   if (!columnar || !columnar.fields || !columnar.length) return [];
@@ -270,11 +221,9 @@ async function answerOutboundQuestion(text) {
   );
 }
 
-// ================= REST TIME & ASSET USAGE (PDA) =================
 const MON_ROOT = "prDcMonitoring";
-const MON_WINDOW_DAYS = 3; // disamain kayak window di rest-time.html/report-agent.html
+const MON_WINDOW_DAYS = 3;
 
-// Niru PERSIS parseDateTime di rest-time.html (format "YYYY-MM-DD HH:mm:ss", lokal WIB).
 function monParseDateTime(str) {
   if (!str) return null;
   const t = String(str).split(/[- :]/);
@@ -305,13 +254,9 @@ async function getRestAssetData() {
   };
 }
 
-// Niru PERSIS computeRestAssetLiveStatus() di report-agent.html (Odyssey),
-// yang sendirinya niru checkRestOvertimeAlert()/getActiveAssetLock() di
-// rest-time.html.
 function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap) {
   const now = nowWIB();
 
-  // --- Operator yang lagi Break Out & udah >60 menit ---
   const byOpsRest = {};
   logs.forEach((l) => { (byOpsRest[l.opsId] = byOpsRest[l.opsId] || []).push(l); });
   const operatorIstirahatLebih60Menit = [];
@@ -332,7 +277,6 @@ function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap) {
   });
   operatorIstirahatLebih60Menit.sort((a, b) => b.durasiMenit - a.durasiMenit);
 
-  // --- PDA yang aksi terakhirnya "Pinjam PDA" (belum "Kembali PDA") ---
   const byAssetSn = {};
   assetLogs.forEach((l) => { (byAssetSn[l.serialNumber] = byAssetSn[l.serialNumber] || []).push(l); });
   const pdaBelumKembali = [];
@@ -375,8 +319,6 @@ async function answerRestTimeQuestion(text) {
   return `⏳ Operator istirahat >60 menit (${status.operatorIstirahatLebih60Menit.length}):\n${lines.join("\n")}`;
 }
 
-// ================= PERFORMANCE BAGGER =================
-// Struktur: prDcPerformanceBagger/dailyRecords/{tanggal}/{opsId} = {name, agency, packed, statusInfo}
 
 async function getTodayBaggerRecords() {
   const snap = await db().ref("prDcPerformanceBagger/dailyRecords/" + todayStr()).get();
@@ -407,12 +349,6 @@ async function answerPerformanceBaggerQuestion(text) {
   return lines.join("\n");
 }
 
-// ================= ROUTER LINTAS MODUL =================
-// Dipanggil dari seatalk-webhook.js. Urutan cek sengaja spesifik dulu
-// (Inbound/Rest Time/Bagger/Outbound) baru Inventory paling akhir, niru
-// pola routing keyword yang sama kayak Odyssey (report-agent.html) —
-// masing-masing handler return null kalau teksnya gak nyangkut ke
-// modulnya, jadi lanjut dicoba ke handler berikutnya.
 async function answerModuleQuestion(text) {
   const handlers = [
     answerInboundQuestion,
