@@ -218,6 +218,19 @@
     .usage-item-row select.usage-item-asset { flex: 2; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; background: #fff; }
     .usage-item-row input.usage-item-qty { flex: 1; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; min-width: 70px; }
     .usage-item-row .usage-item-remove { flex-shrink: 0; }
+    /* ==== Searchable Asset dropdown (combobox) ==== */
+    .asset-combo { position: relative; flex: 2; min-width: 0; }
+    .usage-item-row .asset-combo { flex: 2; }
+    .asset-combo > input { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; background: #fff; }
+    .asset-combo > input:focus { outline: none; border-color: #000; }
+    .asset-combo-list { display: none; position: absolute; left: 0; right: 0; top: calc(100% + 4px); max-height: 240px; overflow-y: auto; background: #fff; border: 1px solid #d4d4d4; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.15); z-index: 400; }
+    .asset-combo.open .asset-combo-list { display: block; }
+    .asset-combo-item { padding: 8px 10px; font-size: 12px; color: #171717; cursor: pointer; border-bottom: 1px solid #f3f3f3; }
+    .asset-combo-item:last-child { border-bottom: none; }
+    .asset-combo-item:hover, .asset-combo-item.active { background: #000; color: #fff; }
+    .asset-combo-item.empty-stock { color: #b91c1c; }
+    .asset-combo-item.empty-stock:hover, .asset-combo-item.empty-stock.active { color: #fecaca; }
+    .asset-combo-none { padding: 10px; font-size: 12px; color: #737373; }
     .form-msg { font-size: 12px; font-weight: 600; min-height: 16px; margin-top: 8px; }
     .form-msg.err { color: #000000; text-decoration: underline; }
     .form-msg.ok { color: #171717; }
@@ -540,6 +553,40 @@
     "inv.th.changedBy": { "id": "Diubah Oleh", "en": "Changed By", "ja": "変更者", "zh": "修改人" },
     "inv.th.change": { "id": "Perubahan", "en": "Change", "ja": "変更内容", "zh": "变更内容" },
 
+    "inv.err.assetDuplicate": { "id": "Asset \"{name}\" udah ada di Stock. Edit asset yang lama aja, jangan bikin dobel.", "en": "Asset \"{name}\" already exists in Stock. Edit the existing one instead of creating a duplicate.", "ja": "資産「{name}」は既に在庫に存在します。重複作成せず既存のものを編集してください。", "zh": "资产“{name}”已存在于库存中，请编辑现有资产，不要重复创建。" },
+    "inv.err.rowDuplicate": { "id": "Baris {row}: \"{name}\" dobel (udah ada di Stock / dobel di file).", "en": "Row {row}: \"{name}\" is a duplicate (already in Stock / repeated in file).", "ja": "{row}行目: 「{name}」は重複しています（在庫またはファイル内に既に存在）。", "zh": "第{row}行：“{name}”重复（已在库存中或文件内重复）。" },
+    "inv.combo.placeholder": { "id": "🔍 Cari / pilih asset...", "en": "🔍 Search / select asset...", "ja": "🔍 資産を検索・選択...", "zh": "🔍 搜索／选择资产..." },
+    "inv.combo.noResult": { "id": "Asset gak ketemu", "en": "No asset found", "ja": "資産が見つかりません", "zh": "未找到资产" },
+    "inv.tab.assetMaster": { "id": "Master Nama Asset", "en": "Asset Name Master", "ja": "資産名マスタ", "zh": "资产名称主数据" },
+    "inv.master.title": { "id": "Database Nama Asset", "en": "Asset Name Database", "ja": "資産名データベース", "zh": "资产名称数据库" },
+    "inv.master.add": { "id": "Tambah Nama Asset", "en": "Add Asset Name", "ja": "資産名を追加", "zh": "添加资产名称" },
+    "inv.master.seed": { "id": "Isi Daftar Awal", "en": "Load Starter List", "ja": "初期リストを読み込む", "zh": "载入初始清单" },
+    "inv.master.searchPlaceholder": { "id": "🔍 Cari nama asset...", "en": "🔍 Search asset name...", "ja": "🔍 資産名で検索...", "zh": "🔍 搜索资产名称..." },
+    "inv.master.readonlyNote": { "id": "🔒 Kamu cuma bisa lihat daftar nama asset. Tambah/Edit/Hapus cuma bisa dilakukan admin.", "en": "🔒 You can only view the asset name list. Adding/editing/deleting can only be done by an admin.", "ja": "🔒 資産名リストは閲覧のみ可能です。追加・編集・削除は管理者のみ行えます。", "zh": "🔒 您只能查看资产名称清单。添加/编辑/删除仅限管理员操作。" },
+    "inv.master.hint": { "id": "Nama asset di Stock & Import Excel HARUS dipilih dari daftar ini, jadi gak ada salah ketik atau input dobel.", "en": "Asset names in Stock & Excel Import MUST come from this list, so there are no typos or duplicate entries.", "ja": "在庫とExcelインポートの資産名は必ずこのリストから選択されます。誤入力や重複を防ぎます。", "zh": "库存和Excel导入中的资产名称必须从此清单选择，避免录入错误或重复。" },
+    "inv.master.emptyTable": { "id": "Master Nama Asset masih kosong.", "en": "The asset name master is still empty.", "ja": "資産名マスタはまだ空です。", "zh": "资产名称主数据仍为空。" },
+    "inv.master.thInStock": { "id": "Di Stock", "en": "In Stock", "ja": "在庫", "zh": "库存中" },
+    "inv.master.stockYes": { "id": "✓ Ada", "en": "✓ Yes", "ja": "✓ あり", "zh": "✓ 有" },
+    "inv.master.stockNo": { "id": "— Belum", "en": "— Not yet", "ja": "— なし", "zh": "— 暂无" },
+    "inv.master.stockDup": { "id": "⚠ Dobel ×{n}", "en": "⚠ Duplicate ×{n}", "ja": "⚠ 重複 ×{n}", "zh": "⚠ 重复 ×{n}" },
+    "inv.master.legacyTitle": { "id": "Nama di Stock yang belum ada di Master ({n}) — klik buat tambahin ke Master:", "en": "Names in Stock not in the Master ({n}) — click to add to the Master:", "ja": "マスタにない在庫の名前（{n}）— クリックでマスタに追加:", "zh": "库存中不在主数据的名称（{n}）— 点击添加到主数据：" },
+    "inv.master.modalAdd": { "id": "Tambah Nama Asset", "en": "Add Asset Name", "ja": "資産名を追加", "zh": "添加资产名称" },
+    "inv.master.modalEdit": { "id": "Edit Nama Asset", "en": "Edit Asset Name", "ja": "資産名を編集", "zh": "编辑资产名称" },
+    "inv.master.pickName": { "id": "-- Pilih Nama Asset --", "en": "-- Select Asset Name --", "ja": "-- 資産名を選択 --", "zh": "-- 选择资产名称 --" },
+    "inv.master.legacyOpt": { "id": "{name} ⚠ (belum ada di Master)", "en": "{name} ⚠ (not in Master)", "ja": "{name} ⚠（マスタ未登録）", "zh": "{name} ⚠（不在主数据）" },
+    "inv.err.masterEmpty": { "id": "Master Nama Asset masih kosong. Isi dulu di tab Master Nama Asset.", "en": "The Asset Name Master is empty. Fill it in first in the Asset Name Master tab.", "ja": "資産名マスタが空です。先にマスタタブで登録してください。", "zh": "资产名称主数据为空，请先在主数据标签页中添加。" },
+    "inv.err.assetNotInMaster": { "id": "Nama asset \"{name}\" belum ada di Master Nama Asset. Pilih dari dropdown atau tambahin dulu di Master.", "en": "Asset name \"{name}\" is not in the Asset Name Master. Pick from the dropdown or add it to the Master first.", "ja": "資産名「{name}」はマスタにありません。ドロップダウンから選ぶか、先にマスタへ追加してください。", "zh": "资产名称“{name}”不在主数据中，请从下拉选择或先添加到主数据。" },
+    "inv.err.rowNotInMaster": { "id": "Baris {row}: \"{name}\" belum ada di Master Nama Asset.", "en": "Row {row}: \"{name}\" is not in the Asset Name Master.", "ja": "{row}行目: 「{name}」はマスタにありません。", "zh": "第{row}行：“{name}”不在资产名称主数据中。" },
+    "inv.err.masterDuplicate": { "id": "Nama \"{name}\" udah ada di Master.", "en": "\"{name}\" already exists in the Master.", "ja": "「{name}」は既にマスタに存在します。", "zh": "“{name}”已存在于主数据中。" },
+    "inv.err.masterInUseRename": { "id": "\"{name}\" udah kepakai di Stock, jadi namanya gak bisa diganti (biar riwayat usage gak pecah). Kategori & unit tetap bisa diubah.", "en": "\"{name}\" is already used in Stock, so it cannot be renamed (to keep usage history intact). Category & unit can still be changed.", "ja": "「{name}」は在庫で使用中のため名称変更できません（使用履歴保持のため）。カテゴリと単位は変更可能です。", "zh": "“{name}”已在库存中使用，无法改名（以保持使用记录完整）。类别和单位仍可修改。" },
+    "inv.err.masterInUseDelete": { "id": "\"{name}\" masih dipakai di Stock, gak bisa dihapus. Hapus dulu asset-nya di tab Stock.", "en": "\"{name}\" is still used in Stock and cannot be deleted. Delete the asset in the Stock tab first.", "ja": "「{name}」は在庫で使用中のため削除できません。先に在庫タブで資産を削除してください。", "zh": "“{name}”仍在库存中使用，无法删除。请先在库存标签页删除该资产。" },
+    "inv.confirm.masterDelete": { "id": "Hapus \"{name}\" dari Master Nama Asset?", "en": "Delete \"{name}\" from the Asset Name Master?", "ja": "「{name}」をマスタから削除しますか？", "zh": "从主数据中删除“{name}”？" },
+    "inv.confirm.masterSeed": { "id": "Tambahin {count} nama asset daftar awal ke Master? (yang udah ada dilewatin)", "en": "Add {count} starter asset names to the Master? (existing ones are skipped)", "ja": "初期リストの{count}件をマスタに追加しますか？（既存は除外）", "zh": "将{count}个初始资产名称添加到主数据？（已有的会跳过）" },
+    "inv.toast.masterSaved": { "id": "✅ Nama asset tersimpan.", "en": "✅ Asset name saved.", "ja": "✅ 資産名を保存しました。", "zh": "✅ 资产名称已保存。" },
+    "inv.toast.masterDeleted": { "id": "🗑️ Nama asset dihapus dari Master.", "en": "🗑️ Asset name removed from the Master.", "ja": "🗑️ 資産名をマスタから削除しました。", "zh": "🗑️ 已从主数据中删除资产名称。" },
+    "inv.toast.masterSeeded": { "id": "✅ {count} nama asset ditambahkan ke Master.", "en": "✅ {count} asset names added to the Master.", "ja": "✅ {count}件の資産名をマスタに追加しました。", "zh": "✅ 已添加{count}个资产名称到主数据。" },
+    "inv.toast.masterNothingToSeed": { "id": "Semua nama daftar awal udah ada di Master.", "en": "All starter names are already in the Master.", "ja": "初期リストはすべてマスタに登録済みです。", "zh": "所有初始名称均已在主数据中。" },
+    "inv.import.namesSheetName": { "id": "Daftar Nama Asset", "en": "Asset Name List", "ja": "資産名リスト", "zh": "资产名称清单" },
     "inv.empty.noData": { "id": "Belum ada data", "en": "No data yet", "ja": "まだデータがありません", "zh": "暂无数据" },
     "inv.loading.history": { "id": "Memuat riwayat...", "en": "Loading history...", "ja": "履歴を読み込み中...", "zh": "正在加载历史记录..." },
 
@@ -830,6 +877,7 @@
         <button class="app-sidebar-link" data-tab="stock" onclick="switchInvSubmenu('stock')">🗄️ <span data-i18n="inv.tab.stock">Stock</span></button>
         <button class="app-sidebar-link" data-tab="assetItNca" onclick="switchInvSubmenu('assetItNca')">🖥️ <span data-i18n="inv.tab.assetItNca">Database Asset IT &amp; NCA</span></button>
         <button class="app-sidebar-link" data-tab="auditLog" onclick="switchInvSubmenu('auditLog')">📜 <span data-i18n="inv.tab.auditLog">Audit Log</span></button>
+        <button class="app-sidebar-link" data-tab="assetMaster" onclick="switchInvSubmenu('assetMaster')">🏷️ <span data-i18n="inv.tab.assetMaster">Master Nama Asset</span></button>
       </div>
 
     </div>
@@ -900,6 +948,7 @@
       <button class="inv-tab-btn" data-tab="stock" onclick="switchInvSubmenu('stock')">🗄️ <span data-i18n="inv.tab.stock">Stock</span></button>
       <button class="inv-tab-btn" data-tab="assetItNca" onclick="switchInvSubmenu('assetItNca')">🖥️ <span data-i18n="inv.tab.assetItNca">Database Asset IT &amp; NCA</span></button>
       <button class="inv-tab-btn" data-tab="auditLog" onclick="switchInvSubmenu('auditLog')">📜 <span data-i18n="inv.tab.auditLog">Audit Log</span></button>
+      <button class="inv-tab-btn" data-tab="assetMaster" onclick="switchInvSubmenu('assetMaster')">🏷️ <span data-i18n="inv.tab.assetMaster">Master Nama Asset</span></button>
     </div>
   </div>
 
@@ -1050,6 +1099,29 @@
     </div>
   </section>
 
+  <!-- ================= SUBMENU: MASTER NAMA ASSET ================= -->
+  <section id="invPanelAssetMaster" class="inv-panel">
+    <div class="header-bar">
+      <div class="panel-title" style="margin:0;">🏷️ <span data-i18n="inv.master.title">Database Nama Asset</span></div>
+      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+        <input type="text" id="assetMasterSearch" class="date-range-input" style="min-width:180px;" placeholder="🔍 Cari nama asset..." data-i18n-placeholder="inv.master.searchPlaceholder" oninput="renderAssetMasterTable()">
+        <button class="btn-primary" id="btnAddMaster" onclick="openAssetMasterModal(null)">➕ <span data-i18n="inv.master.add">Tambah Nama Asset</span></button>
+        <button class="btn-secondary" id="btnSeedMaster" onclick="seedAssetMaster()" style="display:none;">📋 <span data-i18n="inv.master.seed">Isi Daftar Awal</span></button>
+      </div>
+    </div>
+    <p class="readonly-note" style="margin:0 0 8px 0;" data-i18n="inv.master.hint">Nama asset di Stock &amp; Import Excel HARUS dipilih dari daftar ini, jadi gak ada salah ketik atau input dobel.</p>
+    <p class="readonly-note" id="assetMasterReadonlyNote" style="display:none;" data-i18n="inv.master.readonlyNote">🔒 Kamu cuma bisa lihat daftar nama asset. Tambah/Edit/Hapus cuma bisa dilakukan admin.</p>
+    <div id="assetMasterLegacyBox" style="display:none; margin:10px 0; padding:10px 12px; border:1px dashed #000; border-radius:8px; font-size:12px;"></div>
+    <div class="table-wrapper">
+      <table>
+        <thead>
+          <tr><th>#</th><th data-i18n="inv.th.assetName">Nama Asset</th><th data-i18n="inv.th.category">Kategori</th><th data-i18n="inv.th.unit">Unit</th><th data-i18n="inv.master.thInStock">Di Stock</th><th data-i18n="inv.th.action">Action</th></tr>
+        </thead>
+        <tbody id="assetMasterBody"><tr class="empty-row"><td colspan="6" data-i18n="inv.master.emptyTable">Master Nama Asset masih kosong.</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
   <!-- ================= SUBMENU 3: STOCK ================= -->
   <section id="invPanelStock" class="inv-panel">
     <div class="header-bar">
@@ -1117,6 +1189,7 @@
         <option value="Stock">Stock</option>
         <option value="Asset IT & NCA">Asset IT &amp; NCA</option>
         <option value="Log Usage">Log Usage</option>
+        <option value="Master Asset">Master Asset</option>
       </select>
       <button class="range-tab-btn" onclick="resetAuditLogFilter()" data-i18n="inv.action.reset">Reset</button>
     </div>
@@ -1132,6 +1205,31 @@
   </section>
 </div>
 
+<!-- ==== MODAL TAMBAH / EDIT NAMA ASSET (MASTER) ==== -->
+<div class="modal-backdrop" id="assetMasterModalBackdrop">
+  <div class="modal-box">
+    <h3 id="assetMasterModalTitle">🏷️ Tambah Nama Asset</h3>
+    <input type="hidden" id="assetMasterModalId">
+    <div class="form-item">
+      <label data-i18n="inv.th.assetName">Nama Asset</label>
+      <input type="text" id="assetMasterNameInput" placeholder="Contoh: Lakban Coklat" maxlength="120">
+    </div>
+    <div class="form-item">
+      <label data-i18n="inv.label.categoryOptional">Kategori (opsional)</label>
+      <input type="text" id="assetMasterCategoryInput" placeholder="Contoh: Consumable">
+    </div>
+    <div class="form-item">
+      <label data-i18n="inv.th.unit">Unit</label>
+      <input type="text" id="assetMasterUnitInput" placeholder="Contoh: pcs, roll, pack">
+    </div>
+    <div class="form-msg" id="assetMasterModalMsg"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" onclick="closeAssetMasterModal()" data-i18n="inv.action.cancel">Batal</button>
+      <button class="btn-primary" onclick="saveAssetMaster()" data-i18n="inv.action.save">Simpan</button>
+    </div>
+  </div>
+</div>
+
 <!-- ==== MODAL TAMBAH / EDIT ASSET ==== -->
 <div class="modal-backdrop" id="assetModalBackdrop">
   <div class="modal-box">
@@ -1139,7 +1237,7 @@
     <input type="hidden" id="assetModalId">
     <div class="form-item">
       <label data-i18n="inv.th.assetName">Nama Asset</label>
-      <input type="text" id="assetNameInput" placeholder="Contoh: Handpallet, Cutter, dll" data-i18n-placeholder="inv.placeholder.assetNameExample">
+      <select id="assetNameInput"></select>
     </div>
     <div class="form-item">
       <label data-i18n="inv.label.categoryOptional">Kategori (opsional)</label>
@@ -1338,6 +1436,7 @@
   let usageLogsDataByFacility = { SOC: {} }; // { SOC: { logId: {assetId, assetName, unit, qtyUsed, workingDate, devisi, createdAt, createdBy} } }
   let assetItNcaByFacility = { SOC: {} };    // { SOC: { itemId: {name, jenis(IT/NCA), category, serial, pic, lokasi, status, note, photoData, updatedAt, updatedBy} } }
   let auditLogByFacility = { SOC: {} };       // { SOC: { logId: {module, action, itemName, detail, changedAt, changedBy} } }
+  let assetMasterByFacility = { SOC: {} };   // { SOC: { masterId: {name, category, unit, createdAt, createdBy, updatedAt, updatedBy} } } — Master Nama Asset
   let lowStockBannerDismissed = false;        // ditutup manual, balik muncul lagi kalau pindah tab/reload
   let auditLogFilterQuery = '';
   let auditLogFilterModule = '';
@@ -1430,7 +1529,7 @@
   function switchInvSubmenu(tab) {
     currentInvSubmenu = tab;
 
-    ['usage', 'dashboard', 'stock', 'assetItNca', 'auditLog'].forEach(function (key) {
+    ['usage', 'dashboard', 'assetMaster', 'stock', 'assetItNca', 'auditLog'].forEach(function (key) {
       document.getElementById('invPanel' + capitalize(key)).classList.toggle('active', key === tab);
     });
     document.querySelectorAll('.inv-tab-btn').forEach(function (btn) {
@@ -1454,6 +1553,8 @@
   function renderForCurrentFacility() {
     updateUsageFormVisibility();
     populateAssetSelect();
+    populateAssetNameSelect();
+    renderAssetMasterTable();
     renderStockTable();
     renderUsageDashboard();
     renderAssetItNcaTable();
@@ -1481,6 +1582,7 @@
         stockDataByFacility[facility] = snap.val() || {};
         if (facility === currentFacility) {
           renderStockTable();
+          renderAssetMasterTable();
           populateAssetSelect();
           renderUsageDashboard();
           renderLowStockBanner();
@@ -1495,6 +1597,14 @@
       fbDb.ref(FB_ROOT + '/' + facility + '/assetItNca').on('value', function (snap) {
         assetItNcaByFacility[facility] = snap.val() || {};
         if (facility === currentFacility) renderAssetItNcaTable();
+      });
+
+      fbDb.ref(FB_ROOT + '/' + facility + '/assetMaster').on('value', function (snap) {
+        assetMasterByFacility[facility] = snap.val() || {};
+        if (facility === currentFacility) {
+          renderAssetMasterTable();
+          populateAssetNameSelect();
+        }
       });
 
       fbDb.ref(FB_ROOT + '/' + facility + '/auditLog').limitToLast(300).on('value', function (snap) {
@@ -1623,6 +1733,12 @@
 
   function openAssetModal(id) {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
+    // Asset baru wajib pilih dari Master — kalau Master masih kosong, arahin dulu ke tab Master
+    if (!id && !Object.keys(getAssetMasterData()).length) {
+      showToast(t('inv.err.masterEmpty'), 'err', 6000);
+      switchInvSubmenu('assetMaster');
+      return;
+    }
     document.getElementById('assetModalMsg').innerText = '';
     document.getElementById('assetModalId').value = id || '';
     minStockTouched = false; // reset auto-fill tiap kali modal dibuka
@@ -1630,7 +1746,9 @@
     if (id && stockData[id]) {
       const a = stockData[id];
       document.getElementById('assetModalTitle').innerText = '✏️ Edit Asset';
+      populateAssetNameSelect(a.name);
       document.getElementById('assetNameInput').value = a.name || '';
+      if (document.getElementById('assetNameInput')._syncCombo) document.getElementById('assetNameInput')._syncCombo();
       document.getElementById('assetCategoryInput').value = a.category || '';
       document.getElementById('assetUnitInput').value = a.unit || '';
       document.getElementById('assetQtyInput').value = a.qty != null ? a.qty : '';
@@ -1641,7 +1759,9 @@
       minStockTouched = (a.qty != null && a.minStock != null && Number(a.minStock) !== calcSuggestedMinStock(Number(a.qty)));
     } else {
       document.getElementById('assetModalTitle').innerText = '➕ Tambah Asset Baru';
+      populateAssetNameSelect();
       document.getElementById('assetNameInput').value = '';
+      if (document.getElementById('assetNameInput')._syncCombo) document.getElementById('assetNameInput')._syncCombo();
       document.getElementById('assetCategoryInput').value = '';
       document.getElementById('assetUnitInput').value = 'pcs';
       document.getElementById('assetQtyInput').value = '';
@@ -1689,6 +1809,23 @@
     minStockTouched = true; // user override manual, auto-fill berhenti nimpa
   });
 
+  // Normalisasi nama buat deteksi dobel: huruf kecil, spasi berlebih dirapihin
+  // Kunci pembanding nama: huruf kecil + buang spasi, strip, underscore & kurung, jadi
+  // 'Pink( 4,8' dan 'Pink ( 4,8' dianggap SAMA (deteksi dobel lebih ketat).
+  function normalizeAssetName(n) { return String(n || '').toLowerCase().replace(/[\s\-\u2013\u2014_()]+/g, '').trim(); }
+  // Rapihin format nama sebelum disimpan (spasi dobel, " - " konsisten, spasi sebelum "(").
+  // Sengaja TIDAK Title Case biar satuan kayak "mm", "x", "AWB" nggak rusak.
+  function cleanAssetName(n) {
+    return String(n || '')
+      .replace(/\s+/g, ' ')
+      .replace(/\s+[-\u2013\u2014]\s*|\s*[-\u2013\u2014]\s+/g, ' - ')
+      .replace(/\s*\(\s*/g, ' (')
+      .replace(/\s*\)/g, ')')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+  window.__assetSaving = false;
+
   function saveAsset() {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
     const msgEl = document.getElementById('assetModalMsg');
@@ -1702,6 +1839,22 @@
 
     if (!name) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetNameRequired'); return; }
     if (isNaN(qty) || qty < 0) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.qtyInvalid'); return; }
+
+    // Cegah nama asset dobel (baik tambah baru maupun ganti nama jadi nama yang udah ada)
+    const stockNow = getStockData();
+    const normNew = normalizeAssetName(name);
+    const dupId = Object.keys(stockNow).find(function (k) { return k !== id && normalizeAssetName(stockNow[k].name) === normNew; });
+    if (dupId) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetDuplicate', { name: stockNow[dupId].name }); return; }
+
+    // Nama wajib ada di Master Nama Asset (kecuali edit data lama yang namanya gak diubah)
+    const oldNormName = (id && stockNow[id]) ? normalizeAssetName(stockNow[id].name) : null;
+    if (!findMasterByName(name) && oldNormName !== normNew) {
+      msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetNotInMaster', { name: name }); return;
+    }
+
+    // Cegah klik Simpan 2x yang bikin 2 data kesimpen
+    if (window.__assetSaving) return;
+    window.__assetSaving = true;
 
     const facilityRoot = FB_ROOT + '/' + currentFacility;
     const isNew = !id;
@@ -1718,12 +1871,276 @@
 
     const ref = id ? fbDb.ref(facilityRoot + '/stock/' + id) : fbDb.ref(facilityRoot + '/stock').push();
     ref.set(payload).then(function () {
+      window.__assetSaving = false;
       logAudit('Stock', isNew ? 'create' : 'update', name, t('inv.audit.detail.qtyMinStock', { qty: qty, unit: unit, minStock: minStock }));
       closeAssetModal();
     }).catch(function (e) {
+      window.__assetSaving = false;
       msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.savePrefix') + e.message;
     });
   }
+
+
+  // ================= MASTER NAMA ASSET =================
+  // Daftar baku nama asset (cabang Firebase inventoryControl/{facility}/assetMaster).
+  // Stock & Import Excel cuma boleh pakai nama dari daftar ini → gak ada salah ketik / input dobel.
+  const DEFAULT_ASSET_MASTER = [
+    'Barcode Label - AWB (100 x 100)',
+    'Barcode Label - TO (50 x 100)',
+    'Bubble Wrap',
+    'Cable Ties - Biru (4,8 x 25 mm)',
+    'Cable Ties - Oranye (4,8 x 25 mm)',
+    'Cable Ties - Hitam (4,8 x 25 mm)',
+    'Cable Ties - Pink (4,8 x 25 mm)',
+    'Cable Ties - Merah (4,8 x 25 mm)',
+    'Lakban Floor Marking - Biru',
+    'Lakban Floor Marking - Hijau',
+    'Lakban Floor Marking - Merah',
+    'Lakban Floor Marking - Kuning',
+    'Lakban - Bening Besar',
+    'Lakban - Coklat',
+    'Lakban - Fragile',
+    'Plastik Sampah - Hitam Cap Tulip'
+  ];
+
+  function getAssetMasterData() { return assetMasterByFacility[currentFacility] || {}; }
+
+  function findMasterByName(name) {
+    const norm = normalizeAssetName(name);
+    if (!norm) return null;
+    const data = getAssetMasterData();
+    const id = Object.keys(data).find(function (k) { return normalizeAssetName(data[k].name) === norm; });
+    return id ? Object.assign({ _key: id }, data[id]) : null;
+  }
+
+  function masterSortedNames() {
+    const data = getAssetMasterData();
+    return Object.keys(data).map(function (k) { return data[k].name; }).filter(Boolean)
+      .sort(function (a, b) { return a.localeCompare(b); });
+  }
+  function masterSampleName(i) { return masterSortedNames()[i] || 'Nama dari Master'; }
+
+  // Hitung berapa entry Stock yang pakai nama tertentu (>1 = dobel)
+  function countStockByNormName() {
+    const stock = getStockData();
+    const out = {};
+    Object.keys(stock).forEach(function (k) {
+      const n = normalizeAssetName(stock[k].name);
+      if (n) out[n] = (out[n] || 0) + 1;
+    });
+    return out;
+  }
+
+  // Isi dropdown "Nama Asset" di modal Tambah/Edit Stock dari Master.
+  // extraLegacyName: nama lama di Stock yang belum ada di Master (biar tetap bisa diedit).
+  function populateAssetNameSelect(extraLegacyName) {
+    const sel = document.getElementById('assetNameInput');
+    if (!sel) return;
+    enhanceAssetCombo(sel);
+    const prev = sel.value;
+    const names = masterSortedNames();
+    let html = '<option value="">' + escapeHtml(t('inv.master.pickName')) + '</option>';
+    names.forEach(function (n) { html += '<option value="' + escapeHtml(n) + '">' + escapeHtml(n) + '</option>'; });
+    if (extraLegacyName && !findMasterByName(extraLegacyName)) {
+      html += '<option value="' + escapeHtml(extraLegacyName) + '">' + escapeHtml(t('inv.master.legacyOpt', { name: extraLegacyName })) + '</option>';
+    }
+    sel.innerHTML = html;
+    if (prev) sel.value = prev;
+    if (sel._syncCombo) sel._syncCombo();
+  }
+
+  function renderAssetMasterTable() {
+    const tbody = document.getElementById('assetMasterBody');
+    if (!tbody) return;
+    const canEdit = !!window.__authCanDelete;
+    const data = getAssetMasterData();
+    const ids = Object.keys(data);
+
+    document.getElementById('btnAddMaster').style.display = canEdit ? '' : 'none';
+    document.getElementById('btnSeedMaster').style.display = (canEdit && ids.length === 0) ? '' : 'none';
+    document.getElementById('assetMasterReadonlyNote').style.display = canEdit ? 'none' : 'block';
+
+    const q = (document.getElementById('assetMasterSearch').value || '').toLowerCase().split(/\s+/).filter(Boolean);
+    const stockCounts = countStockByNormName();
+
+    ids.sort(function (a, b) { return (data[a].name || '').localeCompare(data[b].name || ''); });
+    const shown = ids.filter(function (id) {
+      const low = ((data[id].name || '') + ' ' + (data[id].category || '')).toLowerCase();
+      return q.every(function (tk) { return low.indexOf(tk) !== -1; });
+    });
+
+    if (!shown.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">' + t('inv.master.emptyTable') + '</td></tr>';
+    } else {
+      let html = '';
+      shown.forEach(function (id, i) {
+        const m = data[id];
+        const cnt = stockCounts[normalizeAssetName(m.name)] || 0;
+        const stockCell = cnt === 0 ? t('inv.master.stockNo')
+          : (cnt === 1 ? t('inv.master.stockYes') : '<b>' + t('inv.master.stockDup', { n: cnt }) + '</b>');
+        html += '<tr><td>' + (i + 1) + '</td><td><b>' + escapeHtml(m.name || '-') + '</b></td><td>' + escapeHtml(m.category || '-') +
+          '</td><td>' + escapeHtml(m.unit || '-') + '</td><td>' + stockCell + '</td><td>' +
+          (canEdit
+            ? '<button class="btn-edit-sm" onclick="openAssetMasterModal(\'' + id + '\')">✏️ ' + t('inv.action.save').replace(/.*/, 'Edit') + '</button> ' +
+              '<button class="btn-danger-sm" onclick="deleteAssetMaster(\'' + id + '\')">🗑️</button>'
+            : '-') +
+          '</td></tr>';
+      });
+      tbody.innerHTML = html;
+    }
+
+    // Nama di Stock yang belum masuk Master (data lama) → bisa langsung ditambahin sekali klik
+    const box = document.getElementById('assetMasterLegacyBox');
+    const stock = getStockData();
+    const seen = {}; const legacy = [];
+    Object.keys(stock).forEach(function (k) {
+      const n = normalizeAssetName(stock[k].name);
+      if (n && !seen[n] && !findMasterByName(stock[k].name)) { seen[n] = true; legacy.push(stock[k].name); }
+    });
+    if (canEdit && legacy.length) {
+      let h = '<div style="font-weight:700; margin-bottom:6px;">' + t('inv.master.legacyTitle', { n: legacy.length }) + '</div><div style="display:flex; flex-wrap:wrap; gap:6px;">';
+      legacy.sort().forEach(function (n) {
+        h += '<button class="btn-edit-sm" data-name="' + escapeHtml(n) + '" onclick="addMasterFromStockName(this.getAttribute(\'data-name\'))">➕ ' + escapeHtml(n) + '</button>';
+      });
+      box.innerHTML = h + '</div>';
+      box.style.display = 'block';
+    } else {
+      box.style.display = 'none';
+      box.innerHTML = '';
+    }
+  }
+
+  function openAssetMasterModal(id) {
+    if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
+    const data = getAssetMasterData();
+    document.getElementById('assetMasterModalMsg').innerText = '';
+    document.getElementById('assetMasterModalId').value = id || '';
+    if (id && data[id]) {
+      document.getElementById('assetMasterModalTitle').innerText = '✏️ ' + t('inv.master.modalEdit');
+      document.getElementById('assetMasterNameInput').value = data[id].name || '';
+      document.getElementById('assetMasterCategoryInput').value = data[id].category || '';
+      document.getElementById('assetMasterUnitInput').value = data[id].unit || '';
+    } else {
+      document.getElementById('assetMasterModalTitle').innerText = '🏷️ ' + t('inv.master.modalAdd');
+      document.getElementById('assetMasterNameInput').value = '';
+      document.getElementById('assetMasterCategoryInput').value = '';
+      document.getElementById('assetMasterUnitInput').value = '';
+    }
+    document.getElementById('assetMasterModalBackdrop').classList.add('open');
+    setTimeout(function () { document.getElementById('assetMasterNameInput').focus(); }, 50);
+  }
+
+  function closeAssetMasterModal() {
+    document.getElementById('assetMasterModalBackdrop').classList.remove('open');
+  }
+
+  window.__masterSaving = false;
+  function saveAssetMaster() {
+    if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
+    const msgEl = document.getElementById('assetMasterModalMsg');
+    const id = document.getElementById('assetMasterModalId').value;
+    const name = cleanAssetName(document.getElementById('assetMasterNameInput').value);
+    const category = document.getElementById('assetMasterCategoryInput').value.trim();
+    const unit = document.getElementById('assetMasterUnitInput').value.trim();
+    if (!name) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetNameRequired'); return; }
+
+    const data = getAssetMasterData();
+    const norm = normalizeAssetName(name);
+    const dupId = Object.keys(data).find(function (k) { return k !== id && normalizeAssetName(data[k].name) === norm; });
+    if (dupId) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.masterDuplicate', { name: data[dupId].name }); return; }
+
+    // Ganti nama cuma boleh kalau belum kepakai di Stock (riwayat usage nyimpen nama asset)
+    const old = id ? data[id] : null;
+    if (old && normalizeAssetName(old.name) !== norm && (countStockByNormName()[normalizeAssetName(old.name)] || 0) > 0) {
+      msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.masterInUseRename', { name: old.name }); return;
+    }
+
+    if (window.__masterSaving) return;
+    window.__masterSaving = true;
+
+    const root = FB_ROOT + '/' + currentFacility + '/assetMaster';
+    const ref = id ? fbDb.ref(root + '/' + id) : fbDb.ref(root).push();
+    const payload = {
+      name: name, category: category, unit: unit,
+      updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-',
+      createdAt: (old && old.createdAt) || Date.now(),
+      createdBy: (old && old.createdBy) || window.__authUserEmail || '-'
+    };
+    ref.set(payload).then(function () {
+      window.__masterSaving = false;
+      logAudit('Master Asset', id ? 'update' : 'create', name, [category, unit].filter(Boolean).join(' · ') || '-');
+      closeAssetMasterModal();
+      showToast(t('inv.toast.masterSaved'), 'ok');
+    }).catch(function (e) {
+      window.__masterSaving = false;
+      msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.savePrefix') + e.message;
+    });
+  }
+
+  function deleteAssetMaster(id) {
+    if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessDelete'), 'err'); return; }
+    const m = getAssetMasterData()[id];
+    if (!m) return;
+    if ((countStockByNormName()[normalizeAssetName(m.name)] || 0) > 0) {
+      showToast(t('inv.err.masterInUseDelete', { name: m.name }), 'err', 6000); return;
+    }
+    showConfirmModal(t('inv.confirm.masterDelete', { name: m.name }), function () {
+      fbDb.ref(FB_ROOT + '/' + currentFacility + '/assetMaster/' + id).remove().then(function () {
+        logAudit('Master Asset', 'delete', m.name, '-');
+        showToast(t('inv.toast.masterDeleted'), 'ok');
+      }).catch(function (e) { showToast(t('inv.err.savePrefix') + e.message, 'err'); });
+    });
+  }
+
+  // Tambah banyak nama sekaligus dari daftar awal (yang udah ada dilewatin)
+  function seedAssetMaster() {
+    if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
+    const todo = DEFAULT_ASSET_MASTER.filter(function (n) { return !findMasterByName(n); });
+    if (!todo.length) { showToast(t('inv.toast.masterNothingToSeed'), 'ok'); return; }
+    showConfirmModal(t('inv.confirm.masterSeed', { count: todo.length }), function () {
+      const root = FB_ROOT + '/' + currentFacility;
+      const updates = {};
+      todo.forEach(function (n) {
+        const key = fbDb.ref(root + '/assetMaster').push().key;
+        updates['/assetMaster/' + key] = {
+          name: n, category: 'Consumable', unit: '',
+          createdAt: Date.now(), createdBy: window.__authUserEmail || '-',
+          updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
+        };
+      });
+      fbDb.ref(root).update(updates).then(function () {
+        logAudit('Master Asset', 'create', todo.length + ' nama asset', 'Daftar awal');
+        showToast(t('inv.toast.masterSeeded', { count: todo.length }), 'ok');
+      }).catch(function (e) { showToast(t('inv.err.savePrefix') + e.message, 'err'); });
+    });
+  }
+
+  // Satu klik: masukin nama dari Stock (data lama) ke Master, bawa kategori & unit-nya
+  function addMasterFromStockName(name) {
+    if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
+    if (findMasterByName(name)) return;
+    const stock = getStockData();
+    const k = Object.keys(stock).find(function (x) { return normalizeAssetName(stock[x].name) === normalizeAssetName(name); });
+    const src = k ? stock[k] : {};
+    const root = FB_ROOT + '/' + currentFacility + '/assetMaster';
+    fbDb.ref(root).push().set({
+      name: cleanAssetName(name), category: src.category || '', unit: src.unit || '',
+      createdAt: Date.now(), createdBy: window.__authUserEmail || '-',
+      updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
+    }).then(function () {
+      logAudit('Master Asset', 'create', name, 'Dari data Stock');
+      showToast(t('inv.toast.masterSaved'), 'ok');
+    }).catch(function (e) { showToast(t('inv.err.savePrefix') + e.message, 'err'); });
+  }
+
+  // Pilih nama di modal Tambah Stock → kategori & unit ke-isi otomatis dari Master (cuma buat asset baru)
+  document.getElementById('assetNameInput').addEventListener('change', function () {
+    if (document.getElementById('assetModalId').value) return;
+    const m = findMasterByName(this.value);
+    if (!m) return;
+    if (m.category) document.getElementById('assetCategoryInput').value = m.category;
+    if (m.unit) document.getElementById('assetUnitInput').value = m.unit;
+  });
 
   function deleteAsset(id) {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessDelete'), 'err'); return; }
@@ -1743,8 +2160,8 @@
     const wb = XLSX.utils.book_new();
     const rows = [
       [t('inv.th.asset'), t('inv.th.category'), t('inv.th.unit'), t('inv.th.qty'), t('inv.th.minStock'), t('inv.th.note')],
-      ['Handpallet', 'Alat Bantu', 'unit', 10, 4, t('inv.import.sampleRowNote')],
-      ['Cutter', 'Consumable', 'pcs', 50, 18, '']
+      [masterSampleName(0), 'Consumable', 'pcs', 10, 4, t('inv.import.sampleRowNote')],
+      [masterSampleName(1), 'Consumable', 'pcs', 50, 18, '']
     ];
     const ws = XLSX.utils.aoa_to_sheet(rows);
     ws['!cols'] = [{ wch: 24 }, { wch: 16 }, { wch: 10 }, { wch: 8 }, { wch: 10 }, { wch: 32 }];
@@ -1764,6 +2181,10 @@
     const wsNote = XLSX.utils.aoa_to_sheet(noteRows);
     wsNote['!cols'] = [{ wch: 75 }];
     XLSX.utils.book_append_sheet(wb, wsNote, t('inv.import.guideSheetName'));
+
+    const wsNames = XLSX.utils.aoa_to_sheet([[t('inv.th.assetName')]].concat(masterSortedNames().map(function (n) { return [n]; })));
+    wsNames['!cols'] = [{ wch: 50 }];
+    XLSX.utils.book_append_sheet(wb, wsNames, t('inv.import.namesSheetName'));
 
     XLSX.writeFile(wb, 'Template_Import_Stock_' + currentFacility + '.xlsx');
     showToast(t('inv.toast.templateDownloaded', { name: 'Import Stock ' + currentFacility }), 'ok');
@@ -1787,9 +2208,20 @@
 
         const toImport = [];
         const errors = [];
+        const existingNames = {};
+        const masterNamesImport = {};
+        masterSortedNames().forEach(function (n) { masterNamesImport[normalizeAssetName(n)] = true; });
+        const stockExisting = getStockData();
+        Object.keys(stockExisting).forEach(function (k) { existingNames[normalizeAssetName(stockExisting[k].name)] = true; });
         rows.forEach(function (row, idx) {
           const name = String(row['Nama Asset'] || row['Nama'] || '').trim();
           if (!name) return; // lewatin baris kosong
+          const masterHit = findMasterByName(name);
+          if (!masterHit) { errors.push(t('inv.err.rowNotInMaster', { row: idx + 2, name: name })); return; }
+          const canonName = masterHit.name; // auto-koreksi ke nama resmi Master (salah spasi/kapital gak ditolak)
+          const normName = normalizeAssetName(canonName);
+          if (existingNames[normName]) { errors.push(t('inv.err.rowDuplicate', { row: idx + 2, name: name })); return; }
+          existingNames[normName] = true; // sekalian cegah dobel di dalam file itu sendiri
 
           const category = String(row['Kategori'] || '').trim();
           const unit = String(row['Unit'] || '').trim() || 'pcs';
@@ -1800,7 +2232,7 @@
           if (isNaN(qty) || qty < 0) { errors.push(t('inv.err.rowQtyInvalid', { row: idx + 2, name: name })); return; }
           if (!minStock) minStock = calcSuggestedMinStock(qty);
 
-          toImport.push({ name: name, category: category, unit: unit, qty: qty, minStock: minStock, note: note });
+          toImport.push({ name: canonName, category: category, unit: unit, qty: qty, minStock: minStock, note: note });
         });
 
         if (errors.length) {
@@ -2430,18 +2862,100 @@
 
   // Isi ulang semua dropdown Asset yang lagi kepasang: baris-baris multi-input
   // di form "Input Penggunaan" (class usage-item-asset) DAN dropdown di modal Edit Log.
+  // ===== Dropdown Asset yang bisa dicari (ngetik buat filter, klik buat pilih) =====
+  // <select> aslinya tetap dipakai (disembunyiin) biar semua logic lama yang baca .value tetap jalan.
+  function enhanceAssetCombo(sel) {
+    if (!sel || sel._combo) return;
+    sel._combo = true;
+    sel.style.display = 'none';
+    const wrap = document.createElement('div');
+    wrap.className = 'asset-combo';
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.autocomplete = 'off';
+    input.placeholder = t('inv.combo.placeholder');
+    const list = document.createElement('div');
+    list.className = 'asset-combo-list';
+    sel.parentNode.insertBefore(wrap, sel);
+    wrap.appendChild(input); wrap.appendChild(list); wrap.appendChild(sel);
+
+    let activeIdx = -1;
+    function labelOf() {
+      const o = sel.options[sel.selectedIndex];
+      return (o && o.value) ? o.textContent : '';
+    }
+    function items() { return Array.prototype.slice.call(list.querySelectorAll('.asset-combo-item')); }
+    function setActive(i) {
+      const its = items();
+      if (!its.length) { activeIdx = -1; return; }
+      activeIdx = (i + its.length) % its.length;
+      its.forEach(function (el, n) { el.classList.toggle('active', n === activeIdx); });
+      its[activeIdx].scrollIntoView({ block: 'nearest' });
+    }
+    function render(q) {
+      const tokens = String(q || '').toLowerCase().split(/\s+/).filter(Boolean);
+      let html = '';
+      Array.prototype.forEach.call(sel.options, function (o) {
+        if (!o.value) return;
+        const txt = o.textContent;
+        const low = txt.toLowerCase();
+        if (tokens.every(function (tk) { return low.indexOf(tk) !== -1; })) {
+          const empty = /\(stock:\s*(0|-\d+)\b/i.test(txt);
+          html += '<div class="asset-combo-item' + (empty ? ' empty-stock' : '') + '" data-value="' + escapeHtml(o.value) + '">' + escapeHtml(txt) + '</div>';
+        }
+      });
+      list.innerHTML = html || '<div class="asset-combo-none">' + t('inv.combo.noResult') + '</div>';
+      activeIdx = -1;
+    }
+    function open() { wrap.classList.add('open'); }
+    function close() { wrap.classList.remove('open'); input.value = labelOf(); }
+    function choose(val) {
+      sel.value = val;
+      sel.dispatchEvent(new Event('change', { bubbles: true }));
+      input.value = labelOf();
+      wrap.classList.remove('open');
+    }
+
+    input.addEventListener('focus', function () { input.select(); render(''); open(); });
+    input.addEventListener('click', function () { render(''); open(); });
+    input.addEventListener('input', function () { render(input.value); open(); setActive(0); });
+    input.addEventListener('blur', close);
+    input.addEventListener('keydown', function (e) {
+      if (e.key === 'ArrowDown') { e.preventDefault(); open(); setActive(activeIdx + 1); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); setActive(activeIdx - 1); }
+      else if (e.key === 'Enter') {
+        e.preventDefault();
+        const its = items();
+        if (its[activeIdx >= 0 ? activeIdx : 0]) choose(its[activeIdx >= 0 ? activeIdx : 0].getAttribute('data-value'));
+      }
+      else if (e.key === 'Escape') { input.blur(); }
+    });
+    // mousedown (bukan click) + preventDefault biar input gak keburu blur sebelum item kepilih
+    list.addEventListener('mousedown', function (e) {
+      e.preventDefault();
+      const it = e.target.closest('.asset-combo-item');
+      if (it) choose(it.getAttribute('data-value'));
+    });
+
+    sel._syncCombo = function () { input.value = labelOf(); };
+    input.value = labelOf();
+  }
+
   function populateAssetSelect() {
     const built = buildAssetOptionsHtml();
     document.querySelectorAll('.usage-item-asset').forEach(function (sel) {
       const prev = sel.value;
       sel.innerHTML = built.html;
       if (built.ids.indexOf(prev) !== -1) sel.value = prev;
+      if (sel._syncCombo) sel._syncCombo();
     });
     const logSel = document.getElementById('logModalAssetSelect');
     if (logSel) {
+      enhanceAssetCombo(logSel);
       const prev = logSel.value;
       logSel.innerHTML = built.html;
       if (built.ids.indexOf(prev) !== -1) logSel.value = prev;
+      if (logSel._syncCombo) logSel._syncCombo();
     }
   }
 
@@ -2463,6 +2977,7 @@
     const wrapper = document.createElement('div');
     wrapper.innerHTML = usageItemRowHtml(rowId);
     container.appendChild(wrapper.firstChild);
+    enhanceAssetCombo(container.querySelector('.usage-item-row[data-row-id="' + rowId + '"] select.usage-item-asset'));
     updateUsageItemRemoveButtons();
   }
 
@@ -2603,6 +3118,7 @@
     populateAssetSelect();
     const logSel = document.getElementById('logModalAssetSelect');
     if (log.assetId) logSel.value = log.assetId;
+    if (logSel._syncCombo) logSel._syncCombo();
     document.getElementById('logModalQtyInput').value = log.qtyUsed != null ? log.qtyUsed : '';
     document.getElementById('logModalDateInput').value = log.workingDate || todayStr();
 
