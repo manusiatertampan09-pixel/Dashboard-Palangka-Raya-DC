@@ -807,10 +807,10 @@ tailwind.config = {
         <span id="pbFileName" data-i18n="pb.header.noImport">Belum ada import</span>
       </span>
 
-      <span class="pbx-hsep" aria-hidden="true"></span>
+      <span class="pbx-hsep" id="pbResetSep" aria-hidden="true" style="display:none"></span>
 
-      <!-- RESET DATA -->
-      <button type="button" id="pbResetBtn" onclick="resetPbData()" class="pbx-hbtn pbx-hbtn-danger" title="Hapus SEMUA data Performance Bagger (dashboard + database online)">
+      <!-- RESET DATA (hanya tampil untuk PB_RESET_ALLOWED_EMAIL) -->
+      <button type="button" id="pbResetBtn" onclick="resetPbData()" class="pbx-hbtn pbx-hbtn-danger" style="display:none" title="Hapus SEMUA data Performance Bagger (dashboard + database online)">
         <i class="fa-solid fa-trash-can"></i> Reset Data
       </button>
     </div>
@@ -1592,12 +1592,40 @@ function renderPbHourChart(labels, data, target) {
 
 // ==== RESET DATA (hapus semua data Performance Bagger di dashboard + RTDB) ====
 // Yang dihapus: dailyRecords, hourlyRecords, hourlyCoverage, importLogs. Roster (hardcode di JS) tidak ikut.
-// Siapa yang boleh jalanin ini ditentukan Firebase Rules, bukan tombolnya.
+// Tombol cuma tampil buat PB_RESET_ALLOWED_EMAIL. Itu cuma lapisan UI; yang BENAR-BENAR nolak akun lain adalah Firebase Rules.
+const PB_RESET_ALLOWED_EMAIL = 'irwan.faiz@spxexpress.com';
+
+function isPbResetAllowed() {
+  let email = window.__authUserEmail || '';
+  try { const u = firebase.auth().currentUser; if (u && u.email) email = u.email; } catch (e) {}
+  return String(email).trim().toLowerCase() === PB_RESET_ALLOWED_EMAIL;
+}
+
+function applyPbResetPermission() {
+  const show = isPbResetAllowed();
+  ['pbResetBtn', 'pbResetSep'].forEach(function (id) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = show ? '' : 'none';
+  });
+}
+
+(function initPbResetPermission() {
+  applyPbResetPermission();
+  try { firebase.auth().onAuthStateChanged(function () { applyPbResetPermission(); }); } catch (e) {}
+  // jaga-jaga kalau email baru ke-set belakangan oleh auth-guard.js
+  let tries = 0;
+  const iv = setInterval(function () {
+    applyPbResetPermission();
+    if (isPbResetAllowed() || ++tries > 20) clearInterval(iv);
+  }, 500);
+})();
+
 function resetPbData() {
+  if (!isPbResetAllowed()) { showToast('⛔ Reset Data cuma bisa dipakai oleh admin yang ditentukan.', 'err'); return; }
   if (!fbDb) { showToast('⚠️ Belum terhubung ke database online.', 'info'); return; }
   const typed = prompt(
-    '⚠️ RESET DATA\\n\\nIni akan MENGHAPUS PERMANEN semua data Performance Bagger di database online (BUKAN cuma bulan yang lagi dibuka):\\n' +
-    '• Data harian semua tanggal\\n• Data per jam\\n• Riwayat import\\n\\nTidak bisa di-undo.\\n\\nKetik RESET untuk lanjut:'
+    '⚠️ RESET DATA\n\nIni akan MENGHAPUS PERMANEN semua data Performance Bagger di database online (BUKAN cuma bulan yang lagi dibuka):\n' +
+    '• Data harian semua tanggal\n• Data per jam\n• Riwayat import\n\nTidak bisa di-undo.\n\nKetik RESET untuk lanjut:'
   );
   if (typed === null) return;
   if (typed.trim() !== 'RESET') { showToast('Reset dibatalkan, kata konfirmasi gak sesuai.', 'info'); return; }
