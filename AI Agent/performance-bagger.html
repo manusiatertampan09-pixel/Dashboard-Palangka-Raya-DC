@@ -207,6 +207,161 @@ tailwind.config = {
     transform: scale(1) translateY(0);
   }
 
+  /* ==== HALL OF FAME CLICKABLE + MODAL STATISTIK PACKED (TOP 20) ==== */
+  section.pbx-hof { cursor: pointer; transition: box-shadow .2s ease; }
+  section.pbx-hof:hover { box-shadow: 0 6px 20px rgba(217,165,0,.22); }
+  section.pbx-hof:focus-visible { outline: 2px solid #9c2436; outline-offset: 2px; }
+  .pbx-hof-hint { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; font-size: 11px; font-weight: 700; color: #9c2436; }
+  html.dark .pbx-hof-hint { color: #fcd34d; }
+
+  #pbStatModal { opacity: 0; visibility: hidden; transition: opacity .25s ease, visibility .25s ease; }
+  #pbStatModal.active { opacity: 1; visibility: visible; }
+  #pbStatModal .modal-card { transform: scale(.9) translateY(-10px); transition: transform .25s ease; }
+  #pbStatModal.active .modal-card { transform: scale(1) translateY(0); }
+  #pbStatModal .pbs{--s0:#f1f5f9;--s1:#fff;--bd:#e2e8f0;--tx:#0f172a;--mu:#64748b;--acc:#059669;--ico-bg:rgba(122,18,36,.09);--ico:#7a1224;
+    width:100%;max-width:980px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px;background:var(--s0);color:var(--tx);border:1px solid var(--bd);box-shadow:0 24px 70px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
+  .dark #pbStatModal .pbs{--s0:#0b1424;--s1:#111d33;--bd:#1f2e4a;--tx:#f1f5f9;--mu:#94a3b8;--acc:#34d399;--ico-bg:rgba(244,63,94,.14);--ico:#fb7185}
+  #pbStatModal .pbs{max-width:1400px;max-height:95vh;max-height:95dvh}
+  .pbs-tabs{display:flex;gap:4px;padding:10px 16px 0;background:var(--s1);border-bottom:1px solid var(--bd);flex-shrink:0;overflow-x:auto}
+  .pbs-tab{display:inline-flex;align-items:center;gap:8px;padding:13px 22px;font-size:14.5px;font-weight:700;color:var(--mu);background:transparent;border:0;border-bottom:3px solid transparent;cursor:pointer;font-family:inherit;white-space:nowrap}
+  .pbs-tab:hover{color:var(--tx)}
+  .pbs-tab[aria-selected="true"]{color:var(--ico);border-bottom-color:var(--ico)}
+  .pbs-tab:focus-visible{outline:2px solid #9c2436;outline-offset:-2px;border-radius:6px}
+  .pbs-controls{display:flex;gap:18px;flex-wrap:wrap;align-items:flex-end;padding:14px 18px;position:sticky;top:0;z-index:3}
+  .pbs-controls .pbd-sel{font-size:14px;padding:8px 12px}
+  .pbs-legend{display:flex;gap:16px;flex-wrap:wrap;margin-left:auto;align-items:center;font-size:12.5px;color:var(--mu)}
+  .pbs-legend span{display:inline-flex;align-items:center;gap:7px}
+  .pbs-legend i{width:16px;height:16px;border-radius:5px;border:1px solid;display:inline-block}
+  .pbs-legend i.ok{background:rgba(16,185,129,.22);border-color:rgba(16,185,129,.55)}
+  .pbs-legend i.low{background:rgba(244,63,94,.18);border-color:rgba(244,63,94,.55)}
+  .pbs-legend i.none{background:var(--s0);border-color:var(--bd)}
+  .pbs-ctl{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--mu);font-weight:600}
+  .pbs-note{font-size:13.5px;color:var(--mu)}
+  .pbs-list{list-style:none;margin:0;padding:0}
+  .pbs-row{display:grid;grid-template-columns:46px minmax(200px,1.2fr) minmax(140px,2fr) 150px;gap:10px 18px;align-items:center;padding:16px 20px;border-bottom:1px solid var(--bd);cursor:pointer}
+  .pbs-row:last-child{border-bottom:0}
+  .pbs-row:hover,.pbs-row:focus-visible{background:var(--s0);outline:none}
+  .pbs-row .pbx-medal{width:38px;height:38px;font-size:16px}
+  .pbs-who{min-width:0}
+  .pbs-who b{display:block;font-size:16px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pbs-who small{display:block;font-size:12.5px;color:var(--mu);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pbs-bar{height:14px;border-radius:99px;background:var(--s0);border:1px solid var(--bd);overflow:hidden}
+  .pbs-bar i{display:block;height:100%;border-radius:99px}
+  .pbs-bar i.ok{background:#10b981}.pbs-bar i.mid{background:#f59e0b}.pbs-bar i.low{background:#f43f5e}
+  .pbs-num{text-align:right}
+  .pbs-num b{display:block;font-size:21px;font-weight:800}
+  .pbs-num small{display:block;font-size:13px;font-weight:700;margin-top:3px}
+  .pbs-num small.ok{color:#059669}.pbs-num small.mid{color:#b45309}.pbs-num small.low{color:#e11d48}
+  .dark .pbs-num small.ok{color:#34d399}.dark .pbs-num small.mid{color:#fbbf24}.dark .pbs-num small.low{color:#fb7185}
+  .pbs-hours{grid-column:2 / -1;display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:8px;margin:4px 0 2px}
+  .pbs-h{display:flex;flex-direction:column;align-items:center;padding:7px 4px;border-radius:9px;border:1px solid var(--bd);background:var(--s0);line-height:1.2}
+  .pbs-h em{font-style:normal;font-size:12px;color:var(--mu);font-weight:600}
+  .pbs-h b{font-size:17px;font-weight:800}
+  .pbs-h.ok{background:rgba(16,185,129,.12);border-color:rgba(16,185,129,.35)}
+  .pbs-h.ok b{color:#059669}.dark .pbs-h.ok b{color:#34d399}
+  .pbs-h.low{background:rgba(244,63,94,.10);border-color:rgba(244,63,94,.35)}
+  .pbs-h.low b{color:#e11d48}.dark .pbs-h.low b{color:#fb7185}
+  .pbs-h.none{opacity:.55}.pbs-h.none b{color:var(--mu);font-weight:600}
+  .pbs-h.sel{outline:2px solid var(--ico);outline-offset:1px}
+  .pbs-empty{padding:40px 14px;text-align:center;color:var(--mu);font-size:14px}
+  .pbs-colheads{display:none}
+  .pbs-foot{padding:12px 18px;border-top:1px solid var(--bd);background:var(--s0);border-radius:0 0 12px 12px;font-size:12px;color:var(--mu)}
+  @media (max-width:640px){
+    .pbs-row{grid-template-columns:30px 1fr 96px}
+    .pbs-bar{grid-column:2 / 4}
+    .pbs-hours{grid-column:1 / -1}
+  }
+  @media (prefers-reduced-motion:reduce){#pbStatModal,#pbStatModal .modal-card{transition:none}}
+
+  /* ==== TOP 20 FULLSCREEN: 1 layar, 2 kolom x 10 baris (layar >= 1000px) ==== */
+  @media (min-width:1000px){
+    #pbStatModal{padding:0 !important;align-items:stretch !important;justify-content:stretch !important;background:rgba(2,6,23,.88)}
+    #pbStatModal .pbs{max-width:none;max-height:none;width:100vw;height:100vh;height:100dvh;border-radius:0;border:0;box-shadow:none}
+    #pbStatModal .pbs .pbd-head{padding:8px 18px}
+    #pbStatModal .pbs-tab{padding:9px 20px;font-size:14px}
+    #pbStatModal .pbs-tabs{padding-top:4px}
+
+    /* baris atas: filter (kiri) + 3 KPI (kanan) sejajar; di bawahnya daftar Top 20 */
+    #pbStatModal .pbd-body{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(calc(10 * 68px + 58px),1fr);gap:8px;padding:8px 14px}
+    #pbStatModal .pbs-controls{grid-column:1;grid-row:1;position:static;padding:6px 14px;gap:14px}
+    #pbStatModal .pbs-controls .pbd-sel{font-size:14px;padding:5px 10px}
+    #pbStatModal .pbs-controls .pbs-legend{margin-left:0;font-size:12px;gap:12px}
+    #pbStatModal .pbs-kpis{grid-column:2;grid-row:1;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+    #pbStatModal .pbs-kpis .pbd-kpi{padding:6px 12px;gap:10px}
+    #pbStatModal .pbs-kpis .pbd-ico{width:32px;height:32px;font-size:14px}
+    #pbStatModal .pbs-kpis .pbd-val{font-size:21px}
+
+    #pbStatModal .pbs-listpanel{grid-column:1 / -1;grid-row:2;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+    #pbStatModal .pbs-listpanel .pbd-phead{padding:6px 14px}
+    #pbStatModal .pbs-foot{padding:6px 14px;border-radius:0}
+    #pbStatModal .pbs-list{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(10,minmax(0,1fr));grid-auto-flow:column}
+    /* dua kartu terpisah: #1-10 (kiri, aksen emas) dan #11-20 (kanan, aksen abu), ada jarak di antaranya */
+    #pbStatModal .pbs-listpanel{background:transparent;border:0;border-radius:0}
+    #pbStatModal .pbs-listpanel .pbd-phead{padding:4px 2px 8px}
+    #pbStatModal .pbs-list{column-gap:20px}
+    #pbStatModal .pbs-list > .pbs-row{background-color:var(--s1);border-left:1px solid var(--bd);border-right:1px solid var(--bd);border-bottom:1px solid var(--bd)}
+    #pbStatModal .pbs-list > .pbs-row:nth-child(even){background-image:linear-gradient(rgba(100,116,139,.08),rgba(100,116,139,.08))}
+    #pbStatModal .pbs-list > .pbs-row:nth-child(1),#pbStatModal .pbs-list > .pbs-row:nth-child(11){border-top:4px solid #d9a500;border-radius:12px 12px 0 0}
+    #pbStatModal .pbs-list > .pbs-row:nth-child(11){border-top-color:#64748b}
+    #pbStatModal .pbs-list > .pbs-row:nth-child(10),#pbStatModal .pbs-list > .pbs-row:nth-child(20){border-radius:0 0 12px 12px}
+    #pbStatModal .pbs-foot{background:transparent;border-top:0;padding:8px 2px 2px}
+    /* header kolom berwarna di atas tiap kartu */
+    #pbStatModal .pbs-listpanel > .pbd-phead{display:none}
+    #pbStatModal .pbs-colheads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px}
+    #pbStatModal .pbs-colhead{display:flex;align-items:center;justify-content:space-between;gap:10px;height:32px;padding:0 16px;border-radius:12px 12px 0 0;color:#fff;font-size:14px;font-weight:800;letter-spacing:.06em}
+    #pbStatModal .pbs-colhead{border:1px solid var(--bd);border-bottom:0;border-top-width:3px}
+    #pbStatModal .pbs-colhead.gold{background:#fbf3d9;color:#6b4e00;border-top-color:#d9a500}
+    #pbStatModal .pbs-colhead.slate{background:#e9eef4;color:#334155;border-top-color:#64748b}
+    .dark #pbStatModal .pbs-colhead.gold{background:rgba(217,165,0,.14);color:#fcd34d}
+    .dark #pbStatModal .pbs-colhead.slate{background:rgba(148,163,184,.14);color:#cbd5e1}
+    #pbStatModal .pbs-colhead small{font-size:11px;font-weight:600;letter-spacing:0;opacity:.8}
+    #pbStatModal .pbs-list > .pbs-row:nth-child(1),#pbStatModal .pbs-list > .pbs-row:nth-child(11){border-top:0;border-radius:0}
+    #pbStatModal .pbs-colhead.gold small{font-size:13px;font-weight:700;opacity:.85}
+    #pbStatModal .pbs-num small{padding:1px 9px;border-radius:999px;font-weight:800}
+    #pbStatModal .pbs-num small.ok{background:rgba(16,185,129,.15)}
+    #pbStatModal .pbs-num small.mid{background:rgba(245,158,11,.18)}
+    #pbStatModal .pbs-num small.low{background:rgba(244,63,94,.14)}
+    #pbStatModal .pbs-h.none{opacity:.45}
+    /* nomor ranking lebih besar + kontras tinggi */
+    #pbStatModal .pbs-row{grid-template-columns:48px minmax(0,1fr) minmax(90px,24%) 190px}
+    #pbStatModal .pbs-row.has-h{grid-template-columns:48px minmax(0,1fr) auto}
+    #pbStatModal .pbs-row .pbx-medal{width:38px;height:38px;font-size:19px;font-weight:900}
+    #pbStatModal .pbs-row .pbx-medal-n{background:#dbe3ee;color:#0f172a;border:2px solid #94a3b8}
+    .dark #pbStatModal .pbs-row .pbx-medal-n{background:#22314d;color:#f8fafc;border-color:#64748b}
+    /* pembatas tengah antara TOP 1-10 dan TOP 11-20: jarak lebih lebar + garis vertikal */
+    #pbStatModal .pbs-list,#pbStatModal .pbs-colheads{position:relative;column-gap:36px}
+    #pbStatModal .pbs-list::before,#pbStatModal .pbs-colheads::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:3px;transform:translateX(-50%);background:#94a3b8;opacity:.6;border-radius:2px}
+    .dark #pbStatModal .pbs-list::before,.dark #pbStatModal .pbs-colheads::before{background:#64748b;opacity:.8}
+    #pbStatModal .pbs-list > .pbs-empty{grid-column:1 / -1;grid-row:1 / -1;align-self:center}
+
+    /* baris default (Daily / Weekly / Monthly): medal | nama | bar | angka */
+    #pbStatModal .pbs-row{grid-template-columns:34px minmax(0,1fr) minmax(90px,24%) 190px;gap:0 14px;padding:3px 14px;align-items:center;align-content:center}
+    #pbStatModal .pbs-row .pbx-medal{width:30px;height:30px;font-size:14px}
+    #pbStatModal .pbs-who b{font-size:clamp(14px,.88vw,17px)}
+    #pbStatModal .pbs-who small{font-size:clamp(11px,.64vw,12.5px);margin-top:1px}
+    #pbStatModal .pbs-bar{height:12px}
+    #pbStatModal .pbs-num{display:flex;align-items:baseline;justify-content:flex-end;gap:7px;white-space:nowrap}
+    #pbStatModal .pbs-num b,#pbStatModal .pbs-num small{display:inline;margin:0}
+    #pbStatModal .pbs-num b{font-size:clamp(17px,1.15vw,23px)}
+    #pbStatModal .pbs-num small{font-size:clamp(11px,.68vw,13px)}
+
+    /* tab Hourly: nama + total satu baris, strip jam di bawahnya (tanpa bar, % sudah ada warnanya) */
+    #pbStatModal .pbs-row.has-h{grid-template-columns:34px minmax(0,1fr) auto;row-gap:2px}
+    #pbStatModal .pbs-row.has-h .pbx-medal{grid-column:1;grid-row:1 / span 2;align-self:center}
+    #pbStatModal .pbs-row.has-h .pbs-who{grid-column:2;grid-row:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    #pbStatModal .pbs-row.has-h .pbs-who b,#pbStatModal .pbs-row.has-h .pbs-who small{display:inline}
+    #pbStatModal .pbs-row.has-h .pbs-who small{margin-left:10px}
+    #pbStatModal .pbs-row.has-h .pbs-bar{display:none}
+    #pbStatModal .pbs-row.has-h .pbs-num{grid-column:3;grid-row:1}
+    #pbStatModal .pbs-row.has-h .pbs-num b{font-size:clamp(16px,.98vw,20px)}
+    #pbStatModal .pbs-row.has-h .pbs-hours{grid-column:2 / -1;grid-row:2}
+    #pbStatModal .pbs-hours{grid-template-columns:none;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:4px;margin:0}
+    #pbStatModal .pbs-h{padding:2px 1px;border-radius:6px}
+    #pbStatModal .pbs-h em{font-size:clamp(9px,.56vw,11px)}
+    #pbStatModal .pbs-h b{font-size:clamp(11px,.82vw,16px)}
+  }
+  @media print{#pbStatModal,.pbx-hof-hint{display:none !important}}
+
   /* ==== MODAL DETAIL OPERATOR (redesign) ==== */
   #pbDetailModal .pbd{--s0:#f1f5f9;--s1:#fff;--bd:#e2e8f0;--tx:#0f172a;--mu:#64748b;--acc:#059669;--ico-bg:rgba(122,18,36,.09);--ico:#7a1224;
     width:100%;max-width:980px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px;background:var(--s0);color:var(--tx);border:1px solid var(--bd);box-shadow:0 24px 70px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
@@ -666,12 +821,13 @@ tailwind.config = {
 <main class="pbx-main flex-1 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
 
   <!-- Hall of Fame -->
-  <section class="pbx-hof">
+  <section class="pbx-hof" id="pbHof" role="button" tabindex="0" aria-label="Buka statistik Top 20 operator" onclick="openPbStats()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPbStats();}">
     <div class="flex items-center gap-3.5 shrink-0">
       <div class="pbx-hof-ico"><i class="fa-solid fa-crown"></i></div>
       <div>
         <h3 data-i18n="pb.hof.title" class="pbx-hof-title">Hall of Fame - Top Performers</h3>
         <p data-i18n="pb.hof.subtitle" class="pbx-hof-sub">Packer dengan achievement tertinggi bulan ini</p>
+        <p class="pbx-hof-hint"><i class="fa-solid fa-chart-column"></i><span data-i18n="pb.hof.hint">Klik untuk lihat statistik Top 20</span></p>
       </div>
     </div>
     <div id="pbLeaderboard" class="pbx-pods">
@@ -882,6 +1038,64 @@ tailwind.config = {
   </div>
 </div>
 
+<!-- STATISTIK PACKED OPERATOR (TOP 20) — dibuka dari klik Hall of Fame -->
+<div id="pbStatModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3" role="dialog" aria-modal="true" aria-labelledby="pbStatTitle">
+  <div class="modal-card pbs">
+    <header class="pbd-head">
+      <div class="pbd-avatar" aria-hidden="true"><i class="fa-solid fa-chart-column"></i></div>
+      <div class="pbd-id">
+        <div class="pbd-name-row"><h2 id="pbStatTitle" data-i18n="pb.stat.title">Statistik Packed Operator</h2></div>
+        <div class="pbd-chips">
+          <span class="pbd-chip"><i class="fa-solid fa-crown"></i><span data-i18n="pb.stat.top20">Top 20 Operator</span></span>
+          <span class="pbd-chip"><i class="fa-regular fa-calendar"></i><span id="pbStatMonthChip">-</span></span>
+        </div>
+      </div>
+      <div class="pbd-actions">
+        <button id="pbStatCloseBtn" class="pbd-close" onclick="closePbStats()" aria-label="Tutup"><i class="fa-solid fa-xmark"></i></button>
+      </div>
+    </header>
+
+    <div class="pbs-tabs" role="tablist">
+      <button type="button" class="pbs-tab" role="tab" data-tab="hourly"><i class="fa-regular fa-clock"></i><span data-i18n="pb.stat.tabHourly">Hourly</span></button>
+      <button type="button" class="pbs-tab" role="tab" data-tab="daily"><i class="fa-regular fa-calendar-day"></i><span data-i18n="pb.stat.tabDaily">Daily</span></button>
+      <button type="button" class="pbs-tab" role="tab" data-tab="weekly"><i class="fa-solid fa-calendar-week"></i><span data-i18n="pb.stat.tabWeekly">Weekly</span></button>
+      <button type="button" class="pbs-tab" role="tab" data-tab="monthly"><i class="fa-regular fa-calendar"></i><span data-i18n="pb.stat.tabMonthly">Monthly</span></button>
+    </div>
+
+    <div class="pbd-body custom-scrollbar">
+      <section class="pbd-panel pbs-controls" id="pbStatControls">
+        <label class="pbs-ctl" id="pbStatCtl1"><span id="pbStatLbl1">Tanggal</span><select id="pbStatSel1" class="pbd-sel"></select></label>
+        <label class="pbs-ctl" id="pbStatCtl2"><span id="pbStatLbl2">Jam</span><select id="pbStatSel2" class="pbd-sel"></select></label>
+        <span class="pbs-note" id="pbStatNote"></span>
+        <div class="pbs-legend" id="pbStatLegend">
+          <span><i class="ok"></i><span data-i18n="pb.stat.legendOk">Capai target/jam</span></span>
+          <span><i class="low"></i><span data-i18n="pb.stat.legendLow">Di bawah target/jam</span></span>
+          <span><i class="none"></i><span data-i18n="pb.stat.legendNone">Tidak ada data</span></span>
+        </div>
+      </section>
+
+      <section class="pbd-kpis pbs-kpis">
+        <div class="pbd-kpi"><div class="pbd-ico"><i class="fa-solid fa-box"></i></div><div><div class="pbd-lbl" data-i18n="pb.stat.kpiTotal">Total Packed (Top 20)</div><div id="pbStatKpiTotal" class="pbd-val">0</div></div></div>
+        <div class="pbd-kpi"><div class="pbd-ico"><i class="fa-solid fa-chart-simple"></i></div><div><div class="pbd-lbl" data-i18n="pb.stat.kpiAvg">Rata-rata / Operator</div><div id="pbStatKpiAvg" class="pbd-val">0</div></div></div>
+        <div class="pbd-kpi"><div class="pbd-ico"><i class="fa-solid fa-crown"></i></div><div><div class="pbd-lbl" data-i18n="pb.stat.kpiTop">Peringkat 1</div><div id="pbStatKpiTop" class="pbd-val" style="font-size:16px">-</div><div id="pbStatKpiTopSub" class="pbd-sub"></div></div></div>
+      </section>
+
+      <section class="pbd-panel pbs-listpanel">
+        <div class="pbs-colheads" aria-hidden="true">
+          <div class="pbs-colhead gold"><span>TOP 1–10</span><small id="pbsColCaption"></small></div>
+          <div class="pbs-colhead slate" id="pbsColRight"><span>TOP 11–20</span><small data-i18n="pb.stat.rowHint">Klik baris untuk lihat detail operator</small></div>
+        </div>
+        <div class="pbd-phead">
+          <div class="pbd-ptitle"><i class="fa-solid fa-ranking-star"></i><span data-i18n="pb.stat.listTitle">Peringkat Top 20</span></div>
+          <span class="pbd-hint" data-i18n="pb.stat.rowHint">Klik baris untuk lihat detail operator</span>
+        </div>
+        <ul id="pbStatList" class="pbs-list"></ul>
+        <div class="pbs-foot" data-i18n="pb.stat.footNote">Persentase target dihitung dari target harian status operator × jumlah hari/jam yang ada datanya.</div>
+      </section>
+    </div>
+  </div>
+</div>
+
 <script>
 // ==== UI HELPER FUNCTIONS ====
 // Open/Hide grup nav (Productivity / Inbound / Outbound Monitoring). Sengaja GAK diinget
@@ -1046,7 +1260,7 @@ const STAFF_ROSTER = [
 const ACHIEVEMENT_THRESHOLD = {
   "Dedicated Operator": 6500,
   "DW Reguler Pria": 6500,
-  "DW Reguler Wanita": 4500,
+  "DW Reguler Wanita": 5500,
   "DW On Call": 3000
 };
 
@@ -1103,6 +1317,7 @@ function loadPbMonth(monthStr) {
   pbDailyRecordsRef.on('value', function (snapshot) {
     pbMonthlyRecords = snapshot.val() || {};
     renderPbTable();
+    if (window.pbStatsRefresh) pbStatsRefresh();
     if (currentDetailOpsId) openPbDetail(currentDetailOpsId);
   }, function (err) { console.error('Gagal baca data Performance Bagger:', err); });
 }
@@ -2703,6 +2918,34 @@ document.addEventListener('DOMContentLoaded', function() {
 const APP_LANG_KEY = "pr_dc_app_language";
 const I18N_DICT = {
   id: {
+    "pb.hof.hint": "Klik untuk lihat statistik Top 20",
+    "pb.stat.title": "Statistik Packed Operator",
+    "pb.stat.top20": "Top 20 Operator",
+    "pb.stat.tabHourly": "Hourly",
+    "pb.stat.tabDaily": "Daily",
+    "pb.stat.tabWeekly": "Weekly",
+    "pb.stat.tabMonthly": "Monthly",
+    "pb.stat.date": "Tanggal",
+    "pb.stat.hour": "Jam",
+    "pb.stat.week": "Minggu",
+    "pb.stat.weekLabel": "Minggu {n}",
+    "pb.stat.allHours": "Semua jam",
+    "pb.stat.kpiTotal": "Total Packed (Top 20)",
+    "pb.stat.kpiAvg": "Rata-rata / Operator",
+    "pb.stat.kpiTop": "Peringkat 1",
+    "pb.stat.listTitle": "Peringkat Top 20",
+    "pb.stat.rowHint": "Klik baris untuk lihat detail operator",
+    "pb.stat.footNote": "Persentase target dihitung dari target harian status operator × jumlah hari/jam yang ada datanya.",
+    "pb.stat.target": "target",
+    "pb.stat.perHourTarget": "target/jam",
+    "pb.stat.legendOk": "Capai target/jam",
+    "pb.stat.legendLow": "Di bawah target/jam",
+    "pb.stat.legendNone": "Tidak ada data",
+    "pb.stat.empty": "Belum ada data untuk periode ini.",
+    "pb.stat.loading": "Memuat data...",
+    "pb.stat.noHourly": "Belum ada data per jam. Import PDVT per jam dulu.",
+    "pb.stat.monthNote": "Akumulasi satu bulan penuh ({month}).",
+    "pb.stat.errorLoad": "Gagal memuat data: {msg}",
     "pb.header.title": "Performance Bagger",
     "pb.header.subtitle": "Monitoring Produktivitas Packer / Bagger Harian",
     "pb.header.mode": "Mode",
@@ -2793,6 +3036,34 @@ const I18N_DICT = {
     "pb.unit.pcs": "pcs"
   },
   en: {
+    "pb.hof.hint": "Click to view Top 20 stats",
+    "pb.stat.title": "Operator Packed Statistics",
+    "pb.stat.top20": "Top 20 Operators",
+    "pb.stat.tabHourly": "Hourly",
+    "pb.stat.tabDaily": "Daily",
+    "pb.stat.tabWeekly": "Weekly",
+    "pb.stat.tabMonthly": "Monthly",
+    "pb.stat.date": "Date",
+    "pb.stat.hour": "Hour",
+    "pb.stat.week": "Week",
+    "pb.stat.weekLabel": "Week {n}",
+    "pb.stat.allHours": "All hours",
+    "pb.stat.kpiTotal": "Total Packed (Top 20)",
+    "pb.stat.kpiAvg": "Average / Operator",
+    "pb.stat.kpiTop": "Rank 1",
+    "pb.stat.listTitle": "Top 20 Ranking",
+    "pb.stat.rowHint": "Click a row to see operator details",
+    "pb.stat.footNote": "Target % = the operator status daily target × number of days/hours with data.",
+    "pb.stat.target": "of target",
+    "pb.stat.perHourTarget": "target/hour",
+    "pb.stat.legendOk": "Hit hourly target",
+    "pb.stat.legendLow": "Below hourly target",
+    "pb.stat.legendNone": "No data",
+    "pb.stat.empty": "No data for this period yet.",
+    "pb.stat.loading": "Loading data...",
+    "pb.stat.noHourly": "No hourly data yet. Import the hourly PDVT export first.",
+    "pb.stat.monthNote": "Full-month accumulation ({month}).",
+    "pb.stat.errorLoad": "Failed to load data: {msg}",
     "pb.header.title": "Performance Bagger",
     "pb.header.subtitle": "Daily Packer/Bagger Productivity Monitoring",
     "pb.header.mode": "Mode",
@@ -3094,6 +3365,9 @@ function setAppLanguage(lang) {
     openPbDetail(currentDetailOpsId);
   }
 
+  // Kalau modal Statistik Top 20 lagi kebuka, render ulang biar label ikut bahasa baru
+  if (window.pbStatsRefresh) pbStatsRefresh();
+
   // Kalau papan Saran & Masukan sedang kebuka, refresh state kosong/error/list-nya
   if (lastFeedbackSnapshot !== null) {
     renderFeedbackList(lastFeedbackSnapshot);
@@ -3186,6 +3460,307 @@ function submitFeedback() {
     btn.disabled = false;
   });
 }
+</script>
+
+<script>
+// ==== STATISTIK PACKED OPERATOR (TOP 20) — dibuka dari klik Hall of Fame ====
+// Daily / Weekly / Monthly dihitung dari pbMonthlyRecords (bulan yang lagi dibuka, sama kayak tabel utama).
+// Hourly dibaca on-demand dari hourlyRecords/{tanggal} + hourlyCoverage.
+(function () {
+  var TOP_N = 20;
+  var sel = { tab: 'daily', daily: '', weekly: '', hourlyDate: '', hourlyHour: 'ALL' };
+  var coverage = null;   // { 'YYYY-MM-DD': { h08: true, ... } }
+  var hourCache = {};    // { 'YYYY-MM-DD': { opsId: { h08: n } } }
+  var reqId = 0;         // buang hasil async yang udah basi
+
+  function $(id) { return document.getElementById(id); }
+  function fmt(n) { return Number(n).toLocaleString('id-ID'); }
+  function esc(v) {
+    return String(v == null ? '' : v).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+  function p2(n) { return String(n).padStart(2, '0'); }
+  function parseD(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function shortD(s) { var d = parseD(s); return p2(d.getDate()) + ' ' + getMonthNames()[d.getMonth()]; }
+  function weekStart(s) {
+    var d = parseD(s);
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Senin
+    return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
+  }
+  function targetOf(status) { return ACHIEVEMENT_THRESHOLD[status] || ACHIEVEMENT_THRESHOLD['DW On Call']; }
+  function isOpen() { return $('pbStatModal').classList.contains('active'); }
+
+  // tanggal di bulan aktif yang ada packed > 0, urut naik
+  function activeDates() {
+    return Object.keys(pbMonthlyRecords).filter(function (d) {
+      var day = pbMonthlyRecords[d] || {};
+      return Object.keys(day).some(function (o) { return (day[o].packed || 0) > 0; });
+    }).sort();
+  }
+
+  // minggu (Senin–Minggu) dalam bulan aktif; n = minggu ke-berapa di kalender bulan itu
+  function weeksOfMonth() {
+    var g = {};
+    activeDates().forEach(function (d) { var k = weekStart(d); (g[k] = g[k] || []).push(d); });
+    return Object.keys(g).sort().map(function (k) {
+      var first = g[k][0].slice(0, 7) + '-01';
+      var n = Math.round((parseD(k) - parseD(weekStart(first))) / 604800000) + 1;
+      return { key: k, n: n, dates: g[k] };
+    });
+  }
+
+  function calcFromDates(dates, agg) {
+    var map = {};
+    dates.forEach(function (d) {
+      var day = pbMonthlyRecords[d] || {};
+      Object.keys(day).forEach(function (o) {
+        var packed = day[o].packed || 0;
+        if (packed <= 0) return;
+        var info = agg[o] || { status: 'DW On Call' };
+        map[o] = map[o] || { value: 0, target: 0 };
+        map[o].value += packed;
+        map[o].target += targetOf(info.status);
+      });
+    });
+    return map;
+  }
+
+  function calcHourly(data, hour, agg) {
+    var map = {};
+    Object.keys(data || {}).forEach(function (o) {
+      var hrs = data[o] || {};
+      var info = agg[o] || { status: 'DW On Call' };
+      var perHour = Math.round(targetOf(info.status) / 8);
+      var value = 0, cnt = 0;
+      if (hour === 'ALL') {
+        Object.keys(hrs).forEach(function (k) { var v = hrs[k] || 0; if (v > 0) { value += v; cnt++; } });
+      } else {
+        value = hrs[hour] || 0; cnt = value > 0 ? 1 : 0;
+      }
+      if (value > 0) map[o] = { value: value, target: perHour * cnt, hours: hrs, perHour: perHour };
+    });
+    return map;
+  }
+
+  function rank(map, agg) {
+    var rows = Object.keys(map).filter(function (o) { return map[o].value > 0; }).map(function (o) {
+      var info = agg[o] || { name: o, agency: '-', status: 'DW On Call' };
+      var m = map[o];
+      return { opsId: o, name: info.name, agency: info.agency, status: info.status, value: m.value, target: m.target,
+        pct: m.target > 0 ? Math.round(m.value / m.target * 100) : 0, hours: m.hours || null, perHour: m.perHour || 0 };
+    });
+    rows.sort(function (a, b) { return b.value - a.value || String(a.name).localeCompare(String(b.name)); });
+    return rows.slice(0, TOP_N);
+  }
+
+  function setOptions(selectEl, opts, current) {
+    selectEl.innerHTML = opts.map(function (o) { return '<option value="' + esc(o.v) + '">' + esc(o.l) + '</option>'; }).join('');
+    var has = opts.some(function (o) { return o.v === current; });
+    selectEl.value = has ? current : (opts.length ? opts[0].v : '');
+    return selectEl.value;
+  }
+
+  // deretan kotak per jam di bawah nama operator (khusus tab Hourly)
+  function hoursStrip(r, hx) {
+    var cells = hx.cols.map(function (k) {
+      var v = (r.hours && r.hours[k]) || 0;
+      var cls = v > 0 ? (v >= r.perHour ? 'ok' : 'low') : 'none';
+      var tip = k.slice(1) + ':00 — ' + (v > 0 ? fmt(v) + ' ' + t('pb.unit.pcs') : '-') + ' · ' + t('pb.stat.perHourTarget') + ' ' + fmt(r.perHour);
+      return '<span class="pbs-h ' + cls + (hx.selHour === k ? ' sel' : '') + '" title="' + esc(tip) + '"><em>' + k.slice(1) + ':00</em><b>' + (v > 0 ? fmt(v) : '–') + '</b></span>';
+    }).join('');
+    return '<div class="pbs-hours">' + cells + '</div>';
+  }
+
+  // keterangan di header kolom kiri: tanggal + rentang jam (Hourly) / tanggal / minggu / bulan -> jelas buat yang baca laporan
+  function captionText(hx) {
+    try {
+      if (sel.tab === 'hourly') {
+        var d = sel.hourlyDate ? formatTanggalId(sel.hourlyDate) : '';
+        var h = '';
+        if (hx && hx.selHour && hx.selHour !== 'ALL') h = hx.selHour.slice(1) + ':00';
+        else if (hx && hx.cols && hx.cols.length) h = hx.cols[0].slice(1) + ':00–' + hx.cols[hx.cols.length - 1].slice(1) + ':00';
+        return [d, h].filter(Boolean).join(' · ');
+      }
+      if (sel.tab === 'monthly') return $('pbSummaryMonth').textContent || '';
+      var s1 = $('pbStatSel1');
+      return (s1 && s1.selectedOptions && s1.selectedOptions[0]) ? s1.selectedOptions[0].text : '';
+    } catch (e) { return ''; }
+  }
+
+  function showRows(rows, hx) {
+    var list = $('pbStatList');
+    var rcol = $('pbsColRight'); if (rcol) rcol.style.visibility = rows.length > 10 ? '' : 'hidden';
+    var cap = $('pbsColCaption'); if (cap) cap.textContent = captionText(hx);
+    if (!rows.length) {
+      $('pbStatKpiTotal').textContent = '0';
+      $('pbStatKpiAvg').textContent = '0';
+      $('pbStatKpiTop').textContent = '-';
+      $('pbStatKpiTopSub').textContent = '';
+      list.innerHTML = '<li class="pbs-empty">' + esc(t('pb.stat.empty')) + '</li>';
+      return;
+    }
+    var total = rows.reduce(function (a, r) { return a + r.value; }, 0);
+    $('pbStatKpiTotal').textContent = fmt(total);
+    $('pbStatKpiAvg').textContent = fmt(Math.round(total / rows.length));
+    $('pbStatKpiTop').textContent = rows[0].name;
+    $('pbStatKpiTopSub').textContent = fmt(rows[0].value) + ' ' + t('pb.unit.pcs');
+    var max = rows[0].value;
+    list.innerHTML = rows.map(function (r, i) {
+      var medal = i < 3
+        ? '<span class="pbx-medal pbx-m' + (i + 1) + '">' + (i + 1) + '</span>'
+        : '<span class="pbx-medal pbx-medal-n">' + (i + 1) + '</span>';
+      var cls = r.pct >= 100 ? 'ok' : (r.pct >= 90 ? 'mid' : 'low');
+      var w = Math.max(2, Math.round(r.value / max * 100));
+      return '<li class="pbs-row' + ((hx && hx.cols && hx.cols.length) ? ' has-h' : '') + '" role="button" tabindex="0" data-ops="' + esc(r.opsId) + '">' + medal +
+        '<div class="pbs-who"><b title="' + esc(r.name) + '">' + esc(r.name) + '</b><small>' + (r.agency && r.agency !== '-' ? esc(r.agency) + ' · ' : '') + esc(statusLabel(r.status)) + (hx && r.perHour ? ' · ' + esc(t('pb.stat.perHourTarget')) + ' ' + fmt(r.perHour) : '') + '</small></div>' +
+        '<div class="pbs-bar"><i class="' + cls + '" style="width:' + w + '%"></i></div>' +
+        '<div class="pbs-num"><b>' + fmt(r.value) + '</b><small class="' + cls + '">' + r.pct + '% ' + esc(t('pb.stat.target')) + '</small></div>' +
+        (hx && hx.cols && hx.cols.length ? hoursStrip(r, hx) : '') +
+        '</li>';
+    }).join('');
+  }
+
+  function showMessage(msg) {
+    showRows([]);
+    $('pbStatList').innerHTML = '<li class="pbs-empty">' + esc(msg) + '</li>';
+  }
+
+  function ensureCoverage(cb) {
+    if (coverage) return cb(null);
+    if (!fbDb) return cb(new Error('Belum terhubung ke database online.'));
+    fbDb.ref(FB_PB_ROOT + '/hourlyCoverage').once('value').then(function (s) {
+      coverage = s.val() || {};
+      cb(null);
+    }).catch(cb);
+  }
+
+  function loadHourlyDay(date, cb) {
+    if (hourCache[date]) return cb(null, hourCache[date]);
+    if (!fbDb) return cb(new Error('Belum terhubung ke database online.'));
+    fbDb.ref(FB_PB_ROOT + '/hourlyRecords/' + date).once('value').then(function (s) {
+      hourCache[date] = s.val() || {};
+      cb(null, hourCache[date]);
+    }).catch(cb);
+  }
+
+  function renderHourly(agg, my) {
+    showMessage(t('pb.stat.loading'));
+    ensureCoverage(function (err) {
+      if (my !== reqId) return;
+      if (err) { showMessage(t('pb.stat.errorLoad', { msg: err.message })); return; }
+      var dates = Object.keys(coverage).filter(function (d) { return Object.keys(coverage[d] || {}).length; }).sort().reverse().slice(0, 60);
+      if (!dates.length) { $('pbStatControls').style.display = 'none'; showMessage(t('pb.stat.noHourly')); return; }
+      $('pbStatControls').style.display = '';
+      sel.hourlyDate = setOptions($('pbStatSel1'), dates.map(function (d) { return { v: d, l: formatTanggalId(d) }; }), sel.hourlyDate);
+      var hrs = Object.keys(coverage[sel.hourlyDate] || {}).sort();
+      var hopts = [{ v: 'ALL', l: t('pb.stat.allHours') }].concat(hrs.map(function (h) { return { v: h, l: h.slice(1) + ':00' }; }));
+      sel.hourlyHour = setOptions($('pbStatSel2'), hopts, sel.hourlyHour);
+      loadHourlyDay(sel.hourlyDate, function (err2, data) {
+        if (my !== reqId) return;
+        if (err2) { showMessage(t('pb.stat.errorLoad', { msg: err2.message })); return; }
+        var ranked = rank(calcHourly(data, sel.hourlyHour, agg), agg);
+        // jam yang kosong buat SEMUA operator di Top 20 gak ditampilin, biar kotak jam yang ada bisa lebih lebar
+        var usedCols = hrs.filter(function (h) { return ranked.some(function (r) { return r.hours && (r.hours[h] || 0) > 0; }); });
+        showRows(ranked, { cols: usedCols.length ? usedCols : hrs, selHour: sel.hourlyHour });
+      });
+    });
+  }
+
+  function render() {
+    if (!isOpen()) return;
+    var my = ++reqId;
+    var agg = computePbAggregates();
+    var tab = sel.tab;
+    var ctl = $('pbStatControls'), c1 = $('pbStatCtl1'), c2 = $('pbStatCtl2'), note = $('pbStatNote');
+    var s1 = $('pbStatSel1');
+
+    $('pbStatMonthChip').textContent = $('pbSummaryMonth').textContent || '-';
+    Array.prototype.forEach.call(document.querySelectorAll('#pbStatModal .pbs-tab'), function (b) {
+      b.setAttribute('aria-selected', b.getAttribute('data-tab') === tab ? 'true' : 'false');
+    });
+    ctl.style.display = '';
+    c1.style.display = '';
+    c2.style.display = 'none';
+    note.textContent = '';
+    $('pbStatLegend').style.display = tab === 'hourly' ? '' : 'none';
+
+    if (tab === 'daily') {
+      $('pbStatLbl1').textContent = t('pb.stat.date');
+      var dates = activeDates().reverse();
+      sel.daily = setOptions(s1, dates.map(function (d) { return { v: d, l: formatTanggalId(d) }; }), sel.daily);
+      showRows(rank(calcFromDates(sel.daily ? [sel.daily] : [], agg), agg));
+    } else if (tab === 'weekly') {
+      $('pbStatLbl1').textContent = t('pb.stat.week');
+      var weeks = weeksOfMonth().reverse();
+      sel.weekly = setOptions(s1, weeks.map(function (w) {
+        return { v: w.key, l: t('pb.stat.weekLabel', { n: w.n }) + ' · ' + shortD(w.dates[0]) + ' – ' + shortD(w.dates[w.dates.length - 1]) };
+      }), sel.weekly);
+      var cur = weeks.filter(function (w) { return w.key === sel.weekly; })[0];
+      showRows(rank(calcFromDates(cur ? cur.dates : [], agg), agg));
+    } else if (tab === 'monthly') {
+      c1.style.display = 'none';
+      note.textContent = t('pb.stat.monthNote', { month: $('pbSummaryMonth').textContent || '-' });
+      showRows(rank(calcFromDates(activeDates(), agg), agg));
+    } else {
+      $('pbStatLbl1').textContent = t('pb.stat.date');
+      $('pbStatLbl2').textContent = t('pb.stat.hour');
+      c2.style.display = '';
+      renderHourly(agg, my);
+    }
+  }
+
+  // ---- event ----
+  Array.prototype.forEach.call(document.querySelectorAll('#pbStatModal .pbs-tab'), function (b) {
+    b.addEventListener('click', function () { sel.tab = b.getAttribute('data-tab'); render(); });
+  });
+  $('pbStatSel1').addEventListener('change', function () {
+    if (sel.tab === 'daily') sel.daily = this.value;
+    else if (sel.tab === 'weekly') sel.weekly = this.value;
+    else if (sel.tab === 'hourly') { sel.hourlyDate = this.value; sel.hourlyHour = 'ALL'; }
+    render();
+  });
+  $('pbStatSel2').addEventListener('change', function () { sel.hourlyHour = this.value; render(); });
+
+  function openDetailFrom(li) {
+    if (!li) return;
+    var ops = li.getAttribute('data-ops');
+    window.closePbStats();
+    openPbDetail(ops);
+  }
+  $('pbStatList').addEventListener('click', function (e) { openDetailFrom(e.target.closest('.pbs-row')); });
+  $('pbStatList').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' || e.key === ' ') { var li = e.target.closest('.pbs-row'); if (li) { e.preventDefault(); openDetailFrom(li); } }
+  });
+  $('pbStatModal').addEventListener('click', function (e) { if (e.target === this) window.closePbStats(); });
+  document.addEventListener('keydown', function (e) {
+    if (!isOpen()) return;
+    if (e.key === 'Escape' || e.key === 'Esc') { window.closePbStats(); return; }
+    if (e.key === 'Tab') {
+      var f = $('pbStatModal').querySelectorAll('button, select, [tabindex]:not([tabindex="-1"])');
+      if (!f.length) return;
+      var first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { last.focus(); e.preventDefault(); }
+      else if (!e.shiftKey && document.activeElement === last) { first.focus(); e.preventDefault(); }
+    }
+  });
+
+  // ---- API global (dipanggil dari HTML / modul lain) ----
+  window.openPbStats = function () {
+    coverage = null; hourCache = {}; // selalu baca ulang biar ikut import terbaru
+    $('pbStatModal').classList.add('active');
+    document.body.style.overflow = 'hidden';
+    render();
+    $('pbStatModal').querySelector('.pbd-body').scrollTop = 0;
+    setTimeout(function () { var b = $('pbStatCloseBtn'); if (b) b.focus(); }, 100);
+  };
+  window.closePbStats = function () {
+    $('pbStatModal').classList.remove('active');
+    var d = document.getElementById('pbDetailModal');
+    if (!d || !d.classList.contains('active')) document.body.style.overflow = 'auto';
+  };
+  window.pbStatsRefresh = function () { if (isOpen()) render(); };
+})();
 </script>
 
 <script>
