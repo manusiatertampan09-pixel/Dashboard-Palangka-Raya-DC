@@ -1065,7 +1065,8 @@ tailwind.config = {
     <div class="pbd-body custom-scrollbar">
       <section class="pbd-panel pbs-controls" id="pbStatControls">
         <label class="pbs-ctl" id="pbStatCtl1"><span id="pbStatLbl1">Tanggal</span><select id="pbStatSel1" class="pbd-sel"></select></label>
-        <label class="pbs-ctl" id="pbStatCtl2"><span id="pbStatLbl2">Jam</span><select id="pbStatSel2" class="pbd-sel"></select></label>
+        <label class="pbs-ctl" id="pbStatCtl2"><span id="pbStatLbl2">Dari Jam</span><select id="pbStatSel2" class="pbd-sel"></select></label>
+        <label class="pbs-ctl" id="pbStatCtl3"><span id="pbStatLbl3">Sampai Jam</span><select id="pbStatSel3" class="pbd-sel"></select></label>
         <span class="pbs-note" id="pbStatNote"></span>
         <div class="pbs-legend" id="pbStatLegend">
           <span><i class="ok"></i><span data-i18n="pb.stat.legendOk">Capai target/jam</span></span>
@@ -2955,6 +2956,8 @@ const I18N_DICT = {
     "pb.stat.tabMonthly": "Monthly",
     "pb.stat.date": "Tanggal",
     "pb.stat.hour": "Jam",
+    "pb.stat.hourFrom": "Dari Jam",
+    "pb.stat.hourTo": "Sampai Jam",
     "pb.stat.week": "Minggu",
     "pb.stat.weekLabel": "Minggu {n}",
     "pb.stat.allHours": "Semua jam",
@@ -3073,6 +3076,8 @@ const I18N_DICT = {
     "pb.stat.tabMonthly": "Monthly",
     "pb.stat.date": "Date",
     "pb.stat.hour": "Hour",
+    "pb.stat.hourFrom": "From Hour",
+    "pb.stat.hourTo": "To Hour",
     "pb.stat.week": "Week",
     "pb.stat.weekLabel": "Week {n}",
     "pb.stat.allHours": "All hours",
@@ -3182,6 +3187,8 @@ const I18N_DICT = {
     "pb.unit.pcs": "pcs"
   },
   ja: {
+    "pb.stat.hourFrom": "開始時間",
+    "pb.stat.hourTo": "終了時間",
     "pb.header.title": "Performance Bagger",
     "pb.header.subtitle": "パッカー/バッガー日次生産性モニタリング",
     "pb.header.mode": "モード",
@@ -3252,6 +3259,8 @@ const I18N_DICT = {
     "pb.unit.pcs": "個"
   },
   zh: {
+    "pb.stat.hourFrom": "起始时间",
+    "pb.stat.hourTo": "结束时间",
     "pb.header.title": "Performance Bagger",
     "pb.header.subtitle": "打包员/装袋员日生产力监控",
     "pb.header.mode": "模式",
@@ -3496,7 +3505,7 @@ function submitFeedback() {
 // Hourly dibaca on-demand dari hourlyRecords/{tanggal} + hourlyCoverage.
 (function () {
   var TOP_N = 20;
-  var sel = { tab: 'daily', daily: '', weekly: '', hourlyDate: '', hourlyHour: 'ALL' };
+  var sel = { tab: 'daily', daily: '', weekly: '', hourlyDate: '', hourFrom: '', hourTo: '' };
   var coverage = null;   // { 'YYYY-MM-DD': { h08: true, ... } }
   var hourCache = {};    // { 'YYYY-MM-DD': { opsId: { h08: n } } }
   var reqId = 0;         // buang hasil async yang udah basi
@@ -3554,18 +3563,19 @@ function submitFeedback() {
     return map;
   }
 
-  function calcHourly(data, hour, agg) {
+  function calcHourly(data, from, to, agg) {
     var map = {};
     Object.keys(data || {}).forEach(function (o) {
       var hrs = data[o] || {};
       var info = agg[o] || { status: 'DW On Call' };
       var perHour = Math.round(targetOf(info.status) / 8);
       var value = 0, cnt = 0;
-      if (hour === 'ALL') {
-        Object.keys(hrs).forEach(function (k) { var v = hrs[k] || 0; if (v > 0) { value += v; cnt++; } });
-      } else {
-        value = hrs[hour] || 0; cnt = value > 0 ? 1 : 0;
-      }
+      // rentang jam inklusif: "h16".."h23" dibandingkan sebagai string (selalu 3 karakter)
+      Object.keys(hrs).forEach(function (k) {
+        if (k < from || k > to) return;
+        var v = hrs[k] || 0;
+        if (v > 0) { value += v; cnt++; }
+      });
       if (value > 0) map[o] = { value: value, target: perHour * cnt, hours: hrs, perHour: perHour };
     });
     return map;
@@ -3606,8 +3616,7 @@ function submitFeedback() {
       if (sel.tab === 'hourly') {
         var d = sel.hourlyDate ? formatTanggalId(sel.hourlyDate) : '';
         var h = '';
-        if (hx && hx.selHour && hx.selHour !== 'ALL') h = hx.selHour.slice(1) + ':00';
-        else if (hx && hx.cols && hx.cols.length) h = hx.cols[0].slice(1) + ':00–' + hx.cols[hx.cols.length - 1].slice(1) + ':00';
+        if (hx && hx.from && hx.to) h = hx.from === hx.to ? hx.from.slice(1) + ':00' : hx.from.slice(1) + ':00–' + hx.to.slice(1) + ':00';
         return [d, h].filter(Boolean).join(' · ');
       }
       if (sel.tab === 'monthly') return $('pbSummaryMonth').textContent || '';
@@ -3682,15 +3691,20 @@ function submitFeedback() {
       $('pbStatControls').style.display = '';
       sel.hourlyDate = setOptions($('pbStatSel1'), dates.map(function (d) { return { v: d, l: formatTanggalId(d) }; }), sel.hourlyDate);
       var hrs = Object.keys(coverage[sel.hourlyDate] || {}).sort();
-      var hopts = [{ v: 'ALL', l: t('pb.stat.allHours') }].concat(hrs.map(function (h) { return { v: h, l: h.slice(1) + ':00' }; }));
-      sel.hourlyHour = setOptions($('pbStatSel2'), hopts, sel.hourlyHour);
+      var hopts = hrs.map(function (h) { return { v: h, l: h.slice(1) + ':00' }; });
+      // default = seluruh jam yang ada datanya (jam pertama s/d jam terakhir)
+      sel.hourFrom = setOptions($('pbStatSel2'), hopts, sel.hourFrom);
+      sel.hourTo = setOptions($('pbStatSel3'), hopts, (sel.hourTo && hrs.indexOf(sel.hourTo) !== -1) ? sel.hourTo : hrs[hrs.length - 1]);
+      if (sel.hourTo < sel.hourFrom) sel.hourTo = $('pbStatSel3').value = sel.hourFrom;
+      var from = sel.hourFrom, to = sel.hourTo;
+      var hrsInRange = hrs.filter(function (h) { return h >= from && h <= to; });
       loadHourlyDay(sel.hourlyDate, function (err2, data) {
         if (my !== reqId) return;
         if (err2) { showMessage(t('pb.stat.errorLoad', { msg: err2.message })); return; }
-        var ranked = rank(calcHourly(data, sel.hourlyHour, agg), agg);
+        var ranked = rank(calcHourly(data, from, to, agg), agg);
         // jam yang kosong buat SEMUA operator di Top 20 gak ditampilin, biar kotak jam yang ada bisa lebih lebar
-        var usedCols = hrs.filter(function (h) { return ranked.some(function (r) { return r.hours && (r.hours[h] || 0) > 0; }); });
-        showRows(ranked, { cols: usedCols.length ? usedCols : hrs, selHour: sel.hourlyHour });
+        var usedCols = hrsInRange.filter(function (h) { return ranked.some(function (r) { return r.hours && (r.hours[h] || 0) > 0; }); });
+        showRows(ranked, { cols: usedCols.length ? usedCols : hrsInRange, selHour: from === to ? from : null, from: from, to: to });
       });
     });
   }
@@ -3700,7 +3714,7 @@ function submitFeedback() {
     var my = ++reqId;
     var agg = computePbAggregates();
     var tab = sel.tab;
-    var ctl = $('pbStatControls'), c1 = $('pbStatCtl1'), c2 = $('pbStatCtl2'), note = $('pbStatNote');
+    var ctl = $('pbStatControls'), c1 = $('pbStatCtl1'), c2 = $('pbStatCtl2'), c3 = $('pbStatCtl3'), note = $('pbStatNote');
     var s1 = $('pbStatSel1');
 
     $('pbStatMonthChip').textContent = $('pbSummaryMonth').textContent || '-';
@@ -3710,6 +3724,7 @@ function submitFeedback() {
     ctl.style.display = '';
     c1.style.display = '';
     c2.style.display = 'none';
+    c3.style.display = 'none';
     note.textContent = '';
     $('pbStatLegend').style.display = tab === 'hourly' ? '' : 'none';
 
@@ -3732,8 +3747,10 @@ function submitFeedback() {
       showRows(rank(calcFromDates(activeDates(), agg), agg));
     } else {
       $('pbStatLbl1').textContent = t('pb.stat.date');
-      $('pbStatLbl2').textContent = t('pb.stat.hour');
+      $('pbStatLbl2').textContent = t('pb.stat.hourFrom');
+      $('pbStatLbl3').textContent = t('pb.stat.hourTo');
       c2.style.display = '';
+      c3.style.display = '';
       renderHourly(agg, my);
     }
   }
@@ -3745,10 +3762,20 @@ function submitFeedback() {
   $('pbStatSel1').addEventListener('change', function () {
     if (sel.tab === 'daily') sel.daily = this.value;
     else if (sel.tab === 'weekly') sel.weekly = this.value;
-    else if (sel.tab === 'hourly') { sel.hourlyDate = this.value; sel.hourlyHour = 'ALL'; }
+    else if (sel.tab === 'hourly') { sel.hourlyDate = this.value; sel.hourFrom = ''; sel.hourTo = ''; }
     render();
   });
-  $('pbStatSel2').addEventListener('change', function () { sel.hourlyHour = this.value; render(); });
+  // "Dari Jam" digeser melewati "Sampai Jam" -> Sampai ikut maju; kebalikannya Dari ikut mundur
+  $('pbStatSel2').addEventListener('change', function () {
+    sel.hourFrom = this.value;
+    if (sel.hourTo && sel.hourTo < sel.hourFrom) sel.hourTo = sel.hourFrom;
+    render();
+  });
+  $('pbStatSel3').addEventListener('change', function () {
+    sel.hourTo = this.value;
+    if (sel.hourFrom && sel.hourFrom > sel.hourTo) sel.hourFrom = sel.hourTo;
+    render();
+  });
 
   function openDetailFrom(li) {
     if (!li) return;
