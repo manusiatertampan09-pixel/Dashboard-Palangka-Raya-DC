@@ -160,6 +160,7 @@
         </div>
 
         <div class="error-msg" id="loginError"></div>
+        <div class="success-msg" id="loginSuccess"></div>
 
         <div class="row-between">
           <label class="remember"><input type="checkbox">Ingat saya</label>
@@ -167,6 +168,10 @@
         </div>
 
         <button class="login-btn" onclick="doLogin()">MASUK</button>
+
+        <p class="hint" style="text-align:center;margin-bottom:0;">
+          <a class="forgot" href="#" onclick="showChangeStep(); return false;">🔑 Ganti password (pakai password lama)</a>
+        </p>
 
         <p class="hint">Belum punya akun? Minta admin nambahin email lu di<br>
         Firebase Console → Authentication → Users.</p>
@@ -186,6 +191,43 @@
         <div class="success-msg" id="forgotSuccess"></div>
 
         <button class="login-btn" id="forgotSubmitBtn" onclick="doForgotPassword()">KIRIM LINK RESET</button>
+
+        <p class="hint" style="text-align:center;">
+          <a class="forgot" href="#" onclick="showLoginStep(); return false;">← Balik ke login</a>
+        </p>
+      </div>
+
+      <!-- STEP GANTI PASSWORD (pakai password lama) -->
+      <div id="changeStep" class="hidden">
+        <p class="hint" style="margin-top:0;margin-bottom:16px;">Isi email, password lama, lalu password baru. Kalau lupa password lama, balik ke login terus pilih "Lupa password?".</p>
+        <div class="field">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c0-4 4-6 8-6s8 2 8 6" stroke="#14213d" stroke-width="2" stroke-linecap="round"/></svg>
+            <input type="email" id="changeEmail" placeholder="Email" autocomplete="username">
+          </div>
+        </div>
+        <div class="field">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#14213d" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#14213d" stroke-width="2"/></svg>
+            <input type="password" id="changeOldPassword" placeholder="Password lama" autocomplete="current-password">
+          </div>
+        </div>
+        <div class="field">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#14213d" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#14213d" stroke-width="2"/></svg>
+            <input type="password" id="changeNewPassword" placeholder="Password baru (min. 6 karakter)" autocomplete="new-password">
+          </div>
+        </div>
+        <div class="field">
+          <div class="input-icon">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="5" y="11" width="14" height="9" rx="2" stroke="#14213d" stroke-width="2"/><path d="M8 11V7a4 4 0 018 0v4" stroke="#14213d" stroke-width="2"/></svg>
+            <input type="password" id="changeNewPassword2" placeholder="Ulangi password baru" autocomplete="new-password">
+          </div>
+        </div>
+
+        <div class="error-msg" id="changeError"></div>
+
+        <button class="login-btn" id="changeSubmitBtn" onclick="doChangePassword()">GANTI PASSWORD</button>
 
         <p class="hint" style="text-align:center;">
           <a class="forgot" href="#" onclick="showLoginStep(); return false;">← Balik ke login</a>
@@ -213,6 +255,8 @@
     measurementId: "G-EMLP5TSZ13"
   };
 
+  let isChangingPassword = false;
+
   function initFirebaseAndShowLogin(config) {
     try {
       if (!firebase.apps.length) firebase.initializeApp(config);
@@ -231,7 +275,9 @@
 
     // Kalau ternyata udah login (session masih aktif), langsung redirect
     firebase.auth().onAuthStateChanged(function (user) {
-      if (user) window.location.href = redirectTarget;
+      // isChangingPassword: pas proses ganti password kita sengaja login sebentar buat
+      // verifikasi password lama, jangan sampai kebawa redirect ke dashboard.
+      if (user && !isChangingPassword) window.location.href = redirectTarget;
     });
   }
 
@@ -248,6 +294,10 @@
   // Login pake Enter key
   document.getElementById("loginPassword").addEventListener("keydown", function (e) {
     if (e.key === "Enter") doLogin();
+  });
+
+  document.getElementById("changeNewPassword2").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") doChangePassword();
   });
 
   function doLogin() {
@@ -280,7 +330,9 @@
   // sebelumnya.
   function showForgotStep() {
     document.getElementById("loginError").innerText = "";
+    document.getElementById("loginSuccess").innerText = "";
     document.getElementById("loginStep").classList.add("hidden");
+    document.getElementById("changeStep").classList.add("hidden");
     document.getElementById("forgotStep").classList.remove("hidden");
     document.getElementById("forgotError").innerText = "";
     document.getElementById("forgotSuccess").innerText = "";
@@ -295,7 +347,74 @@
     document.getElementById("forgotError").innerText = "";
     document.getElementById("forgotSuccess").innerText = "";
     document.getElementById("forgotStep").classList.add("hidden");
+    document.getElementById("changeStep").classList.add("hidden");
+    document.getElementById("changeError").innerText = "";
     document.getElementById("loginStep").classList.remove("hidden");
+  }
+
+  // ==== GANTI PASSWORD (pakai password lama) ====
+  // Verifikasi identitas = login pakai email + password lama, baru updatePassword().
+  // Lupa password lama tetap lewat "Lupa password?" (link ke email).
+  function showChangeStep() {
+    document.getElementById("loginError").innerText = "";
+    document.getElementById("loginSuccess").innerText = "";
+    document.getElementById("changeError").innerText = "";
+    document.getElementById("loginStep").classList.add("hidden");
+    document.getElementById("forgotStep").classList.add("hidden");
+    document.getElementById("changeStep").classList.remove("hidden");
+    const loginEmailVal = document.getElementById("loginEmail").value.trim();
+    if (loginEmailVal) document.getElementById("changeEmail").value = loginEmailVal;
+    document.getElementById(loginEmailVal ? "changeOldPassword" : "changeEmail").focus();
+  }
+
+  function doChangePassword() {
+    const email = document.getElementById("changeEmail").value.trim();
+    const oldPw = document.getElementById("changeOldPassword").value;
+    const newPw = document.getElementById("changeNewPassword").value;
+    const newPw2 = document.getElementById("changeNewPassword2").value;
+    const errEl = document.getElementById("changeError");
+    const btn = document.getElementById("changeSubmitBtn");
+    errEl.innerText = "";
+
+    if (!email || !oldPw || !newPw || !newPw2) { errEl.innerText = "Isi semua kolom dulu bro."; return; }
+    if (newPw.length < 6) { errEl.innerText = "❌ Password baru minimal 6 karakter."; return; }
+    if (newPw !== newPw2) { errEl.innerText = "❌ Password baru dan ulangannya gak sama."; return; }
+    if (newPw === oldPw) { errEl.innerText = "❌ Password baru harus beda dari password lama."; return; }
+
+    btn.disabled = true;
+    btn.innerText = "MEMPROSES...";
+    isChangingPassword = true;
+
+    firebase.auth().signInWithEmailAndPassword(email, oldPw)
+      .then(function (cred) { return cred.user.updatePassword(newPw); })
+      .then(function () { return firebase.auth().signOut(); })
+      .then(function () {
+        ["changeOldPassword", "changeNewPassword", "changeNewPassword2"].forEach(function (id) {
+          document.getElementById(id).value = "";
+        });
+        document.getElementById("loginPassword").value = "";
+        document.getElementById("loginEmail").value = email;
+        showLoginStep();
+        document.getElementById("loginSuccess").innerText = "✅ Password berhasil diganti. Silakan login pakai password baru.";
+      })
+      .catch(function (err) {
+        if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password" || err.code === "auth/user-not-found") {
+          errEl.innerText = "❌ Email atau password lama salah.";
+        } else if (err.code === "auth/weak-password") {
+          errEl.innerText = "❌ Password baru terlalu lemah, pakai minimal 6 karakter.";
+        } else if (err.code === "auth/too-many-requests") {
+          errEl.innerText = "❌ Kebanyakan percobaan gagal, coba lagi beberapa menit lagi.";
+        } else {
+          errEl.innerText = "❌ Gagal ganti password: " + err.message;
+        }
+        // kalau sempet ke-login tapi updatePassword gagal, keluarin lagi
+        if (firebase.auth().currentUser) firebase.auth().signOut();
+      })
+      .finally(function () {
+        isChangingPassword = false;
+        btn.disabled = false;
+        btn.innerText = "GANTI PASSWORD";
+      });
   }
 
   // Kirim email reset password lewat Firebase Authentication. Firebase SENGAJA
