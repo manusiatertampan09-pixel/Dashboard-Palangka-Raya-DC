@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=1280">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Inventory Control - Internal Palangka Raya DC</title>
   <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
@@ -416,6 +416,158 @@
     .fb-dashboard-preview-list .fb-board-item-time { color: #737373; }
     .fb-dashboard-preview-list .fb-board-item-msg { color: #171717; }
     .fb-dashboard-preview-list .fb-board-empty { color: #737373; }
+
+    /* ==================== UI REFRESH (override, JS & ID tidak diubah) ==================== */
+    :root {
+      --ui-bg: #f6f6f4; --ui-surface: #ffffff; --ui-line: #e7e5e4; --ui-line-strong: #d6d3d1;
+      --ui-text: #1c1917; --ui-muted: #78716c; --ui-accent: #1d4ed8; --ui-accent-soft: #eff4ff;
+      --ui-warn: #b45309; --ui-warn-soft: #fffbeb; --ui-danger: #b91c1c; --ui-danger-soft: #fef2f2; --ui-ok: #15803d;
+      --ui-radius: 10px; --ui-shadow: 0 1px 2px rgba(28,25,23,.05);
+    }
+    html { scroll-behavior: smooth; }
+    body { background: var(--ui-bg); color: var(--ui-text); font-size: 14px; line-height: 1.5; padding: 16px 16px 40px 72px; -webkit-font-smoothing: antialiased; }
+    :focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; scroll-behavior: auto !important; } }
+
+    .container { background: transparent; border: none; box-shadow: none; padding: 0; max-width: 100%; margin: 0; width: 100%; }
+    h2 { font-size: 22px; letter-spacing: -0.2px; }
+    .header-bar { margin-bottom: 14px; }
+    .hamburger-btn { top: 14px; left: 14px; width: 44px; height: 44px; border-radius: 10px; font-size: 18px; }
+
+    /* Tab bar: sticky, bisa digeser di HP, tab aktif jelas */
+    .header-bar:has(.inv-tabs) { position: sticky; top: 0; z-index: 90; margin: 0 -16px 16px -16px; padding: 10px 16px; background: rgba(246,246,244,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--ui-line); }
+    .inv-tabs { gap: 6px; margin: 0; overflow-x: auto; max-width: 100%; scrollbar-width: none; padding: 2px; }
+    .inv-tabs::-webkit-scrollbar { display: none; }
+    .inv-tab-btn { flex-shrink: 0; padding: 10px 16px; font-size: 13.5px; font-weight: 600; border-radius: 8px; border-color: var(--ui-line); color: var(--ui-muted); background: var(--ui-surface); }
+    .inv-tab-btn:hover { color: var(--ui-text); background: #fff; border-color: var(--ui-line-strong); }
+    .inv-tab-btn.active { background: var(--ui-text); border-color: var(--ui-text); color: #fff; }
+    .inv-panel.active { animation: ui-in .18s ease-out; }
+    @keyframes ui-in { from { opacity: 0; } to { opacity: 1; } }
+
+    /* Panel & kartu */
+    .panel-box { border-color: var(--ui-line); border-radius: var(--ui-radius); padding: 18px; box-shadow: var(--ui-shadow); }
+    .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; gap: 8px; }
+    .grid-2 { gap: 16px; margin-bottom: 16px; }
+    .chart-wrap { height: 260px; }
+
+    /* KPI */
+    .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 16px; }
+    .kpi-card { text-align: left; padding: 16px 18px; border-radius: var(--ui-radius); border-color: var(--ui-line); box-shadow: var(--ui-shadow); }
+    .kpi-title { font-size: 12.5px; text-transform: none; letter-spacing: 0; color: var(--ui-muted); font-weight: 600; margin-bottom: 6px; }
+    .kpi-value { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; line-height: 1.1; }
+    .kpi-delta { font-size: 12.5px; }
+    .kpi-card.warn { border-color: #fcd34d; background: var(--ui-warn-soft); transition: transform .12s, box-shadow .12s; }
+    .kpi-card.warn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(180,83,9,.15); }
+    .kpi-card.warn .kpi-value { color: var(--ui-warn); }
+
+    /* Form */
+    .form-item { font-size: 13px; color: #44403c; gap: 6px; }
+    .form-item input, .form-item select, .form-item textarea, .date-range-input,
+    .usage-item-row select.usage-item-asset, .usage-item-row input.usage-item-qty, .asset-combo > input {
+      padding: 10px 12px; font-size: 14px; border: 1px solid var(--ui-line-strong); border-radius: 8px; min-height: 42px; background: #fff;
+    }
+    .form-item input:focus, .form-item select:focus, .form-item textarea:focus, .date-range-input:focus, .asset-combo > input:focus,
+    .tag-input-box:focus-within { outline: none; border-color: var(--ui-accent); box-shadow: 0 0 0 3px rgba(29,78,216,.15); }
+    .form-item small { font-size: 12px; color: var(--ui-muted); }
+    .usage-item-row { gap: 8px; margin-bottom: 10px; }
+    .usage-form-layout { gap: 20px; }
+    .form-msg { font-size: 13.5px; min-height: 20px; margin-top: 10px; }
+    .form-msg.err { color: var(--ui-danger); text-decoration: none; background: var(--ui-danger-soft); padding: 8px 12px; border-radius: 8px; }
+    .form-msg.ok { color: var(--ui-ok); }
+    .form-msg:empty { padding: 0; background: none; }
+    .readonly-note { font-size: 12.5px; color: var(--ui-muted); font-style: normal; background: #f5f5f4; border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; }
+
+    /* Tombol */
+    .btn-primary, .btn-secondary { font-size: 14px; font-weight: 600; padding: 10px 18px; min-height: 42px; border-radius: 8px; transition: background .12s, border-color .12s, transform .05s; }
+    .btn-primary { background: var(--ui-text); border-color: var(--ui-text); }
+    .btn-primary:hover { background: #292524; }
+    .btn-secondary { border-color: var(--ui-line-strong); }
+    .btn-secondary:hover { background: #f5f5f4; border-color: #a8a29e; }
+    .btn-primary:active, .btn-secondary:active { transform: scale(.98); }
+    .btn-edit-sm, .btn-danger-sm, .btn-icon-sm { font-size: 12.5px; font-weight: 600; padding: 6px 11px; min-height: 32px; border-radius: 6px; }
+    .btn-danger-sm { color: var(--ui-danger); border-color: #fca5a5; }
+    .btn-danger-sm:hover { background: var(--ui-danger); border-color: var(--ui-danger); color: #fff; }
+    .range-tab-btn { font-size: 12.5px; padding: 7px 14px; min-height: 34px; font-weight: 600; }
+    #devisiFormBadge { background: var(--ui-text) !important; font-size: 13px !important; }
+
+    /* Tabel */
+    .table-wrapper { border-color: var(--ui-line); border-radius: var(--ui-radius); max-height: 60vh; background: #fff; }
+    table { font-size: 14px; }
+    th, td { padding: 12px 16px; border-bottom-color: #f0eeec; }
+    th { background: #f5f5f4; color: #57534e; font-size: 12.5px; text-transform: none; letter-spacing: 0; font-weight: 700; height: 42px; border-bottom: 1px solid var(--ui-line-strong); }
+    tr:nth-child(even) td { background: #fff; }
+    tr:hover td { background: #f8f8f7; }
+    tr.low-stock td { background: var(--ui-warn-soft) !important; font-weight: 600; }
+    tr.low-stock td:first-child { box-shadow: inset 3px 0 0 var(--ui-warn); }
+    .empty-row td { padding: 36px 16px; font-weight: 500; font-size: 14px; color: var(--ui-muted); }
+    .badge-lowstock { background: var(--ui-warn); font-size: 11.5px; padding: 3px 9px; border-radius: 999px; }
+    .days-left { font-weight: 700; }
+    .asset-photo-thumb { width: 40px; height: 40px; border-radius: 8px; }
+    .audit-action-badge { font-size: 11.5px; padding: 3px 10px; text-transform: none; }
+    .tag-chip { font-size: 12.5px; }
+    .ac-item, .asset-combo-item { font-size: 14px; padding: 10px 12px; }
+    .asset-combo-item:hover, .asset-combo-item.active { background: var(--ui-accent-soft); color: var(--ui-text); }
+    .asset-combo-item.empty-stock:hover, .asset-combo-item.empty-stock.active { color: var(--ui-danger); background: var(--ui-danger-soft); }
+    .asset-combo-list { max-height: 280px; }
+
+    /* Banner stok menipis */
+    .lowstock-banner { font-size: 14px; padding: 12px 16px; border-radius: var(--ui-radius); }
+    .lowstock-banner-close { font-size: 17px; padding: 6px 10px; }
+
+    /* Modal: bisa di-scroll di layar kecil */
+    .modal-backdrop, .confirm-backdrop { padding: 16px; backdrop-filter: blur(2px); }
+    .modal-box { max-height: calc(100vh - 32px); overflow-y: auto; border-radius: 14px; padding: 24px; max-width: 460px; }
+    .modal-box h3 { font-size: 17px; margin-bottom: 18px; }
+    .modal-box .form-item { margin-bottom: 14px; }
+    .modal-actions { position: sticky; bottom: -24px; background: #fff; padding: 14px 0 0; margin-top: 8px; }
+    .confirm-box .confirm-msg { font-size: 14.5px; }
+    .confirm-btn { font-size: 14px; padding: 10px 18px; min-height: 42px; }
+    .confirm-btn-ok { background: var(--ui-text); }
+
+    /* Toast pindah ke bawah-kanan, lebih terbaca */
+    .toast-stack { top: auto; bottom: 20px; right: 20px; max-width: min(380px, calc(100vw - 40px)); }
+    .toast-item { font-size: 14px; border-radius: 10px; }
+
+    /* Sidebar */
+    .app-sidebar-link { font-size: 14.5px; padding: 11px 14px; border-radius: 8px; }
+    .app-sidebar-group-label { font-size: 12px; font-weight: 700; }
+    .fb-board-item-msg { font-size: 13.5px; }
+
+    /* HP & tablet */
+    @media (max-width: 900px) {
+      body { padding: 68px 12px 32px 12px; }
+      .header-bar:has(.inv-tabs) { margin: 0 -12px 14px; padding: 8px 12px; top: 0; }
+      h2 { font-size: 19px; }
+      .panel-box { padding: 14px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .kpi-value { font-size: 24px; }
+      .header-bar > div[style*="display:flex"] { width: 100%; }
+      .header-bar .btn-primary, .header-bar .btn-secondary { flex: 1 1 calc(50% - 8px); }
+      .panel-title > div[style*="display:flex"] { width: 100%; }
+      .app-sidebar { width: min(300px, 86vw); }
+      .toast-stack { right: 12px; bottom: 12px; left: 12px; max-width: none; }
+    }
+    @media (max-width: 520px) {
+      .usage-item-row { flex-wrap: wrap; }
+      .usage-item-row .asset-combo { flex: 1 1 100%; }
+      .usage-item-row input.usage-item-qty { flex: 1 1 60%; }
+      .modal-box { padding: 18px; }
+      .modal-actions { bottom: -18px; }
+      .modal-actions button, .confirm-actions button { flex: 1; }
+    }
+
+    /* ===== Scrollbar tabel: tiap tabel punya scroll sendiri (vertikal + horizontal), header tabel nempel di atas ===== */
+    .container .table-wrapper { overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #a8a29e #f5f5f4; }
+    .container .table-wrapper::-webkit-scrollbar { width: 10px; height: 10px; }
+    .container .table-wrapper::-webkit-scrollbar-track { background: #f5f5f4; border-radius: 8px; }
+    .container .table-wrapper::-webkit-scrollbar-thumb { background: #a8a29e; border-radius: 8px; border: 2px solid #f5f5f4; }
+    .container .table-wrapper::-webkit-scrollbar-thumb:hover { background: #78716c; }
+    .container th { position: sticky; top: 0; z-index: 2; }
+
+    /* Stock, Audit Log & Master Nama Asset: tabel dibuat full sampai bawah layar (tinggi dihitung otomatis lewat JS fitTableToBottom) */
+    body.fit-page { padding-bottom: 16px; }
+    .inv-panel.fit-bottom .table-wrapper { max-height: none !important; height: var(--fit-h, 60vh); min-height: 240px; }
+    @media print { .hamburger-btn, .app-sidebar, .toast-stack { display: none !important; } body { padding: 0; } }
   </style>
 </head>
 <body>
@@ -875,7 +1027,6 @@
         <button class="app-sidebar-link" data-tab="usage" onclick="switchInvSubmenu('usage')">📝 <span data-i18n="inv.tab.usage">Log Activity Usage</span></button>
         <button class="app-sidebar-link" data-tab="dashboard" onclick="switchInvSubmenu('dashboard')">📊 <span data-i18n="inv.tab.dashboard">Highlight Usage</span></button>
         <button class="app-sidebar-link" data-tab="stock" onclick="switchInvSubmenu('stock')">🗄️ <span data-i18n="inv.tab.stock">Stock</span></button>
-        <button class="app-sidebar-link" data-tab="assetItNca" onclick="switchInvSubmenu('assetItNca')">🖥️ <span data-i18n="inv.tab.assetItNca">Database Asset IT &amp; NCA</span></button>
         <button class="app-sidebar-link" data-tab="auditLog" onclick="switchInvSubmenu('auditLog')">📜 <span data-i18n="inv.tab.auditLog">Audit Log</span></button>
         <button class="app-sidebar-link" data-tab="assetMaster" onclick="switchInvSubmenu('assetMaster')">🏷️ <span data-i18n="inv.tab.assetMaster">Master Nama Asset</span></button>
       </div>
@@ -946,7 +1097,6 @@
       <button class="inv-tab-btn" data-tab="usage" onclick="switchInvSubmenu('usage')">📝 <span data-i18n="inv.tab.usage">Log Activity Usage</span></button>
       <button class="inv-tab-btn" data-tab="dashboard" onclick="switchInvSubmenu('dashboard')">📊 <span data-i18n="inv.tab.dashboard">Highlight Usage</span></button>
       <button class="inv-tab-btn" data-tab="stock" onclick="switchInvSubmenu('stock')">🗄️ <span data-i18n="inv.tab.stock">Stock</span></button>
-      <button class="inv-tab-btn" data-tab="assetItNca" onclick="switchInvSubmenu('assetItNca')">🖥️ <span data-i18n="inv.tab.assetItNca">Database Asset IT &amp; NCA</span></button>
       <button class="inv-tab-btn" data-tab="auditLog" onclick="switchInvSubmenu('auditLog')">📜 <span data-i18n="inv.tab.auditLog">Audit Log</span></button>
       <button class="inv-tab-btn" data-tab="assetMaster" onclick="switchInvSubmenu('assetMaster')">🏷️ <span data-i18n="inv.tab.assetMaster">Master Nama Asset</span></button>
     </div>
@@ -1015,16 +1165,6 @@
 
   <!-- ================= SUBMENU 2: HIGHLIGHT DAILY & MONTHLY USAGE (Dashboard) ================= -->
   <section id="invPanelDashboard" class="inv-panel">
-
-    <div class="panel-box" style="margin-bottom:18px;">
-      <div class="panel-title" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px;">
-        <span data-i18n="feedback.dashboardPreview.title">💬 Saran & Masukan Terbaru</span>
-        <button class="range-tab-btn" onclick="openFeedbackBoard()" data-i18n="feedback.dashboardPreview.viewAll">Lihat Semua & Kirim</button>
-      </div>
-      <div class="fb-dashboard-preview-list" id="fbDashboardPreviewList">
-        <div class="fb-board-empty" data-i18n="feedback.empty">Belum ada saran &amp; masukan.</div>
-      </div>
-    </div>
 
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
       <span style="font-size:12px; font-weight:800; color:#525252;" data-i18n="inv.dash.breakdownLabel">Breakdown Divisi:</span>
@@ -1100,7 +1240,7 @@
   </section>
 
   <!-- ================= SUBMENU: MASTER NAMA ASSET ================= -->
-  <section id="invPanelAssetMaster" class="inv-panel">
+  <section id="invPanelAssetMaster" class="inv-panel fit-bottom">
     <div class="header-bar">
       <div class="panel-title" style="margin:0;">🏷️ <span data-i18n="inv.master.title">Database Nama Asset</span></div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -1123,7 +1263,7 @@
   </section>
 
   <!-- ================= SUBMENU 3: STOCK ================= -->
-  <section id="invPanelStock" class="inv-panel">
+  <section id="invPanelStock" class="inv-panel fit-bottom">
     <div class="header-bar">
       <div class="panel-title" style="margin:0;">🗄️ <span data-i18n="inv.stock.title">Database Stock Asset</span></div>
       <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
@@ -1144,41 +1284,8 @@
     </div>
   </section>
 
-  <!-- ================= SUBMENU 4: DATABASE ASSET IT & NCA ================= -->
-  <section id="invPanelAssetItNca" class="inv-panel">
-    <div class="header-bar">
-      <div class="panel-title" style="margin:0;">🖥️ <span data-i18n="inv.itnca.title">Database Asset IT &amp; NCA (Non Consumable Asset)</span></div>
-      <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-        <button class="btn-secondary" id="btnExportAssetItNca" onclick="exportAssetItNcaExcel()">⬇️ <span data-i18n="inv.action.exportExcel">Export Excel</span></button>
-        <button class="btn-secondary" onclick="exportAssetItNcaPdf()">📄 <span data-i18n="inv.action.exportPdf">Export PDF</span></button>
-        <button class="btn-primary" id="btnAddAssetItNca" onclick="openAssetItNcaModal(null)">➕ <span data-i18n="inv.action.addAsset">Tambah Asset</span></button>
-        <button class="btn-secondary" id="btnImportAssetItNca" onclick="document.getElementById('assetItNcaImportFileInput').click()">📥 <span data-i18n="inv.action.importExcel">Import Excel</span></button>
-        <button class="btn-secondary" id="btnBulkTemplateAssetItNca" onclick="downloadAssetItNcaBulkTemplate()">📄 <span data-i18n="inv.action.bulkTemplate">Bulk Template</span></button>
-        <input type="file" id="assetItNcaImportFileInput" accept=".xlsx,.xls" style="display:none;" onchange="handleAssetItNcaImportFile(event)">
-      </div>
-    </div>
-    <div style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; margin-bottom:12px;">
-      <input type="text" id="assetItNcaFilterInput" class="date-range-input" style="min-width:180px;" placeholder="🔍 Cari nama / no. inventaris / PIC..." data-i18n-placeholder="inv.itnca.searchPlaceholder" oninput="applyAssetItNcaFilter()">
-      <select id="assetItNcaJenisFilter" class="date-range-input" onchange="applyAssetItNcaFilter()">
-        <option value="" data-i18n="inv.itnca.allTypes">Semua Jenis</option>
-        <option value="IT">IT</option>
-        <option value="NCA">NCA</option>
-      </select>
-      <button class="range-tab-btn" onclick="resetAssetItNcaFilter()" data-i18n="inv.action.reset">Reset</button>
-    </div>
-    <p class="readonly-note" id="assetItNcaReadonlyNote" style="display:none;" data-i18n="inv.itnca.readonlyNote">🔒 Kamu cuma bisa lihat data Database Asset IT &amp; NCA. Tambah/Edit/Hapus cuma bisa dilakukan admin.</p>
-    <div class="table-wrapper">
-      <table>
-        <thead>
-          <tr><th data-i18n="inv.th.photo">Foto</th><th data-i18n="inv.th.assetName">Nama Asset</th><th data-i18n="inv.th.type">Jenis</th><th data-i18n="inv.th.amount">Jumlah</th><th data-i18n="inv.th.serialNo">No. Serial / Inventaris</th><th data-i18n="inv.th.picHolder">PIC Pemegang</th><th data-i18n="inv.th.location">Lokasi</th><th data-i18n="inv.th.status">Status</th><th data-i18n="inv.th.note">Catatan</th><th data-i18n="inv.th.lastUpdate">Update Terakhir</th><th data-i18n="inv.th.action">Action</th></tr>
-        </thead>
-        <tbody id="assetItNcaBody"><tr class="empty-row"><td colspan="11" data-i18n="inv.itnca.emptyTable">Belum ada data Asset IT &amp; NCA</td></tr></tbody>
-      </table>
-    </div>
-  </section>
-
   <!-- ================= SUBMENU 5: AUDIT LOG ================= -->
-  <section id="invPanelAuditLog" class="inv-panel">
+  <section id="invPanelAuditLog" class="inv-panel fit-bottom">
     <div class="header-bar">
       <div class="panel-title" style="margin:0;">📜 <span data-i18n="inv.audit.title">Audit Log — Jejak Perubahan Data</span></div>
     </div>
@@ -1187,7 +1294,6 @@
       <select id="auditLogModuleFilter" class="date-range-input" onchange="applyAuditLogFilter()">
         <option value="" data-i18n="inv.audit.allModules">Semua Modul</option>
         <option value="Stock">Stock</option>
-        <option value="Asset IT & NCA">Asset IT &amp; NCA</option>
         <option value="Log Usage">Log Usage</option>
         <option value="Master Asset">Master Asset</option>
       </select>
@@ -1296,70 +1402,6 @@
     <div class="modal-actions">
       <button class="btn-secondary" onclick="closeLogModal()" data-i18n="inv.action.cancel">Batal</button>
       <button class="btn-primary" onclick="saveEditLog()" data-i18n="inv.action.save">Simpan</button>
-    </div>
-  </div>
-</div>
-
-<!-- ==== MODAL TAMBAH / EDIT ASSET IT & NCA ==== -->
-<div class="modal-backdrop" id="assetItNcaModalBackdrop">
-  <div class="modal-box">
-    <h3 id="assetItNcaModalTitle">➕ <span data-i18n="inv.modal.addAssetItNcaTitle">Tambah Asset IT / NCA Baru</span></h3>
-    <input type="hidden" id="assetItNcaModalId">
-    <div class="form-item">
-      <label data-i18n="inv.th.assetName">Nama Asset</label>
-      <input type="text" id="assetItNcaNameInput" placeholder="Contoh: Laptop Lenovo, Meja Kerja, dll" data-i18n-placeholder="inv.placeholder.assetItNcaNameExample">
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.th.type">Jenis</label>
-      <select id="assetItNcaJenisInput" onchange="toggleAssetItNcaJumlahField()">
-        <option value="IT">IT</option>
-        <option value="NCA" data-i18n="inv.option.ncaDesc">NCA (Non Consumable Asset)</option>
-      </select>
-    </div>
-    <div class="form-item" id="assetItNcaJumlahFormItem" style="display:none;">
-      <label data-i18n="inv.label.qtyAsset">Jumlah Asset</label>
-      <input type="number" id="assetItNcaQtyInput" min="1" step="1" placeholder="1">
-      <small data-i18n="inv.hint.qtyAsset">Buat NCA yang jumlahnya lebih dari 1 (misal: 5 Meja Kerja, 10 Kursi Kantor)</small>
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.label.serialOptional">No. Serial / Inventaris (opsional)</label>
-      <input type="text" id="assetItNcaSerialInput" placeholder="Contoh: SN-12345 / INV-0001" data-i18n-placeholder="inv.placeholder.serialExample">
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.label.picOptional">PIC Pemegang (opsional)</label>
-      <input type="text" id="assetItNcaPicInput" placeholder="Nama karyawan/divisi pemegang asset" data-i18n-placeholder="inv.placeholder.picExample">
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.label.locationOptional">Lokasi (opsional)</label>
-      <input type="text" id="assetItNcaLokasiInput" placeholder="Contoh: Ruang Ops, Meja PIC IT, dll" data-i18n-placeholder="inv.placeholder.locationExample">
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.th.status">Status</label>
-      <select id="assetItNcaStatusInput">
-        <option value="Aktif" data-i18n="inv.status.active">Aktif</option>
-        <option value="Rusak" data-i18n="inv.status.damaged">Rusak</option>
-        <option value="Diperbaiki" data-i18n="inv.status.underRepair">Diperbaiki</option>
-        <option value="Non-Aktif" data-i18n="inv.status.inactive">Non-Aktif</option>
-      </select>
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.label.noteOptional">Catatan (opsional)</label>
-      <input type="text" id="assetItNcaNoteInput" placeholder="Keterangan tambahan..." data-i18n-placeholder="inv.placeholder.noteExtra">
-    </div>
-    <div class="form-item">
-      <label data-i18n="inv.label.photoOptional">Foto Kondisi Asset (opsional)</label>
-      <input type="file" id="assetItNcaPhotoInput" accept="image/*" onchange="handleAssetItNcaPhotoPick(event)">
-      <input type="hidden" id="assetItNcaPhotoData">
-      <div class="photo-preview-box" id="assetItNcaPhotoPreviewBox" style="display:none;">
-        <img id="assetItNcaPhotoPreviewImg" src="" alt="Preview">
-        <button type="button" class="btn-secondary" onclick="removeAssetItNcaPhoto()">🗑️ <span data-i18n="inv.action.removePhoto">Hapus Foto</span></button>
-      </div>
-      <small data-i18n="inv.hint.photo">Foto otomatis dikompres biar hemat, cocok buat dokumentasi kondisi Rusak/Diperbaiki.</small>
-    </div>
-    <div class="form-msg" id="assetItNcaModalMsg"></div>
-    <div class="modal-actions">
-      <button class="btn-secondary" onclick="closeAssetItNcaModal()" data-i18n="inv.action.cancel">Batal</button>
-      <button class="btn-primary" onclick="saveAssetItNca()" data-i18n="inv.action.save">Simpan</button>
     </div>
   </div>
 </div>
@@ -1526,10 +1568,29 @@
   }
   collapseAllSidebarGroups();
 
+  // Bikin tabel di tab Stock / Audit Log / Master Nama Asset memanjang sampai bawah layar
+  function fitTableToBottom() {
+    const panel = document.querySelector('.inv-panel.active.fit-bottom');
+    document.body.classList.toggle('fit-page', !!panel);
+    document.querySelectorAll('.inv-panel.fit-bottom .table-wrapper').forEach(function (w) { w.style.removeProperty('--fit-h'); });
+    if (!panel) return;
+    const wrap = panel.querySelector('.table-wrapper');
+    if (!wrap) return;
+    const top = wrap.getBoundingClientRect().top + window.scrollY;
+    const h = Math.max(240, window.innerHeight - top - 16);
+    wrap.style.setProperty('--fit-h', h + 'px');
+  }
+  window.addEventListener('resize', fitTableToBottom);
+  window.addEventListener('load', fitTableToBottom);
+  (function () {
+    const b = document.getElementById('lowStockBanner');
+    if (b && window.ResizeObserver) new ResizeObserver(function () { requestAnimationFrame(fitTableToBottom); }).observe(b);
+  })();
+
   function switchInvSubmenu(tab) {
     currentInvSubmenu = tab;
 
-    ['usage', 'dashboard', 'assetMaster', 'stock', 'assetItNca', 'auditLog'].forEach(function (key) {
+    ['usage', 'dashboard', 'assetMaster', 'stock', 'auditLog'].forEach(function (key) {
       document.getElementById('invPanel' + capitalize(key)).classList.toggle('active', key === tab);
     });
     document.querySelectorAll('.inv-tab-btn').forEach(function (btn) {
@@ -1543,6 +1604,7 @@
     document.getElementById('appSidebarBackdrop').classList.remove('open');
 
     renderForCurrentFacility();
+    fitTableToBottom();
     if (tab === 'dashboard' && dailyUsageChart) dailyUsageChart.resize();
     if (tab === 'dashboard' && monthlyTrendChart) monthlyTrendChart.resize();
   }
@@ -1592,11 +1654,6 @@
       fbDb.ref(FB_ROOT + '/' + facility + '/usageLogs').limitToLast(500).on('value', function (snap) {
         usageLogsDataByFacility[facility] = snap.val() || {};
         if (facility === currentFacility) renderUsageDashboard();
-      });
-
-      fbDb.ref(FB_ROOT + '/' + facility + '/assetItNca').on('value', function (snap) {
-        assetItNcaByFacility[facility] = snap.val() || {};
-        if (facility === currentFacility) renderAssetItNcaTable();
       });
 
       fbDb.ref(FB_ROOT + '/' + facility + '/assetMaster').on('value', function (snap) {
@@ -2287,6 +2344,7 @@
   }
 
   function renderAssetItNcaTable() {
+    if (!document.getElementById('assetItNcaBody')) return; // tab IT & NCA sudah dihapus
     const tbody = document.getElementById('assetItNcaBody');
     const data = getAssetItNcaData();
     const canEdit = !!window.__authCanDelete;
