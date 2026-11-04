@@ -807,6 +807,12 @@ tailwind.config = {
         <span id="pbFileName" data-i18n="pb.header.noImport">Belum ada import</span>
       </span>
 
+      <!-- LOG UPDATE (riwayat import file) -->
+      <button type="button" id="pbLogBtn" onclick="openPbLogModal()" class="pbx-hbtn pbx-hbtn-ghost" title="Log Update — Riwayat Import File" aria-label="Log Update">
+        <i class="fa-solid fa-clock-rotate-left text-amber-300"></i>
+        <span data-i18n="pb.log.btn" class="hidden md:inline">Log Update</span>
+      </button>
+
       <span class="pbx-hsep" id="pbResetSep" aria-hidden="true" style="display:none"></span>
 
       <!-- RESET DATA (hanya tampil untuk PB_RESET_ALLOWED_EMAIL) -->
@@ -975,6 +981,46 @@ tailwind.config = {
     </div>
   </section>
 </main>
+
+<!-- POPUP MODAL LOG UPDATE (RIWAYAT IMPORT FILE) -->
+<div id="pbLogModal" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity" role="dialog" aria-modal="true" aria-labelledby="pbLogTitle" onclick="if(event.target===this)closePbLogModal()">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[88vh]">
+    <div class="bg-slate-900 text-white p-3.5 flex justify-between items-center border-b dark:border-slate-800 flex-shrink-0">
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-9 h-9 bg-amber-500/10 border border-amber-500/30 rounded-lg flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+        </div>
+        <div class="min-w-0">
+          <h3 id="pbLogTitle" data-i18n="pb.log.title" class="font-extrabold text-sm tracking-wide truncate">Log Update — Riwayat Import File</h3>
+          <p data-i18n="pb.log.subtitle" class="text-[10px] text-slate-400 mt-0.5">Daftar file yang pernah diimport, jam berapa, dan siapa yang import</p>
+        </div>
+      </div>
+      <button id="pbLogCloseX" type="button" onclick="closePbLogModal()" aria-label="Tutup" class="text-slate-400 hover:text-white transition-all text-xl p-1 rounded-lg hover:bg-slate-800 shrink-0">&times;</button>
+    </div>
+
+    <div class="overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-slate-900 p-3 space-y-2">
+      <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm overflow-hidden">
+        <div class="grid grid-cols-12 gap-1 px-3 py-1.5 bg-slate-800 dark:bg-slate-950 text-white text-[10px] font-bold sticky top-0 z-10">
+          <span class="col-span-5" data-i18n="pb.log.colFile">Nama File</span>
+          <span class="col-span-3" data-i18n="pb.log.colTime">Jam Import</span>
+          <span class="col-span-3" data-i18n="pb.log.colBy">Diimport Oleh</span>
+          <span class="col-span-1 text-right" data-i18n="pb.log.colAction">Aksi</span>
+        </div>
+        <div id="pbLogList" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono text-[11px]">
+          <div class="p-4 text-center text-slate-400 dark:text-slate-500 font-sans">Memuat riwayat import...</div>
+        </div>
+      </div>
+      <p id="pbLogLimitNote" class="hidden text-[10px] text-slate-400 dark:text-slate-500 font-sans px-1"></p>
+      <p class="text-[10px] text-slate-400 dark:text-slate-500 font-sans px-1">
+        <i class="fa-solid fa-circle-info mr-1"></i><span data-i18n="pb.log.footerNote">Menghapus log di sini cuma menghapus riwayat/audit trail-nya. Data performa packer yang sudah diimport tidak ikut terhapus.</span>
+      </p>
+    </div>
+
+    <div class="bg-slate-50 dark:bg-slate-900 p-2.5 border-t dark:border-slate-800 text-right flex-shrink-0">
+      <button type="button" onclick="closePbLogModal()" data-i18n="pb.log.close" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-5 py-1.5 rounded-lg text-[11px] transition">Tutup</button>
+    </div>
+  </div>
+</div>
 
 <!-- DETAIL POPUP MODAL -->
 <div id="pbDetailModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3" role="dialog" aria-modal="true" aria-labelledby="pbDetailName">
@@ -1591,6 +1637,182 @@ function renderPbHourChart(labels, data, target) {
   });
 }
 
+// ==== LOG UPDATE (riwayat import file: nama file + jam + siapa yang import) ====
+// Data log ditulis oleh 4 fungsi import (PDVT harian, raw bulanan, per jam, roster) ke
+// FB_PB_ROOT/importLogs. Di sini cuma bagian BACA + TAMPIL + HAPUS.
+// Listener cuma nempel selama modal kebuka (off pas ditutup) dan dibatasi PB_LOG_LIMIT entri
+// terakhir. orderByKey dipakai karena push-ID Firebase urut waktu, jadi gak butuh .indexOn.
+const PB_LOG_LIMIT = 100;
+// true = tombol hapus log cuma muncul buat PB_RESET_ALLOWED_EMAIL (pola yang sama kayak Reset Data).
+// Ganti ke false kalau mau semua user login bisa hapus (yang BENAR-BENAR nentuin tetap Firebase Rules).
+const PB_LOG_DELETE_ADMIN_ONLY = true;
+
+let pbLogEntries = [];
+let pbLogRef = null;
+let pbLogHandler = null;
+let pbLogState = 'loading'; // loading | ok | error
+
+const PB_LOG_TYPE_STYLE = {
+  pdvt:   'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
+  hourly: 'bg-sky-100 text-sky-700 dark:bg-sky-500/15 dark:text-sky-300',
+  raw:    'bg-violet-100 text-violet-700 dark:bg-violet-500/15 dark:text-violet-300',
+  roster: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
+};
+
+// Log lama belum punya field "type" (kecuali hourly), jadi ditebak dari isi "tanggal".
+function pbLogType(log) {
+  if (log.type && PB_LOG_TYPE_STYLE[log.type]) return log.type;
+  const tgl = String(log.tanggal || '');
+  if (tgl === 'Auto-Fill Roster') return 'roster';
+  if (tgl.indexOf(' s/d ') !== -1) return 'raw';
+  return 'pdvt';
+}
+
+function pbLogFormatTime(dt) {
+  if (!(dt instanceof Date) || isNaN(dt)) return '-';
+  const pad = function (n) { return String(n).padStart(2, '0'); };
+  return pad(dt.getDate()) + ' ' + getMonthNames()[dt.getMonth()] + ' ' + pad(dt.getHours()) + ':' + pad(dt.getMinutes());
+}
+
+function pbLogCanDelete() {
+  return PB_LOG_DELETE_ADMIN_ONLY ? isPbResetAllowed() : true;
+}
+
+function renderPbLogList() {
+  const box = document.getElementById('pbLogList');
+  if (!box) return;
+  const note = document.getElementById('pbLogLimitNote');
+
+  if (pbLogState === 'error') {
+    box.innerHTML = '<div class="p-4 text-center text-rose-500 font-sans">' + escapeHtml(t('pb.log.errLoad')) + '</div>';
+    if (note) note.classList.add('hidden');
+    return;
+  }
+  if (pbLogState === 'loading' && pbLogEntries.length === 0) {
+    box.innerHTML = '<div class="p-4 text-center text-slate-400 dark:text-slate-500 font-sans">' + escapeHtml(t('pb.log.loading')) + '</div>';
+    if (note) note.classList.add('hidden');
+    return;
+  }
+  if (pbLogEntries.length === 0) {
+    box.innerHTML = '<div class="p-4 text-center text-slate-400 dark:text-slate-500 font-sans">' + escapeHtml(t('pb.log.empty')) + '</div>';
+    if (note) note.classList.add('hidden');
+    return;
+  }
+
+  const canDelete = pbLogCanDelete();
+  box.innerHTML = pbLogEntries.map(function (log) {
+    const dt = log.importedAt ? new Date(log.importedAt) : null;
+    const validDt = dt && !isNaN(dt);
+    const jamStr = validDt ? pbLogFormatTime(dt) : '-';
+    const jamFull = validDt ? dt.toLocaleString(localStorage.getItem(APP_LANG_KEY) === 'en' ? 'en-GB' : 'id-ID') : '';
+    const type = pbLogType(log);
+    const name = escapeHtml(log.fileName || '-');
+    const by = escapeHtml(log.importedBy || '-');
+    const meta = [];
+    if (log.tanggal) meta.push(escapeHtml(log.tanggal));
+    if (log.rowCount !== undefined && log.rowCount !== null) meta.push(escapeHtml(t('pb.log.operators', { n: Number(log.rowCount).toLocaleString('id-ID') })));
+    const delBtn = canDelete
+      ? '<button type="button" data-log-del="' + escapeHtml(log._key) + '" class="text-rose-500 hover:text-rose-700 dark:hover:text-rose-400 transition" title="' + escapeHtml(t('pb.log.deleteTitle')) + '" aria-label="' + escapeHtml(t('pb.log.deleteTitle')) + '"><i class="fa-solid fa-trash-can"></i></button>'
+      : '';
+    return '<div class="grid grid-cols-12 gap-1 px-3 py-2 items-center hover:bg-slate-50 dark:hover:bg-slate-800/50">' +
+      '<div class="col-span-5 min-w-0 text-left font-sans">' +
+        '<div class="truncate font-semibold text-slate-700 dark:text-slate-200" title="' + name + '">' + name + '</div>' +
+        '<div class="flex items-center gap-1.5 mt-0.5 min-w-0">' +
+          '<span class="shrink-0 px-1.5 py-px rounded text-[9px] font-bold uppercase tracking-wide ' + PB_LOG_TYPE_STYLE[type] + '">' + escapeHtml(t('pb.log.type.' + type)) + '</span>' +
+          '<span class="truncate text-[10px] text-slate-400 dark:text-slate-500" title="' + meta.join(' · ') + '">' + meta.join(' · ') + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<span class="col-span-3 text-slate-600 dark:text-slate-300" title="' + escapeHtml(jamFull) + '">' + escapeHtml(jamStr) + '</span>' +
+      '<span class="col-span-3 truncate text-slate-600 dark:text-slate-300" title="' + by + '">' + by + '</span>' +
+      '<span class="col-span-1 text-right">' + delBtn + '</span>' +
+    '</div>';
+  }).join('');
+
+  if (note) {
+    if (pbLogEntries.length >= PB_LOG_LIMIT) {
+      note.textContent = t('pb.log.limitNote', { n: PB_LOG_LIMIT });
+      note.classList.remove('hidden');
+    } else {
+      note.classList.add('hidden');
+    }
+  }
+}
+
+function attachPbLogListener() {
+  if (pbLogRef) return;
+  if (!fbDb) { pbLogState = 'error'; renderPbLogList(); return; }
+  if (pbLogEntries.length === 0) pbLogState = 'loading';
+  pbLogRef = fbDb.ref(FB_PB_ROOT + '/importLogs').orderByKey().limitToLast(PB_LOG_LIMIT);
+  pbLogHandler = pbLogRef.on('value', function (snapshot) {
+    const val = snapshot.val() || {};
+    pbLogEntries = Object.keys(val).map(function (k) {
+      return Object.assign({}, val[k], { _key: k });
+    });
+    pbLogEntries.sort(function (a, b) { return new Date(b.importedAt) - new Date(a.importedAt); });
+    pbLogState = 'ok';
+    renderPbLogList();
+  }, function (err) {
+    console.error('Gagal baca log update dari Firebase:', err);
+    pbLogRef = null; pbLogHandler = null; // Firebase otomatis batalin listener kalau error
+    pbLogState = 'error';
+    renderPbLogList();
+  });
+}
+
+function detachPbLogListener() {
+  if (pbLogRef && pbLogHandler) pbLogRef.off('value', pbLogHandler);
+  pbLogRef = null; pbLogHandler = null;
+}
+
+function deletePbLogEntry(key) {
+  if (!pbLogCanDelete()) { showToast(t('pb.log.deleteDenied'), 'err'); return; }
+  if (!fbDb) { showToast('⚠️ Belum terhubung ke database online.', 'info'); return; }
+  const log = pbLogEntries.find(function (l) { return l._key === key; });
+  if (!log) return;
+  if (!confirm(t('pb.log.confirmDelete', { f: log.fileName || '-' }))) return;
+  fbDb.ref(FB_PB_ROOT + '/importLogs/' + key).remove().catch(function (err) {
+    const denied = err && (err.code === 'PERMISSION_DENIED' || /permission_denied/i.test(err.message || ''));
+    showToast(denied ? t('pb.log.deleteDenied') : t('pb.log.deleteErr') + (err && err.message ? err.message : err), 'err');
+  });
+}
+
+function openPbLogModal() {
+  const sb = document.getElementById('appSidebar');
+  if (sb && sb.classList.contains('open')) toggleAppSidebar();
+  pbLogState = pbLogEntries.length ? 'ok' : 'loading';
+  document.getElementById('pbLogModal').classList.remove('hidden');
+  renderPbLogList();
+  attachPbLogListener();
+  const x = document.getElementById('pbLogCloseX');
+  if (x) x.focus();
+}
+
+function closePbLogModal() {
+  document.getElementById('pbLogModal').classList.add('hidden');
+  detachPbLogListener();
+  const btn = document.getElementById('pbLogBtn');
+  if (btn) btn.focus();
+}
+
+// Dipanggil pas ganti bahasa & saat init: title tombol header + render ulang list kalau modal kebuka
+window.pbLogRefresh = function () {
+  const btn = document.getElementById('pbLogBtn');
+  if (btn) btn.title = t('pb.log.title');
+  const modal = document.getElementById('pbLogModal');
+  if (modal && !modal.classList.contains('hidden')) renderPbLogList();
+};
+
+document.getElementById('pbLogList').addEventListener('click', function (e) {
+  const btn = e.target.closest('[data-log-del]');
+  if (btn) deletePbLogEntry(btn.getAttribute('data-log-del'));
+});
+
+document.addEventListener('keydown', function (e) {
+  if (e.key !== 'Escape' && e.key !== 'Esc') return;
+  const modal = document.getElementById('pbLogModal');
+  if (modal && !modal.classList.contains('hidden')) closePbLogModal();
+});
+
 // ==== RESET DATA (hapus semua data Performance Bagger di dashboard + RTDB) ====
 // Yang dihapus: dailyRecords, hourlyRecords, hourlyCoverage, importLogs. Roster (hardcode di JS) tidak ikut.
 // Tombol cuma tampil buat PB_RESET_ALLOWED_EMAIL. Itu cuma lapisan UI; yang BENAR-BENAR nolak akun lain adalah Firebase Rules.
@@ -1761,7 +1983,7 @@ function pushPbRawImportToFirebase(byDate, sortedDates, fileName, opsCount) {
   fbDb.ref().update(updates).then(function () {
     const logKey = fbDb.ref(FB_PB_ROOT + '/importLogs').push().key;
     return fbDb.ref(FB_PB_ROOT + '/importLogs/' + logKey).set({
-      fileName: fileName,
+      fileName: fileName, type: 'raw',
       tanggal: sortedDates[0] + ' s/d ' + sortedDates[sortedDates.length - 1] + ' (' + sortedDates.length + ' hari)',
       rowCount: opsCount,
       importedAt: importedAtStr, importedBy: importedByStr
@@ -1819,7 +2041,7 @@ function pushPbImportToFirebase(records, dateStr, fileName, rowCount) {
   fbDb.ref().update(updates).then(function () {
     const logKey = fbDb.ref(FB_PB_ROOT + '/importLogs').push().key;
     return fbDb.ref(FB_PB_ROOT + '/importLogs/' + logKey).set({
-      fileName: fileName, tanggal: dateStr, rowCount: rowCount, importedAt: importedAtStr, importedBy: importedByStr
+      fileName: fileName, type: 'pdvt', tanggal: dateStr, rowCount: rowCount, importedAt: importedAtStr, importedBy: importedByStr
     });
   }).then(function () {
     document.getElementById('pbFileName').innerText = fileName + ' → ' + dateStr;
@@ -1931,6 +2153,7 @@ function processRosterImport(rows, fileName) {
       const logKey = fbDb.ref(FB_PB_ROOT + '/importLogs').push().key;
       return fbDb.ref(FB_PB_ROOT + '/importLogs/' + logKey).set({
         fileName: fileName,
+        type: 'roster',
         tanggal: 'Auto-Fill Roster',
         rowCount: updatedCount,
         importedAt: importedAtStr,
@@ -2947,6 +3170,28 @@ document.addEventListener('DOMContentLoaded', function() {
 const APP_LANG_KEY = "pr_dc_app_language";
 const I18N_DICT = {
   id: {
+    "pb.log.btn": "Log Update",
+    "pb.log.title": "Log Update — Riwayat Import File",
+    "pb.log.subtitle": "Daftar file yang pernah diimport, jam berapa, dan siapa yang import",
+    "pb.log.colFile": "Nama File",
+    "pb.log.colTime": "Jam Import",
+    "pb.log.colBy": "Diimport Oleh",
+    "pb.log.colAction": "Aksi",
+    "pb.log.loading": "Memuat riwayat import...",
+    "pb.log.empty": "Belum ada riwayat import.",
+    "pb.log.errLoad": "Gagal memuat riwayat import. Cek koneksi atau izin akses database.",
+    "pb.log.deleteTitle": "Hapus log ini",
+    "pb.log.confirmDelete": "Hapus log import \"{f}\"? Ini bakal ke-hapus juga di Firebase / semua device. Data performa tidak ikut terhapus.",
+    "pb.log.deleteDenied": "⛔ Hapus log cuma bisa dipakai oleh admin yang ditentukan.",
+    "pb.log.deleteErr": "❌ Gagal hapus log dari database online: ",
+    "pb.log.footerNote": "Menghapus log di sini cuma menghapus riwayat/audit trail-nya. Data performa packer yang sudah diimport tidak ikut terhapus.",
+    "pb.log.limitNote": "Menampilkan {n} import terakhir.",
+    "pb.log.close": "Tutup",
+    "pb.log.operators": "{n} operator",
+    "pb.log.type.pdvt": "PDVT",
+    "pb.log.type.hourly": "Per Jam",
+    "pb.log.type.raw": "Raw Harian",
+    "pb.log.type.roster": "Roster",
     "pb.hof.hint": "Klik untuk lihat statistik Top 20",
     "pb.stat.title": "Statistik Packed Operator",
     "pb.stat.top20": "Top 20 Operator",
@@ -3067,6 +3312,28 @@ const I18N_DICT = {
     "pb.unit.pcs": "pcs"
   },
   en: {
+    "pb.log.btn": "Update Log",
+    "pb.log.title": "Update Log — File Import History",
+    "pb.log.subtitle": "List of files ever imported, when, and by whom",
+    "pb.log.colFile": "File Name",
+    "pb.log.colTime": "Import Time",
+    "pb.log.colBy": "Imported By",
+    "pb.log.colAction": "Action",
+    "pb.log.loading": "Loading import history...",
+    "pb.log.empty": "No import history yet.",
+    "pb.log.errLoad": "Failed to load import history. Check your connection or database access.",
+    "pb.log.deleteTitle": "Delete this log",
+    "pb.log.confirmDelete": "Delete import log \"{f}\"? This will also be removed from Firebase / all devices. Performance data is not deleted.",
+    "pb.log.deleteDenied": "⛔ Only the designated admin can delete logs.",
+    "pb.log.deleteErr": "❌ Failed to delete log from the online database: ",
+    "pb.log.footerNote": "Deleting a log here only removes its history/audit trail. Packer performance data that was already imported is not deleted.",
+    "pb.log.limitNote": "Showing the last {n} imports.",
+    "pb.log.close": "Close",
+    "pb.log.operators": "{n} operators",
+    "pb.log.type.pdvt": "PDVT",
+    "pb.log.type.hourly": "Hourly",
+    "pb.log.type.raw": "Daily Raw",
+    "pb.log.type.roster": "Roster",
     "pb.hof.hint": "Click to view Top 20 stats",
     "pb.stat.title": "Operator Packed Statistics",
     "pb.stat.top20": "Top 20 Operators",
@@ -3187,6 +3454,28 @@ const I18N_DICT = {
     "pb.unit.pcs": "pcs"
   },
   ja: {
+    "pb.log.btn": "更新ログ",
+    "pb.log.title": "更新ログ — ファイルインポート履歴",
+    "pb.log.subtitle": "これまでにインポートされたファイル、時刻、実行者の一覧",
+    "pb.log.colFile": "ファイル名",
+    "pb.log.colTime": "インポート時刻",
+    "pb.log.colBy": "実行者",
+    "pb.log.colAction": "操作",
+    "pb.log.loading": "インポート履歴を読み込み中…",
+    "pb.log.empty": "インポート履歴はまだありません。",
+    "pb.log.errLoad": "インポート履歴の読み込みに失敗しました。接続またはアクセス権限を確認してください。",
+    "pb.log.deleteTitle": "このログを削除",
+    "pb.log.confirmDelete": "インポートログ「{f}」を削除しますか？Firebase／全デバイスからも削除されます。実績データは削除されません。",
+    "pb.log.deleteDenied": "⛔ ログを削除できるのは指定された管理者のみです。",
+    "pb.log.deleteErr": "❌ オンラインデータベースからのログ削除に失敗しました: ",
+    "pb.log.footerNote": "ここでログを削除しても履歴（監査証跡）が消えるだけで、インポート済みの梱包実績データは削除されません。",
+    "pb.log.limitNote": "直近{n}件のインポートを表示中。",
+    "pb.log.close": "閉じる",
+    "pb.log.operators": "{n}名",
+    "pb.log.type.pdvt": "PDVT",
+    "pb.log.type.hourly": "時間別",
+    "pb.log.type.raw": "日次Raw",
+    "pb.log.type.roster": "ロスター",
     "pb.stat.hourFrom": "開始時間",
     "pb.stat.hourTo": "終了時間",
     "pb.header.title": "Performance Bagger",
@@ -3259,6 +3548,28 @@ const I18N_DICT = {
     "pb.unit.pcs": "個"
   },
   zh: {
+    "pb.log.btn": "更新日志",
+    "pb.log.title": "更新日志 — 文件导入历史",
+    "pb.log.subtitle": "已导入的文件、导入时间及导入人列表",
+    "pb.log.colFile": "文件名",
+    "pb.log.colTime": "导入时间",
+    "pb.log.colBy": "导入人",
+    "pb.log.colAction": "操作",
+    "pb.log.loading": "正在加载导入历史…",
+    "pb.log.empty": "暂无导入历史。",
+    "pb.log.errLoad": "加载导入历史失败，请检查网络或数据库访问权限。",
+    "pb.log.deleteTitle": "删除此日志",
+    "pb.log.confirmDelete": "删除导入日志“{f}”？Firebase／所有设备上的日志也会被删除，绩效数据不受影响。",
+    "pb.log.deleteDenied": "⛔ 只有指定的管理员可以删除日志。",
+    "pb.log.deleteErr": "❌ 从在线数据库删除日志失败：",
+    "pb.log.footerNote": "在此删除日志仅会删除其历史/审计记录，已导入的打包员绩效数据不会被删除。",
+    "pb.log.limitNote": "显示最近 {n} 次导入。",
+    "pb.log.close": "关闭",
+    "pb.log.operators": "{n} 名操作员",
+    "pb.log.type.pdvt": "PDVT",
+    "pb.log.type.hourly": "按小时",
+    "pb.log.type.raw": "每日Raw",
+    "pb.log.type.roster": "排班表",
     "pb.stat.hourFrom": "起始时间",
     "pb.stat.hourTo": "结束时间",
     "pb.header.title": "Performance Bagger",
@@ -3386,6 +3697,7 @@ function initAppLanguageSwitcher() {
   const lang = localStorage.getItem(APP_LANG_KEY) || "id";
   if (sel) sel.value = lang;
   applyI18n(lang);
+  if (window.pbLogRefresh) pbLogRefresh();
 }
 function setAppLanguage(lang) {
   localStorage.setItem(APP_LANG_KEY, lang);
@@ -3401,6 +3713,9 @@ function setAppLanguage(lang) {
   if (detailModal && detailModal.classList.contains("active") && currentDetailOpsId) {
     openPbDetail(currentDetailOpsId);
   }
+
+  // Modal Log Update: title tombol + isi list ikut bahasa baru
+  if (window.pbLogRefresh) pbLogRefresh();
 
   // Kalau modal Statistik Top 20 lagi kebuka, render ulang biar label ikut bahasa baru
   if (window.pbStatsRefresh) pbStatsRefresh();
