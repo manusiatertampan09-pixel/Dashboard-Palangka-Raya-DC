@@ -266,6 +266,27 @@ tailwind.config = {
     @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
     </style>
+<style id="ux-patch">
+/* ===== UX PATCH: teks lebih gede, nol jadi dash, summary berbaris, maskot pindah ===== */
+body { font-size: 13px; }
+html body .text-\[8px\]  { font-size: 10px !important; }
+html body .text-\[9px\]  { font-size: 11px !important; }
+html body .text-\[10px\] { font-size: 12px !important; }
+html body .text-\[11px\] { font-size: 13px !important; }
+th, td { padding: 5px 7px !important; }
+.nz { color: #cbd5e1; font-weight: 400; }
+.dark .nz { color: #475569; }
+.exec-line { display: flex; gap: 10px; align-items: flex-start; padding: 3px 0; font-size: 13px; line-height: 1.5; }
+.exec-line > i { width: 16px; margin-top: 4px; text-align: center; flex-shrink: 0; }
+.packer-scroll { max-height: 560px; overflow-y: auto; }
+.ux-odyssey { position: fixed !important; top: auto !important; left: auto !important; right: 14px !important; bottom: 14px !important;
+  transform: scale(.7) !important; transform-origin: bottom right; opacity: .55; transition: opacity .2s; z-index: 40 !important; }
+.ux-odyssey:hover { opacity: 1; }
+.jump-btn { padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; color: #cbd5e1; transition: background .15s, color .15s; }
+.jump-btn:hover { color: #fff; background: rgba(255,255,255,.12); }
+.jump-btn.active { background: #fbbf24; color: #0f172a; }
+#occupancySection, #agingSection { scroll-margin-top: 8px; }
+</style>
 </head>
 <body class="bg-slate-100 text-slate-800 dark:bg-[#090d16] dark:text-slate-100 h-screen flex flex-col overflow-hidden transition-colors duration-200" id="dashboardContent">
 <script>window.__PAGE_TAB = "outbound";</script>
@@ -306,7 +327,7 @@ tailwind.config = {
     "sidebar.group.inbound": { "id": "Inbound", "en": "Inbound", "ja": "インバウンド", "zh": "入库" },
     "sidebar.link.inbound": { "id": "LH Tracking & Forecast MP", "en": "LH Tracking & Forecast MP", "ja": "LHトラッキング＆人員予測", "zh": "LH跟踪与人力预测" },
     "sidebar.group.outbound": { "id": "Outbound Monitoring", "en": "Outbound Monitoring", "ja": "アウトバウンドモニタリング", "zh": "出库监控" },
-    "sidebar.link.outboundAging": { "id": "Aging & Packer Backlog", "en": "Aging & Packer Backlog", "ja": "滞留時間＆梱包滞留", "zh": "滞留时间与打包积压" },
+    "sidebar.link.outboundAging": { "id": "Aging, Occupancy & Packer Backlog", "en": "Aging, Occupancy & Packer Backlog", "ja": "滞留時間・稼働率＆梱包滞留", "zh": "滞留时间、占用率与打包积压" },
     "sidebar.link.outboundOccupancy": { "id": "Occupancy & Shift", "en": "Occupancy & Shift", "ja": "稼働率＆シフト", "zh": "占用率与班次" },
     "sidebar.group.inventory": { "id": "Inventory Control", "en": "Inventory Control", "ja": "在庫管理", "zh": "库存管理" },
     "sidebar.link.inventory": { "id": "Inventory Control", "en": "Inventory Control", "ja": "在庫管理", "zh": "库存管理" },
@@ -362,11 +383,14 @@ tailwind.config = {
     "ob.grid1.title": { "id": "Grid 1: High Volume Destination", "en": "Grid 1: High Volume Destination", "ja": "グリッド1: 高ボリューム宛先", "zh": "表格1: 高量目的地" },
     "ob.grid2.title": { "id": "Grid 2: Mid-Low Volume Destination", "en": "Grid 2: Mid-Low Volume Destination", "ja": "グリッド2: 中～低ボリューム宛先", "zh": "表格2: 中低量目的地" },
     "ob.th.sortCode": { "id": "Sort Code", "en": "Sort Code", "ja": "ソートコード", "zh": "分拣代码" },
-    "ob.th.agingStatusTitle": { "id": "Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 DANGER", "en": "Alert based on Aging: D-1 GOOD, D-2 WARNING, D-3 to D-5 DANGER", "ja": "滞留日数によるアラート: D-1 GOOD、D-2 WARNING、D-3～D-5 DANGER", "zh": "基于滞留天数的提醒：D-1 良好，D-2 警告，D-3至D-5 危险" },
+    "ob.th.agingStatusTitle": { "id": "Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5+ DANGER", "en": "Alert based on Aging: D-1 GOOD, D-2 WARNING, D-3 to D-5+ DANGER", "ja": "滞留日数によるアラート: D-1 GOOD、D-2 WARNING、D-3～D-5+ DANGER", "zh": "基于滞留天数的提醒：D-1 良好，D-2 警告，D-3至D-5+ 危险" },
     "ob.th.agingStatus": { "id": "Aging Status", "en": "Aging Status", "ja": "滞留ステータス", "zh": "滞留状态" },
     "ob.th.receiverName": { "id": "Receiver Name", "en": "Receiver Name", "ja": "受取人名", "zh": "收件人名称" },
     "ob.th.hv": { "id": "HV", "en": "HV", "ja": "HV", "zh": "HV" },
     "ob.th.liquid": { "id": "Liquid", "en": "Liquid", "ja": "液体", "zh": "液体" },
+    "ob.th.nonBulky": { "id": "Non-Bulky", "en": "Non-Bulky", "ja": "非大型", "zh": "非大件" },
+    "ob.th.bulkyTitle": { "id": "Bulky = Packing Method Individual Packing", "en": "Bulky = Packing Method Individual Packing", "ja": "大型 = Individual Packing", "zh": "大件 = Individual Packing" },
+    "ob.th.nonBulkyTitle": { "id": "Non-Bulky = Packing Method Assisted Sorting", "en": "Non-Bulky = Packing Method Assisted Sorting", "ja": "非大型 = Assisted Sorting", "zh": "非大件 = Assisted Sorting" },
     "ob.th.totalParcel": { "id": "Total Parcel", "en": "Total Parcel", "ja": "パーセル合計", "zh": "包裹总数" },
     "ob.th.no": { "id": "No", "en": "No", "ja": "No", "zh": "序号" },
     "ob.emptyImportNew": { "id": "Silakan import data Excel baru.", "en": "Please import new Excel data.", "ja": "新しいExcelデータをインポートしてください。", "zh": "请导入新的Excel数据。" },
@@ -379,10 +403,19 @@ tailwind.config = {
     "ob.packer.personUnit": { "id": "{n} Person", "en": "{n} Person", "ja": "{n} 名", "zh": "{n} 人" },
     "ob.packer.parcelUnit": { "id": "{n} Parcel", "en": "{n} Parcel", "ja": "{n} 個", "zh": "{n} 件" },
     "ob.packer.operatorUnit": { "id": "{n} Operator", "en": "{n} Operator", "ja": "{n} 名", "zh": "{n} 名" },
+    "ob.jump.aging": { "id": "Aging & Backlog", "en": "Aging & Backlog" },
+    "ob.jump.occupancy": { "id": "Occupancy", "en": "Occupancy" },
+    "ob.packer.viewTop": { "id": "Menampilkan Top {n} dari {total} operator", "en": "Showing Top {n} of {total} operators" },
+    "ob.packer.viewTopCritical": { "id": "Menampilkan Top {n} + {x} operator dengan backlog kritis, dari {total} operator", "en": "Showing Top {n} + {x} operators with critical backlog, out of {total}" },
+    "ob.packer.viewAll": { "id": "Menampilkan semua {total} operator", "en": "Showing all {total} operators" },
+    "ob.packer.btnAll": { "id": "Lihat semua {total} operator", "en": "View all {total} operators" },
+    "ob.packer.btnLess": { "id": "Ringkas", "en": "Collapse" },
     "ob.leaderboard.title": { "id": "Leaderboard Packer & Distribution Analysis", "en": "Leaderboard Packer & Distribution Analysis", "ja": "梱包リーダーボード＆分布分析", "zh": "打包排行榜与分布分析" },
-    "ob.leaderboard.sortedBy": { "id": "Sorted by Total Parcel Packed", "en": "Sorted by Total Parcel Packed", "ja": "梱包済み合計パーセル数順", "zh": "按已打包包裹总数排序" },
+    "ob.leaderboard.sortedBy": { "id": "Hanya Operator dengan Parcel D-2+ · Sorted by Total D-2+", "en": "Only Operators with D-2+ Parcels · Sorted by Total D-2+", "ja": "D-2以上のパーセルを持つオペレーターのみ · D-2+合計順", "zh": "仅显示有D-2+包裹的操作员 · 按D-2+总数排序" },
     "ob.th.rank": { "id": "Rank", "en": "Rank", "ja": "順位", "zh": "排名" },
     "ob.th.operatorName": { "id": "Operator Name", "en": "Operator Name", "ja": "オペレーター名", "zh": "操作员姓名" },
+    "ob.th.totalBacklogD2": { "id": "Total D-2+", "en": "Total D-2+", "ja": "D-2+合計", "zh": "D-2+总数" },
+    "ob.packer.emptyBacklog": { "id": "Tidak ada parcel D-2 ke atas. Semua operator aman.", "en": "No D-2+ parcels. All operators are clear.", "ja": "D-2以上のパーセルはありません。", "zh": "没有D-2及以上的包裹。" },
     "ob.th.totalPacked": { "id": "Total Packed", "en": "Total Packed", "ja": "梱包済み合計", "zh": "已打包总数" },
     "ob.th.criticalD4": { "id": "Critical (>D4)", "en": "Critical (>D4)", "ja": "重大 (>D4)", "zh": "严重 (>D4)" },
     "ob.th.criticalContribTitle": { "id": "Kontribusi operator ini terhadap total backlog kritis (>D4) seluruh DC", "en": "This operator's contribution to the DC's total critical backlog (>D4)", "ja": "DC全体の重大滞留（>D4）に対するこのオペレーターの寄与度", "zh": "该操作员对全DC严重积压(>D4)总量的贡献占比" },
@@ -572,11 +605,11 @@ tailwind.config = {
     const sel = document.getElementById('appLangSelect');
     if (sel) sel.value = lang;
     applyStaticI18n();
+    if (typeof updateClock === 'function') updateClock();
     // Re-render semua konten dinamis biar ikut translate
     if (filteredData && filteredData.length > 0) {
       if (typeof renderDashboard === 'function') renderDashboard();
     }
-    if (typeof renderShiftTable === 'function') renderShiftTable();
     if (typeof renderLogUpdateList === 'function') renderLogUpdateList();
   }
 
@@ -621,8 +654,7 @@ tailwind.config = {
         <span data-i18n="sidebar.group.outbound">Outbound Monitoring</span><span class="chevron">▾</span>
       </div>
       <div class="app-sidebar-group" data-group-body="OutboundMonitoring">
-        <button class="app-sidebar-link active" id="menuAging" data-tab="aging" onclick="switchSubmenu('aging')">📦 <span data-i18n="sidebar.link.outboundAging">Aging &amp; Packer Backlog</span></button>
-        <button class="app-sidebar-link" id="menuOccupancy" data-tab="occupancy" onclick="switchSubmenu('occupancy')">🏭 <span data-i18n="sidebar.link.outboundOccupancy">Occupancy &amp; Shift</span></button>
+        <button class="app-sidebar-link active" id="menuAging" data-tab="aging" onclick="switchSubmenu('aging')">📦 <span data-i18n="sidebar.link.outboundAging">Aging, Occupancy &amp; Packer Backlog</span></button>
       </div>
 
       <div class="app-sidebar-group-label collapsible" data-group="SOC" onclick="toggleSidebarGroup('SOC')">
@@ -696,8 +728,9 @@ tailwind.config = {
         </select>
       </div>
       
-      <div id="activeMenuBadge" class="bg-white/15 px-3 py-1 rounded-lg border border-white/20 font-bold text-white text-[11px] backdrop-blur-sm shadow-sm hidden sm:block" data-i18n="ob.badge.agingMode">
-        Aging & Packer Backlog Mode
+      <div id="sectionJump" class="hidden sm:flex items-center gap-0.5 bg-white/10 p-0.5 rounded-lg border border-white/20 backdrop-blur-sm">
+        <button type="button" data-jump="aging" onclick="switchSubmenu('aging')" class="jump-btn active" data-i18n="ob.jump.aging">Aging &amp; Backlog</button>
+        <button type="button" data-jump="occupancy" onclick="switchSubmenu('occupancy')" class="jump-btn" data-i18n="ob.jump.occupancy">Occupancy</button>
       </div>
       
       <button id="downloadImageBtn" onclick="downloadReportImage()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1 rounded-lg text-[11px] transition flex items-center gap-1.5 shadow border border-emerald-400/30">
@@ -739,7 +772,7 @@ tailwind.config = {
             <span id="execDeltaTotal"></span>
             <span id="execDeltaCritical"></span>
           </div>
-          <p id="execNarrativeText" class="text-[11px] leading-relaxed font-sans text-slate-700 dark:text-slate-200" data-i18n="ob.exec.emptyNarrative">Belum ada data. Silakan import file Excel untuk melihat ringkasan otomatis.</p>
+          <div id="execNarrativeText" class="text-[11px] leading-relaxed font-sans text-slate-700 dark:text-slate-200" data-i18n="ob.exec.emptyNarrative">Belum ada data. Silakan import file Excel untuk melihat ringkasan otomatis.</div>
         </div>
       </div>
 
@@ -754,70 +787,91 @@ tailwind.config = {
   <section id="agingSection" class="flex flex-col gap-3">
     <!-- KPI CARDS SECTION -->
     <div class="grid grid-cols-12 gap-3 flex-shrink-0">
-      <div class="col-span-3 bg-black p-2.5 rounded-xl text-white shadow-md hover:shadow-lg transition-shadow duration-200 border border-white/20 space-y-1 flex flex-col justify-between">
-        <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.dcName">DC Name</span>
-          <span class="font-extrabold text-sm">Palangka Raya DC</span>
+      <div class="col-span-3 font-sans relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-black p-3 rounded-xl text-white shadow-md hover:shadow-lg transition-shadow duration-200 border border-white/10 border-l-4 border-l-orange-500 flex flex-col justify-between gap-2.5">
+        <!-- Nama DC + status live -->
+        <div class="flex items-center justify-between gap-2">
+          <div class="flex items-center gap-2.5 min-w-0">
+            <div class="w-10 h-10 flex-shrink-0 rounded-lg bg-orange-500/15 border border-orange-500/30 text-orange-400 flex items-center justify-center">
+              <svg class="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-8h10v8"/><path d="M7 17h10"/></svg>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[11px] uppercase tracking-wider font-semibold text-white/60 leading-none" data-i18n="ob.kpi.dcName">DC Name</p>
+              <p class="text-base font-bold leading-tight mt-1 truncate">Palangka Raya DC</p>
+            </div>
+          </div>
+          <span class="flex-shrink-0 flex items-center gap-1.5 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Live
+          </span>
         </div>
-        <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.processOutbound">Process Outbound</span>
-          <span class="font-bold text-sm" data-i18n="ob.kpi.staging">Staging</span>
+
+        <!-- Jam, hari & tanggal laporan -->
+        <div class="flex items-end justify-between gap-3 border-t border-white/10 pt-2.5">
+          <div>
+            <p class="text-[11px] uppercase tracking-wider font-semibold text-white/60 leading-none flex items-center gap-1.5"><svg class="w-3 h-3 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg><span data-i18n="ob.kpi.reportTime">Report Time</span></p>
+            <p id="liveTime" class="text-[30px] leading-none font-bold tabular-nums tracking-tight mt-1.5 text-white">--:--:--</p>
+          </div>
+          <p id="liveDate" class="text-base leading-none font-bold text-white text-right whitespace-nowrap pb-0.5">-</p>
         </div>
-        <div class="flex justify-between items-center border-b border-white/20 pb-1">
-          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.reportTime">Report Time</span>
-          <span id="liveClock" class="font-bold font-mono text-sm" data-i18n="ob.kpi.loading">Loading...</span>
-        </div>
-        <div class="flex justify-between items-center">
-          <span class="text-white/70 text-xs font-semibold" data-i18n="ob.kpi.viewBy">View By</span>
-          <span class="font-bold text-sm" data-i18n="ob.kpi.destination">Destination</span>
+        <span id="liveClock" class="hidden"></span>
+
+        <!-- Proses & tampilan -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5">
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-white/60 leading-none" data-i18n="ob.kpi.processOutbound">Process Outbound</p>
+            <p class="text-sm font-bold mt-1 flex items-center gap-1.5 text-amber-300"><svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l9 5-9 5-9-5 9-5z"/><path d="M3 13l9 5 9-5"/></svg><span data-i18n="ob.kpi.staging">Staging</span></p>
+          </div>
+          <div class="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5">
+            <p class="text-[10px] uppercase tracking-wider font-semibold text-white/60 leading-none" data-i18n="ob.kpi.viewBy">View By</p>
+            <p class="text-sm font-bold mt-1 flex items-center gap-1.5 text-sky-300"><svg class="w-3.5 h-3.5 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s7-6.2 7-11a7 7 0 10-14 0c0 4.8 7 11 7 11z"/><circle cx="12" cy="10" r="2.5"/></svg><span data-i18n="ob.kpi.destination">Destination</span></p>
+          </div>
         </div>
       </div>
 
       <div class="col-span-9 grid grid-cols-5 gap-2">
         <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.totalPacked">Total Parcel Packed</p>
-            <h3 id="kpiTotalUnits" class="text-2xl font-black text-slate-800 dark:text-slate-100 font-mono mt-1">0</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.totalPacked">Total Parcel Packed</p>
+            <h3 id="kpiTotalUnits" class="text-3xl xl:text-4xl leading-none font-black text-slate-800 dark:text-slate-100 font-mono mt-1.5">0</h3>
             <span id="kpiTotalUnitsDelta" class="block mt-0.5"></span>
           </div>
-          <div class="p-2 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-400 group-hover:scale-105 transition-transform">
-            <i class="fa-solid fa-boxes-stacked text-base"></i>
+          <div class="p-2.5 bg-slate-100 dark:bg-slate-800 rounded-xl text-slate-400 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-boxes-stacked text-xl"></i>
           </div>
         </div>
         <div id="kpiColorAssisted" class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-emerald-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.parcelPacked">Parcel Packed</p>
-            <h3 id="kpiParcel" class="text-2xl font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1">0</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.parcelPacked">Parcel Packed</p>
+            <h3 id="kpiParcel" class="text-3xl xl:text-4xl leading-none font-black text-emerald-600 dark:text-emerald-400 font-mono mt-1.5">0</h3>
           </div>
-          <div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover:scale-105 transition-transform">
-            <i class="fa-solid fa-box text-base"></i>
+          <div class="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-box text-xl"></i>
           </div>
         </div>
         <div id="kpiColorIndividual" class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-indigo-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.bulkyPacked">Bulky Packed</p>
-            <h3 id="kpiBulky" class="text-2xl font-black text-indigo-600 dark:text-indigo-400 font-mono mt-1">0</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.bulkyPacked">Bulky Packed</p>
+            <h3 id="kpiBulky" class="text-3xl xl:text-4xl leading-none font-black text-indigo-600 dark:text-indigo-400 font-mono mt-1.5">0</h3>
           </div>
-          <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-500 group-hover:scale-105 transition-transform">
-            <i class="fa-solid fa-dolly text-base"></i>
+          <div class="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-500 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-dolly text-xl"></i>
           </div>
         </div>
         <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-amber-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.highValuePacked">High Value Packed</p>
-            <h3 id="kpiHighValue" class="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono mt-1">0</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.highValuePacked">High Value Packed</p>
+            <h3 id="kpiHighValue" class="text-3xl xl:text-4xl leading-none font-black text-amber-600 dark:text-amber-400 font-mono mt-1.5">0</h3>
           </div>
-          <div class="p-2 bg-amber-500/10 rounded-xl text-amber-500 group-hover:scale-105 transition-transform">
-            <i class="fa-solid fa-gem text-base"></i>
+          <div class="p-2.5 bg-amber-500/10 rounded-xl text-amber-500 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-gem text-xl"></i>
           </div>
         </div>
         <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 border-l-4 border-l-sky-500 flex items-center justify-between">
           <div>
-            <p class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.liquidPacked">Liquid Packed</p>
-            <h3 id="kpiLiquid" class="text-2xl font-black text-sky-600 dark:text-sky-400 font-mono mt-1">0</h3>
+            <p class="text-[11px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider" data-i18n="ob.kpi.liquidPacked">Liquid Packed</p>
+            <h3 id="kpiLiquid" class="text-3xl xl:text-4xl leading-none font-black text-sky-600 dark:text-sky-400 font-mono mt-1.5">0</h3>
           </div>
-          <div class="p-2 bg-sky-500/10 rounded-xl text-sky-500 group-hover:scale-105 transition-transform">
-            <i class="fa-solid fa-droplet text-base"></i>
+          <div class="p-2.5 bg-sky-500/10 rounded-xl text-sky-500 group-hover:scale-105 transition-transform">
+            <i class="fa-solid fa-droplet text-xl"></i>
           </div>
         </div>
       </div>
@@ -868,22 +922,24 @@ tailwind.config = {
           <table class="w-full text-[10px] dynamic-table">
             <thead class="text-white bg-slate-800 dark:bg-slate-950 font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-[9%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode"><span data-i18n="ob.th.sortCode">Sort Code</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" data-i18n-title="ob.th.agingStatusTitle" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 DANGER"><span data-i18n="ob.th.agingStatus">Aging Status</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[19%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name"><span data-i18n="ob.th.receiverName">Receiver Name</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[8%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode"><span data-i18n="ob.th.sortCode">Sort Code</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" data-i18n-title="ob.th.agingStatusTitle" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5+ DANGER"><span data-i18n="ob.th.agingStatus">Aging Status</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[16%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name"><span data-i18n="ob.th.receiverName">Receiver Name</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[7%] bg-amber-600 border-x border-amber-700 cursor-pointer select-none hover:bg-amber-700 transition" data-sort-field="hv"><span data-i18n="ob.th.hv">HV</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid"><span data-i18n="ob.th.liquid">Liquid</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] bg-shopee cursor-pointer select-none hover:brightness-110 transition" data-sort-field="total"><span data-i18n="ob.th.totalParcel">Total Parcel</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d0">D-Day<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d1">D-1<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d2">D-2<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d3">D-3<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d4">D-4<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d5">D-5<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid"><span data-i18n="ob.th.liquid">Liquid</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="individual" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing"><span data-i18n="ob.th.bulky">Bulky</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="assisted" data-i18n-title="ob.th.nonBulkyTitle" title="Non-Bulky = Packing Method Assisted Sorting"><span data-i18n="ob.th.nonBulky">Non-Bulky</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="total"><span data-i18n="ob.th.totalParcel">Total Parcel</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d0">D-Day<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d1">D-1<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d2">D-2<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d3">D-3<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d4">D-4<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d5">D-5+<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
               </tr>
             </thead>
             <tbody id="grid1TableBody" class="font-mono divide-y divide-slate-100 dark:divide-slate-800">
-              <tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportNew">Silakan import data Excel baru.</td></tr>
+              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportNew">Silakan import data Excel baru.</td></tr>
             </tbody>
           </table>
         </div>
@@ -898,28 +954,114 @@ tailwind.config = {
           <table class="w-full text-[10px] dynamic-table">
             <thead class="text-white bg-slate-800 dark:bg-slate-950 font-bold sticky top-0 z-10">
               <tr>
-                <th class="w-[9%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode"><span data-i18n="ob.th.sortCode">Sort Code</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[8%] !text-center cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="sortcode"><span data-i18n="ob.th.sortCode">Sort Code</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[9%] !text-center bg-slate-700 border-x border-slate-600 cursor-pointer select-none hover:bg-slate-600 transition" data-sort-field="status" data-i18n-title="ob.th.agingStatusTitle" title="Alert berdasarkan Aging: D-1 GOOD, D-2 WARNING, D-3 s.d D-5 Danger"><span data-i18n="ob.th.agingStatus">Aging Status</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[19%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name"><span data-i18n="ob.th.receiverName">Receiver Name</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[16%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="name"><span data-i18n="ob.th.receiverName">Receiver Name</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
                 <th class="w-[7%] bg-amber-600 border-x border-amber-700 cursor-pointer select-none hover:bg-amber-700 transition" data-sort-field="hv"><span data-i18n="ob.th.hv">HV</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid"><span data-i18n="ob.th.liquid">Liquid</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[9%] bg-shopee cursor-pointer select-none hover:brightness-110 transition" data-sort-field="total"><span data-i18n="ob.th.totalParcel">Total Parcel</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d0">D-Day<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d1">D-1<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d2">D-2<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d3">D-3<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d4">D-4<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
-                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d5">D-5<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="liquid"><span data-i18n="ob.th.liquid">Liquid</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[6%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="individual" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing"><span data-i18n="ob.th.bulky">Bulky</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[7%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="assisted" data-i18n-title="ob.th.nonBulkyTitle" title="Non-Bulky = Packing Method Assisted Sorting"><span data-i18n="ob.th.nonBulky">Non-Bulky</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[9%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="total"><span data-i18n="ob.th.totalParcel">Total Parcel</span><i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d0">D-Day<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d1">D-1<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d2">D-2<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d3">D-3<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d4">D-4<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
+                <th class="w-[5%] cursor-pointer select-none hover:bg-slate-700 transition" data-sort-field="d5">D-5+<i class="fa-solid fa-sort ml-1 opacity-40 text-[8px]"></i></th>
               </tr>
             </thead>
             <tbody id="grid2TableBody" class="font-mono divide-y divide-slate-100 dark:divide-slate-800">
-              <tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportNew">Silakan import data Excel baru.</td></tr>
+              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportNew">Silakan import data Excel baru.</td></tr>
             </tbody>
           </table>
         </div>
       </div>
     </div>
+  </section>
 
+  <!-- SECTION 2: OCCUPANCY STAGING -->
+  <section id="occupancySection" class="flex flex-col gap-3">
+    <div class="flex items-center gap-3 pt-4 pb-1">
+      <i class="fa-solid fa-warehouse text-amber-500"></i>
+      <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap" data-i18n="ob.jump.occupancy">Occupancy</h2>
+      <div class="flex-1 h-px bg-slate-300 dark:bg-slate-700"></div>
+    </div>
+    <!-- GRID: INNER ISLAND (KIRI, LEBIH LEBAR) & OUTER ISLAND (KANAN) -->
+    <div class="grid grid-cols-5 gap-3 items-stretch">
+      <!-- INNER ISLAND ROUTE (VOLUME + AGING DAYS DALAM 1 TABEL) -->
+      <div class="col-span-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
+        <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 px-3">
+          <span class="flex items-center gap-2"><i class="fa-solid fa-route text-amber-400"></i> <span data-i18n="ob.occ.innerTitle">Breakdown Volume &amp; Aging Days Inner Island</span></span>
+          <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-mono" id="routeTotalInfo">Total Jalur: 25</span>
+        </div>
+        <div class="overflow-x-auto custom-scrollbar">
+          <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
+            <thead class="bg-slate-800 dark:bg-slate-950 text-white font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
+              <tr>
+                <th class="w-10" data-i18n="ob.th.no">No</th>
+                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
+                <th class="w-12 bg-amber-600 border-x border-amber-700 text-white" data-i18n="ob.th.hv">HV</th>
+                <th class="w-12" data-i18n="ob.th.liquid">Liquid</th>
+                <th class="w-14" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing" data-i18n="ob.th.bulky">Bulky</th>
+                <th class="w-16" data-i18n-title="ob.th.nonBulkyTitle" title="Non-Bulky = Packing Method Assisted Sorting" data-i18n="ob.th.nonBulky">Non-Bulky</th>
+                <th class="w-16" data-i18n="ob.th.totalParcel">Total Parcel</th>
+                <th class="w-14" data-i18n="ob.th.capPct">Cap (%)</th>
+                <th class="w-12">D-Day</th>
+                <th class="w-12">D-1</th>
+                <th class="w-12">D-2</th>
+                <th class="w-12">D-3</th>
+                <th class="w-12">D-4</th>
+                <th class="w-12">D-5+</th>
+              </tr>
+            </thead>
+            <tbody id="routeTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyPleaseImport">Silakan import data.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- OUTER ISLAND ROUTE TABLE -->
+      <div class="col-span-2 flex flex-col gap-2">
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
+          <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 px-3">
+            <span class="flex items-center gap-2"><i class="fa-solid fa-plane-departure text-sky-400"></i> <span data-i18n="ob.occ.outerTitle">Breakdown Volume Outer Island</span></span>
+            <span class="text-[9px] bg-sky-600 px-2 py-0.5 rounded-full font-mono font-bold" id="outerIslandTotalHeader">Total: 0</span>
+          </div>
+          <div class="overflow-x-auto custom-scrollbar">
+            <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
+              <thead class="bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-sky-300 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
+                <tr>
+                  <th class="w-10" data-i18n="ob.th.no">No</th>
+                  <th class="text-left pl-2" data-i18n="ob.th.receiverName">Receiver Name</th>
+                  <th class="w-20 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.parcel">Parcel</th>
+                  <th class="w-20 bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300" data-i18n="ob.th.total">Total</th>
+                  <th class="w-20" data-i18n-title="ob.occ.capTitle" title="Estimasi Occupancy terhadap kapasitas per destination" data-i18n="ob.th.capPct">Cap (%)</th>
+                </tr>
+              </thead>
+              <tbody id="outerIslandTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+                <tr><td colspan="5" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyNoOuterIsland">Tidak ada data Outer Island.</td></tr>
+            </tbody>
+          </table>
+        </div>
+        </div>
+
+        <!-- CARD ACTION PLAN (DIPINDAH KE BAWAH OUTER ISLAND, ISI RUANG KOSONG) -->
+        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden flex-1">
+          <div class="p-2 px-3 bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 dark:from-rose-800 dark:via-red-800 dark:to-amber-800 font-bold text-white flex justify-between items-center flex-shrink-0">
+            <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> <span data-i18n="ob.occ.actionCenterTitle">Priority Action Center — Top 5 Rute Occupancy Tertinggi</span></span>
+            <span class="text-[9px] bg-black/30 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5 border border-white/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span data-i18n="ob.occ.liveMonitoring">Live Monitoring</span></span>
+          </div>
+          <div class="p-2 grid grid-cols-1 gap-1.5 overflow-y-auto custom-scrollbar flex-1" id="topActionPlanContainer">
+            <div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans" data-i18n="ob.occ.emptyAnalysis">Belum ada data untuk dianalisis.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3: PACKER BACKLOG & TREND (lanjutan Aging) -->
+  <section id="agingPackerSection" class="flex flex-col gap-3">
     <!-- KPI SUMMARY PACKER -->
     <div class="grid grid-cols-4 gap-3 flex-shrink-0">
       <div class="group bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-between">
@@ -977,29 +1119,31 @@ tailwind.config = {
         <i class="fa-solid fa-magnifying-glass-chart"></i>
         <span id="packerRootCauseText"></span>
       </div>
-      <div class="overflow-x-auto custom-scrollbar">
+      <div id="packerTableWrap" class="overflow-x-auto custom-scrollbar">
         <table class="w-full text-[11px] text-slate-700 dark:text-slate-200 dynamic-table">
           <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold sticky top-0 z-10 border-b dark:border-slate-700">
             <tr>
               <th class="w-10" data-i18n="ob.th.rank">Rank</th>
               <th class="text-left pl-3" data-i18n="ob.th.operatorName">Operator Name</th>
-              <th class="w-24 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.totalPacked">Total Packed</th>
-              <th class="w-14 bg-slate-50 dark:bg-slate-800/60">D-Day</th>
-              <th class="w-14">D-1</th>
+              <th class="w-24 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.totalBacklogD2">Total D-2+</th>
               <th class="w-14">D-2</th>
               <th class="w-14">D-3</th>
               <th class="w-14">D-4</th>
               <th class="w-14">D-5</th>
-              <th class="w-14">D-6</th>
+              <th class="w-14">D-6+</th>
               <th class="w-24 text-rose-600 dark:text-rose-400" data-i18n="ob.th.criticalD4">Critical (>D4)</th>
               <th class="w-32 text-rose-600 dark:text-rose-400 text-left pl-2" data-i18n-title="ob.th.criticalContribTitle" title="Kontribusi operator ini terhadap total backlog kritis (>D4) seluruh DC" data-i18n="ob.th.criticalContrib">Kontribusi Backlog Kritis</th>
               <th class="w-40 text-left pl-2" data-i18n="ob.th.shareVolume">Share Volume</th>
             </tr>
           </thead>
           <tbody id="packerTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-            <tr><td colspan="13" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportExcel">Import data Excel untuk menampilkan rangkuman Packer.</td></tr>
+            <tr><td colspan="11" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyImportExcel">Import data Excel untuk menampilkan rangkuman Packer.</td></tr>
           </tbody>
         </table>
+      </div>
+      <div id="packerShowMoreBar" class="hidden flex items-center justify-between gap-3 px-3 py-2 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex-shrink-0">
+        <span id="packerShowMoreInfo" class="text-[11px] text-slate-500 dark:text-slate-400 font-sans"></span>
+        <button id="packerShowMoreBtn" type="button" onclick="togglePackerShowAll()" class="text-[11px] font-bold px-3 py-1 rounded-lg bg-slate-800 text-white hover:bg-slate-700 dark:bg-slate-700 dark:hover:bg-slate-600 transition"></button>
       </div>
     </div>
 
@@ -1028,223 +1172,11 @@ tailwind.config = {
       </div>
     </div>
   </section>
-
-  <!-- SECTION 2: OCCUPANCY STAGING -->
-  <section id="occupancySection" class="hidden flex flex-col gap-3">
-    <!-- GRID: INNER ISLAND (KIRI, LEBIH LEBAR) & OUTER ISLAND (KANAN) -->
-    <div class="grid grid-cols-5 gap-3 items-stretch">
-      <!-- INNER ISLAND ROUTE (VOLUME + AGING DAYS DALAM 1 TABEL) -->
-      <div class="col-span-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
-        <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 px-3">
-          <span class="flex items-center gap-2"><i class="fa-solid fa-route text-amber-400"></i> <span data-i18n="ob.occ.innerTitle">Breakdown Volume &amp; Aging Days Inner Island</span></span>
-          <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-mono" id="routeTotalInfo">Total Jalur: 25</span>
-        </div>
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
-            <thead class="bg-orange-50 dark:bg-slate-800 text-orange-900 dark:text-orange-300 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
-              <tr>
-                <th class="w-10" data-i18n="ob.th.no">No</th>
-                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
-                <th class="w-16 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.parcel">Parcel</th>
-                <th class="w-16 bg-indigo-50 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300" data-i18n="ob.th.bulky">Bulky</th>
-                <th class="w-16 bg-orange-100 dark:bg-orange-950/60 text-orange-800 dark:text-orange-300" data-i18n="ob.th.total">Total</th>
-                <th class="w-16" data-i18n="ob.th.capPct">Cap (%)</th>
-                <th class="w-12 bg-slate-50 dark:bg-slate-800/60">D-Day</th>
-                <th class="w-12">D-1</th>
-                <th class="w-12">D-2</th>
-                <th class="w-12">D-3</th>
-                <th class="w-12">D-4</th>
-                <th class="w-12">D-5</th>
-                <th class="w-12">D-6</th>
-                <th class="w-16 text-rose-600 dark:text-rose-400">&gt;D-6+</th>
-              </tr>
-            </thead>
-            <tbody id="routeTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyPleaseImport">Silakan import data.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- OUTER ISLAND ROUTE TABLE -->
-      <div class="col-span-2 flex flex-col gap-2">
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
-          <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 px-3">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-plane-departure text-sky-400"></i> <span data-i18n="ob.occ.outerTitle">Breakdown Volume Outer Island</span></span>
-            <span class="text-[9px] bg-sky-600 px-2 py-0.5 rounded-full font-mono font-bold" id="outerIslandTotalHeader">Total: 0</span>
-          </div>
-          <div class="overflow-x-auto custom-scrollbar">
-            <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
-              <thead class="bg-sky-50 dark:bg-slate-800 text-sky-900 dark:text-sky-300 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
-                <tr>
-                  <th class="w-10" data-i18n="ob.th.no">No</th>
-                  <th class="text-left pl-2" data-i18n="ob.th.receiverName">Receiver Name</th>
-                  <th class="w-20 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300" data-i18n="ob.th.parcel">Parcel</th>
-                  <th class="w-20 bg-sky-100 dark:bg-sky-950/60 text-sky-800 dark:text-sky-300" data-i18n="ob.th.total">Total</th>
-                  <th class="w-20" data-i18n-title="ob.occ.capTitle" title="Estimasi Occupancy terhadap kapasitas per destination" data-i18n="ob.th.capPct">Cap (%)</th>
-                </tr>
-              </thead>
-              <tbody id="outerIslandTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-                <tr><td colspan="5" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyNoOuterIsland">Tidak ada data Outer Island.</td></tr>
-            </tbody>
-          </table>
-        </div>
-        </div>
-
-        <!-- CARD ACTION PLAN (DIPINDAH KE BAWAH OUTER ISLAND, ISI RUANG KOSONG) -->
-        <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden flex-1">
-          <div class="p-2 px-3 bg-gradient-to-r from-rose-600 via-red-600 to-amber-600 dark:from-rose-800 dark:via-red-800 dark:to-amber-800 font-bold text-white flex justify-between items-center flex-shrink-0">
-            <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> <span data-i18n="ob.occ.actionCenterTitle">Priority Action Center — Top 5 Rute Occupancy Tertinggi</span></span>
-            <span class="text-[9px] bg-black/30 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5 border border-white/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span data-i18n="ob.occ.liveMonitoring">Live Monitoring</span></span>
-          </div>
-          <div class="p-2 grid grid-cols-1 gap-1.5 overflow-y-auto custom-scrollbar flex-1" id="topActionPlanContainer">
-            <div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans" data-i18n="ob.occ.emptyAnalysis">Belum ada data untuk dianalisis.</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VOLUME PER SHIFT CHART -->
-    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
-      <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0">
-        <span class="flex items-center gap-2"><i class="fa-solid fa-chart-simple text-sky-400 text-sm"></i> <span data-i18n="ob.occ.shiftVolumeTitle">Perbandingan Volume Parcel per Shift</span>
-        <span id="shiftChartTotalBadge" class="text-[9px] bg-slate-700 dark:bg-slate-800 px-2.5 py-0.5 rounded-full text-slate-300 font-mono">0 Parcel</span>
-      </div>
-      <div class="p-2.5 h-[160px] relative">
-        <canvas id="shiftVolumeChart"></canvas>
-      </div>
-    </div>
-
-    <!-- HEADER TOOLBAR FILTER SHIFT -->
-    <div class="p-2 px-3 bg-slate-800 dark:bg-slate-950 font-bold text-white flex justify-between items-center flex-shrink-0 rounded-xl shadow-sm">
-      <div class="flex items-center gap-2">
-        <i class="fa-solid fa-truck-departure text-emerald-400"></i>
-        <span data-i18n="ob.occ.shiftScheduleTitle">Shift Departure Schedule &amp; Heatmap Monitoring</span>
-      </div>
-      <div class="flex items-center gap-2">
-        <div class="hidden sm:flex items-center gap-2 text-[9px] text-slate-400 font-semibold">
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-slate-500"></span><span data-i18n="ob.occ.legendScheduled">Terjadwal</span></span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span><span data-i18n="ob.occ.legendSoon">Segera (&lt;30m)</span></span>
-          <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span><span data-i18n="ob.occ.legendOverdue">Lewat Jadwal</span></span>
-        </div>
-        <div class="flex items-center gap-1 bg-slate-900/80 p-1 rounded-lg border border-slate-700/80">
-          <span class="text-[10px] text-slate-400 font-semibold px-1.5" data-i18n="ob.occ.filterView">Filter View:</span>
-          <button onclick="filterShiftTable('ALL')" id="btnShiftFilterALL" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-400 text-slate-950 transition" data-i18n="ob.occ.allShifts">ALL SHIFTS</button>
-          <button onclick="filterShiftTable('Shift 1')" id="btnShiftFilterS1" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">Shift 1</button>
-          <button onclick="filterShiftTable('Shift 2')" id="btnShiftFilterS2" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">Shift 2</button>
-          <button onclick="filterShiftTable('Shift 3')" id="btnShiftFilterS3" class="px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition">Shift 3</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- TOTAL KEBERANGKATAN LINEHAUL -->
-    <div class="px-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-800 flex items-center gap-2 flex-shrink-0 rounded-xl shadow-sm">
-      <i class="fa-solid fa-truck-ramp-box text-emerald-500 text-sm"></i>
-      <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wide" data-i18n="ob.occ.totalLinehaul">Total Keberangkatan Linehaul:</span>
-      <span id="kpiTotalLinehaul" class="text-xs font-black text-slate-800 dark:text-slate-100 font-mono">0 Unit</span>
-    </div>
-
-    <!-- GRID CONTAINER UTAMA (DILENGKAPI GRID-COLS DYNAMIC) -->
-    <div id="shiftGridContainer" class="grid grid-cols-1 lg:grid-cols-3 gap-3 items-start transition-all duration-300">
-      <!-- ================= KOLOM SHIFT 1 ================= -->
-      <div id="shift1Column" class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden transition-all duration-300">
-        <!-- HEADER CARD SHIFT 1 -->
-        <div class="p-2.5 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between relative overflow-hidden flex-shrink-0">
-          <div class="space-y-0.5 z-10">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Shift 1 (00:00 - 09:00)</span>
-              <span id="hwBadge1" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase" data-i18n="ob.heat.normal">NORMAL</span>
-            </div>
-            <h3 id="kpiShift1Slots" class="text-sm font-black text-amber-500 font-mono">0 Slot Linehaul</h3>
-          </div>
-          <i class="fa-solid fa-sun text-amber-500/10 text-4xl absolute -right-1 -bottom-2"></i>
-        </div>
-        <!-- TABEL SCROLLABLE SHIFT 1 -->
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-[10px] dynamic-table">
-            <thead class="bg-slate-800 text-white font-bold sticky top-0 z-10">
-              <tr>
-                <th class="w-8" data-i18n="ob.th.slot">Slot</th>
-                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
-                <th class="col-time-departed bg-amber-600" data-i18n="ob.th.timeDeparted">Time Departed</th>
-                <th class="w-24" data-i18n="ob.th.status">Status</th>
-              </tr>
-            </thead>
-            <tbody id="shift1TableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="4" class="text-center py-4 text-slate-400" data-i18n="ob.emptyImportData">Import Data.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ================= KOLOM SHIFT 2 ================= -->
-      <div id="shift2Column" class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden transition-all duration-300">
-        <!-- HEADER CARD SHIFT 2 -->
-        <div class="p-2.5 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between relative overflow-hidden flex-shrink-0">
-          <div class="space-y-0.5 z-10">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Shift 2 (08:00 - 17:00)</span>
-              <span id="hwBadge2" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase" data-i18n="ob.heat.normal">NORMAL</span>
-            </div>
-            <h3 id="kpiShift2Slots" class="text-sm font-black text-indigo-500 font-mono">0 Slot Linehaul</h3>
-          </div>
-          <i class="fa-solid fa-cloud-sun text-indigo-500/10 text-4xl absolute -right-1 -bottom-2"></i>
-        </div>
-        <!-- TABEL SCROLLABLE SHIFT 2 -->
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-[10px] dynamic-table">
-            <thead class="bg-slate-800 text-white font-bold sticky top-0 z-10">
-              <tr>
-                <th class="w-8" data-i18n="ob.th.slot">Slot</th>
-                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
-                <th class="col-time-departed bg-indigo-600" data-i18n="ob.th.timeDeparted">Time Departed</th>
-                <th class="w-24" data-i18n="ob.th.status">Status</th>
-              </tr>
-            </thead>
-            <tbody id="shift2TableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="4" class="text-center py-4 text-slate-400" data-i18n="ob.emptyImportData">Import Data.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- ================= KOLOM SHIFT 3 ================= -->
-      <div id="shift3Column" class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden transition-all duration-300">
-        <!-- HEADER CARD SHIFT 3 -->
-        <div class="p-2.5 bg-slate-50 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between relative overflow-hidden flex-shrink-0">
-          <div class="space-y-0.5 z-10">
-            <div class="flex items-center gap-1.5">
-              <span class="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">Shift 3 (16:00 - 01:00)</span>
-              <span id="hwBadge3" class="text-[9px] font-extrabold px-1.5 py-0.2 rounded uppercase" data-i18n="ob.heat.normal">NORMAL</span>
-            </div>
-            <h3 id="kpiShift3Slots" class="text-sm font-black text-rose-500 font-mono">0 Slot Linehaul</h3>
-          </div>
-          <i class="fa-solid fa-moon text-rose-500/10 text-4xl absolute -right-1 -bottom-2"></i>
-        </div>
-        <!-- TABEL SCROLLABLE SHIFT 3 -->
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-[10px] dynamic-table">
-            <thead class="bg-slate-800 text-white font-bold sticky top-0 z-10">
-              <tr>
-                <th class="w-8" data-i18n="ob.th.slot">Slot</th>
-                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
-                <th class="col-time-departed bg-rose-600" data-i18n="ob.th.timeDeparted">Time Departed</th>
-                <th class="w-24" data-i18n="ob.th.status">Status</th>
-              </tr>
-            </thead>
-            <tbody id="shift3TableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="4" class="text-center py-4 text-slate-400" data-i18n="ob.emptyImportData">Import Data.</td></tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
 </main>
 
 <!-- POPUP MODAL UNTUK PREVIEW TO NUMBER -->
-<div id="toModal" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity">
-  <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-5xl w-full overflow-visible flex flex-col max-h-[85vh]">
+<div id="toModal" onclick="if(event.target===this)closeModal()" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity">
+  <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-6xl w-full overflow-visible flex flex-col max-h-[88vh]">
 
     <!-- FUNNY ALERT: Mascot Kucing + Bubble Chat (nempel pojok kanan atas popup) -->
     <div id="funnyAlertBox" class="hidden absolute right-1 sm:right-4 z-[60] flex items-end gap-2 pointer-events-none" style="bottom: 100%; margin-bottom: -10px; opacity:0; transition: opacity 1s ease, transform 1s ease; transform: translateY(8px);">
@@ -1252,31 +1184,54 @@ tailwind.config = {
       <img id="funnyAlertImg" src="" alt="Funny Alert" class="w-20 h-20 sm:w-28 sm:h-28 object-contain drop-shadow-xl select-none" draggable="false" />
     </div>
 
-    <div class="bg-slate-900 text-white p-3.5 flex justify-between items-center border-b dark:border-slate-800 rounded-t-2xl">
-      <div>
-        <h3 id="modalTitle" class="font-extrabold text-sm tracking-wide">List TO Number & Parcel</h3>
-        <p id="modalSubtitle" class="text-[10px] text-slate-400 mt-0.5"></p>
+    <div class="bg-slate-900 text-white px-5 py-4 flex justify-between items-start gap-3 border-b dark:border-slate-800 rounded-t-2xl">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <h3 id="modalTitle" class="font-extrabold text-lg tracking-wide truncate">List TO Number & Parcel</h3>
+          <span id="modalAgingPill" class="text-xs font-extrabold px-2.5 py-0.5 rounded-full border bg-slate-600 text-white border-slate-500"></span>
+        </div>
+        <p id="modalSubtitle" class="text-xs text-slate-400 mt-1"></p>
       </div>
-      <button onclick="closeModal()" class="text-slate-400 hover:text-white transition-all text-xl p-1 rounded-lg hover:bg-slate-800">&times;</button>
+      <button onclick="closeModal()" title="Tutup (Esc)" class="text-slate-400 hover:text-white transition-all text-2xl leading-none w-9 h-9 rounded-lg hover:bg-slate-800 shrink-0">&times;</button>
     </div>
-    <div class="p-3 bg-slate-50 dark:bg-slate-900/50 flex justify-between items-center border-b dark:border-slate-800 gap-2 flex-wrap">
-      <span id="modalCount" class="font-bold text-slate-700 dark:text-slate-200 text-xs">Total: 0 Data</span>
-      <div class="flex items-center gap-1.5">
-        <button onclick="copyToClipboard('TO_ONLY')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-1.5 rounded-lg text-[10px] flex items-center gap-1.5 transition shadow-sm border border-slate-700">
+
+    <div id="modalSummary" class="px-5 py-3 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900"></div>
+
+    <div class="px-5 py-2.5 bg-slate-50 dark:bg-slate-900/60 flex items-center justify-between gap-3 flex-wrap border-b border-slate-200 dark:border-slate-800">
+      <div class="flex items-center gap-2 flex-1 min-w-[280px]">
+        <div class="relative flex-1 max-w-sm">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+          <input id="modalSearchInput" type="text" autocomplete="off" oninput="onModalSearch(this.value)" placeholder="Cari nomor TO atau operator..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-400">
+        </div>
+        <select id="modalSortSelect" onchange="onModalSort(this.value)" class="py-1.5 px-2 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-sans focus:outline-none focus:ring-2 focus:ring-amber-400">
+          <option value="oldest">Urut: Terlama dulu</option>
+          <option value="parcel">Urut: Parcel terbanyak</option>
+          <option value="operator">Urut: Operator A–Z</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-2">
+        <span id="modalCount" class="text-sm font-semibold text-slate-500 dark:text-slate-400 mr-1"></span>
+        <button onclick="copyToClipboard('TO_ONLY')" class="bg-slate-800 hover:bg-slate-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition shadow-sm border border-slate-700">
           <i class="fa-solid fa-copy"></i> <span id="copyBtnTextTO">Copy Unique TO</span>
+        </button>
+        <button onclick="copyModalTable()" title="Salin sebagai tabel (bisa langsung paste ke Excel)" class="bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold px-3 py-1.5 rounded-lg text-xs flex items-center gap-1.5 transition shadow-sm border border-slate-300 dark:border-slate-600">
+          <i class="fa-solid fa-table"></i> <span id="copyBtnTextTable">Copy Tabel</span>
         </button>
       </div>
     </div>
-    <div class="px-3 py-2 bg-slate-100 dark:bg-slate-800/80 text-[10px] font-bold text-slate-600 dark:text-slate-300 grid grid-cols-12 gap-2 border-b dark:border-slate-700">
-      <span class="col-span-3 text-left">LIST TO NUMBER</span>
-      <span class="col-span-2 text-center"><i class="fa-solid fa-tags mr-1"></i> TO TYPE</span>
-      <span class="col-span-2 text-center"><i class="fa-solid fa-box mr-1"></i> JUMLAH PARCEL</span>
-      <span class="col-span-3 text-center"><i class="fa-solid fa-user-gear mr-1"></i> OPERATOR</span>
-      <span class="col-span-2 text-right pr-1"><i class="fa-regular fa-clock mr-1"></i> COMPLETE TIME</span>
+
+    <div class="px-5 py-2 bg-slate-100 dark:bg-slate-800/80 text-xs font-bold text-slate-600 dark:text-slate-300 grid grid-cols-12 gap-3 border-b dark:border-slate-700">
+      <span class="col-span-3 text-left">NOMOR TO</span>
+      <span class="col-span-2 text-center">TIPE</span>
+      <span class="col-span-1 text-center">PARCEL</span>
+      <span class="col-span-1 text-center">AGING</span>
+      <span class="col-span-3 text-left">OPERATOR</span>
+      <span class="col-span-2 text-right">SELESAI PACK</span>
     </div>
-    <div class="p-3 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-slate-900 font-mono text-[11px] space-y-1.5" id="modalListContainer"></div>
-    <div class="bg-slate-50 dark:bg-slate-900 p-2.5 border-t dark:border-slate-800 text-right rounded-b-2xl">
-      <button onclick="closeModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-5 py-1.5 rounded-lg text-[11px] transition">Tutup</button>
+    <div class="px-3 py-1 overflow-y-auto custom-scrollbar flex-1 bg-white dark:bg-slate-900 font-sans divide-y divide-slate-100 dark:divide-slate-800" id="modalListContainer"></div>
+    <div class="bg-slate-50 dark:bg-slate-900 px-5 py-2.5 border-t dark:border-slate-800 flex items-center justify-between rounded-b-2xl">
+      <span class="text-xs text-slate-400 dark:text-slate-500 font-sans"><i class="fa-regular fa-hand-pointer mr-1"></i>Klik nomor TO untuk menyalin &middot; Esc untuk menutup</span>
+      <button onclick="closeModal()" class="bg-slate-200 dark:bg-slate-800 hover:bg-slate-300 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold px-5 py-1.5 rounded-lg text-sm transition">Tutup</button>
     </div>
   </div>
 </div>
@@ -1441,6 +1396,8 @@ tailwind.config = {
 let globalRawData = [];
 let filteredData = [];
 let currentTheme = 'light';
+// Angka 0 -> dash abu tipis biar angka yang beneran ada langsung kelihatan
+function nz(v) { var n = Number(v); return n > 0 ? n.toLocaleString('id-ID') : '<span class="nz">–</span>'; }
 
 // ==== FIREBASE SYNC (biar data import kebaca real-time di semua device) ====
 let fbDb = null;
@@ -1796,6 +1753,8 @@ let gridPageSize = 100;
 let gridCurrentPage = 1;
 let currentSubmenu = 'aging';
 let currentShiftFilter = 'ALL';
+let packerShowAll = false;
+const PACKER_TOP_N = 10;
 
 // CHART.JS INSTANCES (Backlog Trend & Shift Volume)
 let agingDistributionChartInstance = null;
@@ -1877,6 +1836,9 @@ function agingStatusDisplayLabel(label) {
 
 function statusBadgeHtml(row) {
   const st = getAgingStatus(row);
+  if (st.label === 'GOOD') {
+    return `<span class="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-600 dark:text-emerald-400"><i class="fa-solid fa-circle" style="font-size:6px"></i>${agingStatusDisplayLabel(st.label)}</span>`;
+  }
   return `<span class="inline-flex items-center gap-1 text-[9px] font-extrabold px-1.5 py-0.5 rounded-full ${st.cls}"><i class="${st.icon}"></i>${agingStatusDisplayLabel(st.label)}</span>`;
 }
 
@@ -1910,25 +1872,10 @@ document.addEventListener('keydown', function(event) {
 });
 
 function focusGridSearchInput() {
-  // Search box cuma ada di submenu Aging & Packer Backlog, jadi auto-switch dulu kalau lagi di Occupancy
-  if (currentSubmenu !== 'aging') {
-    const btnAging = document.getElementById('menuAging');
-    const btnOccupancy = document.getElementById('menuOccupancy');
-    const sectionAging = document.getElementById('agingSection');
-    const sectionOccupancy = document.getElementById('occupancySection');
-    const badge = document.getElementById('activeMenuBadge');
-
-    currentSubmenu = 'aging';
-    btnAging.classList.add('active');
-    btnOccupancy.classList.remove('active');
-    sectionOccupancy.classList.add('hidden');
-    sectionAging.classList.remove('hidden');
-    badge.innerText = t('ob.badge.agingMode');
-    if (filteredData.length > 0) renderBacklogCharts();
-  }
 
   const input = document.getElementById('gridSearchInput');
   if (input) {
+    input.scrollIntoView({ block: 'center', behavior: 'smooth' });
     input.focus();
     input.select();
   }
@@ -2045,37 +1992,49 @@ function getDeliveryShiftForItem(item) {
   return getShiftFromTimeStr(`${hh}:${mm}`);
 }
 
-function switchSubmenu(menuType) {
+// Aging & Occupancy sekarang 1 halaman. Fungsi ini cuma lompat (scroll) ke bagian yang dipilih.
+function setActiveSection(menuType) {
   currentSubmenu = menuType;
-  const btnAging = document.getElementById('menuAging');
-  const btnOccupancy = document.getElementById('menuOccupancy');
-  const sectionAging = document.getElementById('agingSection');
-  const sectionOccupancy = document.getElementById('occupancySection');
-  const badge = document.getElementById('activeMenuBadge');
+  const isOcc = menuType === 'occupancy';
+  const bA = document.getElementById('menuAging');
+  const bO = document.getElementById('menuOccupancy');
+  if (bA) bA.classList.add('active');
+  if (bO) bO.classList.toggle('active', isOcc);
+  document.querySelectorAll('#sectionJump [data-jump]').forEach(b => b.classList.toggle('active', b.dataset.jump === menuType));
+}
 
-  btnAging.classList.remove('active');
-  btnOccupancy.classList.remove('active');
-  sectionAging.classList.add('hidden');
-  sectionOccupancy.classList.add('hidden');
-
-  if (menuType === 'occupancy') {
-    btnOccupancy.classList.add('active');
-    sectionOccupancy.classList.remove('hidden');
-    badge.innerText = t('ob.badge.occupancyMode');
-  } else {
-    btnAging.classList.add('active');
-    sectionAging.classList.remove('hidden');
-    badge.innerText = t('ob.badge.agingMode');
-  }
+function switchSubmenu(menuType) {
+  const main = document.querySelector('main');
+  setActiveSection(menuType === 'occupancy' ? 'occupancy' : 'aging');
   document.getElementById('appSidebar').classList.remove('open');
   document.getElementById('appSidebarBackdrop').classList.remove('open');
-
-  // Redraw chart setelah section jadi visible (canvas butuh dimensi container yang benar)
-  if (filteredData.length > 0) {
-    if (menuType === 'occupancy') renderShiftVolumeChart();
-    else renderBacklogCharts();
+  if (!main) return;
+  if (menuType === 'occupancy') {
+    const sec = document.getElementById('occupancySection');
+    if (sec) main.scrollTo({ top: Math.max(main.scrollTop + sec.getBoundingClientRect().top - main.getBoundingClientRect().top - 8, 0), behavior: 'smooth' });
+  } else {
+    main.scrollTo({ top: 0, behavior: 'smooth' });
   }
 }
+
+// Tombol di header ikut nyala sesuai bagian yang lagi kelihatan
+(function () {
+  const main = document.querySelector('main');
+  if (!main) return;
+  let ticking = false;
+  main.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(function () {
+      ticking = false;
+      const sec = document.getElementById('occupancySection');
+      if (!sec) return;
+      const top = sec.getBoundingClientRect().top - main.getBoundingClientRect().top;
+      const atBottom = main.scrollTop + main.clientHeight >= main.scrollHeight - 4;
+      setActiveSection(top <= main.clientHeight * 0.35 || atBottom ? 'occupancy' : 'aging');
+    });
+  }, { passive: true });
+})();
 
 // Open/Hide grup Sidebar. Sengaja GAK diinget lewat localStorage — tiap buka
 // halaman / pindah tab, semua grup default Hide, user wajib Open manual biar
@@ -2136,10 +2095,20 @@ function toggleAppSidebar() {
 function updateClock() {
   const now = new Date();
   const options = { day: '2-digit', month: 'short', year: '2-digit' };
-  document.getElementById('liveClock').innerText = `${now.toLocaleDateString('id-ID', options)} | ${now.toLocaleTimeString('id-ID', { hour12: false })}`;
+  const dStr = now.toLocaleDateString('id-ID', options);
+  const tStr = now.toLocaleTimeString('id-ID', { hour12: false }).replace(/\./g, ':');
+  const lc = document.getElementById('liveClock'); if (lc) lc.innerText = `${dStr} | ${tStr}`;
+  const lt = document.getElementById('liveTime'); if (lt) lt.innerText = tStr;
+  const ld = document.getElementById('liveDate');
+  if (ld) {
+    const lang = (typeof currentAppLang !== 'undefined' && currentAppLang) ? currentAppLang : 'id';
+    const loc = { id: 'id-ID', en: 'en-GB', ja: 'ja-JP', zh: 'zh-CN' }[lang] || 'id-ID';
+    const wd = now.toLocaleDateString(loc, { weekday: 'long' });
+    const dt = now.toLocaleDateString(loc, { day: '2-digit', month: 'short', year: 'numeric' });
+    ld.innerText = (lang === 'ja' || lang === 'zh') ? `${dt} ${wd}` : `${wd}, ${dt}`;
+  }
 }
 setInterval(updateClock, 1000); updateClock();
-setInterval(() => { if (currentSubmenu === 'occupancy') renderShiftTable(); }, 60000);
 
 document.getElementById('excelFile').addEventListener('change', function(e) {
   const file = e.target.files[0];
@@ -2264,6 +2233,7 @@ const FUNNY_ALERT_CONFIG = {
   d3:    { img: FUNNY_ALERT_IMAGES.d4,   text: "Ayo kapan ini mau di keluarin paket nya?" },
   d4:    { img: FUNNY_ALERT_IMAGES.d4,   text: "Ayo kapan ini mau di keluarin paket nya?" },
   d5:    { img: FUNNY_ALERT_IMAGES.d5,   text: "Mau saya pecat kamu???" },
+  d5plus: { img: FUNNY_ALERT_IMAGES.d5,  text: "Mau saya pecat kamu???" },
   d6:    { img: FUNNY_ALERT_IMAGES.d5,   text: "Mau saya pecat kamu???" },
   dMore: { img: FUNNY_ALERT_IMAGES.d5,   text: "Mau saya pecat kamu???" }
 };
@@ -2343,6 +2313,129 @@ function toTypeBadgeHtml(toType) {
   }
 }
 
+// ===== POPUP LIST TO: state, search, sort, copy =====
+let modalAllRows = [];
+let modalSearchTerm = '';
+let modalSortMode = 'oldest';
+
+function agingLabelFromDays(n) { return n <= 0 ? 'D-Day' : 'D-' + n; }
+
+function modalAgingTypeLabel(type) {
+  return { d0: 'D-Day', d1: 'D-1', d2: 'D-2', d3: 'D-3', d4: 'D-4', d5: 'D-5', d5plus: 'D-5+', d6: 'D-6', dMore: '>D-4' }[type] || String(type).toUpperCase();
+}
+
+function agingPillClass(days) {
+  if (days >= 5) return 'bg-rose-100 text-rose-700 border-rose-300 dark:bg-rose-950/70 dark:text-rose-300 dark:border-rose-800';
+  if (days >= 3) return 'bg-orange-100 text-orange-700 border-orange-300 dark:bg-orange-950/70 dark:text-orange-300 dark:border-orange-800';
+  if (days === 2) return 'bg-amber-100 text-amber-700 border-amber-300 dark:bg-amber-950/70 dark:text-amber-300 dark:border-amber-800';
+  return 'bg-emerald-100 text-emerald-700 border-emerald-300 dark:bg-emerald-950/70 dark:text-emerald-300 dark:border-emerald-800';
+}
+
+function agingBorderClass(days) {
+  if (days >= 5) return 'border-rose-500';
+  if (days >= 3) return 'border-orange-400';
+  if (days === 2) return 'border-amber-400';
+  return 'border-transparent';
+}
+
+function modalOperatorHtml(raw) {
+  if (!raw || raw === '-') return '<span class="text-slate-400">N/A</span>';
+  const m = String(raw).match(/^\[([^\]]+)\]\s*(.*)$/);
+  if (!m) return '<div class="font-semibold text-sm text-slate-800 dark:text-slate-100 truncate" title="' + escapeHtml(raw) + '">' + escapeHtml(raw) + '</div>';
+  return '<div class="leading-tight min-w-0"><div class="font-bold text-sm text-slate-800 dark:text-slate-100 truncate" title="' + escapeHtml(m[2] || m[1]) + '">' + escapeHtml(m[2] || m[1]) +
+    '</div><div class="font-mono text-xs text-slate-400 dark:text-slate-500">' + escapeHtml(m[1]) + '</div></div>';
+}
+
+function modalPackTimeHtml(raw) {
+  const m = String(raw || '').match(/^(\d{4})-(\d{2})-(\d{2})\s+(\d{2}):(\d{2})/);
+  if (!m) return '<span class="text-slate-400">-</span>';
+  const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+  const hari = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+  const bulan = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agt', 'Sep', 'Okt', 'Nov', 'Des'];
+  const now = new Date();
+  const dayDiff = Math.round((new Date(now.getFullYear(), now.getMonth(), now.getDate()) - new Date(d.getFullYear(), d.getMonth(), d.getDate())) / 86400000);
+  const dayLabel = dayDiff <= 0 ? 'Hari ini' : dayDiff === 1 ? 'Kemarin' : dayDiff + ' hari lalu';
+  const mins = Math.max(0, Math.floor((now - d) / 60000));
+  const ago = mins < 60 ? mins + ' menit lalu'
+    : mins < 1440 ? Math.floor(mins / 60) + ' jam lalu'
+    : Math.floor(mins / 1440) + ' hari' + (Math.floor((mins % 1440) / 60) ? ' ' + Math.floor((mins % 1440) / 60) + ' jam' : '') + ' lalu';
+  const tone = dayDiff <= 0 ? 'text-emerald-600 dark:text-emerald-400'
+    : dayDiff === 1 ? 'text-amber-600 dark:text-amber-400'
+    : 'text-red-600 dark:text-red-400';
+  return '<div class="leading-tight">' +
+    '<div class="text-base font-extrabold font-mono text-slate-800 dark:text-slate-100"><i class="fa-regular fa-clock text-slate-400 text-xs mr-1"></i>' + m[4] + ':' + m[5] + '</div>' +
+    '<div class="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-0.5">' + hari[d.getDay()] + ', ' + d.getDate() + ' ' + bulan[d.getMonth()] + ' ' + d.getFullYear() + '</div>' +
+    '<div class="text-[11px] font-bold ' + tone + ' mt-0.5">' + (dayDiff >= 2 ? ago : dayLabel + ' &middot; ' + ago) + '</div>' +
+    '</div>';
+}
+
+function getModalVisibleRows() {
+  const q = modalSearchTerm.trim().toLowerCase();
+  let rows = q
+    ? modalAllRows.filter(r => String(r.toNo).toLowerCase().includes(q) || String(r.lastPacker || '').toLowerCase().includes(q))
+    : modalAllRows.slice();
+  if (modalSortMode === 'parcel') rows.sort((a, b) => b.parcelCount - a.parcelCount || b.agingDays - a.agingDays);
+  else if (modalSortMode === 'operator') rows.sort((a, b) => String(a.lastPacker).localeCompare(String(b.lastPacker)) || b.agingDays - a.agingDays);
+  else rows.sort((a, b) => b.agingDays - a.agingDays || String(a.completeTimeStr).localeCompare(String(b.completeTimeStr)));
+  return rows;
+}
+
+function renderModalRows() {
+  const rows = getModalVisibleRows();
+  currentModalTOList = rows.map(r => r.toNo);
+  document.getElementById('modalCount').innerText = rows.length === modalAllRows.length
+    ? rows.length + ' TO'
+    : rows.length + ' dari ' + modalAllRows.length + ' TO';
+  const container = document.getElementById('modalListContainer');
+  if (!rows.length) {
+    container.innerHTML = '<div class="py-12 text-center text-sm text-slate-400 dark:text-slate-500"><i class="fa-regular fa-face-frown-open text-3xl mb-2 block"></i>Tidak ada TO atau operator yang cocok dengan pencarian.</div>';
+    return;
+  }
+  container.innerHTML = rows.map((item, i) => {
+    return `
+    <div class="grid grid-cols-12 gap-3 px-2 py-2.5 items-center border-l-[3px] ${agingBorderClass(item.agingDays)} hover:bg-slate-50 dark:hover:bg-slate-800/70 transition">
+      <div class="col-span-3 flex items-center min-w-0 gap-2">
+        <span class="text-slate-400 dark:text-slate-500 text-xs w-6 shrink-0 text-right">${i + 1}</span>
+        <button type="button" class="group flex items-center gap-2 min-w-0 font-mono text-sm font-semibold text-slate-800 dark:text-slate-100 hover:text-amber-600 dark:hover:text-amber-400" data-to="${escapeHtml(item.toNo)}" onclick="copyOneTO(this)" title="Klik untuk menyalin">
+          <span class="truncate">${escapeHtml(item.toNo)}</span><i class="fa-regular fa-copy text-slate-300 group-hover:text-slate-500 dark:group-hover:text-slate-300 text-xs"></i>
+        </button>
+      </div>
+      <div class="col-span-2 text-center">${toTypeBadgeHtml(item.toType)}</div>
+      <div class="col-span-1 text-center font-bold text-sm text-slate-700 dark:text-slate-200">${item.parcelCount}</div>
+      <div class="col-span-1 text-center"><span class="text-xs font-extrabold px-2 py-0.5 rounded-full border ${agingPillClass(item.agingDays)}">${agingLabelFromDays(item.agingDays)}</span></div>
+      <div class="col-span-3 min-w-0">${modalOperatorHtml(item.lastPacker)}</div>
+      <div class="col-span-2 text-right">${modalPackTimeHtml(item.completeTimeStr)}</div>
+    </div>`;
+  }).join('');
+}
+
+function onModalSearch(v) { modalSearchTerm = v || ''; renderModalRows(); }
+function onModalSort(v) { modalSortMode = v || 'oldest'; renderModalRows(); }
+
+function copyOneTO(btn) {
+  const v = btn.getAttribute('data-to');
+  if (!v) return;
+  navigator.clipboard.writeText(v).then(function () {
+    const ic = btn.querySelector('i');
+    if (!ic) return;
+    ic.className = 'fa-solid fa-check text-emerald-500 text-xs';
+    setTimeout(function () { ic.className = 'fa-regular fa-copy text-slate-300 group-hover:text-slate-500 dark:group-hover:text-slate-300 text-xs'; }, 1200);
+  });
+}
+
+function copyModalTable() {
+  const rows = getModalVisibleRows();
+  if (!rows.length) return;
+  const lines = ['TO Number\tTO Type\tParcel\tAging\tOperator\tComplete Time'].concat(rows.map(r =>
+    [r.toNo, r.toType, r.parcelCount, agingLabelFromDays(r.agingDays), r.lastPacker, r.completeTimeStr].join('\t')));
+  navigator.clipboard.writeText(lines.join('\n')).then(function () {
+    const el = document.getElementById('copyBtnTextTable');
+    const o = el.innerText;
+    el.innerText = 'Berhasil!';
+    setTimeout(function () { el.innerText = o; }, 2000);
+  });
+}
+
 function renderTOModal(titleLabel, agingType, matches) {
   const uniqueMap = new Map();
   matches.forEach(item => {
@@ -2356,6 +2449,7 @@ function renderTOModal(titleLabel, agingType, matches) {
         isHv: item.isHv,
         isLiquid: item.isLiquid,
         toType: itemToType,
+        agingDays: item.agingDays || 0,
         parcelCount: 0
       });
     } else {
@@ -2363,47 +2457,36 @@ function renderTOModal(titleLabel, agingType, matches) {
       if (item.isHv) existing.isHv = true;
       if (item.isLiquid) existing.isLiquid = true;
       if (TO_TYPE_RANK[itemToType] < TO_TYPE_RANK[existing.toType]) existing.toType = itemToType;
+      existing.agingDays = Math.max(existing.agingDays, item.agingDays || 0);
     }
     uniqueMap.get(key).parcelCount++;
   });
 
-  const uniqueList = Array.from(uniqueMap.values());
-  currentModalTOList = uniqueList.map(u => u.toNo);
+  modalAllRows = Array.from(uniqueMap.values());
+  modalSearchTerm = '';
+  modalSortMode = 'oldest';
+  const si = document.getElementById('modalSearchInput'); if (si) si.value = '';
+  const ss = document.getElementById('modalSortSelect'); if (ss) ss.value = 'oldest';
 
   document.getElementById('modalTitle').innerText = titleLabel;
-  document.getElementById('modalSubtitle').innerText = `Kategori Aging: ${agingType.toUpperCase().replace('MORE', '>6')} (${matches.length} Total Parcel)`;
-  document.getElementById('modalCount').innerText = `Total: ${uniqueList.length} Unique TO (${matches.length} Total Parcel)`;
+  const repDays = { d0: 0, d1: 1, d2: 2, d3: 3, d4: 4 }[agingType];
+  const pill = document.getElementById('modalAgingPill');
+  pill.innerText = modalAgingTypeLabel(agingType);
+  pill.className = 'text-xs font-extrabold px-2.5 py-0.5 rounded-full border ' + agingPillClass(repDays === undefined ? 5 : repDays);
+  document.getElementById('modalSubtitle').innerText = matches.length.toLocaleString('id-ID') + ' parcel dalam ' + modalAllRows.length + ' nomor TO';
 
-  const container = document.getElementById('modalListContainer');
-  container.innerHTML = uniqueList.map((item, i) => {
-    let toTypeBadge = toTypeBadgeHtml(item.toType);
+  const maxAge = Math.max.apply(null, modalAllRows.map(r => r.agingDays));
+  const operatorCount = new Set(matches.map(m => m.lastPacker)).size;
+  const typeParcels = {};
+  modalAllRows.forEach(r => { typeParcels[r.toType] = (typeParcels[r.toType] || 0) + r.parcelCount; });
+  const stat = (label, val) => '<div class="flex items-baseline gap-1.5"><span class="text-xs text-slate-500 dark:text-slate-400">' + label + '</span><span class="text-lg font-black text-slate-800 dark:text-slate-100">' + val + '</span></div>';
+  document.getElementById('modalSummary').innerHTML =
+    stat('Total TO', modalAllRows.length) + stat('Total Parcel', matches.length.toLocaleString('id-ID')) +
+    stat('Operator', operatorCount) + stat('Terlama', agingLabelFromDays(maxAge)) +
+    '<div class="flex items-center gap-2 flex-wrap">' + Object.keys(typeParcels).sort((a, b) => TO_TYPE_RANK[a] - TO_TYPE_RANK[b]).map(k =>
+      '<span class="inline-flex items-center gap-1">' + toTypeBadgeHtml(k) + '<b class="text-sm text-slate-700 dark:text-slate-200">' + typeParcels[k] + '</b></span>').join('') + '</div>';
 
-    return `
-    <div class="grid grid-cols-12 gap-2 p-2 hover:bg-slate-50 dark:hover:bg-slate-800/80 rounded-lg border-b border-slate-100 dark:border-slate-800 items-center transition">
-      <div class="col-span-3 flex items-center min-w-0">
-        <span class="text-slate-400 dark:text-slate-500 w-5 text-left shrink-0">${i+1}.</span>
-        <span class="font-bold text-slate-800 dark:text-slate-200 select-all truncate text-[11px]">${item.toNo}</span>
-      </div>
-      <div class="col-span-2 text-center min-w-0 px-1">
-        ${toTypeBadge}
-      </div>
-      <div class="col-span-2 text-center min-w-0 px-1">
-        <span class="bg-amber-100 dark:bg-amber-950/80 text-amber-800 dark:text-amber-300 font-bold px-2 py-0.5 rounded-full text-[10px] border border-amber-300/80 dark:border-amber-800 inline-block">
-          <i class="fa-solid fa-box mr-1"></i>${item.parcelCount} Parcel
-        </span>
-      </div>
-      <div class="col-span-3 text-center min-w-0 px-1">
-        <span class="bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 px-2 py-0.5 rounded-lg text-[10px] font-sans font-bold border border-indigo-200/60 dark:border-indigo-800/80 inline-block max-w-full overflow-x-auto custom-scrollbar whitespace-nowrap">
-          ${item.lastPacker !== '-' ? item.lastPacker : 'N/A'}
-        </span>
-      </div>
-      <div class="col-span-2 text-right">
-        <span class="text-[10px] text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-md border dark:border-slate-700 font-sans inline-block">
-          ${item.completeTimeStr}
-        </span>
-      </div>
-    </div>`;
-  }).join('');
+  renderModalRows();
 
   document.getElementById('toModal').classList.remove('hidden');
   document.getElementById('copyBtnTextTO').innerText = "Copy Unique TO";
@@ -2418,12 +2501,26 @@ function showTONumbers(hubName, agingType) {
   else if (agingType === 'd2') matches = matches.filter(d => d.agingDays === 2);
   else if (agingType === 'd3') matches = matches.filter(d => d.agingDays === 3);
   else if (agingType === 'd4') matches = matches.filter(d => d.agingDays === 4);
-  else if (agingType === 'd5') matches = matches.filter(d => d.agingDays === 5);
+  else if (agingType === 'd5') matches = matches.filter(d => d.agingDays >= 5);
   else if (agingType === 'd6') matches = matches.filter(d => d.agingDays === 6);
   else if (agingType === 'dMore') matches = matches.filter(d => d.agingDays > 4);
 
   if (matches.length === 0) return;
-  renderTOModal(hubName, agingType, matches);
+  renderTOModal(hubName, agingType === 'd5' ? 'd5plus' : agingType, matches);
+}
+
+function showRouteTONumbers(routeLabel, agingType) {
+  const route = linehaulRoutes.find(r => r.label === routeLabel);
+  if (!route) return;
+  let matches = filteredData.filter(d => route.hubs.includes(d.receiverName));
+  if (agingType === 'd0') matches = matches.filter(d => d.agingDays === 0);
+  else if (agingType === 'd1') matches = matches.filter(d => d.agingDays === 1);
+  else if (agingType === 'd2') matches = matches.filter(d => d.agingDays === 2);
+  else if (agingType === 'd3') matches = matches.filter(d => d.agingDays === 3);
+  else if (agingType === 'd4') matches = matches.filter(d => d.agingDays === 4);
+  else if (agingType === 'd5') matches = matches.filter(d => d.agingDays >= 5);
+  if (matches.length === 0) return;
+  renderTOModal(routeLabel, agingType === 'd5' ? 'd5plus' : agingType, matches);
 }
 
 function showPackerTONumbers(packerName, agingType) {
@@ -2438,7 +2535,7 @@ function showPackerTONumbers(packerName, agingType) {
   else if (agingType === 'd3') matches = matches.filter(d => d.agingDays === 3);
   else if (agingType === 'd4') matches = matches.filter(d => d.agingDays === 4);
   else if (agingType === 'd5') matches = matches.filter(d => d.agingDays === 5);
-  else if (agingType === 'd6') matches = matches.filter(d => d.agingDays === 6);
+  else if (agingType === 'd6') matches = matches.filter(d => d.agingDays >= 6);
   else if (agingType === 'dMore') matches = matches.filter(d => d.agingDays > 4);
 
   if (matches.length === 0) return;
@@ -2810,81 +2907,47 @@ function getSortCode(receiverName) {
   return hubSortCodeMap[receiverName] || '-';
 }
 
-function filterShiftTable(shiftName) {
-  currentShiftFilter = shiftName;
-  ['ALL', 'S1', 'S2', 'S3'].forEach(id => {
-    const btn = document.getElementById('btnShiftFilter' + id);
-    if (btn) btn.className = "px-2.5 py-0.5 rounded-md text-[10px] font-bold text-slate-300 hover:text-white hover:bg-slate-800 transition";
-  });
-  const activeBtn = document.getElementById(shiftName === 'ALL' ? 'btnShiftFilterALL' : (shiftName === 'Shift 1' ? 'btnShiftFilterS1' : (shiftName === 'Shift 2' ? 'btnShiftFilterS2' : 'btnShiftFilterS3')));
-  if(activeBtn) activeBtn.className = "px-2.5 py-0.5 rounded-md text-[10px] font-bold bg-amber-400 text-slate-950 transition shadow-sm";
-
-  const gridContainer = document.getElementById('shiftGridContainer');
-  const col1 = document.getElementById('shift1Column');
-  const col2 = document.getElementById('shift2Column');
-  const col3 = document.getElementById('shift3Column');
-
-  if (shiftName === 'Shift 1') {
-    gridContainer.className = "grid grid-cols-1 gap-2 items-start transition-all duration-300 single-shift-active";
-    col1.classList.remove('hidden'); col2.classList.add('hidden'); col3.classList.add('hidden');
-  } else if (shiftName === 'Shift 2') {
-    gridContainer.className = "grid grid-cols-1 gap-2 items-start transition-all duration-300 single-shift-active";
-    col1.classList.add('hidden'); col2.classList.remove('hidden'); col3.classList.add('hidden');
-  } else if (shiftName === 'Shift 3') {
-    gridContainer.className = "grid grid-cols-1 gap-2 items-start transition-all duration-300 single-shift-active";
-    col1.classList.add('hidden'); col2.classList.add('hidden'); col3.classList.remove('hidden');
-  } else {
-    gridContainer.className = "grid grid-cols-1 lg:grid-cols-3 gap-3 items-start transition-all duration-300";
-    col1.classList.remove('hidden'); col2.classList.remove('hidden'); col3.classList.remove('hidden');
-  }
-  renderShiftTable();
-}
-
 function normalizeHubName(str) {
   return String(str || '').trim().toLowerCase().replace(/\s+/g, ' ');
 }
 
-function renderShiftTable() {
-  let filteredSchedules = linehaulSchedule.map(s => {
-    const shiftCalculated = getShiftFromTimeStr(s.time);
-    return { ...s, shift: shiftCalculated };
-  });
-  filteredSchedules.sort((a, b) => a.time.localeCompare(b.time));
+function packerNameHtml(raw) {
+  const m = String(raw).match(/^\[([^\]]+)\]\s*(.*)$/);
+  if (!m) return '<span class="font-bold text-slate-900 dark:text-slate-100">' + escapeHtml(raw) + '</span>';
+  return '<span class="font-bold text-slate-900 dark:text-slate-100">' + escapeHtml(m[2] || m[1]) + '</span>' +
+    '<span class="font-mono text-[10px] text-slate-400 dark:text-slate-500 ml-2">' + escapeHtml(m[1]) + '</span>';
+}
 
-  const getDepartureStatus = (timeStr) => {
-    const now = new Date();
-    const parts = timeStr.split(':');
-    const target = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(parts[0], 10), parseInt(parts[1], 10) || 0);
-    const diffMinutes = (target - now) / 60000;
+function togglePackerShowAll() {
+  packerShowAll = !packerShowAll;
+  renderPackerLeaderboard();
+}
 
-    if (diffMinutes < 0) return `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950/70 text-rose-600 dark:text-rose-300 border border-rose-300 dark:border-rose-800 whitespace-nowrap"><i class="fa-solid fa-triangle-exclamation mr-0.5"></i>${t('ob.occ.legendOverdue')}</span>`;
-    if (diffMinutes <= 30) return `<span class="text-[9px] font-extrabold px-1.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950/70 text-amber-700 dark:text-amber-300 border border-amber-300 dark:border-amber-800 whitespace-nowrap animate-pulse"><i class="fa-solid fa-clock mr-0.5"></i>Segera</span>`;
-    return `<span class="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200 dark:border-slate-700 whitespace-nowrap">${t('ob.occ.legendScheduled')}</span>`;
-  };
-
-  const renderShiftBody = (targetShift) => {
-    const items = filteredSchedules.filter(s => s.shift === targetShift);
-    if (items.length === 0) return `<tr><td colspan="4" class="text-center py-4 text-slate-400">Nggak ada jadwal.</td></tr>`;
-
-    return items.map(item => {
-      return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
-        <td class="text-center font-bold text-slate-700 dark:text-slate-300">S${item.slot}</td>
-        <td class="font-sans text-slate-900 dark:text-slate-200 font-bold text-left pl-2 route-cell" title="${item.dest}">${item.dest}</td>
-        <td class="col-time-departed font-mono font-bold text-indigo-600 dark:text-indigo-400">${item.time}</td>
-        <td class="text-center">${getDepartureStatus(item.time)}</td>
-      </tr>`;
-    }).join('');
-  };
-
-  document.getElementById('shift1TableBody').innerHTML = renderShiftBody('Shift 1');
-  document.getElementById('shift2TableBody').innerHTML = renderShiftBody('Shift 2');
-  document.getElementById('shift3TableBody').innerHTML = renderShiftBody('Shift 3');
-  document.getElementById('kpiTotalLinehaul').innerText = `${linehaulSchedule.length.toLocaleString('id-ID')} Unit`;
+function updatePackerShowMoreBar(total, shown) {
+  const bar = document.getElementById('packerShowMoreBar');
+  const wrap = document.getElementById('packerTableWrap');
+  if (!bar || !wrap) return;
+  if (total <= PACKER_TOP_N) {
+    bar.classList.add('hidden');
+    wrap.classList.remove('packer-scroll');
+    return;
+  }
+  bar.classList.remove('hidden');
+  const extra = Math.max(shown - PACKER_TOP_N, 0);
+  const info = packerShowAll
+    ? t('ob.packer.viewAll', { total: total })
+    : (extra > 0 ? t('ob.packer.viewTopCritical', { n: PACKER_TOP_N, x: extra, total: total })
+                 : t('ob.packer.viewTop', { n: PACKER_TOP_N, total: total }));
+  document.getElementById('packerShowMoreInfo').innerText = info;
+  document.getElementById('packerShowMoreBtn').innerText = packerShowAll ? t('ob.packer.btnLess') : t('ob.packer.btnAll', { total: total });
+  wrap.classList.toggle('packer-scroll', packerShowAll);
 }
 
 function renderPackerLeaderboard() {
   const packerMap = {};
+  const backlogMap = {};            // khusus tabel: hanya parcel D-2 ke atas
   let totalParcelsTracked = 0;
+  let totalBacklogD2 = 0;
 
   filteredData.forEach(item => {
     const packer = item.lastPacker && item.lastPacker !== '-' ? item.lastPacker : t('ob.packer.unassigned');
@@ -2914,6 +2977,18 @@ function renderPackerLeaderboard() {
     else if (item.agingDays === 6) packerMap[packer].d6++;
     
     if (item.agingDays > 4) packerMap[packer].criticalD6++;
+
+    if (item.agingDays >= 2) {
+      if (!backlogMap[packer]) backlogMap[packer] = { name: packer, total: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, criticalD6: 0 };
+      const bp = backlogMap[packer];
+      bp.total++; totalBacklogD2++;
+      if (item.agingDays === 2) bp.d2++;
+      else if (item.agingDays === 3) bp.d3++;
+      else if (item.agingDays === 4) bp.d4++;
+      else if (item.agingDays === 5) bp.d5++;
+      else bp.d6++;                 // D-6 ke atas digabung
+      if (item.agingDays > 4) bp.criticalD6++;
+    }
   });
 
   const sortedPackers = Object.values(packerMap).sort((a, b) => b.total - a.total);
@@ -2922,7 +2997,8 @@ function renderPackerLeaderboard() {
   document.getElementById('kpiTotalPackers').innerText = t('ob.packer.operatorUnit', { n: totalPackersCount });
 
   if (sortedPackers.length > 0) {
-    document.getElementById('kpiTopPackerName').innerText = `${sortedPackers[0].name} (${sortedPackers[0].total.toLocaleString('id-ID')})`;
+    document.getElementById('kpiTopPackerName').innerText = `${sortedPackers[0].name.replace(/^\[[^\]]*\]\s*/, '')} (${sortedPackers[0].total.toLocaleString('id-ID')})`;
+    document.getElementById('kpiTopPackerName').title = sortedPackers[0].name;
     const avg = Math.round(totalParcelsTracked / totalPackersCount);
     document.getElementById('kpiAvgPackerOutput').innerText = t('ob.packer.parcelUnit', { n: avg.toLocaleString('id-ID') });
   } else {
@@ -2933,22 +3009,30 @@ function renderPackerLeaderboard() {
   const criticalPackers = sortedPackers.filter(p => p.criticalD6 > 0).length;
   document.getElementById('kpiCriticalPackerCount').innerText = t('ob.packer.operatorUnit', { n: criticalPackers });
 
-  const maxPackerQty = sortedPackers.length > 0 ? sortedPackers[0].total : 1;
+  const tablePackers = Object.values(backlogMap).sort((a, b) => b.total - a.total);
+  const maxPackerQty = tablePackers.length > 0 ? tablePackers[0].total : 1;
   const container = document.getElementById('packerTableBody');
 
   // ROOT CAUSE: total backlog kritis (>D4) seluruh operator, buat hitung % kontribusi masing-masing
-  const totalCriticalD6All = sortedPackers.reduce((sum, p) => sum + p.criticalD6, 0);
+  const totalCriticalD6All = tablePackers.reduce((sum, p) => sum + p.criticalD6, 0);
   const rootCauseBox = document.getElementById('packerRootCauseCallout');
   const rootCauseText = document.getElementById('packerRootCauseText');
 
   if (sortedPackers.length === 0) {
-    container.innerHTML = `<tr><td colspan="13" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Belum ada data packer. Silakan import file Excel.</td></tr>`;
+    container.innerHTML = `<tr><td colspan="11" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">Belum ada data packer. Silakan import file Excel.</td></tr>`;
     rootCauseBox.classList.add('hidden');
     return;
   }
 
+  if (tablePackers.length === 0) {
+    container.innerHTML = `<tr><td colspan="11" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">${t('ob.packer.emptyBacklog')}</td></tr>`;
+    rootCauseBox.classList.add('hidden');
+    updatePackerShowMoreBar(0, 0);
+    return;
+  }
+
   if (totalCriticalD6All > 0) {
-    const topContributor = [...sortedPackers].sort((a, b) => b.criticalD6 - a.criticalD6)[0];
+    const topContributor = [...tablePackers].sort((a, b) => b.criticalD6 - a.criticalD6)[0];
     const contribPct = ((topContributor.criticalD6 / totalCriticalD6All) * 100).toFixed(1);
     rootCauseText.innerText = `Root Cause: ${topContributor.name} menyumbang ${topContributor.criticalD6.toLocaleString('id-ID')} parcel (${contribPct}%) dari total ${totalCriticalD6All.toLocaleString('id-ID')} backlog kritis (>D4) DC ini — prioritaskan follow up ke operator ini.`;
     rootCauseBox.classList.remove('hidden');
@@ -2956,8 +3040,12 @@ function renderPackerLeaderboard() {
     rootCauseBox.classList.add('hidden');
   }
 
-  container.innerHTML = sortedPackers.map((p, idx) => {
-    const sharePct = ((p.total / (totalParcelsTracked || 1)) * 100).toFixed(1);
+  const rankedPackers = tablePackers.map((p, idx) => ({ p, idx }));
+  // Mode ringkas: Top N + semua operator yg punya backlog kritis (biar root cause gak ketutup)
+  const visiblePackers = packerShowAll ? rankedPackers : rankedPackers.filter(r => r.idx < PACKER_TOP_N || r.p.criticalD6 > 0);
+  updatePackerShowMoreBar(tablePackers.length, visiblePackers.length);
+  container.innerHTML = visiblePackers.map(({ p, idx }) => {
+    const sharePct = ((p.total / (totalBacklogD2 || 1)) * 100).toFixed(1);
     const barWidth = Math.min(Math.round((p.total / maxPackerQty) * 100), 100);
 
     let rankBadge = `<span class="font-bold text-slate-500 dark:text-slate-400">${idx + 1}</span>`;
@@ -2972,16 +3060,14 @@ function renderPackerLeaderboard() {
     return `
     <tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
       <td class="text-center flex justify-center items-center py-1.5">${rankBadge}</td>
-      <td class="font-sans font-bold text-slate-900 dark:text-slate-100 text-left pl-3">${p.name}</td>
+      <td class="font-sans text-left pl-3">${packerNameHtml(p.name)}</td>
       <td class="text-center font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50/40 dark:bg-emerald-950/20">${p.total.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d0, 'd0')} ${fnClickP(p.d0, 'd0')}>${p.d0.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d1, 'd1')} ${fnClickP(p.d1, 'd1')}>${p.d1.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d2, 'd2')} ${fnClickP(p.d2, 'd2')}>${p.d2.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d3, 'd3')} ${fnClickP(p.d3, 'd3')}>${p.d3.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d4, 'd4')} ${fnClickP(p.d4, 'd4')}>${p.d4.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d5, 'd5')} ${fnClickP(p.d5, 'd5')}>${p.d5.toLocaleString('id-ID')}</td>
-      <td ${tdClickP(p.d6, 'd6')} ${fnClickP(p.d6, 'd6')}>${p.d6.toLocaleString('id-ID')}</td>
-      <td class="text-center font-bold ${p.criticalD6 > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-50/50 dark:bg-rose-950/30 font-black cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900 underline' : 'text-slate-400 dark:text-slate-600'}" ${p.criticalD6 > 0 ? `onclick="showPackerTONumbers('${safeName}', 'dMore')"` : ''}>${p.criticalD6.toLocaleString('id-ID')}</td>
+      <td ${tdClickP(p.d2, 'd2')} ${fnClickP(p.d2, 'd2')}>${nz(p.d2)}</td>
+      <td ${tdClickP(p.d3, 'd3')} ${fnClickP(p.d3, 'd3')}>${nz(p.d3)}</td>
+      <td ${tdClickP(p.d4, 'd4')} ${fnClickP(p.d4, 'd4')}>${nz(p.d4)}</td>
+      <td ${tdClickP(p.d5, 'd5')} ${fnClickP(p.d5, 'd5')}>${nz(p.d5)}</td>
+      <td ${tdClickP(p.d6, 'd6')} ${fnClickP(p.d6, 'd6')}>${nz(p.d6)}</td>
+      <td class="text-center font-bold ${p.criticalD6 > 0 ? 'text-rose-600 dark:text-rose-400 bg-rose-50/50 dark:bg-rose-950/30 font-black cursor-pointer hover:bg-rose-100 dark:hover:bg-rose-900 underline' : 'text-slate-400 dark:text-slate-600'}" ${p.criticalD6 > 0 ? `onclick="showPackerTONumbers('${safeName}', 'dMore')"` : ''}>${nz(p.criticalD6)}</td>
       <td class="text-left pl-2 pr-2">
         ${(() => {
           const contribPct = totalCriticalD6All > 0 ? ((p.criticalD6 / totalCriticalD6All) * 100) : 0;
@@ -3060,6 +3146,7 @@ function renderBacklogCharts() {
 
 function renderShiftVolumeChart() {
   if (typeof Chart === 'undefined') return;
+  if (!document.getElementById('shiftVolumeChart')) return; // chart Perbandingan Volume per Shift sudah dihapus dari halaman
   const colors = getChartThemeColors();
 
   let s1 = 0, s2 = 0, s3 = 0;
@@ -3236,19 +3323,21 @@ function renderGrids() {
       <td class="!text-center font-mono text-slate-500 dark:text-slate-400">${getSortCode(row.name)}</td>
       <td class="text-center">${statusBadgeHtml(row)}</td>
       <td class="font-sans font-semibold text-slate-900 dark:text-slate-100 text-left">${row.name}</td>
-      <td class="text-center font-bold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${row.hv}</td>
-      <td class="text-center text-sky-600 dark:text-sky-400">${row.liquid}</td>
+      <td class="text-center font-bold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${nz(row.hv)}</td>
+      <td class="text-center text-sky-600 dark:text-sky-400">${nz(row.liquid)}</td>
+      <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.individual)}</td>
+      <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.assisted)}</td>
       <td class="text-center bg-orange-50 dark:bg-orange-950/50 font-bold text-shopee dark:text-orange-400">${row.total}</td>
-      <td ${tdClick(row.d0, 'd0')} ${fnClick(row.d0, 'd0')}>${row.d0}</td>
-      <td ${tdClick(row.d1, 'd1')} ${fnClick(row.d1, 'd1')}>${row.d1}</td>
-      <td ${tdClick(row.d2, 'd2')} ${fnClick(row.d2, 'd2')}>${row.d2}</td>
-      <td ${tdClick(row.d3, 'd3')} ${fnClick(row.d3, 'd3')}>${row.d3}</td>
-      <td ${tdClick(row.d4, 'd4')} ${fnClick(row.d4, 'd4')}>${row.d4}</td>
-      <td ${tdClick(row.d5, 'd5')} ${fnClick(row.d5, 'd5')}>${row.d5}</td>
+      <td ${tdClick(row.d0, 'd0')} ${fnClick(row.d0, 'd0')}>${nz(row.d0)}</td>
+      <td ${tdClick(row.d1, 'd1')} ${fnClick(row.d1, 'd1')}>${nz(row.d1)}</td>
+      <td ${tdClick(row.d2, 'd2')} ${fnClick(row.d2, 'd2')}>${nz(row.d2)}</td>
+      <td ${tdClick(row.d3, 'd3')} ${fnClick(row.d3, 'd3')}>${nz(row.d3)}</td>
+      <td ${tdClick(row.d4, 'd4')} ${fnClick(row.d4, 'd4')}>${nz(row.d4)}</td>
+      <td ${tdClick(row.d5, 'd5')} ${fnClick(row.d5, 'd5')}>${nz(row.d5)}</td>
     </tr>`;
   }).join('');
 
-  const emptyRow = `<tr><td colspan="12" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">${term ? t('ob.emptyNoMatch') : t('ob.emptyImportNew')}</td></tr>`;
+  const emptyRow = `<tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">${term ? t('ob.emptyNoMatch') : t('ob.emptyImportNew')}</td></tr>`;
 
   document.getElementById('grid1TableBody').innerHTML = grid1Data.length ? makeTable(grid1Data) : emptyRow;
   document.getElementById('grid2TableBody').innerHTML = grid2Data.length ? makeTable(grid2Data) : emptyRow;
@@ -3288,15 +3377,15 @@ function exportGridToExcel() {
     'Receiver Name': row.name,
     'HV': row.hv,
     'Liquid': row.liquid,
+    'Bulky': row.individual,
+    'Non-Bulky': row.assisted,
     'Total Parcel': row.total,
     'D-Day': row.d0,
     'D-1': row.d1,
     'D-2': row.d2,
     'D-3': row.d3,
     'D-4': row.d4,
-    'D-5': row.d5,
-    'D-6': row.d6,
-    '> D-6+': row.dMore
+    'D-5+': row.d5
   }));
 
   const ws = XLSX.utils.json_to_sheet(exportRows);
@@ -3333,35 +3422,6 @@ function renderDashboard() {
   document.getElementById('kpiHighValue').innerText = hvCount.toLocaleString('id-ID');
   document.getElementById('kpiLiquid').innerText = liquidCount.toLocaleString('id-ID');
 
-  // CALC HEAT WAVE FOR SHIFT DEPARTURE SLOTS
-  const s1Slots = linehaulSchedule.filter(s => getShiftFromTimeStr(s.time) === 'Shift 1').length;
-  const s2Slots = linehaulSchedule.filter(s => getShiftFromTimeStr(s.time) === 'Shift 2').length;
-  const s3Slots = linehaulSchedule.filter(s => getShiftFromTimeStr(s.time) === 'Shift 3').length;
-
-  document.getElementById('kpiShift1Slots').innerText = t('ob.shift.keberangkatan', { n: s1Slots });
-  document.getElementById('kpiShift2Slots').innerText = t('ob.shift.keberangkatan', { n: s2Slots });
-  document.getElementById('kpiShift3Slots').innerText = t('ob.shift.keberangkatan', { n: s3Slots });
-
-  // HIGHEST OUTBOUND HEAT WAVE BADGE DETECTOR
-  const shiftSlotsArr = [
-    { id: '1', slots: s1Slots },
-    { id: '2', slots: s2Slots },
-    { id: '3', slots: s3Slots }
-  ].sort((a, b) => b.slots - a.slots);
-
-  shiftSlotsArr.forEach((s, idx) => {
-    const el = document.getElementById('hwBadge' + s.id);
-    if (idx === 0) {
-      el.className = "text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-rose-600 text-white animate-pulse shadow-sm";
-      el.innerText = t('ob.heat.highTraffic');
-    } else if (idx === 1) {
-      el.className = "text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-amber-500 text-slate-950";
-      el.innerText = t('ob.heat.medium');
-    } else {
-      el.className = "text-[9px] font-extrabold px-1.5 py-0.2 rounded bg-emerald-500 text-white";
-      el.innerText = t('ob.heat.normal');
-    }
-  });
 
   const receiverMap = {};
   let criticalParcels = 0;
@@ -3385,9 +3445,7 @@ function renderDashboard() {
     else if (item.agingDays === 2) receiverMap[name].d2++;
     else if (item.agingDays === 3) receiverMap[name].d3++;
     else if (item.agingDays === 4) receiverMap[name].d4++;
-    else if (item.agingDays === 5) receiverMap[name].d5++;
-    else if (item.agingDays === 6) receiverMap[name].d6++;
-    else if (item.agingDays > 6) receiverMap[name].dMore++;
+    else if (item.agingDays >= 5) receiverMap[name].d5++; // kolom D-5+ = D-5 ke atas (D-6, D-7, dst digabung)
 
     if (item.agingDays > 4) criticalParcels++;
 
@@ -3435,7 +3493,6 @@ function renderDashboard() {
   lastSortedReceivers = sorted;
   renderGrids();
 
-  renderShiftTable();
   renderPackerLeaderboard();
   renderBacklogCharts();
   renderShiftVolumeChart();
@@ -3443,7 +3500,7 @@ function renderDashboard() {
 
   // Inner Islan Logic
   const routeVolumes = linehaulRoutes.map(r => ({
-    label: r.label, hubs: r.hubs, total: 0, parcel: 0, bulky: 0, category: 'Inner',
+    label: r.label, hubs: r.hubs, total: 0, parcel: 0, bulky: 0, hv: 0, liquid: 0, category: 'Inner',
     d0: 0, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, dMore: 0
   }));
 
@@ -3464,6 +3521,8 @@ function renderDashboard() {
         r.total++;
         if (isParcel) { r.parcel++; totalInnerParcel++; }
         if (isBulky) { r.bulky++; totalInnerBulky++; }
+        if (item.isHv) r.hv++;
+        if (item.isLiquid) r.liquid++;
         totalInnerCombined++;
 
         if (item.agingDays === 0) r.d0++;
@@ -3490,27 +3549,32 @@ function renderDashboard() {
 
   routeVolumes.sort((a, b) => b.total - a.total);
   let idx = 1;
-  const tdAging = (val) => val > 0
-    ? `class="text-center font-bold text-slate-800 dark:text-slate-200 px-0.5"`
+  const routeMaxTotal = routeVolumes.reduce((m, r) => Math.max(m, r.total), 0);
+  const tdAging = (val, row, type) => val > 0
+    ? `class="text-center font-bold cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 underline text-slate-800 dark:text-slate-200 transition px-0.5" onclick="showRouteTONumbers('${row.label.replace(/'/g, "\\'")}', '${type}')"`
     : `class="text-center text-slate-400 dark:text-slate-600 font-normal px-0.5"`;
   document.getElementById('routeTableBody').innerHTML = routeVolumes.map(row => {
     const pctCapacity = ((row.total / 4000) * 100).toFixed(1);
     const safeLabel = row.label.replace(/'/g, "\\'");
-    return `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+    const d5plus = row.d5 + row.d6 + row.dMore;
+    let bgRow = '';
+    if (routeMaxTotal > 0 && row.total === routeMaxTotal) bgRow = 'bg-orange-50 dark:bg-orange-950/50 font-bold';
+    else if (row.total > routeMaxTotal * 0.6) bgRow = 'bg-orange-50/50 dark:bg-orange-900/20';
+    return `<tr class="${bgRow} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
       <td class="text-center text-slate-400 dark:text-slate-500">${idx++}</td>
       <td class="font-sans text-slate-800 dark:text-slate-200 font-bold max-w-xs truncate text-left pl-2 cursor-pointer hover:text-shopee dark:hover:text-orange-400 hover:underline transition" onclick="showRouteDrilldown('${safeLabel}')" title="Klik untuk lihat breakdown per Hub di rute ${row.label}">${row.label}</td>
-      <td class="text-center text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50/30 dark:bg-emerald-950/20">${row.parcel.toLocaleString('id-ID')}</td>
-      <td class="text-center text-indigo-600 dark:text-indigo-400 font-bold bg-indigo-50/30 dark:bg-indigo-950/20">${row.bulky.toLocaleString('id-ID')}</td>
-      <td class="text-center font-black text-amber-600 dark:text-amber-400 bg-amber-50/40 dark:bg-amber-950/20">${row.total.toLocaleString('id-ID')}</td>
+      <td class="text-center font-bold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${nz(row.hv)}</td>
+      <td class="text-center text-sky-600 dark:text-sky-400">${nz(row.liquid)}</td>
+      <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.bulky)}</td>
+      <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.parcel)}</td>
+      <td class="text-center bg-orange-50 dark:bg-orange-950/50 font-bold text-shopee dark:text-orange-400">${row.total.toLocaleString('id-ID')}</td>
       <td class="text-center font-bold text-slate-700 dark:text-slate-300">${pctCapacity}%</td>
-      <td ${tdAging(row.d0)}>${row.d0}</td>
-      <td ${tdAging(row.d1)}>${row.d1}</td>
-      <td ${tdAging(row.d2)}>${row.d2}</td>
-      <td ${tdAging(row.d3)}>${row.d3}</td>
-      <td ${tdAging(row.d4)}>${row.d4}</td>
-      <td ${tdAging(row.d5)}>${row.d5}</td>
-      <td ${tdAging(row.d6)}>${row.d6}</td>
-      <td class="${row.dMore > 0 ? 'text-center bg-rose-100 dark:bg-rose-950/80 text-rose-700 dark:text-rose-300 font-black px-0.5' : 'text-center text-slate-400 dark:text-slate-600 font-normal px-0.5'}">${row.dMore}</td>
+      <td ${tdAging(row.d0, row, 'd0')}>${nz(row.d0)}</td>
+      <td ${tdAging(row.d1, row, 'd1')}>${nz(row.d1)}</td>
+      <td ${tdAging(row.d2, row, 'd2')}>${nz(row.d2)}</td>
+      <td ${tdAging(row.d3, row, 'd3')}>${nz(row.d3)}</td>
+      <td ${tdAging(row.d4, row, 'd4')}>${nz(row.d4)}</td>
+      <td ${tdAging(d5plus, row, 'd5')}>${nz(d5plus)}</td>
     </tr>`;
   }).join('');
 
@@ -3648,20 +3712,21 @@ function renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, pre
   verdictIcon.className = `${icon} text-xl`;
   verdictLabel.innerText = verdict;
 
-  let narrative = t('ob.exec.narrativeMain', {
+  const execLine = (ico, cls, html) => '<div class="exec-line"><i class="' + ico + ' ' + cls + '"></i><span>' + String(html).replace(/^[\s.,;]+/, '') + '</span></div>';
+  let narrative = execLine('fa-solid fa-boxes-stacked', 'text-slate-400', t('ob.exec.narrativeMain', {
     total: total.toLocaleString('id-ID'),
     capPct: capPct,
     maxCap: MAX_STAGING_CAPACITY.toLocaleString('id-ID'),
     critical: criticalParcels.toLocaleString('id-ID'),
     critPct: criticalPctOfTotal.toFixed(1)
-  });
+  }));
   if (worst) {
-    narrative += t('ob.exec.narrativeRoute', {
+    narrative += execLine('fa-solid fa-route', routeCritical ? 'text-rose-500' : (routeWatch ? 'text-amber-500' : 'text-emerald-500'), t('ob.exec.narrativeRoute', {
       route: worst.label, category: worst.category, pct: worst.pct.toFixed(1), alertText: worstAlert.text
-    });
+    }));
   }
   if (topPackerName && topPackerCount > 0) {
-    narrative += t('ob.exec.narrativeTopPacker', { name: topPackerName, pct: topPackerPct });
+    narrative += execLine('fa-solid fa-user-clock', 'text-rose-500', t('ob.exec.narrativeTopPacker', { name: escapeHtml(topPackerName), pct: topPackerPct }));
   }
   narrativeEl.innerHTML = narrative;
 
@@ -3704,7 +3769,7 @@ function renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, pre
         <span class="text-[9px] font-bold text-slate-600 dark:text-slate-300 flex items-center gap-1 truncate"><i class="fa-solid ${s.icon}"></i>${s.label}</span>
         <span class="text-[8px] font-extrabold px-1.5 py-0.3 rounded-full ${badgeCls} shrink-0">${s.pass ? t('ob.exec.pass') : t('ob.exec.fail')}</span>
       </div>
-      <span class="text-[9px] text-slate-500 dark:text-slate-400 mt-1 font-mono">${s.detail}</span>
+      <div class="flex items-baseline gap-2 mt-1"><span class="text-2xl font-black font-mono leading-none ${s.pass ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}">${s.value.toFixed(1)}%</span><span class="text-[10px] text-slate-500 dark:text-slate-400 font-mono">target ≤${s.target}%</span></div>
     </div>`;
   }).join('');
 }
@@ -3729,13 +3794,8 @@ document.addEventListener('click', function(e) {
 });
 
 if (window.location.hash === '#occupancy') {
-  currentSubmenu = 'occupancy';
-  document.getElementById('menuAging').classList.remove('active');
-  document.getElementById('menuOccupancy').classList.add('active');
-  document.getElementById('agingSection').classList.add('hidden');
-  document.getElementById('occupancySection').classList.remove('hidden');
-  document.getElementById('activeMenuBadge').innerText = t('ob.badge.occupancyMode');
   history.replaceState(null, '', window.location.pathname);
+  window.addEventListener('load', function () { setTimeout(function () { switchSubmenu('occupancy'); }, 300); });
 }
 </script>
 <script>
@@ -3766,6 +3826,43 @@ if (window.location.hash === '#occupancy') {
     // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
     if (data.type === "collapseSidebarGroups") collapseAllSidebarGroups();
   });
+})();
+</script>
+<script>
+// Maskot floating "The Odyssey" (disuntik auth-guard.js) tadinya nongol di tengah layar & nutupin data.
+// Dipindah ke pojok kanan bawah, dikecilin & transparan; hover buat normal lagi.
+(function () {
+  function findLabel() {
+    var all = document.body.querySelectorAll('*');
+    for (var i = 0; i < all.length; i++) {
+      var el = all[i];
+      if (el.children.length === 0 && /^\s*The Odyssey\s*$/i.test(el.textContent || '')) return el;
+    }
+    return null;
+  }
+  function outerPinned(el) {
+    var fixed = null, abs = null, n = el;
+    while (n && n !== document.body && n !== document.documentElement) {
+      var pos = getComputedStyle(n).position;
+      if (pos === 'fixed') fixed = n;
+      else if (pos === 'absolute') abs = n;
+      n = n.parentElement;
+    }
+    return fixed || abs || el;
+  }
+  function relocate() {
+    var label = findLabel();
+    if (!label) return false;
+    outerPinned(label).classList.add('ux-odyssey');
+    return true;
+  }
+  function start() {
+    if (relocate()) return;
+    var obs = new MutationObserver(function () { if (relocate()) obs.disconnect(); });
+    obs.observe(document.body, { childList: true, subtree: true });
+    setTimeout(function () { obs.disconnect(); }, 30000);
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
 })();
 </script>
 </body>
