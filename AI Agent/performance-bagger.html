@@ -22,7 +22,6 @@ tailwind.config = {
 }
 </script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<!-- SheetJS & Chart.js & jsPDF -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -49,7 +48,6 @@ tailwind.config = {
   thead tr.bg-shopee th:hover { background: #9c2436; }
   thead tr.bg-shopee th .sort-icon { font-size: 9px; margin-left: 4px; opacity: 0.6; }
   thead tr.bg-shopee th.sort-active .sort-icon { opacity: 1; }
-  /* ==== SIDEBAR NAVIGASI — disamain persis kayak Inventory Control (tema minimalis hitam-putih) ==== */
   :root {
     --tw-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
       "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
@@ -133,7 +131,6 @@ tailwind.config = {
   }
   .app-sidebar-footer button:hover { background: #1f1f1f; }
 
-  /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
   .app-sidebar-lang { margin-bottom: 10px; }
   .app-sidebar-lang label {
     display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
@@ -207,7 +204,6 @@ tailwind.config = {
     transform: scale(1) translateY(0);
   }
 
-  /* ==== HALL OF FAME CLICKABLE + MODAL STATISTIK PACKED (TOP 20) ==== */
   section.pbx-hof { cursor: pointer; transition: box-shadow .2s ease; }
   section.pbx-hof:hover { box-shadow: 0 6px 20px rgba(217,165,0,.22); }
   section.pbx-hof:focus-visible { outline: 2px solid #9c2436; outline-offset: 2px; }
@@ -273,7 +269,6 @@ tailwind.config = {
   }
   @media (prefers-reduced-motion:reduce){#pbStatModal,#pbStatModal .modal-card{transition:none}}
 
-  /* ==== TOP 20 FULLSCREEN: 1 layar, 2 kolom x 10 baris (layar >= 1000px) ==== */
   @media (min-width:1000px){
     #pbStatModal{padding:0 !important;align-items:stretch !important;justify-content:stretch !important;background:rgba(2,6,23,.88)}
     #pbStatModal .pbs{max-width:none;max-height:none;width:100vw;height:100vh;height:100dvh;border-radius:0;border:0;box-shadow:none}
@@ -281,7 +276,6 @@ tailwind.config = {
     #pbStatModal .pbs-tab{padding:9px 20px;font-size:14px}
     #pbStatModal .pbs-tabs{padding-top:4px}
 
-    /* baris atas: filter (kiri) + 3 KPI (kanan) sejajar; di bawahnya daftar Top 20 */
     #pbStatModal .pbd-body{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto minmax(calc(10 * 68px + 58px),1fr);gap:8px;padding:8px 14px}
     #pbStatModal .pbs-controls{grid-column:1;grid-row:1;position:static;padding:6px 14px;gap:14px}
     #pbStatModal .pbs-controls .pbd-sel{font-size:14px;padding:5px 10px}
@@ -295,7 +289,6 @@ tailwind.config = {
     #pbStatModal .pbs-listpanel .pbd-phead{padding:6px 14px}
     #pbStatModal .pbs-foot{padding:6px 14px;border-radius:0}
     #pbStatModal .pbs-list{flex:1 1 auto;min-height:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:repeat(10,minmax(0,1fr));grid-auto-flow:column}
-    /* dua kartu terpisah: #1-10 (kiri, aksen emas) dan #11-20 (kanan, aksen abu), ada jarak di antaranya */
     #pbStatModal .pbs-listpanel{background:transparent;border:0;border-radius:0}
     #pbStatModal .pbs-listpanel .pbd-phead{padding:4px 2px 8px}
     #pbStatModal .pbs-list{column-gap:20px}
@@ -305,7 +298,6 @@ tailwind.config = {
     #pbStatModal .pbs-list > .pbs-row:nth-child(11){border-top-color:#64748b}
     #pbStatModal .pbs-list > .pbs-row:nth-child(10),#pbStatModal .pbs-list > .pbs-row:nth-child(20){border-radius:0 0 12px 12px}
     #pbStatModal .pbs-foot{background:transparent;border-top:0;padding:8px 2px 2px}
-    /* header kolom berwarna di atas tiap kartu */
     #pbStatModal .pbs-listpanel > .pbd-phead{display:none}
     #pbStatModal .pbs-colheads{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:20px}
     #pbStatModal .pbs-colhead{display:flex;align-items:center;justify-content:space-between;gap:10px;height:32px;padding:0 16px;border-radius:12px 12px 0 0;color:#fff;font-size:14px;font-weight:800;letter-spacing:.06em}
@@ -322,19 +314,16 @@ tailwind.config = {
     #pbStatModal .pbs-num small.mid{background:rgba(245,158,11,.18)}
     #pbStatModal .pbs-num small.low{background:rgba(244,63,94,.14)}
     #pbStatModal .pbs-h.none{opacity:.45}
-    /* nomor ranking lebih besar + kontras tinggi */
     #pbStatModal .pbs-row{grid-template-columns:48px minmax(0,1fr) minmax(90px,24%) 190px}
     #pbStatModal .pbs-row.has-h{grid-template-columns:48px minmax(0,1fr) auto}
     #pbStatModal .pbs-row .pbx-medal{width:38px;height:38px;font-size:19px;font-weight:900}
     #pbStatModal .pbs-row .pbx-medal-n{background:#dbe3ee;color:#0f172a;border:2px solid #94a3b8}
     .dark #pbStatModal .pbs-row .pbx-medal-n{background:#22314d;color:#f8fafc;border-color:#64748b}
-    /* pembatas tengah antara TOP 1-10 dan TOP 11-20: jarak lebih lebar + garis vertikal */
     #pbStatModal .pbs-list,#pbStatModal .pbs-colheads{position:relative;column-gap:36px}
     #pbStatModal .pbs-list::before,#pbStatModal .pbs-colheads::before{content:'';position:absolute;top:0;bottom:0;left:50%;width:3px;transform:translateX(-50%);background:#94a3b8;opacity:.6;border-radius:2px}
     .dark #pbStatModal .pbs-list::before,.dark #pbStatModal .pbs-colheads::before{background:#64748b;opacity:.8}
     #pbStatModal .pbs-list > .pbs-empty{grid-column:1 / -1;grid-row:1 / -1;align-self:center}
 
-    /* baris default (Daily / Weekly / Monthly): medal | nama | bar | angka */
     #pbStatModal .pbs-row{grid-template-columns:34px minmax(0,1fr) minmax(90px,24%) 190px;gap:0 14px;padding:3px 14px;align-items:center;align-content:center}
     #pbStatModal .pbs-row .pbx-medal{width:30px;height:30px;font-size:14px}
     #pbStatModal .pbs-who b{font-size:clamp(14px,.88vw,17px)}
@@ -345,7 +334,6 @@ tailwind.config = {
     #pbStatModal .pbs-num b{font-size:clamp(17px,1.15vw,23px)}
     #pbStatModal .pbs-num small{font-size:clamp(11px,.68vw,13px)}
 
-    /* tab Hourly: nama + total satu baris, strip jam di bawahnya (tanpa bar, % sudah ada warnanya) */
     #pbStatModal .pbs-row.has-h{grid-template-columns:34px minmax(0,1fr) auto;row-gap:2px}
     #pbStatModal .pbs-row.has-h .pbx-medal{grid-column:1;grid-row:1 / span 2;align-self:center}
     #pbStatModal .pbs-row.has-h .pbs-who{grid-column:2;grid-row:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -362,7 +350,6 @@ tailwind.config = {
   }
   @media print{#pbStatModal,.pbx-hof-hint{display:none !important}}
 
-  /* ==== MODAL DETAIL OPERATOR (redesign) ==== */
   #pbDetailModal .pbd{--s0:#f1f5f9;--s1:#fff;--bd:#e2e8f0;--tx:#0f172a;--mu:#64748b;--acc:#059669;--ico-bg:rgba(122,18,36,.09);--ico:#7a1224;
     width:100%;max-width:980px;max-height:92vh;max-height:92dvh;display:flex;flex-direction:column;overflow:hidden;border-radius:16px;background:var(--s0);color:var(--tx);border:1px solid var(--bd);box-shadow:0 24px 70px rgba(0,0,0,.45);font-variant-numeric:tabular-nums}
   .dark #pbDetailModal .pbd{--s0:#0b1424;--s1:#111d33;--bd:#1f2e4a;--tx:#f1f5f9;--mu:#94a3b8;--acc:#34d399;--ico-bg:rgba(244,63,94,.14);--ico:#fb7185}
@@ -425,7 +412,6 @@ tailwind.config = {
   }
   @media (prefers-reduced-motion:reduce){#pbDetailModal,#pbDetailModal .modal-card{transition:none}}
 
-  /* Styling khusus Print-Friendly View */
   @media print {
     body { background: white !important; color: black !important; overflow: visible !important; height: auto !important; }
     #appSidebar, #appSidebarBackdrop, header, .no-print, button, input, select { display: none !important; }
@@ -438,7 +424,6 @@ tailwind.config = {
   }
   .print-title { display: none; }
 
-    /* Toast notifikasi in-app (ganti alert() bawaan browser) */
     .toast-stack {
       position: fixed; top: 16px; right: 16px; z-index: 9999;
       display: flex; flex-direction: column; gap: 10px; max-width: 340px;
@@ -458,11 +443,9 @@ tailwind.config = {
     .toast-close:hover { color: #fff; }
     @keyframes toast-in { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
 
-/* ==== REDESIGN DASHBOARD UTAMA (prefix pbx-) ==== */
   html { --pbx-page:#f6f4f5; --pbx-card:#ffffff; --pbx-line:#e8e3e5; --pbx-ink:#1f1a1d; --pbx-mute:#6f6569; --pbx-soft:#f3eff1; --pbx-name:#5d1020; --pbx-hover:#faf6f7; --pbx-low:#fdecee; --pbx-low-hover:#fbe0e4; }
   html.dark { --pbx-page:#0f172a; --pbx-card:#1e293b; --pbx-line:#334155; --pbx-ink:#f1f5f9; --pbx-mute:#94a3b8; --pbx-soft:#0f172a; --pbx-name:#fda4af; --pbx-hover:rgba(148,163,184,.08); --pbx-low:rgba(244,63,94,.10); --pbx-low-hover:rgba(244,63,94,.17); }
 
-  /* -- Header -- */
   .pbx-logo { width:38px; height:38px; border-radius:10px; background:rgba(0,0,0,.25); border:1px solid rgba(255,255,255,.2); display:grid; place-items:center; font-size:17px; flex-shrink:0; }
   .pbx-hbtn { display:inline-flex; align-items:center; gap:7px; height:34px; padding:0 11px; border-radius:9px; border:1px solid transparent; font-size:12px; font-weight:700; color:#fff; white-space:nowrap; cursor:pointer; transition:background-color .15s, border-color .15s; }
   .pbx-hbtn:focus-visible, .pbx-date:focus-visible { outline:2px solid #fff; outline-offset:2px; }
@@ -482,18 +465,15 @@ tailwind.config = {
   .pbx-import-dot { width:8px; height:8px; border-radius:50%; background:#94a3b8; flex-shrink:0; }
   .pbx-import-dot.on { background:#22c55e; box-shadow:0 0 0 3px rgba(34,197,94,.25); }
 
-  /* -- Layout & kartu dasar -- */
   .pbx-main { background:var(--pbx-page); }
   .pbx-card { background:var(--pbx-card); border:1px solid var(--pbx-line); border-radius:14px; box-shadow:0 1px 2px rgba(60,20,30,.05); }
 
-  /* -- Medal rank (dipakai Hall of Fame + tabel) -- */
   .pbx-medal { display:inline-grid; place-items:center; width:28px; height:28px; border-radius:50%; flex-shrink:0; font-size:12px; font-weight:800; color:#fff; border:2px solid rgba(255,255,255,.75); font-variant-numeric:tabular-nums; }
   .pbx-m1 { background:linear-gradient(145deg,#fcd34d,#d97706); box-shadow:0 1px 4px rgba(180,100,0,.45); }
   .pbx-m2 { background:linear-gradient(145deg,#cbd5e1,#64748b); box-shadow:0 1px 3px rgba(71,85,105,.4); }
   .pbx-m3 { background:linear-gradient(145deg,#f0a77a,#b45309); box-shadow:0 1px 3px rgba(146,64,14,.4); }
   .pbx-medal-n { background:var(--pbx-soft); color:var(--pbx-mute); border-color:var(--pbx-line); }
 
-  /* -- Hall of Fame -- */
   .pbx-hof { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; flex-shrink:0; padding:14px 18px; border-radius:14px; border:1px solid #f1d98f; background:linear-gradient(100deg,#fff6dc 0%,#fffcf3 52%,#ffffff 100%); }
   html.dark .pbx-hof { border-color:rgba(245,158,11,.3); background:linear-gradient(100deg,rgba(245,158,11,.16),rgba(30,41,59,.95) 62%); }
   .pbx-hof-ico { width:44px; height:44px; border-radius:12px; background:#fbbf24; color:#4a2e00; display:grid; place-items:center; font-size:20px; flex-shrink:0; box-shadow:0 2px 6px rgba(180,120,0,.28); }
@@ -513,7 +493,6 @@ tailwind.config = {
   .pbx-pod-pcs { font-size:12px; color:var(--pbx-mute); margin-top:2px; font-variant-numeric:tabular-nums; }
   .pbx-pod-pcs b { font-size:13px; font-weight:800; color:var(--pbx-ink); }
 
-  /* -- KPI -- */
   .pbx-kpis { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; flex-shrink:0; }
   @media (min-width:768px) { .pbx-kpis { grid-template-columns:repeat(4,minmax(0,1fr)) minmax(0,1.45fr); } }
   .pbx-kpi { display:flex; flex-direction:column; gap:10px; min-width:0; padding:14px 16px; }
@@ -546,7 +525,6 @@ tailwind.config = {
   .pbx-ag .pbx-prog-track { height:6px; }
   .pbx-ag .pbx-prog-track i { background:#94a3b8; }
 
-  /* -- Filter bar -- */
   .pbx-filters { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 14px; padding:10px 12px; flex-shrink:0; }
   .pbx-fgroup { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
   .pbx-fgroup-main { flex:1 1 560px; }
@@ -574,7 +552,6 @@ tailwind.config = {
   .pbx-btn-excel { background:#059669; color:#fff; } .pbx-btn-excel:hover { background:#047857; }
   .pbx-btn-pdf { background:#e11d48; color:#fff; } .pbx-btn-pdf:hover { background:#be123c; }
 
-  /* -- Tabel ranking -- */
   .pbx-tablecard { flex:1 1 auto; min-height:380px; display:flex; flex-direction:column; overflow:hidden; }
   .pbx-table th, .pbx-table td { text-align:left; }
   .pbx-table thead tr.bg-shopee th { background:#7a1224; color:#fff; font-size:12px; font-weight:700; letter-spacing:0; padding:12px 14px !important; border-bottom:0; }
@@ -614,7 +591,6 @@ tailwind.config = {
   .pbx-up { color:#059669; } .pbx-down { color:#e11d48; } .pbx-flat { color:var(--pbx-mute); }
   html.dark .pbx-up { color:#34d399; } html.dark .pbx-down { color:#fb7185; }
 
-  /* -- Print: lengkapi aturan print bawaan -- */
   @media print {
     .pbx-main { background:#fff !important; }
     .pbx-filters { display:none !important; }
@@ -633,7 +609,6 @@ tailwind.config = {
     .pbx-prog-track i, .pbx-chip, .pbx-btn, .pbx-hbtn, .pbx-table tbody tr { transition:none; }
   }
 
-  /* -- Medali bergaya pita (override): top 3 pita + lingkaran, rank 4+ lingkaran lembut -- */
   .pbx-medal { position:relative; isolation:isolate; border:0; box-shadow:none; }
   .pbx-m1, .pbx-m2, .pbx-m3 { width:26px; height:26px; margin-top:6px; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.28); }
   .pbx-m1::before, .pbx-m2::before, .pbx-m3::before { content:''; position:absolute; left:50%; top:-9px; width:18px; height:12px; transform:translateX(-50%); z-index:-1; background:var(--rib); clip-path:polygon(0 0,100% 0,82% 100%,50% 62%,18% 100%); }
@@ -652,7 +627,6 @@ tailwind.config = {
 <script src="auth-guard.js"></script>
 <div class="toast-stack" id="toastStack"></div>
 <script>
-  // Toast notifikasi in-app, pengganti alert() bawaan browser. type: 'ok' | 'err' | 'info'
   function showToast(message, type, durationMs) {
     type = type || 'info';
     var icon = type === 'ok' ? '✅' : (type === 'err' ? '⛔' : 'ℹ️');
@@ -676,13 +650,11 @@ tailwind.config = {
 </script>
 
 
-<!-- PRINT TITLE -->
 <div class="print-title text-center p-2">
   <h1 class="text-xl font-bold uppercase">Laporan Performance Bagger DC Palangka Raya</h1>
   <p class="text-xs">Dicetak Pada: <span id="printTimestamp"></span></p>
 </div>
 
-<!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
 <div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
 <nav class="app-sidebar" id="appSidebar">
   <div>
@@ -761,7 +733,6 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- TOP HEADER -->
 <header class="bg-gradient-to-r from-shopee-dark via-shopee to-shopee-light text-white shadow-lg flex-shrink-0 z-30">
   <div class="max-w-full mx-auto px-4 py-2.5 flex justify-between items-center gap-3 flex-wrap">
     <div class="flex items-center gap-3">
@@ -790,13 +761,11 @@ tailwind.config = {
 
       <input type="date" id="pbImportDate" class="pbx-date" title="Pilih Tanggal Import PDVT" aria-label="Tanggal import PDVT" />
 
-      <!-- IMPORT PDVT -->
       <label for="pbExcelFile" class="pbx-hbtn pbx-hbtn-amber" title="Import Data Packer PDVT">
         <i class="fa-solid fa-file-import"></i> <span data-i18n="pb.header.importPdvt">Import PDVT</span>
       </label>
       <input type="file" id="pbExcelFile" accept=".xlsx, .xls, .csv" class="hidden" />
 
-      <!-- IMPORT ROSTER -->
       <label for="pbRosterFile" class="pbx-hbtn pbx-hbtn-sky" title="Import Data Roster (Auto-Fill Status)">
         <i class="fa-solid fa-calendar-days"></i> <span data-i18n="pb.header.importRoster">Import Roster</span>
       </label>
@@ -807,7 +776,6 @@ tailwind.config = {
         <span id="pbFileName" data-i18n="pb.header.noImport">Belum ada import</span>
       </span>
 
-      <!-- LOG UPDATE (riwayat import file) -->
       <button type="button" id="pbLogBtn" onclick="openPbLogModal()" class="pbx-hbtn pbx-hbtn-ghost" title="Log Update — Riwayat Import File" aria-label="Log Update">
         <i class="fa-solid fa-clock-rotate-left text-amber-300"></i>
         <span data-i18n="pb.log.btn" class="hidden md:inline">Log Update</span>
@@ -815,7 +783,6 @@ tailwind.config = {
 
       <span class="pbx-hsep" id="pbResetSep" aria-hidden="true" style="display:none"></span>
 
-      <!-- RESET DATA (hanya tampil untuk PB_RESET_ALLOWED_EMAIL) -->
       <button type="button" id="pbResetBtn" onclick="resetPbData()" class="pbx-hbtn pbx-hbtn-danger" style="display:none" title="Hapus SEMUA data Performance Bagger (dashboard + database online)">
         <i class="fa-solid fa-trash-can"></i> Reset Data
       </button>
@@ -823,10 +790,8 @@ tailwind.config = {
   </div>
 </header>
 
-<!-- MAIN CONTENT -->
 <main class="pbx-main flex-1 p-4 flex flex-col gap-4 overflow-y-auto custom-scrollbar">
 
-  <!-- Hall of Fame -->
   <section class="pbx-hof" id="pbHof" role="button" tabindex="0" aria-label="Buka statistik Top 20 operator" onclick="openPbStats()" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();openPbStats();}">
     <div class="flex items-center gap-3.5 shrink-0">
       <div class="pbx-hof-ico"><i class="fa-solid fa-crown"></i></div>
@@ -841,7 +806,6 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- SUMMARY CARDS -->
   <section class="pbx-kpis">
     <div class="pbx-card pbx-kpi">
       <div class="pbx-kpi-head">
@@ -902,7 +866,6 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- FILTER & ACTION BAR -->
   <section class="pbx-card pbx-filters">
     <div class="pbx-fgroup pbx-fgroup-main">
       <div class="pbx-search">
@@ -957,7 +920,6 @@ tailwind.config = {
     </div>
   </section>
 
-  <!-- TABLE -->
   <section class="pbx-card pbx-tablecard">
     <div class="overflow-auto custom-scrollbar flex-1">
       <table class="dynamic-table pbx-table">
@@ -982,7 +944,6 @@ tailwind.config = {
   </section>
 </main>
 
-<!-- POPUP MODAL LOG UPDATE (RIWAYAT IMPORT FILE) -->
 <div id="pbLogModal" class="hidden fixed inset-0 bg-slate-950/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm transition-opacity" role="dialog" aria-modal="true" aria-labelledby="pbLogTitle" onclick="if(event.target===this)closePbLogModal()">
   <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full overflow-hidden flex flex-col max-h-[88vh]">
     <div class="bg-slate-900 text-white p-3.5 flex justify-between items-center border-b dark:border-slate-800 flex-shrink-0">
@@ -1022,7 +983,6 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- DETAIL POPUP MODAL -->
 <div id="pbDetailModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3" role="dialog" aria-modal="true" aria-labelledby="pbDetailName">
   <div class="modal-card pbd">
     <header class="pbd-head">
@@ -1084,7 +1044,6 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- STATISTIK PACKED OPERATOR (TOP 20) — dibuka dari klik Hall of Fame -->
 <div id="pbStatModal" class="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-3" role="dialog" aria-modal="true" aria-labelledby="pbStatTitle">
   <div class="modal-card pbs">
     <header class="pbd-head">
@@ -1144,10 +1103,6 @@ tailwind.config = {
 </div>
 
 <script>
-// ==== UI HELPER FUNCTIONS ====
-// Open/Hide grup nav (Productivity / Inbound / Outbound Monitoring). Sengaja GAK diinget
-// lewat localStorage — tiap buka halaman / pindah tab, semua grup default Hide, user
-// wajib Open manual biar Sidebar-nya tetep rapi.
 function toggleSidebarGroup(group) {
   const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
   const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
@@ -1194,9 +1149,7 @@ function logoutApp() {
   }
 }
 
-// ==== ROSTER STAFF ====
 const STAFF_ROSTER = [
-  // -- Dedicated Operator --
   { name: "Muhammad Arifin 2", opsId: "Ops854217", agency: "MYROBIN", status: "Dedicated Operator" },
   { name: "Muhammad Ramadani", opsId: "Ops767061", agency: "UGBM", status: "Dedicated Operator" },
   { name: "Rivqy Akbar Riswana", opsId: "Ops664556", agency: "MYROBIN", status: "Dedicated Operator" },
@@ -1242,7 +1195,6 @@ const STAFF_ROSTER = [
   { name: "DEFRI ANDREADI", opsId: "Ops1872555", agency: "MYROBIN", status: "Dedicated Operator" },
   { name: "AHMAD MUTALIB", opsId: "Ops1872558", agency: "IPI", status: "Dedicated Operator" },
 
-  // -- DW Reguler Pria --
   { name: "MUHAMMAD NAZRIL ILHAM", opsId: "Ops1935449", agency: "IPI", status: "DW Reguler Pria" },
   { name: "AKMAL LUNABIL", opsId: "Ops1472837", agency: "UGBM", status: "DW Reguler Pria" },
   { name: "DANO ALAM", opsId: "Ops1455291", agency: "UGBM", status: "DW Reguler Pria" },
@@ -1286,7 +1238,6 @@ const STAFF_ROSTER = [
   { name: "PAULUS THALAWANG WOGE NDORE", opsId: "Ops1956235", agency: "IPI", status: "DW Reguler Pria" },
   { name: "TRIO PATRAMAN JOSAFAT SIANTURI", opsId: "Ops1733568", agency: "MYROBIN", status: "DW Reguler Pria" },
 
-  // -- DW Reguler Wanita --
   { name: "YANTI", opsId: "Ops1461807", agency: "MYROBIN", status: "DW Reguler Wanita" },
   { name: "FEBRILIYA ROFIKA SARI", opsId: "Ops1474257", agency: "IPI", status: "DW Reguler Wanita" },
   { name: "NATALIA SIMAMORA", opsId: "Ops1357681", agency: "UGBM", status: "DW Reguler Wanita" },
@@ -1377,7 +1328,6 @@ function initPbFirebaseSync() {
   loadPbMonth(range.monthStr);
 }
 
-// ==== IMPORT EXCEL HARIAN (PDVT) ====
 function getPbFieldValue(row, possibleKeys) {
   const rowKeys = Object.keys(row);
   for (let i = 0; i < possibleKeys.length; i++) {
@@ -1437,8 +1387,6 @@ document.getElementById('pbExcelFile').addEventListener('change', function (e) {
 });
 
 
-// ==== IMPORT PER JAM (export PDVT 12 jam terakhir, kolom "YYYY-MM-DD HH:00") ====
-// Disimpan terpisah di hourlyRecords/{tanggal}/{opsId}/h{HH}. Tidak menyentuh dailyRecords.
 function detectPbHourColumns(sampleRow) {
   if (!sampleRow) return [];
   return Object.keys(sampleRow).filter(function (k) { return /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/.test(String(k).trim()); });
@@ -1510,8 +1458,6 @@ function pushPbHourlyToFirebase(byDate, coverage, dates, fileName, opsCount, nam
             sum += merged;
           });
 
-          // Total harian otomatis = jumlah semua jam yang udah diimport.
-          // Kalau tanggal itu udah ada data dari import PDVT harian/mingguan (packed > 0, bukan dari per jam), JANGAN ditimpa.
           const dRec = existingDaily[opsId];
           const fromPdvt = dRec && (dRec.packed || 0) > 0 && dRec.source !== 'hourly';
           if (fromPdvt) { dailySkipped++; return; }
@@ -1551,7 +1497,6 @@ function pushPbHourlyToFirebase(byDate, coverage, dates, fileName, opsCount, nam
 
 let hourChartInstance = null;
 
-// Plugin kecil: nampilin angka di atas tiap bar (cuma dataset bertipe bar, nilai > 0)
 const barValueLabelsPlugin = {
   id: 'barValueLabels',
   afterDatasetsDraw: function (chart) {
@@ -1577,7 +1522,6 @@ const barValueLabelsPlugin = {
   }
 };
 
-// ==== HELPER MODAL DETAIL: garis target, tema, chart per jam ====
 const pbdTargetLine = {
   id: 'pbdTargetLine',
   afterDatasetsDraw: function (chart) {
@@ -1637,20 +1581,13 @@ function renderPbHourChart(labels, data, target) {
   });
 }
 
-// ==== LOG UPDATE (riwayat import file: nama file + jam + siapa yang import) ====
-// Data log ditulis oleh 4 fungsi import (PDVT harian, raw bulanan, per jam, roster) ke
-// FB_PB_ROOT/importLogs. Di sini cuma bagian BACA + TAMPIL + HAPUS.
-// Listener cuma nempel selama modal kebuka (off pas ditutup) dan dibatasi PB_LOG_LIMIT entri
-// terakhir. orderByKey dipakai karena push-ID Firebase urut waktu, jadi gak butuh .indexOn.
 const PB_LOG_LIMIT = 100;
-// true = tombol hapus log cuma muncul buat PB_RESET_ALLOWED_EMAIL (pola yang sama kayak Reset Data).
-// Ganti ke false kalau mau semua user login bisa hapus (yang BENAR-BENAR nentuin tetap Firebase Rules).
 const PB_LOG_DELETE_ADMIN_ONLY = true;
 
 let pbLogEntries = [];
 let pbLogRef = null;
 let pbLogHandler = null;
-let pbLogState = 'loading'; // loading | ok | error
+let pbLogState = 'loading';
 
 const PB_LOG_TYPE_STYLE = {
   pdvt:   'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300',
@@ -1659,7 +1596,6 @@ const PB_LOG_TYPE_STYLE = {
   roster: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300'
 };
 
-// Log lama belum punya field "type" (kecuali hourly), jadi ditebak dari isi "tanggal".
 function pbLogType(log) {
   if (log.type && PB_LOG_TYPE_STYLE[log.type]) return log.type;
   const tgl = String(log.tanggal || '');
@@ -1753,7 +1689,7 @@ function attachPbLogListener() {
     renderPbLogList();
   }, function (err) {
     console.error('Gagal baca log update dari Firebase:', err);
-    pbLogRef = null; pbLogHandler = null; // Firebase otomatis batalin listener kalau error
+    pbLogRef = null; pbLogHandler = null;
     pbLogState = 'error';
     renderPbLogList();
   });
@@ -1794,7 +1730,6 @@ function closePbLogModal() {
   if (btn) btn.focus();
 }
 
-// Dipanggil pas ganti bahasa & saat init: title tombol header + render ulang list kalau modal kebuka
 window.pbLogRefresh = function () {
   const btn = document.getElementById('pbLogBtn');
   if (btn) btn.title = t('pb.log.title');
@@ -1813,9 +1748,6 @@ document.addEventListener('keydown', function (e) {
   if (modal && !modal.classList.contains('hidden')) closePbLogModal();
 });
 
-// ==== RESET DATA (hapus semua data Performance Bagger di dashboard + RTDB) ====
-// Yang dihapus: dailyRecords, hourlyRecords, hourlyCoverage, importLogs. Roster (hardcode di JS) tidak ikut.
-// Tombol cuma tampil buat PB_RESET_ALLOWED_EMAIL. Itu cuma lapisan UI; yang BENAR-BENAR nolak akun lain adalah Firebase Rules.
 const PB_RESET_ALLOWED_EMAIL = 'irwan.faiz@spxexpress.com';
 
 function isPbResetAllowed() {
@@ -1835,7 +1767,6 @@ function applyPbResetPermission() {
 (function initPbResetPermission() {
   applyPbResetPermission();
   try { firebase.auth().onAuthStateChanged(function () { applyPbResetPermission(); }); } catch (e) {}
-  // jaga-jaga kalau email baru ke-set belakangan oleh auth-guard.js
   let tries = 0;
   const iv = setInterval(function () {
     applyPbResetPermission();
@@ -1868,7 +1799,6 @@ function resetPbData() {
     document.getElementById('pbFileName').innerText = 'Belum ada import';
     renderPbTable();
     showToast('🗑️ Semua data berhasil direset.', 'ok');
-    // catatan audit, best-effort (kalau rules nolak, reset tetap sukses)
     fbDb.ref(FB_PB_ROOT + '/resetLogs').push({ resetAt: new Date().toISOString(), resetBy: window.__authUserEmail || 'unknown' }).catch(function () {});
   }).catch(function (err) {
     const denied = err && (err.code === 'PERMISSION_DENIED' || /permission_denied/i.test(err.message || ''));
@@ -2050,7 +1980,6 @@ function pushPbImportToFirebase(records, dateStr, fileName, rowCount) {
   });
 }
 
-// ==== IMPORT ROSTER (NEW) ====
 document.getElementById('pbRosterFile').addEventListener('change', function (e) {
   const file = e.target.files[0];
   if (!file) return;
@@ -2170,7 +2099,6 @@ function processRosterImport(rows, fileName) {
   }
 }
 
-// ==== UPDATE STATUS HARIAN OPERATOR (MANUAL VIA POPUP) ====
 function updateDailyStatusInfo(dateStr, opsId, selectEl) {
   const val = selectEl.value;
   const customInput = document.getElementById(`custom-status-${dateStr}`);
@@ -2202,7 +2130,6 @@ function saveDailyStatusToFirebase(dateStr, opsId, statusText) {
     });
 }
 
-// ==== AGGREGASI & RENDER TABEL ====
 function computePbAggregates() {
   const agg = {};
   const targetDateStr = getYesterdayDateStr();
@@ -2534,7 +2461,6 @@ function updatePbSummary(allRows) {
   }
 }
 
-// ==== AGENCY BREAKDOWN (proportional bars) ====
 function renderAgencyChart(allRows) {
   const agencyColors = { MYROBIN: '#7c6bb0', UGBM: '#3b82f6', IPI: '#f59e0b' };
   const agencyTotals = { MYROBIN: 0, UGBM: 0, IPI: 0 };
@@ -2561,7 +2487,6 @@ function renderAgencyChart(allRows) {
   }).join('');
 }
 
-// ==== POPUP DETAIL HARIAN & CHART ====
 function formatTanggalId(dateStr) {
   const parts = dateStr.split('-').map(Number);
   const monthNames = getMonthNames();
@@ -2577,7 +2502,6 @@ function openPbDetail(opsId) {
   const fmt = function (n) { return Number(n).toLocaleString('id-ID'); };
   const setTxt = function (id, v) { document.getElementById(id).innerText = v; };
 
-  // Header: identitas operator
   setTxt('pbDetailName', staff.name);
   setTxt('pbDetailAvatar', staff.name.trim().split(/\s+/).slice(0, 2).map(function (w) { return w.charAt(0); }).join('').toUpperCase());
   setTxt('pbDetailOps', opsId);
@@ -2591,7 +2515,6 @@ function openPbDetail(opsId) {
     streakEl.classList.add('hidden');
   }
 
-  // Kartu ringkasan
   setTxt('pbKpiTotal', fmt(staff.total));
   setTxt('pbKpiAvg', (staff.days > 0 ? staff.total / (staff.days * 8) : 0).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }));
   setTxt('pbKpiTarget', '>' + fmt(threshold));
@@ -2609,8 +2532,6 @@ function openPbDetail(opsId) {
   }
 
   const dateKeys = Object.keys(pbMonthlyRecords).filter(function (d) { return pbMonthlyRecords[d][opsId]; }).sort();
-  // Dropdown Per Jam: gabungin tanggal dari dailyRecords + hourlyCoverage,
-  // biar chart per jam tetap muncul walau data harian belum diimport.
   const hourMonthStr = document.getElementById('pbMonthPicker').value;
   if (fbDb && hourMonthStr) {
     fbDb.ref(FB_PB_ROOT + '/hourlyCoverage')
@@ -2625,7 +2546,6 @@ function openPbDetail(opsId) {
     refreshPbHourSelect(opsId, dateKeys);
   }
 
-  // Tabel riwayat
   const tbody = document.getElementById('pbDetailBody');
   const packedValues = [], shortLabels = [], fullLabels = [];
   const presetOptions = ['Normal / Bekerja', 'Off Duty', 'Rest Day', 'Cuti', 'Sakit', 'Izin', 'Lainnya...'];
@@ -2669,7 +2589,6 @@ function openPbDetail(opsId) {
   modal.querySelector('.pbd-body').scrollTop = 0;
   setTimeout(function () { document.getElementById('pbDetailCloseBtn').focus(); }, 100);
 
-  // Grafik harian
   const th = pbdTheme();
   if (detailChartInstance) detailChartInstance.destroy();
   detailChartInstance = new Chart(document.getElementById('detailDailyChart').getContext('2d'), {
@@ -2703,7 +2622,6 @@ function openPbDetail(opsId) {
   });
 }
 
-// FITUR "INDIVIDUAL PERFORMANCE CARD" (RAPOR DIGITAL PDF) — REDESIGN v2
 function downloadIndividualSlipPDF() {
   if (!currentDetailOpsId) return;
   const agg = computePbAggregates();
@@ -2717,7 +2635,6 @@ function downloadIndividualSlipPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p', 'mm', 'a4');
 
-  // ---------- Palet & util ----------
   const C = {
     maroon: [122, 18, 36],
     maroonDark: [96, 12, 28],
@@ -2736,7 +2653,6 @@ function downloadIndividualSlipPDF() {
   const font = (style, size) => { doc.setFont('helvetica', style); doc.setFontSize(size); };
   try { doc.setLineCap('round'); doc.setLineJoin('round'); } catch (e) { /* optional */ }
 
-  // Kecilkan font sampai teks muat di lebar tertentu
   function fitText(text, style, size, minSize, maxW) {
     font(style, size);
     while (doc.getTextWidth(text) > maxW && size > minSize) { size -= 0.5; font(style, size); }
@@ -2748,7 +2664,6 @@ function downloadIndividualSlipPDF() {
     doc.line(cx - s * 0.3, cy + s * 0.7, cx + s, cy - s * 0.6);
   }
 
-  // ---------- Ikon vektor (semua digambar pakai primitif jsPDF) ----------
   function iconShield(x, y, h, col) {
     const w = h * 0.82;
     stroke(col); doc.setLineWidth(0.7);
@@ -2765,7 +2680,6 @@ function downloadIndividualSlipPDF() {
     doc.rect(x + s * 0.25, y + s * 0.6, 1, 1, 'F');
     doc.rect(x + s * 0.55, y + s * 0.6, 1, 1, 'F');
   }
-  // Ikon bulat kecil di judul section
   function sectionIcon(type, cx, cy) {
     fill(C.maroon); doc.circle(cx, cy, 4.2, 'F');
     fill(C.white); stroke(C.white); doc.setLineWidth(0.5);
@@ -2786,7 +2700,6 @@ function downloadIndividualSlipPDF() {
       doc.rect(cx - 1.6, cy + 0.3, 3.2, 1.6, 'F');
     }
   }
-  // Ikon bulat di kartu KPI
   function kpiIcon(type, cx, cy, col) {
     fill(col); doc.circle(cx, cy, 4.2, 'F');
     stroke(C.white); fill(C.white); doc.setLineWidth(0.5);
@@ -2817,7 +2730,6 @@ function downloadIndividualSlipPDF() {
     doc.line(24.5 + w + 3, y - 1.4, 196, y - 1.4);
   }
 
-  // ---------- 1. HEADER ----------
   fill(C.maroon); doc.rect(0, 0, 210, 32, 'F');
   fill(C.maroonDark); doc.rect(0, 30.6, 210, 1.4, 'F');
   iconShield(14, 8.5, 15, C.white);
@@ -2839,10 +2751,8 @@ function downloadIndividualSlipPDF() {
   font('normal', 8); doc.text('Tanggal Cetak:', 196 - lblW, 14.5);
   font('bold', 11); doc.text(todayStr, 196 - dateW, 21.5);
 
-  // ---------- 2. PROFIL OPERATOR ----------
   sectionTitle('PROFIL OPERATOR', 'person', 46);
   const profileRows = [
-    // [kolom, baris, label, value]
     [0, 0, 'Nama Operator', String(staff.name || '-')],
     [0, 2, 'Status Kerja', String(staff.status || '-')],
     [1, 0, 'Ops ID', String(staff.opsId || '-')],
@@ -2861,7 +2771,6 @@ function downloadIndividualSlipPDF() {
     doc.text(value, vx, y);
   });
 
-  // ---------- 3. RINGKASAN PERFORMA (4 KARTU KPI) ----------
   sectionTitle('RINGKASAN PERFORMA BULAN INI', 'bars', 88);
   const rateColor = achRatePct >= 80 ? C.green : (achRatePct >= 50 ? C.amber : C.red);
   const streakBad = staff.underStreak >= 3;
@@ -2883,7 +2792,6 @@ function downloadIndividualSlipPDF() {
     doc.text(k.value, x + 4.5, cardY + 22.5);
   });
 
-  // ---------- 4. TABEL PRODUKTIVITAS HARIAN ----------
   sectionTitle('RINCIAN PRODUKTIVITAS HARIAN', 'calendar', 138);
 
   const dateKeys = Object.keys(pbMonthlyRecords).filter(d => {
@@ -2936,7 +2844,6 @@ function downloadIndividualSlipPDF() {
     }
   });
 
-  // ---------- 5. EVALUASI & COACHING (PANEL KHUSUS) ----------
   let y = (doc.lastAutoTable && doc.lastAutoTable.finalY) ? doc.lastAutoTable.finalY + 12 : 190;
 
   let tier, headline, recText;
@@ -2958,7 +2865,6 @@ function downloadIndividualSlipPDF() {
   font('bold', 9.5);
   const headLines = doc.splitTextToSize(headline, textMaxW);
 
-  // Susun baris "Rekomendasi:" (label bold + isi normal, wrap manual)
   font('bold', 9); const recLabel = 'Rekomendasi: ';
   const recLabelW = doc.getTextWidth(recLabel);
   font('normal', 9);
@@ -3001,7 +2907,6 @@ function downloadIndividualSlipPDF() {
     ty += lineH;
   });
 
-  // ---------- 6. AREA TANDA TANGAN ----------
   let sy = py0 + panelH + 14;
   font('bold', 9.5); color(C.navy);
   doc.text('Disiapkan Oleh,', 14, sy);
@@ -3013,7 +2918,6 @@ function downloadIndividualSlipPDF() {
   doc.text('Team Leader / Supervisor', 14, sy + 26);
   doc.text('DC Area Manager', 140, sy + 26);
 
-  // ---------- 7. FOOTER (semua halaman) ----------
   const totalPages = doc.getNumberOfPages();
   for (let p = 1; p <= totalPages; p++) {
     doc.setPage(p);
@@ -3033,14 +2937,12 @@ function closePbDetail() {
   currentDetailOpsId = null;
 }
 
-// ==== HANDLER EVENT POPUP ====
 const pbDetailModal = document.getElementById('pbDetailModal');
 
 pbDetailModal.addEventListener('click', function(e) {
   if (e.target === pbDetailModal) closePbDetail();
 });
 
-// ESC buat nutup sidebar juga (dicek terpisah biar gak nyangkut sama guard pbDetailModal di bawah)
 document.addEventListener('keydown', function (e) {
   if (e.key !== 'Escape' && e.key !== 'Esc') return;
   const sidebar = document.getElementById('appSidebar');
@@ -3153,7 +3055,6 @@ function toggleDarkMode() {
   if (lastFilteredRows.length) renderAgencyChart(lastFilteredRows);
 }
 
-// ==== INITIALIZATION ====
 document.addEventListener('DOMContentLoaded', function() {
   if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.documentElement.classList.add('dark');
@@ -3166,7 +3067,6 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// ==== LANGUAGE SWITCHER (ID/EN/JA/ZH) — sinkron sama pola di modul Rest Time ====
 const APP_LANG_KEY = "pr_dc_app_language";
 const I18N_DICT = {
   id: {
@@ -3655,8 +3555,6 @@ function t(key, params) {
   return val;
 }
 
-// Peta status mentah (value data) -> key i18n label yang udah ada di filter dropdown,
-// dipakai buat nampilin label status di tabel/detail biar ikut ganti bahasa juga.
 const STATUS_I18N_KEY = {
   "Dedicated Operator": "pb.filter.statusDedicated",
   "DW Reguler Pria": "pb.filter.statusRegPria",
@@ -3668,7 +3566,6 @@ function statusLabel(status) {
   return key ? t(key) : status;
 }
 
-// Nama bulan buat format tanggal, ikut bahasa aktif
 const MONTH_NAMES_I18N = {
   id: ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agt", "Sep", "Okt", "Nov", "Des"],
   en: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
@@ -3703,30 +3600,23 @@ function setAppLanguage(lang) {
   localStorage.setItem(APP_LANG_KEY, lang);
   applyI18n(lang);
 
-  // Semua konten yang dirender lewat JS (bukan elemen data-i18n statis) harus
-  // di-render ulang manual, karena teksnya "dibekukan" saat pertama kali dirender.
   if (document.getElementById("thTotalCol")) renderThTotalHeader();
-  if (document.getElementById("pbTableBody")) renderPbTable(); // ini juga cascade ke summary, agency chart, leaderboard
+  if (document.getElementById("pbTableBody")) renderPbTable();
 
-  // Kalau modal detail harian sedang kebuka, refresh juga isinya
   const detailModal = document.getElementById("pbDetailModal");
   if (detailModal && detailModal.classList.contains("active") && currentDetailOpsId) {
     openPbDetail(currentDetailOpsId);
   }
 
-  // Modal Log Update: title tombol + isi list ikut bahasa baru
   if (window.pbLogRefresh) pbLogRefresh();
 
-  // Kalau modal Statistik Top 20 lagi kebuka, render ulang biar label ikut bahasa baru
   if (window.pbStatsRefresh) pbStatsRefresh();
 
-  // Kalau papan Saran & Masukan sedang kebuka, refresh state kosong/error/list-nya
   if (lastFeedbackSnapshot !== null) {
     renderFeedbackList(lastFeedbackSnapshot);
   }
 }
 
-// ==== SARAN & MASUKAN (papan terbuka realtime — sama root Firebase dgn modul lain, jadi 1 papan buat semua modul) ====
 const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
 let fbFeedbackRef = null;
 let lastFeedbackSnapshot = null;
@@ -3746,7 +3636,7 @@ function closeFeedbackBoard() {
 }
 
 function initFeedbackBoardSync() {
-  if (fbFeedbackRef) return; // udah nyala dari sebelumnya, gak perlu attach listener dobel
+  if (fbFeedbackRef) return;
   try {
     const db = firebase.database();
     fbFeedbackRef = db.ref(FB_FEEDBACK_ROOT).orderByChild("createdAt").limitToLast(100);
@@ -3815,16 +3705,12 @@ function submitFeedback() {
 </script>
 
 <script>
-// ==== STATISTIK PACKED OPERATOR (TOP 20) — dibuka dari klik Hall of Fame ====
-// Daily / Weekly / Monthly dihitung dari pbMonthlyRecords (bulan yang lagi dibuka, sama kayak tabel utama).
-// Hourly dibaca on-demand dari hourlyRecords/{tanggal} + hourlyCoverage.
 (function () {
   var TOP_N = 20;
   var sel = { tab: 'daily', daily: '', weekly: '', hourlyDate: '', hourFrom: '', hourTo: '' };
-  var coverage = null;   // { 'YYYY-MM-DD': { h08: true, ... } }
-  var hourCache = {};    // { 'YYYY-MM-DD': { opsId: { h08: n } } }
-  var reqId = 0;         // buang hasil async yang udah basi
-
+  var coverage = null;
+  var hourCache = {};
+  var reqId = 0;
   function $(id) { return document.getElementById(id); }
   function fmt(n) { return Number(n).toLocaleString('id-ID'); }
   function esc(v) {
@@ -3837,13 +3723,12 @@ function submitFeedback() {
   function shortD(s) { var d = parseD(s); return p2(d.getDate()) + ' ' + getMonthNames()[d.getMonth()]; }
   function weekStart(s) {
     var d = parseD(s);
-    d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); // Senin
+    d.setDate(d.getDate() - ((d.getDay() + 6) % 7));
     return d.getFullYear() + '-' + p2(d.getMonth() + 1) + '-' + p2(d.getDate());
   }
   function targetOf(status) { return ACHIEVEMENT_THRESHOLD[status] || ACHIEVEMENT_THRESHOLD['DW On Call']; }
   function isOpen() { return $('pbStatModal').classList.contains('active'); }
 
-  // tanggal di bulan aktif yang ada packed > 0, urut naik
   function activeDates() {
     return Object.keys(pbMonthlyRecords).filter(function (d) {
       var day = pbMonthlyRecords[d] || {};
@@ -3851,7 +3736,6 @@ function submitFeedback() {
     }).sort();
   }
 
-  // minggu (Senin–Minggu) dalam bulan aktif; n = minggu ke-berapa di kalender bulan itu
   function weeksOfMonth() {
     var g = {};
     activeDates().forEach(function (d) { var k = weekStart(d); (g[k] = g[k] || []).push(d); });
@@ -3885,7 +3769,6 @@ function submitFeedback() {
       var info = agg[o] || { status: 'DW On Call' };
       var perHour = Math.round(targetOf(info.status) / 8);
       var value = 0, cnt = 0;
-      // rentang jam inklusif: "h16".."h23" dibandingkan sebagai string (selalu 3 karakter)
       Object.keys(hrs).forEach(function (k) {
         if (k < from || k > to) return;
         var v = hrs[k] || 0;
@@ -3914,7 +3797,6 @@ function submitFeedback() {
     return selectEl.value;
   }
 
-  // deretan kotak per jam di bawah nama operator (khusus tab Hourly)
   function hoursStrip(r, hx) {
     var cells = hx.cols.map(function (k) {
       var v = (r.hours && r.hours[k]) || 0;
@@ -3925,7 +3807,6 @@ function submitFeedback() {
     return '<div class="pbs-hours">' + cells + '</div>';
   }
 
-  // keterangan di header kolom kiri: tanggal + rentang jam (Hourly) / tanggal / minggu / bulan -> jelas buat yang baca laporan
   function captionText(hx) {
     try {
       if (sel.tab === 'hourly') {
@@ -4070,7 +3951,6 @@ function submitFeedback() {
     }
   }
 
-  // ---- event ----
   Array.prototype.forEach.call(document.querySelectorAll('#pbStatModal .pbs-tab'), function (b) {
     b.addEventListener('click', function () { sel.tab = b.getAttribute('data-tab'); render(); });
   });
@@ -4080,7 +3960,6 @@ function submitFeedback() {
     else if (sel.tab === 'hourly') { sel.hourlyDate = this.value; sel.hourFrom = ''; sel.hourTo = ''; }
     render();
   });
-  // "Dari Jam" digeser melewati "Sampai Jam" -> Sampai ikut maju; kebalikannya Dari ikut mundur
   $('pbStatSel2').addEventListener('change', function () {
     sel.hourFrom = this.value;
     if (sel.hourTo && sel.hourTo < sel.hourFrom) sel.hourTo = sel.hourFrom;
@@ -4115,9 +3994,8 @@ function submitFeedback() {
     }
   });
 
-  // ---- API global (dipanggil dari HTML / modul lain) ----
   window.openPbStats = function () {
-    coverage = null; hourCache = {}; // selalu baca ulang biar ikut import terbaru
+    coverage = null; hourCache = {};
     $('pbStatModal').classList.add('active');
     document.body.style.overflow = 'hidden';
     render();
@@ -4134,13 +4012,8 @@ function submitFeedback() {
 </script>
 
 <script>
-// ==== APP-SHELL BRIDGE ====
-// Kalau halaman ini dibuka langsung (bukan lewat index.html app-shell), link sidebar
-// tetap jalan normal (pindah halaman biasa). Tapi kalau dibuka di dalam iframe shell,
-// klik link ke modul lain di-intercept dan diteruskan ke shell lewat postMessage,
-// biar shell yang toggle tab tanpa reload sama sekali.
 (function () {
-  if (window.self === window.top) return; // diakses langsung, biarin behavior default
+  if (window.self === window.top) return;
 
   function hijack(id, tab, submenu) {
     var el = document.getElementById(id);
@@ -4158,7 +4031,6 @@ function submitFeedback() {
   hijack("navToOutboundLog", "outbound");
   hijack("navToInventoryControl", "inventory-control");
 
-  // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
   window.addEventListener("message", function (e) {
     var data = e.data;
     if (!data || data.source !== "pkydc") return;
@@ -4167,7 +4039,6 @@ function submitFeedback() {
 })();
 </script>
 <script>
-// Indikator titik hijau di header: nyala kalau sudah ada file/aksi import (teks #pbFileName berubah dari default)
 (function () {
   var el = document.getElementById('pbFileName');
   var dot = document.getElementById('pbImportDot');
