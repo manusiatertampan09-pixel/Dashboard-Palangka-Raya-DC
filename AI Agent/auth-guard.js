@@ -1,6 +1,6 @@
 (function () {
   "use strict";
-  var FB_CONFIG_KEY = "firebase_config_pr_dc"; // shared sama config Firebase Rest Time Monitoring
+  var FB_CONFIG_KEY = "firebase_config_pr_dc";
 
   var ACCESS_MAP = {
     "securty-swat@spx-external.com": ["rest-time"],
