@@ -7,8 +7,6 @@ const {
 } = require("./_seatalk-common");
 const { askGemini } = require("./_gemini-chat");
 
-// Nama mention bot persis seperti yang tampil di SeaTalk (buat dibersihin
-// dari teks pertanyaan). Bisa dioverride lewat env var BOT_MENTION_NAME.
 const BOT_MENTION_NAME = process.env.BOT_MENTION_NAME || "Smith - Reminder Support";
 
 const AI_FOOTER = "\n\nℹ️ Dijawab AI (Gemini). Mohon verifikasi kembali untuk memastikan keakuratannya.";
@@ -33,7 +31,6 @@ function escapeRegExp(s) {
   return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
-// Buang markup mention & nama bot dari teks, sisakan pertanyaannya aja.
 function cleanQuestion(text) {
   return String(text || "")
     .replace(/<mention-tag[^>]*\/?>(<\/mention-tag>)?/gi, " ")
@@ -45,7 +42,6 @@ function cleanQuestion(text) {
 async function buildAnswer(question) {
   if (!question) return HELP_TEXT;
 
-  // 1) Data live dashboard dulu (akurat). null = bukan pertanyaan data.
   try {
     const dataAnswer = await answerModuleQuestion(question);
     if (dataAnswer) return dataAnswer;
@@ -54,7 +50,6 @@ async function buildAnswer(question) {
     return "Lagi ada gangguan ambil data dari dashboard, coba lagi sebentar ya.";
   }
 
-  // 2) Pertanyaan bebas -> Gemini.
   try {
     const aiAnswer = await askGemini(question);
     return aiAnswer + AI_FOOTER;
@@ -77,9 +72,6 @@ exports.handler = async (event) => {
     return { statusCode: 400, body: "Invalid JSON" };
   }
 
-  // 1) Verification saat pertama kali setup Callback URL.
-  //    SeaTalk cuma butuh { "seatalk_challenge": "..." } balik, TANPA
-  //    signature check dulu di step ini (belum ada signature terkirim).
   if (body.event_type === "event_verification") {
     return {
       statusCode: 200,
@@ -88,15 +80,10 @@ exports.handler = async (event) => {
     };
   }
 
-  // 2) Verifikasi signature buat event selanjutnya.
-  //    NOTE: cek nama header aslinya waktu event beneran masuk (log dulu
-  //    semua header di Netlify function log), lalu sesuaikan key di bawah.
   const signatureHeader =
     event.headers["signature"] || event.headers["x-seatalk-signature"];
   if (!isValidSignature(rawBody, signatureHeader)) {
     console.warn("Signature SeaTalk gak valid / belum dicocokkan skemanya.");
-    // return { statusCode: 401, body: "invalid signature" };
-    // (sementara di-comment biar gak ke-block pas masih uji coba format signature)
   }
 
   const seatalkEvent = body.event || {};
@@ -105,8 +92,6 @@ exports.handler = async (event) => {
     return { statusCode: 200, body: "ok" };
   }
 
-  // TEMPORARY: log payload buat mastiin nama field thread_id / message_id /
-  // plain_text. Hapus kalau udah beres.
   console.log("SeaTalk event payload:", JSON.stringify(body));
 
   const rawText = (msg.text && (msg.text.plain_text || msg.text.content)) || "";
@@ -116,8 +101,6 @@ exports.handler = async (event) => {
   try {
     const token = await getSeatalkAccessToken();
     if (seatalkEvent.group_id) {
-      // Kalau pesan sudah di dalam thread, pakai thread-nya. Kalau pesan
-      // biasa di main feed, jadikan pesan itu root thread baru.
       const threadId =
         msg.thread_id && msg.thread_id !== "0" ? msg.thread_id : msg.message_id;
 
@@ -128,8 +111,6 @@ exports.handler = async (event) => {
         { threadId }
       );
 
-      // Fallback: kalau thread/pesan gak ketemu (4009/4010), balas pakai
-      // quote aja supaya tetap nyambung ke pesan yang nge-tag.
       if (result && (result.code === 4009 || result.code === 4010)) {
         await sendSeatalkGroupMessage(token, seatalkEvent.group_id, answer, {
           quotedMessageId: msg.message_id,
