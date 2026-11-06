@@ -1,16 +1,7 @@
-/**
- * netlify/functions/_alert-image.js
- * ------------------------------------------------------------------
- * Render tabel "Early Loading" jadi gambar PNG (base64) buat dikirim ke
- * SeaTalk. Pakai @resvg/resvg-wasm (WASM murni, gak butuh binary native)
- * + font DejaVu dari package npm "dejavu-fonts-ttf" (Lambda gak punya font
- * sistem, jadi font HARUS disertakan).
- */
 const fs = require("fs");
 const path = require("path");
 const { initWasm, Resvg } = require("@resvg/resvg-wasm");
 
-// require JSON ini cuma biar bundler Netlify ikut nyertain package font-nya.
 const fontPkgJson = require.resolve("dejavu-fonts-ttf/package.json");
 const FONT_DIR = path.join(path.dirname(fontPkgJson), "ttf");
 const WASM_PATH = path.join(path.dirname(require.resolve("@resvg/resvg-wasm")), "index_bg.wasm");
@@ -34,7 +25,6 @@ function getFontBuffers() {
 const esc = (s) =>
   String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
-// Pecah nama route di pemisah " - " biar muat max ~MAX_CHARS per baris.
 function wrapRoute(label, maxChars = 46, maxLines = 3) {
   const parts = String(label).split(" - ");
   const lines = [];
@@ -65,11 +55,6 @@ const LEVEL_STYLE = {
   6: { bg: "#fecaca", fg: "#7f1d1d", pill: "#7f1d1d", pillFg: "#ffffff" },
 };
 
-/**
- * rows: [{ label, total, agingLabel, level, shortTitle }]
- * opts: { title, subtitle }
- * return: string base64 PNG
- */
 async function renderEarlyLoadingTable(rows, opts = {}) {
   await ensureWasm();
 
