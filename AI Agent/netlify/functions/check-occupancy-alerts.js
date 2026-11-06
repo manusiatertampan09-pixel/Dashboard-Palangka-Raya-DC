@@ -6,18 +6,17 @@ const SEATALK_API_BASE = "https://openapi.seatalk.io";
 
 const FB_ROOT = "prDcOutboundMonitoring";
 const STATE_PATH = FB_ROOT + "/occupancyAlertState";
-const INCLUDE_OUTER = false;     // true = Outer Island (Kosambi 2 DC dkk) ikut dialert
-const ALERT_EVERY_RUN = true;    // true = tiap function jalan, semua route >= 1.200 selalu dialert (gak nunggu import baru / tier naik)
-const ALERT_INTERVAL_MINUTES = 70; // jarak minimal antar alert (dipakai kalau ALERT_EVERY_RUN = true). 0 = alert di setiap function jalan
-const INTERVAL_GRACE_MS = 2 * 60 * 1000; // toleransi biar jadwal cron 5 menit gak ngegeser ke 75 menit
-const REMIND_MINUTES = 180;      // ingetin ulang kalau tier sama & udah segini lama (0 = matiin)
-const MAX_IMPORT_AGE_MIN = 180;  // import yang lebih tua dari ini dianggap basi, gak dialert
-const MAX_MSG_CHARS = 3500;      // batas aman panjang 1 pesan SeaTalk
-const SEND_IMAGE = true;         // kirim gambar tabel dulu sebelum teks (false = teks aja)
+const INCLUDE_OUTER = false;
+const ALERT_EVERY_RUN = true;
+const ALERT_INTERVAL_MINUTES = 70;
+const INTERVAL_GRACE_MS = 2 * 60 * 1000;
+const REMIND_MINUTES = 180;
+const MAX_IMPORT_AGE_MIN = 180;
+const MAX_MSG_CHARS = 3500;
+const SEND_IMAGE = true;
 const WIB_OFFSET_MS = 7 * 60 * 60 * 1000;
 
-// ---- Auto tag (mention) di alert teks. Semua harus member grup tujuan. ----
-const ENABLE_MENTION = true;     // false = alert tanpa tag
+const ENABLE_MENTION = true;
 const TAG_EMAILS = [
   "kristian.yoga@spxexpress.com",
   "m.badrianoor@spxexpress.com",
@@ -68,7 +67,6 @@ function agingLabel(days) {
 }
 
 function wibDayNumber(date) {
-  // jumlah hari sejak epoch untuk tanggal kalender WIB
   return Math.floor((date.getTime() + WIB_OFFSET_MS) / 86400000);
 }
 
@@ -91,7 +89,6 @@ function slugKey(str) {
   return String(str).toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 120);
 }
 
-// Hitung aging dari jam packing (zona WIB) biar akurat walau import udah agak lama.
 function agingDaysOf(row, todayDay) {
   if (row.completeDateObj) {
     const d = new Date(row.completeDateObj);
@@ -131,7 +128,6 @@ function buildBlock(item, tier) {
   );
 }
 
-// Kirim gambar PNG (base64) ke grup SeaTalk.
 async function sendGroupImage(accessToken, groupId, base64Png) {
   const res = await fetch(`${SEATALK_API_BASE}/messaging/v2/group_chat`, {
     method: "POST",
@@ -144,7 +140,6 @@ async function sendGroupImage(accessToken, groupId, base64Png) {
   return res.json();
 }
 
-// Kirim teks alert (format 1 = markdown, wajib biar <mention-tag> jadi @tag beneran).
 async function sendAlertText(accessToken, groupId, text) {
   const res = await fetch(`${SEATALK_API_BASE}/messaging/v2/group_chat`, {
     method: "POST",
@@ -157,8 +152,6 @@ async function sendAlertText(accessToken, groupId, text) {
   return res.json();
 }
 
-// SeaTalk balikin { code: 0 } kalau sukses. Kalau bukan 0, anggap gagal biar
-// state "sudah dialert" gak ke-tandain padahal pesannya gak sampai.
 function assertSent(result, what) {
   console.log(`[occupancy-alert] respon SeaTalk (${what}): ` + JSON.stringify(result));
   if (result && typeof result.code === "number" && result.code !== 0) {
@@ -189,7 +182,6 @@ function chunkBlocks(blocks, maxChars = MAX_MSG_CHARS) {
   return messages;
 }
 
-// Semua jalur keluar dicatat ke log Netlify biar kelihatan KENAPA notif gak kekirim.
 function done(msg) {
   console.log("[occupancy-alert] " + msg);
   return { statusCode: 200, body: msg };
@@ -204,7 +196,6 @@ exports.handler = async () => {
   const lastProcessed = stateSnap._meta && stateSnap._meta.lastImportedAt;
   const lastAlertAt = (stateSnap._meta && stateSnap._meta.lastAlertAt) || 0;
 
-  // Jaga interval antar alert (function-nya sendiri dijadwalin lebih sering, mis. tiap 5 menit).
   if (ALERT_EVERY_RUN && ALERT_INTERVAL_MINUTES > 0) {
     const elapsed = Date.now() - lastAlertAt;
     if (elapsed < ALERT_INTERVAL_MINUTES * 60000 - INTERVAL_GRACE_MS) {
@@ -221,7 +212,6 @@ exports.handler = async () => {
     return done(`import basi (${Math.round(ageMin)} menit > ${MAX_IMPORT_AGE_MIN}), dilewati & ditandai sudah diproses`);
   }
 
-  // Tarik & urai data gede (gzip + base64 + columnar, sama kayak di outbound.html)
   const dataGz = (await db().ref(FB_ROOT + "/latestImportData/dataGz").get()).val();
   if (!dataGz) return done("data import kosong (latestImportData/dataGz gak ada)");
   const rows = fromColumnar(JSON.parse(zlib.gunzipSync(Buffer.from(dataGz, "base64")).toString("utf8")));
@@ -265,14 +255,11 @@ exports.handler = async () => {
       toAlert.map((a) => buildBlock(a.item, a.tier)),
       MAX_MSG_CHARS - mentionText.length - 2
     );
-    // Tag + Cc ditempel di pesan terakhir (1x aja, biar gak spam notif).
     if (mentionText) messages[messages.length - 1] += "\n\n" + mentionText;
     if (!groupId) throw new Error("Env var SEATALK_TARGET_GROUP_ID belum diset di Netlify.");
     console.log(`[occupancy-alert] ngirim ${toAlert.length} route ke grup ...${String(groupId).slice(-6)}`);
     const token = await getSeatalkAccessToken();
 
-    // 1) Gambar tabel dulu. Kalau gagal (termasuk modul gambar gak kebaca),
-    //    jangan sampai nahan alert teks.
     if (SEND_IMAGE) {
       try {
         const { renderEarlyLoadingTable } = require("./_alert-image");
@@ -295,7 +282,6 @@ exports.handler = async () => {
       }
     }
 
-    // 2) Teks alert (format asli).
     for (const text of messages) {
       assertSent(await sendAlertText(token, groupId, text), "teks");
     }
