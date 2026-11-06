@@ -6,21 +6,15 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Inventory Control - Internal Palangka Raya DC</title>
   <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
-  <!-- Chart.js buat grafik Highlight Daily & Monthly Usage -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
-  <!-- SheetJS buat fitur Export Laporan ke Excel -->
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-  <!-- QRCode.js buat fitur QR Code / Label Generator (khusus Asset NCA) -->
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <!-- jsPDF + AutoTable buat fitur Export Laporan ke PDF -->
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-  <!-- FIREBASE SDK (app+auth dibutuhkan auth-guard.js, database dibutuhkan buat sync Stock & Usage Log) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <style>
-    /* ==== TEMA MINIMALIS HITAM-PUTIH — font stack default Tailwind (sans) ==== */
     :root {
       --tw-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
@@ -76,7 +70,6 @@
       color: var(--text-sidebar-muted); margin: 16px 4px 9px; padding: 0 4px;
     }
     .app-sidebar-group-label:first-child { margin-top: 0; }
-    /* Group label yang bisa diklik buat Open/Hide (collapsible) */
     .app-sidebar-group-label.collapsible {
       display: flex; align-items: center; justify-content: space-between;
       cursor: pointer; user-select: none; border-radius: 6px; padding: 6px 4px;
@@ -113,7 +106,6 @@
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px; }
     h2 { margin: 0; color: #000000; display: flex; align-items: center; gap: 8px; font-weight: 700; }
 
-    /* Submenu tabs (Log Activity Usage / Stock) */
     .inv-tabs { display: flex; gap: 8px; margin-bottom: 18px; }
     .inv-tab-btn { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 9px 18px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.15s; }
     .inv-tab-btn:hover { background: #f5f5f5; }
@@ -121,7 +113,6 @@
     .inv-panel { display: none; }
     .inv-panel.active { display: block; }
 
-    /* KPI Cards */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-bottom: 18px; }
     .kpi-card { background: #ffffff; border: 1px solid #e5e5e5; border-radius: 8px; padding: 12px; text-align: center; }
     .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #737373; font-weight: 700; margin-bottom: 4px; }
@@ -151,17 +142,12 @@
     .panel-title { font-weight: 700; font-size: 13px; color: #000000; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
     .chart-wrap { position: relative; height: 220px; }
 
-    /* Form input */
     .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; align-items: end; }
     .form-item { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #404040; }
     .form-item input, .form-item select, .form-item textarea { padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; background: white; font-family: inherit; color: #171717; }
     .form-item input:focus, .form-item select:focus, .form-item textarea:focus { outline: none; border-color: #000000; }
     .form-item small { font-weight: 500; color: #a3a3a3; }
 
-    /* Layout khusus form "Log Activity Usage": kolom Asset (kiri, tinggi berubah-ubah
-       karena baris asset bisa ditambah) dipisah dari kolom Tanggal/Devisi/Simpan Log
-       (kanan) pakai flex align-items:flex-start, biar kolom kanan gak ikut kedorong ke
-       bawah tiap kali "Tambah Asset Lain" diklik. */
     .usage-form-layout { display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
     .usage-form-layout .usage-asset-col { flex: 1 1 320px; min-width: 280px; }
     .usage-form-layout .usage-rest-grid {
@@ -183,7 +169,6 @@
     }
     .tag-chip-remove:hover { background: #d4d4d4; color: #171717; }
 
-    /* Kotak input tag (chip nempel DI DALAM kolom yang sama, bukan baris terpisah di bawah) */
     .ac-wrap { position: relative; }
     .tag-input-box {
       display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
@@ -218,7 +203,6 @@
     .usage-item-row select.usage-item-asset { flex: 2; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; background: #fff; }
     .usage-item-row input.usage-item-qty { flex: 1; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; min-width: 70px; }
     .usage-item-row .usage-item-remove { flex-shrink: 0; }
-    /* ==== Searchable Asset dropdown (combobox) ==== */
     .asset-combo { position: relative; flex: 2; min-width: 0; }
     .usage-item-row .asset-combo { flex: 2; }
     .asset-combo > input { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid #d4d4d4; border-radius: 6px; font-size: 12px; font-family: inherit; color: #171717; background: #fff; }
@@ -235,7 +219,6 @@
     .form-msg.err { color: #000000; text-decoration: underline; }
     .form-msg.ok { color: #171717; }
 
-    /* Table */
     .table-wrapper { overflow-x: auto; max-height: 55vh; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 2px rgba(0,0,0,0.03); }
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
     th, td { border-bottom: 1px solid #eef1f5; padding: 10px 14px; text-align: left; background-color: #fff; white-space: nowrap; color: #171717; }
@@ -259,7 +242,6 @@
     .badge-lowstock { background: #000000; color: #ffffff; font-weight: 700; font-size: 10px; padding: 2px 7px; border-radius: 10px; margin-left: 6px; }
     .readonly-note { font-size: 11px; color: #a3a3a3; font-style: italic; margin-top: 6px; }
 
-    /* ==== LOW-STOCK BANNER (global, tampil di semua tab Inventory Control) ==== */
     .lowstock-banner {
       display: none; align-items: center; gap: 10px; padding: 11px 14px; border-radius: 8px;
       margin-bottom: 14px; font-size: 12.5px; font-weight: 700; border: 1px solid transparent;
@@ -275,7 +257,6 @@
     }
     .lowstock-banner-close:hover { opacity: 1; }
 
-    /* Thumbnail foto kondisi asset (Database Asset IT & NCA) */
     .asset-photo-thumb { width: 30px; height: 30px; border-radius: 6px; object-fit: cover; border: 1px solid #d4d4d4; cursor: pointer; display: block; }
     .asset-photo-empty { color: #d4d4d4; font-size: 11px; }
     .btn-icon-sm { background: #ffffff; color: #171717; border: 1px solid #d4d4d4; padding: 5px 9px; border-radius: 5px; font-weight: 700; cursor: pointer; font-size: 11px; margin-right: 4px; }
@@ -288,8 +269,6 @@
     .audit-action-badge.update { background: #fef3c7; color: #b45309; }
     .audit-action-badge.delete { background: #fee2e2; color: #b91c1c; }
 
-    /* Modal Asset */
-    /* Toast notifikasi in-app (ganti alert() bawaan browser) */
     .toast-stack {
       position: fixed; top: 16px; right: 16px; z-index: 400;
       display: flex; flex-direction: column; gap: 10px; max-width: 340px;
@@ -315,7 +294,6 @@
     .modal-box .form-item { margin-bottom: 10px; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }
 
-    /* Confirm modal custom, pengganti confirm() bawaan browser */
     .confirm-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 500; display: none; align-items: center; justify-content: center; }
     .confirm-backdrop.open { display: flex; animation: confirm-fade 0.15s ease-out; }
     .confirm-box { background: #fff; border-radius: 12px; padding: 22px; width: 100%; max-width: 380px; box-shadow: 0 12px 44px rgba(0,0,0,0.3); }
@@ -328,7 +306,6 @@
     .confirm-btn-ok:hover { background: #262626; }
     @keyframes confirm-fade { from { opacity: 0; } to { opacity: 1; } }
 
-    /* ===== Language Switcher & Saran/Masukan (di atas Logout) — sama persis kayak modul lain ===== */
     .app-sidebar-lang { margin-bottom: 10px; }
     .app-sidebar-lang label {
       display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
@@ -406,8 +383,6 @@
     .fb-board-item-tag.is-fitur { background: rgba(34, 197, 94, 0.14); border-color: rgba(34, 197, 94, 0.35); color: #22c55e; }
     .fb-board-item-msg { margin: 0; color: #e5e5e5; font-size: 12.5px; line-height: 1.5; white-space: pre-line; }
 
-    /* ===== Preview Saran & Masukan di tab Dashboard (Highlight Usage) — pakai template
-       card yang sama kayak di popup, tapi di-override jadi tema terang biar nyatu sama panel-box ===== */
     .fb-dashboard-preview-list { max-height: 280px; overflow-y: auto; }
     .fb-dashboard-preview-list .fb-board-item {
       background: #fafafa; border: 1px solid #e5e5e5; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px;
@@ -417,7 +392,6 @@
     .fb-dashboard-preview-list .fb-board-item-msg { color: #171717; }
     .fb-dashboard-preview-list .fb-board-empty { color: #737373; }
 
-    /* ==================== UI REFRESH (override, JS & ID tidak diubah) ==================== */
     :root {
       --ui-bg: #f6f6f4; --ui-surface: #ffffff; --ui-line: #e7e5e4; --ui-line-strong: #d6d3d1;
       --ui-text: #1c1917; --ui-muted: #78716c; --ui-accent: #1d4ed8; --ui-accent-soft: #eff4ff;
@@ -434,7 +408,6 @@
     .header-bar { margin-bottom: 14px; }
     .hamburger-btn { top: 14px; left: 14px; width: 44px; height: 44px; border-radius: 10px; font-size: 18px; }
 
-    /* Tab bar: sticky, bisa digeser di HP, tab aktif jelas */
     .header-bar:has(.inv-tabs) { position: sticky; top: 0; z-index: 90; margin: 0 -16px 16px -16px; padding: 10px 16px; background: rgba(246,246,244,.92); backdrop-filter: blur(8px); border-bottom: 1px solid var(--ui-line); }
     .inv-tabs { gap: 6px; margin: 0; overflow-x: auto; max-width: 100%; scrollbar-width: none; padding: 2px; }
     .inv-tabs::-webkit-scrollbar { display: none; }
@@ -444,13 +417,11 @@
     .inv-panel.active { animation: ui-in .18s ease-out; }
     @keyframes ui-in { from { opacity: 0; } to { opacity: 1; } }
 
-    /* Panel & kartu */
     .panel-box { border-color: var(--ui-line); border-radius: var(--ui-radius); padding: 18px; box-shadow: var(--ui-shadow); }
     .panel-title { font-size: 15px; font-weight: 700; margin-bottom: 14px; gap: 8px; }
     .grid-2 { gap: 16px; margin-bottom: 16px; }
     .chart-wrap { height: 260px; }
 
-    /* KPI */
     .kpi-grid { grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 14px; margin-bottom: 16px; }
     .kpi-card { text-align: left; padding: 16px 18px; border-radius: var(--ui-radius); border-color: var(--ui-line); box-shadow: var(--ui-shadow); }
     .kpi-title { font-size: 12.5px; text-transform: none; letter-spacing: 0; color: var(--ui-muted); font-weight: 600; margin-bottom: 6px; }
@@ -460,7 +431,6 @@
     .kpi-card.warn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(180,83,9,.15); }
     .kpi-card.warn .kpi-value { color: var(--ui-warn); }
 
-    /* Form */
     .form-item { font-size: 13px; color: #44403c; gap: 6px; }
     .form-item input, .form-item select, .form-item textarea, .date-range-input,
     .usage-item-row select.usage-item-asset, .usage-item-row input.usage-item-qty, .asset-combo > input {
@@ -477,7 +447,6 @@
     .form-msg:empty { padding: 0; background: none; }
     .readonly-note { font-size: 12.5px; color: var(--ui-muted); font-style: normal; background: #f5f5f4; border-radius: 8px; padding: 8px 12px; margin: 0 0 12px; }
 
-    /* Tombol */
     .btn-primary, .btn-secondary { font-size: 14px; font-weight: 600; padding: 10px 18px; min-height: 42px; border-radius: 8px; transition: background .12s, border-color .12s, transform .05s; }
     .btn-primary { background: var(--ui-text); border-color: var(--ui-text); }
     .btn-primary:hover { background: #292524; }
@@ -490,7 +459,6 @@
     .range-tab-btn { font-size: 12.5px; padding: 7px 14px; min-height: 34px; font-weight: 600; }
     #devisiFormBadge { background: var(--ui-text) !important; font-size: 13px !important; }
 
-    /* Tabel */
     .table-wrapper { border-color: var(--ui-line); border-radius: var(--ui-radius); max-height: 60vh; background: #fff; }
     table { font-size: 14px; }
     th, td { padding: 12px 16px; border-bottom-color: #f0eeec; }
@@ -510,11 +478,9 @@
     .asset-combo-item.empty-stock:hover, .asset-combo-item.empty-stock.active { color: var(--ui-danger); background: var(--ui-danger-soft); }
     .asset-combo-list { max-height: 280px; }
 
-    /* Banner stok menipis */
     .lowstock-banner { font-size: 14px; padding: 12px 16px; border-radius: var(--ui-radius); }
     .lowstock-banner-close { font-size: 17px; padding: 6px 10px; }
 
-    /* Modal: bisa di-scroll di layar kecil */
     .modal-backdrop, .confirm-backdrop { padding: 16px; backdrop-filter: blur(2px); }
     .modal-box { max-height: calc(100vh - 32px); overflow-y: auto; border-radius: 14px; padding: 24px; max-width: 460px; }
     .modal-box h3 { font-size: 17px; margin-bottom: 18px; }
@@ -524,16 +490,13 @@
     .confirm-btn { font-size: 14px; padding: 10px 18px; min-height: 42px; }
     .confirm-btn-ok { background: var(--ui-text); }
 
-    /* Toast pindah ke bawah-kanan, lebih terbaca */
     .toast-stack { top: auto; bottom: 20px; right: 20px; max-width: min(380px, calc(100vw - 40px)); }
     .toast-item { font-size: 14px; border-radius: 10px; }
 
-    /* Sidebar */
     .app-sidebar-link { font-size: 14.5px; padding: 11px 14px; border-radius: 8px; }
     .app-sidebar-group-label { font-size: 12px; font-weight: 700; }
     .fb-board-item-msg { font-size: 13.5px; }
 
-    /* HP & tablet */
     @media (max-width: 900px) {
       body { padding: 68px 12px 32px 12px; }
       .header-bar:has(.inv-tabs) { margin: 0 -12px 14px; padding: 8px 12px; top: 0; }
@@ -556,7 +519,6 @@
       .modal-actions button, .confirm-actions button { flex: 1; }
     }
 
-    /* ===== Scrollbar tabel: tiap tabel punya scroll sendiri (vertikal + horizontal), header tabel nempel di atas ===== */
     .container .table-wrapper { overflow: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: #a8a29e #f5f5f4; }
     .container .table-wrapper::-webkit-scrollbar { width: 10px; height: 10px; }
     .container .table-wrapper::-webkit-scrollbar-track { background: #f5f5f4; border-radius: 8px; }
@@ -564,7 +526,6 @@
     .container .table-wrapper::-webkit-scrollbar-thumb:hover { background: #78716c; }
     .container th { position: sticky; top: 0; z-index: 2; }
 
-    /* Stock, Audit Log & Master Nama Asset: tabel dibuat full sampai bawah layar (tinggi dihitung otomatis lewat JS fitTableToBottom) */
     body.fit-page { padding-bottom: 16px; }
     .inv-panel.fit-bottom .table-wrapper { max-height: none !important; height: var(--fit-h, 60vh); min-height: 240px; }
     @media print { .hamburger-btn, .app-sidebar, .toast-stack { display: none !important; } body { padding: 0; } }
@@ -585,9 +546,6 @@
 <script src="auth-guard.js"></script>
 
 <script>
-  // ==== I18N ENGINE (Bahasa, English, 日本語, 中文) — sama persis pola & key sidebar/feedback
-  // kayak modul lain (outbound, inbound, rest-time), biar bahasa yg dipilih user ke-share
-  // ke semua modul lewat localStorage. ====
   const APP_I18N = {
     "lang.label": { "id": "Bahasa", "en": "Language", "ja": "言語", "zh": "语言" },
     "sidebar.group.productivity": { "id": "Productivity", "en": "Productivity", "ja": "生産性", "zh": "生产力" },
@@ -970,7 +928,6 @@
     const sel = document.getElementById('appLangSelect');
     if (sel) sel.value = lang;
     applyStaticI18n();
-    // Re-render semua konten dinamis biar ikut translate (header tabel, dsb)
     if (typeof renderForCurrentFacility === 'function') renderForCurrentFacility();
   }
 
@@ -981,7 +938,6 @@
   });
 </script>
 
-<!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
 <button class="hamburger-btn" onclick="toggleAppSidebar()" title="Buka Menu">☰</button>
 <div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
 <nav class="app-sidebar" id="appSidebar">
@@ -1048,7 +1004,6 @@
   </div>
 </nav>
 
-<!-- ==== FEEDBACK BOARD (Saran & Masukan) — shared board via Firebase, real-time di semua device/modul ==== -->
 <div class="fb-board-backdrop" id="fbBoardBackdrop" onclick="if(event.target===this) closeFeedbackBoard()">
   <div class="fb-board-card">
     <div class="fb-board-header">
@@ -1102,14 +1057,12 @@
     </div>
   </div>
 
-  <!-- ================= LOW-STOCK BANNER (global, tampil terus di semua tab) ================= -->
   <div class="lowstock-banner" id="lowStockBanner">
     <span class="lowstock-banner-icon" id="lowStockBannerIcon">⚠️</span>
     <span class="lowstock-banner-text" id="lowStockBannerText"></span>
     <button class="lowstock-banner-close" onclick="dismissLowStockBanner()" title="Tutup sementara" data-i18n-title="inv.banner.closeTitle">✕</button>
   </div>
 
-  <!-- ================= SUBMENU 1: LOG ACTIVITY USAGE (Input murni) ================= -->
   <section id="invPanelUsage" class="inv-panel">
 
     <div class="panel-box" style="margin-bottom:18px;">
@@ -1163,7 +1116,6 @@
     </div>
   </section>
 
-  <!-- ================= SUBMENU 2: HIGHLIGHT DAILY & MONTHLY USAGE (Dashboard) ================= -->
   <section id="invPanelDashboard" class="inv-panel">
 
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:14px; flex-wrap:wrap;">
@@ -1239,7 +1191,6 @@
     </div>
   </section>
 
-  <!-- ================= SUBMENU: MASTER NAMA ASSET ================= -->
   <section id="invPanelAssetMaster" class="inv-panel fit-bottom">
     <div class="header-bar">
       <div class="panel-title" style="margin:0;">🏷️ <span data-i18n="inv.master.title">Database Nama Asset</span></div>
@@ -1262,7 +1213,6 @@
     </div>
   </section>
 
-  <!-- ================= SUBMENU 3: STOCK ================= -->
   <section id="invPanelStock" class="inv-panel fit-bottom">
     <div class="header-bar">
       <div class="panel-title" style="margin:0;">🗄️ <span data-i18n="inv.stock.title">Database Stock Asset</span></div>
@@ -1284,7 +1234,6 @@
     </div>
   </section>
 
-  <!-- ================= SUBMENU 5: AUDIT LOG ================= -->
   <section id="invPanelAuditLog" class="inv-panel fit-bottom">
     <div class="header-bar">
       <div class="panel-title" style="margin:0;">📜 <span data-i18n="inv.audit.title">Audit Log — Jejak Perubahan Data</span></div>
@@ -1311,7 +1260,6 @@
   </section>
 </div>
 
-<!-- ==== MODAL TAMBAH / EDIT NAMA ASSET (MASTER) ==== -->
 <div class="modal-backdrop" id="assetMasterModalBackdrop">
   <div class="modal-box">
     <h3 id="assetMasterModalTitle">🏷️ Tambah Nama Asset</h3>
@@ -1336,7 +1284,6 @@
   </div>
 </div>
 
-<!-- ==== MODAL TAMBAH / EDIT ASSET ==== -->
 <div class="modal-backdrop" id="assetModalBackdrop">
   <div class="modal-box">
     <h3 id="assetModalTitle">➕ <span data-i18n="inv.modal.addAssetTitle">Tambah Asset Baru</span></h3>
@@ -1374,7 +1321,6 @@
   </div>
 </div>
 
-<!-- ==== MODAL EDIT LOG ACTIVITY USAGE ==== -->
 <div class="modal-backdrop" id="logModalBackdrop">
   <div class="modal-box">
     <h3>✏️ <span data-i18n="inv.modal.editLogTitle">Edit Log Penggunaan</span></h3>
@@ -1406,7 +1352,6 @@
   </div>
 </div>
 
-<!-- ==== MODAL LIGHTBOX FOTO KONDISI ASSET ==== -->
 <div class="modal-backdrop" id="photoLightboxBackdrop">
   <div class="modal-box" style="max-width:420px; text-align:center;">
     <h3 id="photoLightboxTitle">📷 <span data-i18n="inv.modal.photoLightboxTitle">Foto Kondisi Asset</span></h3>
@@ -1417,7 +1362,6 @@
   </div>
 </div>
 
-<!-- ==== MODAL QR CODE / LABEL (khusus Asset NCA) ==== -->
 <div class="modal-backdrop" id="qrLabelModalBackdrop">
   <div class="modal-box" style="max-width:360px;">
     <h3>🏷️ <span data-i18n="inv.modal.qrTitle">QR Code / Label Asset</span></h3>
@@ -1433,7 +1377,6 @@
   </div>
 </div>
 
-<!-- ==== MODAL RIWAYAT MUTASI ASSET ==== -->
 <div class="modal-backdrop" id="assetHistoryModalBackdrop">
   <div class="modal-box" style="max-width:520px;">
     <h3 id="assetHistoryModalTitle">🕘 <span data-i18n="inv.modal.assetHistoryTitle">Riwayat Mutasi Asset</span></h3>
@@ -1449,7 +1392,6 @@
   </div>
 </div>
 
-<!-- ==== MODAL RIWAYAT PEMAKAIAN PER ITEM (Stock) ==== -->
 <div class="modal-backdrop" id="itemHistoryModalBackdrop">
   <div class="modal-box" style="max-width:560px;">
     <h3 id="itemHistoryModalTitle">🕘 <span data-i18n="inv.modal.itemHistoryTitle">Riwayat Pemakaian</span></h3>
@@ -1467,30 +1409,25 @@
 </div>
 
 <script>
-  // ================= STATE & FIREBASE =================
-  const FB_ROOT = "inventoryControl"; // root data khusus Inventory Control, project Firebase sama kayak modul lain
-  const FACILITIES = ["SOC"]; // SOC & EHA udah digabung jadi 1 menu — "SOC" cuma nama path Firebase internal (inventoryControl/SOC/...), gak ditampilin ke user lagi
+  const FB_ROOT = "inventoryControl";
+  const FACILITIES = ["SOC"];
   let fbDb = null;
-  // Data sekarang kepisah per Facility. Data lama (root inventoryControl/stock & /usageLogs,
-  // sebelum ada Facility) SENGAJA nggak dipindah/dibaca lagi di sini — diarsipkan begitu aja,
-  // jadi SOC & EHA mulai dari kosong.
-  let stockDataByFacility = { SOC: {} };     // { SOC: { assetId: {name, category, unit, qty, minStock, note, updatedAt, updatedBy} } }
-  let usageLogsDataByFacility = { SOC: {} }; // { SOC: { logId: {assetId, assetName, unit, qtyUsed, workingDate, devisi, createdAt, createdBy} } }
-  let assetItNcaByFacility = { SOC: {} };    // { SOC: { itemId: {name, jenis(IT/NCA), category, serial, pic, lokasi, status, note, photoData, updatedAt, updatedBy} } }
-  let auditLogByFacility = { SOC: {} };       // { SOC: { logId: {module, action, itemName, detail, changedAt, changedBy} } }
-  let assetMasterByFacility = { SOC: {} };   // { SOC: { masterId: {name, category, unit, createdAt, createdBy, updatedAt, updatedBy} } } — Master Nama Asset
-  let lowStockBannerDismissed = false;        // ditutup manual, balik muncul lagi kalau pindah tab/reload
+  let stockDataByFacility = { SOC: {} };
+  let usageLogsDataByFacility = { SOC: {} };
+  let assetItNcaByFacility = { SOC: {} };
+  let auditLogByFacility = { SOC: {} };
+  let assetMasterByFacility = { SOC: {} };
+  let lowStockBannerDismissed = false;
   let auditLogFilterQuery = '';
   let auditLogFilterModule = '';
   let assetItNcaFilterQuery = '';
   let assetItNcaFilterJenis = '';
-  let dashboardDevisiFilter = ''; // filter breakdown '' (Semua) / 'SOC' / 'EHA' khusus di Highlight Usage
+  let dashboardDevisiFilter = '';
   let dailyUsageChart = null;
   let monthlyTrendChart = null;
-  // Cache data render terakhir, dipakai pas export ke Excel biar gak hitung ulang
   let lastReportData = { topAsset: [], dailyChart: { rows: [], start: '', end: '' }, monthlyTrend: [], lowStock: [] };
-  let dailyUsageStartDate = null; // 'YYYY-MM-DD', diisi pas init
-  let dailyUsageEndDate = null;   // 'YYYY-MM-DD', diisi pas init
+  let dailyUsageStartDate = null;
+  let dailyUsageEndDate = null;
   let currentFacility = "SOC";
   let currentInvSubmenu = "usage";
 
@@ -1501,8 +1438,6 @@
     return Object.keys(data).map(function (id) { return Object.assign({ _key: id }, data[id]); });
   }
 
-  // ===== Devisi otomatis (SOC / EHA) berdasarkan email yang lagi login =====
-  // Email di bawah ini dianggap Devisi EHA. Selain email ini, otomatis masuk Devisi SOC.
   const EHA_EMAILS = [
     "yoga.parera@spxexpress.com",
     "yuyun.lestari@spx-external.com",
@@ -1518,12 +1453,8 @@
   }
   function getCurrentUserDevisi() { return getDevisiForEmail(window.__authUserEmail); }
 
-  // Nama lengkap Devisi buat ditampilin ke user — kode SOC/EHA tetep dipakai apa
-  // adanya di data (Firebase, filter, dsb), cuma yang ditampilin ke layar full name-nya.
   function getDevisiLabel(code) { return code === 'EHA' ? t('inv.dash.ehaLabel') : t('inv.dash.socLabel'); }
 
-  // Devisi (SOC/EHA) cuma buat breakdown laporan — gak butuh field tambahan apapun
-  // di form input, karena siapa yang input udah otomatis kecatet di "Diinput Oleh".
   function updateUsageFormVisibility() {
     const devisi = getCurrentUserDevisi();
     document.getElementById('devisiFormBadge').innerText = getDevisiLabel(devisi);
@@ -1536,15 +1467,11 @@
     return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
   }
 
-  // ================= SIDEBAR & SUBMENU SWITCH =================
   function toggleAppSidebar() {
     document.getElementById('appSidebar').classList.toggle('open');
     document.getElementById('appSidebarBackdrop').classList.toggle('open');
   }
 
-  // Open/Hide grup SOC / EHA di sidebar. Sengaja GAK diinget lewat localStorage — tiap
-  // buka halaman / pindah tab, semua grup default Hide, user wajib Open manual biar
-  // Sidebar-nya tetep rapi.
   function toggleSidebarGroup(group) {
     const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
     const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
@@ -1568,7 +1495,6 @@
   }
   collapseAllSidebarGroups();
 
-  // Bikin tabel di tab Stock / Audit Log / Master Nama Asset memanjang sampai bawah layar
   function fitTableToBottom() {
     const panel = document.querySelector('.inv-panel.active.fit-bottom');
     document.body.classList.toggle('fit-page', !!panel);
@@ -1609,9 +1535,6 @@
     if (tab === 'dashboard' && monthlyTrendChart) monthlyTrendChart.resize();
   }
 
-  // Render ulang ketiga Sub Menu (Log Activity / Highlight / Stock) pakai data
-  // Facility yang lagi aktif. Dipanggil tiap pindah Facility/Sub Menu, dan tiap
-  // ada data baru masuk dari Firebase buat Facility yang lagi aktif.
   function renderForCurrentFacility() {
     updateUsageFormVisibility();
     populateAssetSelect();
@@ -1626,10 +1549,6 @@
 
   function capitalize(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 
-  // ================= FIREBASE SYNC =================
-  // SOC & EHA sekarang 1 menu gabungan — semua data disimpen di 1 cabang Firebase
-  // (inventoryControl/SOC/stock & /usageLogs), pembeda SOC/EHA cuma di field
-  // "devisi" tiap Log Activity Usage (otomatis dari email yang input).
   function initInventoryFirebaseSync() {
     if (fbDb) return; // udah pernah init
     try {
@@ -1671,9 +1590,6 @@
     });
   }
 
-  // ================= AUDIT LOG (SUBMENU 5) =================
-  // Dipanggil tiap ada Tambah/Edit/Hapus data di Stock, Asset IT & NCA, atau Log Usage.
-  // Catatan otomatis, gak bisa diedit/dihapus manual dari UI.
   function logAudit(module, action, itemName, detail) {
     if (!fbDb) return;
     const payload = {
@@ -1743,7 +1659,6 @@
     renderAuditLogTable();
   }
 
-  // ================= STOCK TABLE (SUBMENU 2) =================
   function renderStockTable() {
     const tbody = document.getElementById('stockBody');
     const stockData = getStockData();
@@ -1790,7 +1705,6 @@
 
   function openAssetModal(id) {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
-    // Asset baru wajib pilih dari Master — kalau Master masih kosong, arahin dulu ke tab Master
     if (!id && !Object.keys(getAssetMasterData()).length) {
       showToast(t('inv.err.masterEmpty'), 'err', 6000);
       switchInvSubmenu('assetMaster');
@@ -1798,7 +1712,7 @@
     }
     document.getElementById('assetModalMsg').innerText = '';
     document.getElementById('assetModalId').value = id || '';
-    minStockTouched = false; // reset auto-fill tiap kali modal dibuka
+    minStockTouched = false;
     const stockData = getStockData();
     if (id && stockData[id]) {
       const a = stockData[id];
@@ -1811,8 +1725,6 @@
       document.getElementById('assetQtyInput').value = a.qty != null ? a.qty : '';
       document.getElementById('assetMinStockInput').value = a.minStock != null ? a.minStock : '';
       document.getElementById('assetNoteInput').value = a.note || '';
-      // Kalau minStock yang lagi kesimpen BEDA dari hasil hitungan 35% Qty, anggap
-      // sebelumnya udah pernah di-override manual → jangan auto-timpa pas Qty diubah lagi.
       minStockTouched = (a.qty != null && a.minStock != null && Number(a.minStock) !== calcSuggestedMinStock(Number(a.qty)));
     } else {
       document.getElementById('assetModalTitle').innerText = '➕ Tambah Asset Baru';
@@ -1833,10 +1745,6 @@
     document.getElementById('assetModalBackdrop').classList.remove('open');
   }
 
-  // ================= AUTO-FILL MIN STOCK (35% dari Qty) =================
-  // Minim  : Qty <35% dari Qty yang diisi saat asset dibuat/di-set → auto Min Stock = 35% Qty
-  // Aman   : selama qty aktual masih >35% dari angka itu, status Stock dianggap aman
-  let minStockTouched = false; // true kalau user udah ngetik manual di kolom Min Stock
 
   function calcSuggestedMinStock(qty) {
     if (isNaN(qty) || qty <= 0) return 0;
@@ -1866,12 +1774,7 @@
     minStockTouched = true; // user override manual, auto-fill berhenti nimpa
   });
 
-  // Normalisasi nama buat deteksi dobel: huruf kecil, spasi berlebih dirapihin
-  // Kunci pembanding nama: huruf kecil + buang spasi, strip, underscore & kurung, jadi
-  // 'Pink( 4,8' dan 'Pink ( 4,8' dianggap SAMA (deteksi dobel lebih ketat).
   function normalizeAssetName(n) { return String(n || '').toLowerCase().replace(/[\s\-\u2013\u2014_()]+/g, '').trim(); }
-  // Rapihin format nama sebelum disimpan (spasi dobel, " - " konsisten, spasi sebelum "(").
-  // Sengaja TIDAK Title Case biar satuan kayak "mm", "x", "AWB" nggak rusak.
   function cleanAssetName(n) {
     return String(n || '')
       .replace(/\s+/g, ' ')
@@ -1897,19 +1800,16 @@
     if (!name) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetNameRequired'); return; }
     if (isNaN(qty) || qty < 0) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.qtyInvalid'); return; }
 
-    // Cegah nama asset dobel (baik tambah baru maupun ganti nama jadi nama yang udah ada)
     const stockNow = getStockData();
     const normNew = normalizeAssetName(name);
     const dupId = Object.keys(stockNow).find(function (k) { return k !== id && normalizeAssetName(stockNow[k].name) === normNew; });
     if (dupId) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetDuplicate', { name: stockNow[dupId].name }); return; }
 
-    // Nama wajib ada di Master Nama Asset (kecuali edit data lama yang namanya gak diubah)
     const oldNormName = (id && stockNow[id]) ? normalizeAssetName(stockNow[id].name) : null;
     if (!findMasterByName(name) && oldNormName !== normNew) {
       msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.assetNotInMaster', { name: name }); return;
     }
 
-    // Cegah klik Simpan 2x yang bikin 2 data kesimpen
     if (window.__assetSaving) return;
     window.__assetSaving = true;
 
@@ -1920,8 +1820,6 @@
     const payload = {
       name: name, category: category, unit: unit, qty: qty, minStock: minStock, note: note,
       updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-',
-      // createdAt/createdBy dipakai buat "Riwayat Pemakaian per Item" (kapan asset ini pertama ditambahin).
-      // Kalau edit data lama yang belum punya createdAt, dianggap "ditambahin" pas edit ini biar tetep ada catatannya.
       createdAt: (oldData && oldData.createdAt) || Date.now(),
       createdBy: (oldData && oldData.createdBy) || window.__authUserEmail || '-'
     };
@@ -1938,9 +1836,6 @@
   }
 
 
-  // ================= MASTER NAMA ASSET =================
-  // Daftar baku nama asset (cabang Firebase inventoryControl/{facility}/assetMaster).
-  // Stock & Import Excel cuma boleh pakai nama dari daftar ini → gak ada salah ketik / input dobel.
   const DEFAULT_ASSET_MASTER = [
     'Barcode Label - AWB (100 x 100)',
     'Barcode Label - TO (50 x 100)',
@@ -1977,7 +1872,6 @@
   }
   function masterSampleName(i) { return masterSortedNames()[i] || 'Nama dari Master'; }
 
-  // Hitung berapa entry Stock yang pakai nama tertentu (>1 = dobel)
   function countStockByNormName() {
     const stock = getStockData();
     const out = {};
@@ -1988,8 +1882,6 @@
     return out;
   }
 
-  // Isi dropdown "Nama Asset" di modal Tambah/Edit Stock dari Master.
-  // extraLegacyName: nama lama di Stock yang belum ada di Master (biar tetap bisa diedit).
   function populateAssetNameSelect(extraLegacyName) {
     const sel = document.getElementById('assetNameInput');
     if (!sel) return;
@@ -2046,7 +1938,6 @@
       tbody.innerHTML = html;
     }
 
-    // Nama di Stock yang belum masuk Master (data lama) → bisa langsung ditambahin sekali klik
     const box = document.getElementById('assetMasterLegacyBox');
     const stock = getStockData();
     const seen = {}; const legacy = [];
@@ -2106,7 +1997,6 @@
     const dupId = Object.keys(data).find(function (k) { return k !== id && normalizeAssetName(data[k].name) === norm; });
     if (dupId) { msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.masterDuplicate', { name: data[dupId].name }); return; }
 
-    // Ganti nama cuma boleh kalau belum kepakai di Stock (riwayat usage nyimpen nama asset)
     const old = id ? data[id] : null;
     if (old && normalizeAssetName(old.name) !== norm && (countStockByNormName()[normalizeAssetName(old.name)] || 0) > 0) {
       msgEl.className = 'form-msg err'; msgEl.innerText = t('inv.err.masterInUseRename', { name: old.name }); return;
@@ -2149,7 +2039,6 @@
     });
   }
 
-  // Tambah banyak nama sekaligus dari daftar awal (yang udah ada dilewatin)
   function seedAssetMaster() {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
     const todo = DEFAULT_ASSET_MASTER.filter(function (n) { return !findMasterByName(n); });
@@ -2172,7 +2061,6 @@
     });
   }
 
-  // Satu klik: masukin nama dari Stock (data lama) ke Master, bawa kategori & unit-nya
   function addMasterFromStockName(name) {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditStock'), 'err'); return; }
     if (findMasterByName(name)) return;
@@ -2190,7 +2078,6 @@
     }).catch(function (e) { showToast(t('inv.err.savePrefix') + e.message, 'err'); });
   }
 
-  // Pilih nama di modal Tambah Stock → kategori & unit ke-isi otomatis dari Master (cuma buat asset baru)
   document.getElementById('assetNameInput').addEventListener('change', function () {
     if (document.getElementById('assetModalId').value) return;
     const m = findMasterByName(this.value);
@@ -2209,9 +2096,6 @@
     }, t('inv.confirm.yesDelete'));
   }
 
-  // ================= IMPORT / BULK TEMPLATE STOCK (Excel) =================
-  // Template dibuat sesuai kolom yang dibutuhin buat Import: Nama Asset & Qty wajib,
-  // sisanya opsional (Unit default "pcs", Min Stock auto 35% dari Qty kalau kosong).
   function downloadStockBulkTemplate() {
     if (!window.__authCanDelete) { showToast(t('inv.err.noAccessFeature'), 'err'); return; }
     const wb = XLSX.utils.book_new();
@@ -2328,10 +2212,6 @@
     reader.readAsArrayBuffer(file);
   }
 
-  // ================= DATABASE ASSET IT & NCA (SUBMENU 4) =================
-  // Beda sama Stock: gak ada Qty/Min Stock, tapi punya Jenis (IT/NCA), No Serial/Inventaris,
-  // PIC Pemegang, Lokasi & Status (Aktif/Rusak/Diperbaiki/Non-Aktif). Data-nya kepisah total
-  // dari Stock, di cabang Firebase inventoryControl/{facility}/assetItNca.
   function statusBadgeHtml(status) {
     const map = {
       'Aktif': { bg: '#171717', fg: '#ffffff' },
@@ -2355,7 +2235,6 @@
 
     let ids = Object.keys(data);
 
-    // Terapkan filter search (nama/serial/PIC) & filter Jenis kalau lagi aktif
     const q = assetItNcaFilterQuery.trim().toLowerCase();
     if (q) {
       ids = ids.filter(function (id) {
@@ -2459,14 +2338,11 @@
     document.getElementById('assetItNcaModalBackdrop').classList.add('open');
   }
 
-  // Field "Jumlah Asset" cuma relevan buat Jenis NCA (asset IT biasanya dicatat
-  // satuan per unit via No. Serial, jadi jumlahnya selalu dianggap 1).
   function toggleAssetItNcaJumlahField() {
     const isNca = document.getElementById('assetItNcaJenisInput').value === 'NCA';
     document.getElementById('assetItNcaJumlahFormItem').style.display = isNca ? '' : 'none';
   }
 
-  // ================= FOTO KONDISI ASSET (upload + kompres client-side) =================
   function showAssetItNcaPhotoPreview(dataUrl) {
     const box = document.getElementById('assetItNcaPhotoPreviewBox');
     const img = document.getElementById('assetItNcaPhotoPreviewImg');
@@ -2480,8 +2356,6 @@
     showAssetItNcaPhotoPreview('');
   }
 
-  // Foto dikompres di browser (resize max 480px + JPEG q0.6) sebelum disimpan sebagai
-  // base64 ke Firebase Realtime Database, biar ukuran datanya tetep kecil & hemat kuota.
   function handleAssetItNcaPhotoPick(evt) {
     const file = evt.target.files[0];
     if (!file) return;
@@ -2551,8 +2425,6 @@
     const itemId = id || fbDb.ref(facilityRoot + '/assetItNca').push().key;
     const ref = fbDb.ref(facilityRoot + '/assetItNca/' + itemId);
     ref.set(payload).then(function () {
-      // Catat Riwayat Mutasi: bandingin PIC/Lokasi/Status lama vs baru, tiap ada
-      // perubahan disimpan sebagai 1 entry history biar jejak siapa pindah kapan kelihatan.
       const histRef = fbDb.ref(facilityRoot + '/assetItNcaHistory/' + itemId);
       const changedBy = window.__authUserEmail || '-';
       if (isNew) {
@@ -2585,7 +2457,6 @@
     }, t('inv.confirm.yesDelete'));
   }
 
-  // ================= RIWAYAT MUTASI ASSET (modal) =================
   function openAssetHistoryModal(id) {
     const asset = getAssetItNcaData()[id];
     document.getElementById('assetHistoryModalTitle').innerText = '🕘 ' + t('inv.modal.historyMutationTitleWithName', { name: (asset ? asset.name : id) });
@@ -2615,10 +2486,6 @@
     document.getElementById('assetHistoryModalBackdrop').classList.remove('open');
   }
 
-  // ================= RIWAYAT PEMAKAIAN PER ITEM (Stock) =================
-  // Dipicu tombol "🕘 Riwayat" di tabel Stock. Nampilin kapan asset ditambahin,
-  // siapa yang paling sering minjem/minta (dihitung dari usageLogs), dan tabel
-  // riwayat pemakaian lengkap (Tanggal, Qty, Divisi, Diinput Oleh).
   function openItemHistoryModal(id) {
     const asset = getStockData()[id];
     document.getElementById('itemHistoryModalTitle').innerText = '🕘 ' + t('inv.modal.historyUsageTitleWithName', { name: (asset ? asset.name : id) });
@@ -2629,7 +2496,6 @@
     const logsArr = getLogsArr(currentFacility).filter(function (l) { return l.assetId === id; });
     logsArr.sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
 
-    // Hitung siapa yang paling sering minjem/minta asset ini
     const countByEmail = {};
     logsArr.forEach(function (l) {
       const who = l.createdBy || '-';
@@ -2667,9 +2533,6 @@
     document.getElementById('itemHistoryModalBackdrop').classList.remove('open');
   }
 
-  // ================= LOW-STOCK BANNER (global) =================
-  // Dipanggil tiap Stock berubah (realtime dari Firebase) & tiap pindah tab/facility.
-  // "Habis" (qty <= 0) dianggap paling parah (merah), "Menipis" (qty <= minStock) kuning.
   function renderLowStockBanner() {
     const banner = document.getElementById('lowStockBanner');
     if (lowStockBannerDismissed) { banner.classList.remove('show'); return; }
@@ -2710,7 +2573,6 @@
     document.getElementById('lowStockBanner').classList.remove('show');
   }
 
-  // ================= QR CODE / LABEL (khusus Asset NCA) =================
   let qrLabelCurrentAsset = null;
   function openQrLabelModal(id) {
     const asset = getAssetItNcaData()[id];
@@ -2732,7 +2594,6 @@
     document.getElementById('qrLabelModalBackdrop').classList.remove('open');
   }
 
-  // Cetak label kecil (QR + nama + serial) lewat window print terpisah, siap tempel di fisik asset.
   function printQrLabel() {
     if (!qrLabelCurrentAsset) return;
     const wrap = document.getElementById('qrCodeCanvasWrap');
@@ -2751,10 +2612,6 @@
     w.document.close();
   }
 
-  // ================= EXPORT / IMPORT / BULK TEMPLATE ASSET IT & NCA (Excel) =================
-  // Export ngikutin filter (search & Jenis) yang lagi aktif di tabel — jadi yang
-  // ke-download = persis yang lagi ditampilin di layar. Export ini kebuka buat
-  // semua orang (bukan cuma admin), soalnya cuma baca data, bukan ubah.
   function exportAssetItNcaExcel() {
     if (typeof XLSX === 'undefined') { showToast('Library Excel belum ke-load, coba refresh halaman.', 'err'); return; }
     const data = getAssetItNcaData();
@@ -2904,7 +2761,6 @@
     reader.readAsArrayBuffer(file);
   }
 
-  // ================= LOG ACTIVITY USAGE (SUBMENU 1) =================
   function buildAssetOptionsHtml() {
     const stockData = getStockData();
     const ids = Object.keys(stockData).sort(function (a, b) {
@@ -2918,10 +2774,6 @@
     return { html: html, ids: ids };
   }
 
-  // Isi ulang semua dropdown Asset yang lagi kepasang: baris-baris multi-input
-  // di form "Input Penggunaan" (class usage-item-asset) DAN dropdown di modal Edit Log.
-  // ===== Dropdown Asset yang bisa dicari (ngetik buat filter, klik buat pilih) =====
-  // <select> aslinya tetap dipakai (disembunyiin) biar semua logic lama yang baca .value tetap jalan.
   function enhanceAssetCombo(sel) {
     if (!sel || sel._combo) return;
     sel._combo = true;
@@ -2988,7 +2840,6 @@
       }
       else if (e.key === 'Escape') { input.blur(); }
     });
-    // mousedown (bukan click) + preventDefault biar input gak keburu blur sebelum item kepilih
     list.addEventListener('mousedown', function (e) {
       e.preventDefault();
       const it = e.target.closest('.asset-combo-item');
@@ -3017,7 +2868,6 @@
     }
   }
 
-  // ================= MULTI-INPUT: baris Asset & Qty di form "Input Penggunaan" =================
   let usageItemRowSeq = 0;
 
   function usageItemRowHtml(rowId) {
@@ -3045,7 +2895,6 @@
     updateUsageItemRemoveButtons();
   }
 
-  // Tombol "✕" cuma muncul kalau barisnya lebih dari 1, biar minimal selalu ada 1 baris.
   function updateUsageItemRemoveButtons() {
     const rows = document.querySelectorAll('.usage-item-row');
     rows.forEach(function (row) {
@@ -3063,12 +2912,11 @@
 
   function submitUsageLog() {
     const msgEl = document.getElementById('usageFormMsg');
-    updateUsageFormVisibility(); // jaga-jaga kalau badge Devisi belum sempet ke-refresh pas email login baru kebaca
+    updateUsageFormVisibility();
     const dateStr = document.getElementById('usageDateInput').value || todayStr();
     const devisi = getCurrentUserDevisi();
     const stockData = getStockData();
 
-    // Kumpulin semua baris Asset+Qty yang keisi (multi-input sekaligus).
     const rowEls = Array.prototype.slice.call(document.querySelectorAll('.usage-item-row'));
     const items = [];
     for (let i = 0; i < rowEls.length; i++) {
@@ -3097,8 +2945,6 @@
   function proceedSubmitUsageLog(items, dateStr, devisi, stockData, msgEl) {
     const facilityRoot = FB_ROOT + '/' + currentFacility;
 
-    // Proses tiap baris berurutan (bukan paralel) biar transaction pengurangan
-    // stock-nya aman & gampang dilacak kalau ada yang gagal di tengah jalan.
     let chain = Promise.resolve();
     items.forEach(function (item) {
       chain = chain.then(function () {
@@ -3164,7 +3010,6 @@
     }, t('inv.confirm.yesDelete'));
   }
 
-  // ================= EDIT LOG (modal) =================
   function openEditLogModal(id) {
     if (!window.__authCanDelete) { showToast('🚫 ' + t('inv.err.noAccessEditData'), 'err'); return; }
     const logsData = usageLogsDataByFacility[currentFacility] || {};
@@ -3219,9 +3064,6 @@
       updatedAt: Date.now(), updatedBy: window.__authUserEmail || '-'
     };
 
-    // Kembalikan dulu qty lama ke asset lama (kalau assetnya masih ada di Stock),
-    // baru potong qty baru dari asset baru. Kalau asset-nya sama, efek bersihnya
-    // otomatis cuma selisihnya aja.
     let chain = Promise.resolve();
     if (oldAssetId && stockData[oldAssetId]) {
       chain = chain.then(function () {
@@ -3249,7 +3091,6 @@
     });
   }
 
-  // ================= SEARCH/FILTER RIWAYAT LOG =================
   let logFilterAssetQuery = '';
   let logFilterStart = '';
   let logFilterEnd = '';
@@ -3273,17 +3114,13 @@
     renderUsageLogTable(getLogsArr(currentFacility));
   }
 
-  // Wrapper: hitung sekali, lalu render ke Sub Menu "Log Activity Usage" (riwayat log)
-  // dan Sub Menu "Highlight Usage" (KPI + chart + tabel bulanan) sekaligus, buat
-  // Facility yang lagi aktif. Dua-duanya tetep harus update bareng tiap ada
-  // perubahan data, meskipun tampil di tab beda.
   function renderUsageDashboard() {
     const logsArr = getLogsArr(currentFacility);
     const highlightArr = dashboardDevisiFilter
       ? logsArr.filter(function (l) { return (l.devisi || getDevisiForEmail(l.createdBy)) === dashboardDevisiFilter; })
       : logsArr;
     renderUsageHighlight(highlightArr);
-    renderUsageLogTable(logsArr); // Riwayat Log tetep nampilin semua Devisi, filter breakdown cuma buat Highlight Usage
+    renderUsageLogTable(logsArr);
   }
 
   function applyDashboardDevisiFilter() {
@@ -3293,16 +3130,15 @@
 
   function renderUsageHighlight(logsArr) {
     const today = todayStr();
-    const monthPrefix = today.slice(0, 7); // YYYY-MM
+    const monthPrefix = today.slice(0, 7);
 
-    // Bulan lalu, dipakai buat hitung delta % vs sekarang
     const now = new Date();
     const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
     const lastMonthPrefix = lastMonthDate.getFullYear() + '-' + String(lastMonthDate.getMonth() + 1).padStart(2, '0');
 
     let todayTotal = 0, monthTotal = 0, lastMonthTotal = 0;
     const monthAssetTotals = {};
-    const dailyTotals = {}; // { 'YYYY-MM-DD': qty }
+    const dailyTotals = {};
 
     logsArr.forEach(function (log) {
       const d = log.workingDate || '';
@@ -3320,7 +3156,6 @@
     document.getElementById('kpiMonthUsage').innerText = monthTotal;
     document.getElementById('kpiAssetTouched').innerText = Object.keys(monthAssetTotals).length;
 
-    // Delta % Usage Bulan Ini vs Bulan Lalu
     const deltaEl = document.getElementById('kpiMonthDelta');
     if (lastMonthTotal === 0 && monthTotal === 0) {
       deltaEl.className = 'kpi-delta'; deltaEl.innerText = '';
@@ -3333,7 +3168,6 @@
       else { deltaEl.className = 'kpi-delta flat'; deltaEl.innerText = '± 0% dari bulan lalu'; }
     }
 
-    // Rata-rata pemakaian/hari per Asset, 30 hari terakhir (buat estimasi habis stock)
     const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 29);
     const cutoffStr = cutoff.getFullYear() + '-' + String(cutoff.getMonth() + 1).padStart(2, '0') + '-' + String(cutoff.getDate()).padStart(2, '0');
     const last30Totals = {}; // keyed by assetId
@@ -3346,7 +3180,6 @@
     const avgPerDayByAsset = {};
     Object.keys(last30Totals).forEach(function (id) { avgPerDayByAsset[id] = last30Totals[id] / 30; });
 
-    // Stock Menipis: KPI count + detail list dengan estimasi habis
     let lowStockCount = 0;
     const stockData = getStockData();
     const lowStockItems = [];
@@ -3358,8 +3191,6 @@
         lowStockCount++;
         const avgPerDay = avgPerDayByAsset[id] || 0;
         const daysRemaining = qty <= 0 ? 0 : (avgPerDay > 0 ? Math.floor(qty / avgPerDay) : null);
-        // Saran Reorder Qty: target stock = pemakaian rata-rata 30 hari ke depan (buffer 1 bulan).
-        // Kalau belum ada histori pemakaian, saranin balik ke Min Stock aja.
         const reorderQty = avgPerDay > 0
           ? Math.max(0, Math.ceil((avgPerDay * 30) - qty))
           : Math.max(0, minStock - qty);
@@ -3399,10 +3230,8 @@
           '</tr>';
       }).join('');
     }
-    // Cache buat export PDF/Excel laporan dashboard
     lastReportData.lowStock = lowStockItems;
 
-    // Top Asset Terpakai bulan ini (leaderboard + mini bar)
     const monthBody = document.getElementById('monthlyUsageBody');
     const monthKeys = Object.keys(monthAssetTotals).sort(function (a, b) { return monthAssetTotals[b] - monthAssetTotals[a]; });
     if (monthKeys.length === 0) {
@@ -3421,7 +3250,6 @@
       lastReportData.topAsset = monthKeys.map(function (name, idx) { return { rank: idx + 1, name: name, total: monthAssetTotals[name] }; });
     }
 
-    // Daily chart, sesuai rentang tanggal custom yang dipilih user
     const days = [];
     const startD = new Date(dailyUsageStartDate + 'T00:00:00');
     const endD = new Date(dailyUsageEndDate + 'T00:00:00');
@@ -3433,7 +3261,6 @@
 
     document.getElementById('dailyUsageChartTitle').innerText = '📊 Highlight Daily Usage (' + formatDateID(dailyUsageStartDate) + ' – ' + formatDateID(dailyUsageEndDate) + ')';
 
-    // Cache data chart harian (versi tanggal lengkap DD/MM/YYYY) buat export Excel
     lastReportData.dailyChart = {
       rows: days.map(function (d, idx) { return { date: formatDateID(d), qty: chartValues[idx] }; }),
       start: dailyUsageStartDate, end: dailyUsageEndDate
@@ -3463,7 +3290,6 @@
       });
     }
 
-    // ===== Trend Bulanan Usage (6 bulan terakhir) — buat lihat pola musiman =====
     const MONTH_LABELS_ID = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Ags', 'Sep', 'Okt', 'Nov', 'Des'];
     const monthlyTrendTotals = {}; // { 'YYYY-MM': qty }
     logsArr.forEach(function (log) {
@@ -3514,13 +3340,11 @@
     }
   }
 
-  // ===== Export Laporan ke Excel (Top Asset + Chart Daily Usage + Trend Bulanan) =====
   function exportUsageExcelReport() {
     if (typeof XLSX === 'undefined') { showToast('Library Excel belum ke-load, coba refresh halaman.', 'err'); return; }
 
     const wb = XLSX.utils.book_new();
 
-    // Sheet 1: Top Asset Terpakai (Bulan Ini)
     const topAssetRows = [['No', t('inv.th.asset'), t('inv.th.totalUsed')]];
     if (lastReportData.topAsset.length === 0) {
       topAssetRows.push(['-', t('inv.msg.noDataThisMonth'), '-']);
@@ -3531,21 +3355,18 @@
     wsTopAsset['!cols'] = [{ wch: 6 }, { wch: 35 }, { wch: 16 }];
     XLSX.utils.book_append_sheet(wb, wsTopAsset, 'Top Asset Bulan Ini');
 
-    // Sheet 2: Chart Highlight Daily Usage (sesuai rentang tanggal yang lagi ditampilin)
     const dailyRows = [[t('inv.th.date'), t('inv.th.qtyUsed')]];
     lastReportData.dailyChart.rows.forEach(function (r) { dailyRows.push([r.date, r.qty]); });
     const wsDaily = XLSX.utils.aoa_to_sheet(dailyRows);
     wsDaily['!cols'] = [{ wch: 14 }, { wch: 14 }];
     XLSX.utils.book_append_sheet(wb, wsDaily, 'Chart Daily Usage');
 
-    // Sheet 3: Trend Bulanan (6 Bulan Terakhir)
     const trendRows = [['Bulan', 'Total Qty Terpakai']];
     lastReportData.monthlyTrend.forEach(function (r) { trendRows.push([r.month, r.qty]); });
     const wsTrend = XLSX.utils.aoa_to_sheet(trendRows);
     wsTrend['!cols'] = [{ wch: 14 }, { wch: 18 }];
     XLSX.utils.book_append_sheet(wb, wsTrend, 'Trend Bulanan');
 
-    // Sheet 4: Saran Reorder (Stock Menipis)
     const reorderRows = [['Asset', 'Stock Saat Ini', 'Min Stock', 'Rata-rata Pemakaian/Hari', 'Estimasi Habis (hari)', 'Saran Reorder Qty']];
     if (lastReportData.lowStock.length === 0) {
       reorderRows.push(['-', '-', '-', '-', '-', t('inv.msg.noLowStockShort')]);
@@ -3562,7 +3383,6 @@
     XLSX.writeFile(wb, fname);
   }
 
-  // ================= EXPORT LAPORAN KE PDF =================
   function exportDashboardPdfReport() {
     if (typeof window.jspdf === 'undefined') { showToast('Library PDF belum ke-load, coba refresh halaman.', 'err'); return; }
     const doc = new window.jspdf.jsPDF();
@@ -3644,11 +3464,10 @@
 
   function formatDateID(dateStr) {
     if (!dateStr) return '-';
-    const parts = dateStr.split('-'); // YYYY-MM-DD
+    const parts = dateStr.split('-');
     return parts[2] + '/' + parts[1] + '/' + parts[0];
   }
 
-  // Terapkan filter tanggal custom buat chart "Highlight Daily Usage"
   function applyDailyUsageDateRange() {
     const startVal = document.getElementById('dailyRangeStart').value;
     const endVal = document.getElementById('dailyRangeEnd').value;
@@ -3663,7 +3482,6 @@
     const canEdit = !!window.__authCanDelete;
     const colCount = 6;
 
-    // Terapkan filter search (nama asset) & rentang tanggal kalau lagi aktif
     let filtered = logsArr;
     if (logFilterAssetQuery) {
       filtered = filtered.filter(function (l) { return (l.assetName || '').toLowerCase().indexOf(logFilterAssetQuery) !== -1; });
@@ -3676,7 +3494,6 @@
     }
     const isFiltering = !!(logFilterAssetQuery || logFilterStart || logFilterEnd);
 
-    // Recent logs table (terbaru dulu). Kalau lagi filter, tampilin lebih banyak baris.
     const sorted = filtered.slice().sort(function (a, b) { return (b.createdAt || 0) - (a.createdAt || 0); });
     const recent = sorted.slice(0, isFiltering ? 500 : 100);
     const logBody = document.getElementById('usageLogBody');
@@ -3697,8 +3514,6 @@
     }
   }
 
-  // ================= HELPERS =================
-  // Toast notifikasi in-app, pengganti alert() bawaan browser. type: 'ok' | 'err' | 'info'
   function showToast(message, type, durationMs) {
     type = type || 'info';
     const icon = type === 'ok' ? '✅' : (type === 'err' ? '⛔' : 'ℹ️');
@@ -3714,9 +3529,6 @@
     }, durationMs || (type === 'err' ? 7000 : 4500));
   }
 
-  // Modal konfirmasi in-app, pengganti confirm() bawaan browser.
-  // Dipanggil async: onConfirm cuma jalan kalau user klik "Ya, Lanjut".
-  // okLabel opsional buat ganti teks tombol (misal "Ya, Hapus").
   function showConfirmModal(message, onConfirm, okLabel) {
     const backdrop = document.getElementById('confirmModalBackdrop');
     document.getElementById('confirmModalMsg').innerText = message;
@@ -3724,7 +3536,6 @@
     const cancelBtn = document.getElementById('confirmModalCancelBtn');
     okBtn.innerText = okLabel || t('inv.confirm.yesContinue');
 
-    // Ganti listener tiap kali dipanggil (biar gak numpuk callback lama)
     const newOkBtn = okBtn.cloneNode(true);
     okBtn.parentNode.replaceChild(newOkBtn, okBtn);
     const newCancelBtn = cancelBtn.cloneNode(true);
@@ -3742,16 +3553,10 @@
     });
   }
 
-  // ==== FEEDBACK BOARD (Saran & Masukan) — shared board via Firebase, real-time di semua device/modul.
-  // Reuse fbDb yang sama dipakai buat sync Inventory Control (fbDb udah ke-init duluan lewat
-  // initInventoryFirebaseSync() begitu user login). ====
   const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
   let fbFeedbackEntries = [];
   let fbFeedbackListenerAttached = false;
 
-  // createdAt bisa berupa number (epoch ms, dari rest-time.html) ATAU string ISO
-  // (dari modul ini/inbound.html) karena papannya digabung dari beberapa modul.
-  // Normalisasi dulu ke angka biar sortir gak crash pas ketemu tipe campuran.
   function feedbackCreatedAtToTime(v) {
     if (typeof v === 'number') return v;
     if (typeof v === 'string') { const t = new Date(v).getTime(); return isNaN(t) ? 0 : t; }
@@ -3803,8 +3608,6 @@
     container.innerHTML = fbFeedbackEntries.map(buildFeedbackItemHtml).join('');
   }
 
-  // Preview ringkas (5 terbaru) yang nampil langsung di tab Dashboard (Highlight Usage),
-  // biar semua orang bisa lihat Saran & Masukan tanpa perlu buka popup dulu.
   function renderFeedbackDashboardPreview() {
     const container = document.getElementById('fbDashboardPreviewList');
     if (!container) return;
@@ -3862,7 +3665,6 @@
     });
   }
 
-  // ESC buat nutup popup/modal yang lagi kebuka (prioritas: yang paling "atas" duluan)
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape' && e.key !== 'Esc') return;
     const confirmBackdrop = document.getElementById('confirmModalBackdrop');
@@ -3892,12 +3694,6 @@
     if (sidebar && sidebar.classList.contains('open')) { toggleAppSidebar(); return; }
   });
 
-  // ENTER buat langsung Submit/Simpan tanpa harus klik tombol — berlaku di form
-  // "Input Penggunaan Asset/Pcs" (Log Activity Usage), dan di modal-modal Simpan
-  // (Tambah/Edit Asset Stock, Tambah/Edit Asset IT & NCA, Edit Log). Nggak berlaku
-  // di textarea, <select>, tombol, atau input
-  // tag-chip (kalau ada) karena Enter di situ udah punya fungsi sendiri (nambah
-  // baris baru / nambah tag / pilih dropdown).
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Enter') return;
     const el = e.target;
@@ -3905,7 +3701,7 @@
     const tag = el.tagName;
     if (tag === 'TEXTAREA' || tag === 'BUTTON' || tag === 'SELECT') return;
     if (el.type === 'file') return;
-    if (el.classList && el.classList.contains('tag-input-field')) return; // input tag-chip (kalau ada) - Enter-nya punya fungsi sendiri
+    if (el.classList && el.classList.contains('tag-input-field')) return;
 
     const confirmBackdrop = document.getElementById('confirmModalBackdrop');
     const itNcaModal = document.getElementById('assetItNcaModalBackdrop');
@@ -3936,10 +3732,8 @@
     return d.toLocaleDateString('id-ID', opts) + ' ' + d.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
   }
 
-  // ================= INIT =================
   document.getElementById('usageDateInput').value = todayStr();
   initUsageItemRows();
-  // Default filter chart Daily Usage: 14 hari terakhir
   (function initDailyUsageRange() {
     const end = new Date();
     const start = new Date();
@@ -3952,10 +3746,6 @@
   })();
   switchInvSubmenu('usage');
 
-  // Devisi (SOC/EHA) baru bisa dihitung akurat setelah window.__authUserEmail
-  // ke-set sama shell/parent halaman — kadang ini kejadian ASYNC, sesudah render
-  // form pertama kali. Makanya di-polling ringan tiap 500ms: begitu emailnya
-  // kebaca (atau berubah), badge Devisi otomatis ke-refresh.
   (function watchAuthEmailForDevisi() {
     let lastSeenEmail = window.__authUserEmail || null;
     setInterval(function () {
@@ -3966,9 +3756,6 @@
     }, 500);
   })();
 
-  // Baru mulai sync Firebase SETELAH status login kevalidasi (biar gak kena
-  // permission-denied karena Security Rules butuh auth != null) - pola yang sama
-  // dipakai di modul lain (outbound.html, inbound.html, dst).
   if (window.firebase && firebase.auth) {
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) { initInventoryFirebaseSync(); initFeedbackSync(); }
@@ -3977,13 +3764,8 @@
 </script>
 
 <script>
-  // ==== APP-SHELL BRIDGE ====
-  // Kalau halaman ini dibuka langsung (bukan lewat index.html app-shell), link sidebar
-  // tetap jalan normal (pindah halaman biasa). Tapi kalau dibuka di dalam iframe shell,
-  // klik link ke modul lain di-intercept dan diteruskan ke shell lewat postMessage,
-  // biar shell yang toggle tab tanpa reload sama sekali.
   (function () {
-    if (window.self === window.top) return; // diakses langsung, biarin behavior default
+    if (window.self === window.top) return;
 
     function hijack(id, tab, submenu) {
       var el = document.getElementById(id);
@@ -4000,15 +3782,12 @@
     hijack("navToOutboundAging", "outbound", "aging");
     hijack("navToOutboundOccupancy", "outbound", "occupancy");
 
-    // Terima perintah pindah submenu dari shell (mis. link lintas-tab yang nunjuk ke
-    // Inventory Control submenu tertentu)
     window.addEventListener("message", function (e) {
       var data = e.data;
       if (!data || data.source !== "pkydc") return;
       if (data.type === "setSubmenu" && data.submenu) {
         switchInvSubmenu(data.submenu);
       }
-      // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
       if (data.type === "collapseSidebarGroups") collapseAllSidebarGroups();
     });
   })();
