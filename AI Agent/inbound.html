@@ -6,14 +6,11 @@
   <meta name="robots" content="noindex, nofollow, noarchive">
   <title>Inbound - Internal Palangka Raya DC</title>
   <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
-  <!-- PapaParse CDN for CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-  <!-- FIREBASE SDK (app+auth dibutuhkan auth-guard.js, database dibutuhkan buat sync LH Tracking & Forecast MP) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
   <style>
-    /* ==== TEMA MINIMALIS HITAM-PUTIH — font stack default Tailwind (sans) ==== */
     :root {
       --tw-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
         "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
@@ -69,7 +66,6 @@
       color: var(--text-sidebar-muted); margin: 16px 4px 9px; padding: 0 4px;
     }
     .app-sidebar-group-label:first-child { margin-top: 0; }
-    /* Group label yang bisa diklik buat Open/Hide (collapsible) */
     .app-sidebar-group-label.collapsible {
       display: flex; align-items: center; justify-content: space-between;
       cursor: pointer; user-select: none; border-radius: 6px; padding: 6px 4px;
@@ -98,7 +94,6 @@
     }
     .app-sidebar-footer button:hover { background: #1f1f1f; }
 
-    /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
     .app-sidebar-lang { margin-bottom: 10px; }
     .app-sidebar-lang label {
       display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
@@ -178,8 +173,6 @@
     .fb-board-item-msg { font-size: 13px; color: #e5e5e5; line-height: 1.5; white-space: pre-wrap; word-break: break-word; margin: 0; }
     .fb-board-empty { padding: 30px 16px; text-align: center; color: var(--text-sidebar-muted); font-size: 12.5px; }
 
-    /* ===== Preview Saran & Masukan di halaman utama — pakai template card yang sama
-       kayak di popup, tapi di-override jadi tema terang biar nyatu sama panel lain ===== */
     .fb-dashboard-preview-card {
       background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 15px; margin-bottom: 20px;
     }
@@ -207,7 +200,6 @@
     .header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
     h2 { margin: 0; color: #1e3a8a; display: flex; align-items: center; gap: 8px; }
     
-    /* Live Refresh & Freshness Bar */
     .freshness-bar { display: flex; align-items: center; gap: 15px; font-size: 13px; font-weight: 600; background: #f8fafc; padding: 8px 16px; border-radius: 20px; border: 1px solid #e2e8f0; }
     .freshness-tag { padding: 4px 10px; border-radius: 12px; }
     .fresh-green { background: #dcfce7; color: #15803d; }
@@ -227,7 +219,6 @@
     .btn-clear { background-color: #ef4444; color: white; padding: 10px 16px; border-radius: 6px; border: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
     .btn-clear:hover { background-color: #dc2626; }
     
-    /* KPI Cards Grid */
     .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; margin-bottom: 20px; }
     .kpi-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; text-align: center; cursor: pointer; transition: transform 0.15s, box-shadow 0.15s; }
     .kpi-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
@@ -235,7 +226,6 @@
     .kpi-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: #64748b; font-weight: 700; margin-bottom: 4px; }
     .kpi-value { font-size: 22px; font-weight: 800; color: #0f172a; }
     
-    /* Critical Action Center & Predictive Panel */
     .panels-wrapper { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 15px; margin-bottom: 20px; }
     .panel-box { border-radius: 8px; padding: 15px; border: 1px solid; max-height: 250px; overflow-y: auto; }
     .panel-action { background-color: #fef2f2; border-color: #fecaca; }
@@ -250,14 +240,12 @@
     .action-card.orange { border-left-color: #f97316; }
     .action-card.yellow { border-left-color: #eab308; }
     
-    /* Vendor Performance Section */
     .performance-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-bottom: 20px; }
     .perf-card { background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; font-size: 12px; }
     .perf-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
     .perf-table th, .perf-table td { text-align: left; padding: 6px 10px; border-bottom: 1px solid #f1f5f9; }
     .perf-table th { background-color: #f8fafc; color: #475569; font-weight: 700; }
 
-    /* Forecast & Manpower Panel */
     .forecast-card { background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; padding: 15px; margin-bottom: 20px; }
     .forecast-header { font-weight: 700; font-size: 14px; color: #0369a1; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
     .forecast-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-bottom: 15px; }
@@ -268,7 +256,6 @@
     .forecast-editable:hover { background: #fef9c3; }
     .inline-edit-input { width: 100%; font-size: 18px; font-weight: 800; border: 1px solid #ca8a04; border-radius: 4px; padding: 2px 6px; color: #854d0e; outline: none; }
 
-    /* MP Tabs (By Actual / By Projection) */
     .mp-tabs { display: flex; gap: 8px; margin-bottom: 14px; }
     .mp-tab-btn { background: #ffffff; color: #0369a1; border: 1px solid #bae6fd; padding: 8px 16px; border-radius: 6px; font-weight: 700; font-size: 12px; cursor: pointer; transition: 0.15s; }
     .mp-tab-btn:hover { background: #e0f2fe; }
@@ -280,30 +267,25 @@
     .projection-table-toggle-bar { display: flex; justify-content: space-between; align-items: center; background: #0369a1; color: #ffffff; padding: 10px 14px; border-radius: 6px 6px 0 0; font-weight: 700; font-size: 12px; cursor: pointer; user-select: none; }
     .projection-table-toggle-bar:hover { background: #075985; }
 
-    /* Count Head Calculator Table Styling */
     .ch-wrapper { overflow-x: auto; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 6px; }
     .ch-table { width: 100%; border-collapse: collapse; font-size: 12px; }
     .ch-table th { background-color: #ff8c00; color: #ffffff; font-weight: 700; padding: 8px; border: 1px solid #e5e7eb; text-align: center; }
     .ch-table td { padding: 6px 8px; border: 1px dashed #cbd5e1; text-align: center; font-weight: 600; color: #1e293b; }
     
-    /* Shift Header Row Dark Styling */
     .ch-shift-row { background-color: #0b1e42 !important; color: #ffffff !important; }
     .ch-shift-row td { background-color: #0b1e42 !important; color: #ffffff !important; font-weight: 800; border-color: #1e293b !important; }
     .ch-shift-label { font-weight: 800; color: #ffffff; }
 
-    /* Editable cells in Count Head */
     .ch-editable-cell { background-color: #f8fafc; cursor: pointer; transition: background-color 0.2s; }
     .ch-editable-cell:hover { background-color: #fef08a !important; }
     .ch-input { width: 45px; text-align: center; font-size: 12px; font-weight: 700; border: 1px solid #2563eb; border-radius: 3px; outline: none; padding: 2px; }
 
-    /* Filter Bar */
     .filter-bar { background: #f8fafc; border: 1px solid #e2e8f0; padding: 15px; border-radius: 8px; margin-bottom: 20px; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
     .filter-item { display: flex; flex-direction: column; gap: 4px; font-size: 12px; font-weight: 600; color: #475569; }
     .filter-item input, .filter-item select { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; background: white; }
     .btn-reset-filter { background: #64748b; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-weight: bold; cursor: pointer; align-self: flex-end; margin-top: auto; }
     .btn-reset-filter:hover { background: #475569; }
 
-    /* Table Styles */
     .table-wrapper { overflow-x: auto; max-height: 60vh; border: 1px solid #cbd5e1; border-radius: 6px; }
     table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12px; white-space: nowrap; }
     th, td { border-bottom: 1px solid #cbd5e1; border-right: 1px solid #cbd5e1; padding: 8px 10px; text-align: center; background-color: #fff; }
@@ -311,7 +293,6 @@
     tr:nth-child(even) td { background-color: #f8fafc; }
     tr:hover td { background-color: #f1f5f9; }
 
-    /* Sticky Freeze Columns */
     .freeze-col { position: sticky !important; z-index: 3; }
     th.freeze-col { z-index: 4 !important; background-color: #1e40af !important; }
     .freeze-border { border-right: 3px solid #1e40af !important; }
@@ -325,7 +306,6 @@
     .col-7 { left: 720px; }
     .col-8 { left: 815px; }
 
-    /* Badges Status & Remarks */
     .badge { padding: 4px 8px; border-radius: 12px; color: white; font-weight: bold; font-size: 11px; display: inline-block; }
     .bg-early { background-color: #10b981; }
     .bg-ontime { background-color: #3b82f6; }
@@ -339,13 +319,11 @@
     .rm-completed { background-color: #dcfce7; color: #15803d; border: 1px solid #86efac; } 
     .rm-pending { background-color: #ffedd5; color: #c2410c; border: 1px solid #fed7aa; } 
 
-    /* Aging Indicator Badges */
     .aging-tag { font-weight: 700; font-size: 11px; padding: 2px 6px; border-radius: 4px; display: inline-block; }
     .aging-green { background: #dcfce7; color: #166534; }
     .aging-yellow { background: #fef9c3; color: #854d0e; }
     .aging-red { background: #fee2e2; color: #991b1b; }
   
-    /* Toast notifikasi in-app (ganti alert() bawaan browser) */
     .toast-stack {
       position: fixed; top: 16px; right: 16px; z-index: 9999;
       display: flex; flex-direction: column; gap: 10px; max-width: 340px;
@@ -372,7 +350,6 @@
 <script src="auth-guard.js"></script>
 <div class="toast-stack" id="toastStack"></div>
 <script>
-  // Toast notifikasi in-app, pengganti alert() bawaan browser. type: 'ok' | 'err' | 'info'
   function showToast(message, type, durationMs) {
     type = type || 'info';
     var icon = type === 'ok' ? '✅' : (type === 'err' ? '⛔' : 'ℹ️');
@@ -397,7 +374,6 @@
 
 
 <script>
-  // ==== I18N ENGINE (Bahasa, English, 日本語, 中文) ====
   const APP_I18N = {
   "lang.label": {
     "id": "Bahasa",
@@ -1367,14 +1343,12 @@
     const sel = document.getElementById('appLangSelect');
     if (sel) sel.value = lang;
     applyStaticI18n();
-    // Re-render semua konten dinamis (tabel, badge, dropdown filter, dll) biar ikut translate
     if (typeof renderAll === 'function') renderAll();
     if (typeof renderCountHeadTable === 'function') renderCountHeadTable();
     if (typeof renderProjectionTable === 'function') renderProjectionTable();
     if (typeof updateDropdownOptions === 'function') updateDropdownOptions();
   }
-
-  // Terapkan bahasa tersimpan begitu DOM siap (sebelum script lain yang render data jalan)
+  
   document.addEventListener('DOMContentLoaded', function () {
     applyStaticI18n();
     const sel = document.getElementById('appLangSelect');
@@ -1382,7 +1356,6 @@
   });
 </script>
 
-<!-- ==== SIDEBAR NAVIGASI ANTAR MODUL ==== -->
 <button class="hamburger-btn" onclick="toggleAppSidebar()" title="Buka Menu" data-i18n-title="sidebar.openMenu">☰</button>
 <div class="sidebar-backdrop" id="appSidebarBackdrop" onclick="toggleAppSidebar()"></div>
 <nav class="app-sidebar" id="appSidebar">
@@ -1444,7 +1417,6 @@
   </div>
 </nav>
 
-<!-- ==== PAPAN SARAN & MASUKAN (realtime, 1 papan sama buat semua modul) ==== -->
 <div class="fb-board-backdrop" id="fbBoardBackdrop" onclick="if(event.target===this) closeFeedbackBoard()">
   <div class="fb-board-card">
     <div class="fb-board-header">
@@ -1485,7 +1457,6 @@
 </div>
 
 <div class="container">
-  <!-- Header Bar -->
   <div class="header-bar">
     <h2>🚚 <span data-i18n="inb.header.title">Line Haul Tracking &amp; Manpower Planning Palangka Raya DC</span></h2>
     <div class="header-right">
@@ -1503,7 +1474,6 @@
     </div>
   </div>
 
-  <!-- ==================== PREVIEW SARAN & MASUKAN (semua orang bisa lihat) ==================== -->
   <div class="fb-dashboard-preview-card">
     <div class="fb-dashboard-preview-head">
       <span data-i18n="feedback.dashboardPreview.title">💬 Saran & Masukan Terbaru</span>
@@ -1514,24 +1484,19 @@
     </div>
   </div>
 
-  <!-- ==================== MODULE: FORECAST INBOUND & MANPOWER PLANNING ==================== -->
-  <!-- Forecast & Manpower Planning Panel -->
   <div class="forecast-card">
     <div class="forecast-header">
       <span data-i18n="inb.forecast.header">📈 Inbound Forecast & Manpower Planning</span>
       <span style="font-size:11px; font-weight:600; color:#0284c7;" data-i18n="inb.forecast.note">*(Klik/Double-click angka pada kolom DW Reg, DW OC, Operator, atau Actual Operator Dedicated untuk mengubah Manpower)*</span>
     </div>
     
-    <!-- Row 3 Inbound Forecast Cards -->
     <div class="forecast-grid">
-      <!-- Total Active Parcel -->
       <div class="forecast-item">
         <div class="forecast-title" data-i18n="inb.forecast.activeParcel.title">📦 Total Active Parcel (In-Flight)</div>
         <div class="forecast-value" id="fctActiveParcel">0</div>
         <div style="font-size:10px; color:#64748b; margin-top:2px;" data-i18n="inb.forecast.activeParcel.desc">Proses Bongkar, Pending, Transporting & Loading</div>
       </div>
       
-      <!-- Editable Pending Banjarmasin -->
       <div class="forecast-item">
         <div class="forecast-title" data-i18n="inb.forecast.pendingBjm.title">🏭 Pending Loading Banjarmasin 2 DC</div>
         <div class="forecast-editable" ondblclick="enableInlineEdit('pendingBanjarmasin')" title="Double click untuk edit langsung" data-i18n-title="inb.forecast.editHintTitle">
@@ -1541,7 +1506,6 @@
         </div>
       </div>
       
-      <!-- Editable Pending Palangka -->
       <div class="forecast-item">
         <div class="forecast-title" data-i18n="inb.forecast.pendingPky.title">🏢 Pending Packed Palangka Raya DC</div>
         <div class="forecast-editable" ondblclick="enableInlineEdit('pendingPalangka')" title="Double click untuk edit langsung" data-i18n-title="inb.forecast.editHintTitle">
@@ -1552,13 +1516,11 @@
       </div>
     </div>
 
-    <!-- Sub Tabs: By Actual Inbound / By Projection Inbound -->
     <div class="mp-tabs">
       <button type="button" class="mp-tab-btn active" id="tabBtnActual" onclick="switchMpTab('actual')">📊 <span data-i18n="inb.tab.actual">By Actual Inbound</span></button>
       <button type="button" class="mp-tab-btn" id="tabBtnProjection" onclick="switchMpTab('projection')">📈 <span data-i18n="inb.tab.projection">By Projection Inbound</span></button>
     </div>
 
-    <!-- Tab Panel: By Actual Inbound (Count Head Calculator Table) -->
     <div class="mp-panel active" id="mpPanelActual">
       <div class="projection-table-toggle-bar" onclick="toggleActualTable()">
         <span data-i18n="inb.actualTable.toggle">📋 Detail Tabel Manpower per Shift</span>
@@ -1581,13 +1543,11 @@
             </tr>
           </thead>
           <tbody id="chTableBody">
-            <!-- Rows will be dynamically rendered -->
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Tab Panel: By Projection Inbound -->
     <div class="mp-panel" id="mpPanelProjection">
       <div class="projection-filter-bar">
         <div class="filter-item">
@@ -1635,15 +1595,12 @@
             </tr>
           </thead>
           <tbody id="projectionTableBody">
-            <!-- Rows will be dynamically rendered -->
           </tbody>
         </table>
       </div>
     </div>
   </div>
 
-  <!-- ==================== MODULE: TRACKING LINE HAUL ==================== -->
-  <!-- KPI Cards Grid -->
   <div class="kpi-grid">
     <div class="kpi-card" onclick="filterByKpi('ALL')">
       <div class="kpi-title" data-i18n="kpi.totalTrip">Total Trip</div>
@@ -1679,9 +1636,7 @@
     </div>
   </div>
 
-  <!-- Panels Wrapper -->
   <div class="panels-wrapper">
-    <!-- Critical Action Center -->
     <div class="panel-box panel-action">
       <div class="panel-header" style="color: #991b1b;">
         <span data-i18n="panel.criticalAction.title">🚨 Critical Action Center</span>
@@ -1692,7 +1647,6 @@
       </div>
     </div>
 
-    <!-- Predictive Risk Alert -->
     <div class="panel-box panel-predictive">
       <div class="panel-header" style="color: #854d0e;">
         <span data-i18n="panel.predictive.title">🔮 Predictive Risk Alert</span>
@@ -1703,7 +1657,6 @@
       </div>
     </div>
 
-    <!-- SLA Compliance Center -->
     <div class="panel-box panel-sla">
       <div class="panel-header" style="color: #166534;">
         <span data-i18n="panel.sla.title">📊 SLA Compliance Center</span>
@@ -1728,7 +1681,6 @@
     </div>
   </div>
 
-  <!-- Vendor Performance -->
   <div class="performance-grid">
     <div class="perf-card">
       <strong style="font-size:14px; color:#1e3a8a;" data-i18n="vendor.title">🏢 Vendor / Agency Performance</strong>
@@ -1742,7 +1694,6 @@
   </div>
 
 
-  <!-- Filter & Search Bar -->
   <div class="filter-bar">
     <div class="filter-item" style="flex: 2; min-width: 180px;">
       <label data-i18n="filter.searchLabel">🔎 Search LT / Driver / Plat / Vendor</label>
@@ -1788,12 +1739,10 @@
     <button class="btn-reset-filter" id="btnResetFilter">🔄 <span data-i18n="filter.reset">Reset Filter</span></button>
   </div>
 
-  <!-- Table Section -->
   <div class="table-wrapper">
     <table id="dashboardTable">
       <thead>
         <tr>
-          <!-- Sticky Freeze Columns -->
           <th class="freeze-col col-0" data-i18n="th.tanggal">Tanggal</th>
           <th class="freeze-col col-1" data-i18n="th.ltNumber">LT Number</th>
           <th class="freeze-col col-2" data-i18n="th.route">Route</th>
@@ -1804,7 +1753,6 @@
           <th class="freeze-col col-7" data-i18n="th.typeUnit">Type Unit</th>
           <th class="freeze-col col-8 freeze-border" data-i18n="th.vehiclePlate">Vehicle Plate Number</th>
           
-          <!-- Scrollable Columns -->
           <th data-i18n="th.stdOrigin">STD Origin</th>
           <th data-i18n="th.atdOrigin">ATD Origin</th>
           <th data-i18n="th.staDest">STA Destination</th>
@@ -1833,15 +1781,12 @@
   let lastDataUploadTime = null;
   let refreshTimerSeconds = 60;
 
-  // Editable Forecast Values
   let manualForecast = {
     pendingBanjarmasin: 0,
     pendingPalangka: 0
   };
 
-  // Initial Count Head Master Data (Persis sesuai gambar)
   let countHeadData = [
-    // Shift 3 Header
     { id: 1, shift: 'Shift 3', clockIn: '16:00', clockOut: '1:00', dwReg: 11, dwOc: 0, operator: 9, isShiftHeader: true },
     { id: 2, shift: '', clockIn: '17:00', clockOut: '2:00', dwReg: 0, dwOc: 13, operator: 0, isShiftHeader: false },
     { id: 3, shift: '', clockIn: '18:00', clockOut: '3:00', dwReg: 0, dwOc: 1, operator: 0, isShiftHeader: false },
@@ -1851,7 +1796,6 @@
     { id: 7, shift: '', clockIn: '22:00', clockOut: '7:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
     { id: 8, shift: '', clockIn: '23:00', clockOut: '8:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
 
-    // Shift 1 Header
     { id: 9, shift: 'Shift 1', clockIn: '0:00', clockOut: '9:00', dwReg: 14, dwOc: 11, operator: 11, isShiftHeader: true },
     { id: 10, shift: '', clockIn: '1:00', clockOut: '10:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
     { id: 11, shift: '', clockIn: '2:00', clockOut: '11:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
@@ -1861,7 +1805,6 @@
     { id: 15, shift: '', clockIn: '6:00', clockOut: '15:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
     { id: 16, shift: '', clockIn: '7:00', clockOut: '16:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
 
-    // Shift 2 Header
     { id: 17, shift: 'Shift 2', clockIn: '8:00', clockOut: '17:00', dwReg: 10, dwOc: 3, operator: 19, isShiftHeader: true },
     { id: 18, shift: '', clockIn: '9:00', clockOut: '18:00', dwReg: 0, dwOc: 10, operator: 0, isShiftHeader: false },
     { id: 19, shift: '', clockIn: '10:00', clockOut: '19:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
@@ -1871,7 +1814,6 @@
     { id: 23, shift: '', clockIn: '14:00', clockOut: '23:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
     { id: 24, shift: '', clockIn: '15:00', clockOut: '0:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false },
 
-    // Shift 3 Header (Sesi Berikutnya)
     { id: 25, shift: 'Shift 3', clockIn: '16:00', clockOut: '1:00', dwReg: 11, dwOc: 0, operator: 9, isShiftHeader: true },
     { id: 26, shift: '', clockIn: '17:00', clockOut: '2:00', dwReg: 0, dwOc: 9, operator: 0, isShiftHeader: false },
     { id: 27, shift: '', clockIn: '18:00', clockOut: '3:00', dwReg: 0, dwOc: 1, operator: 0, isShiftHeader: false },
@@ -1882,11 +1824,8 @@
     { id: 32, shift: '', clockIn: '23:00', clockOut: '8:00', dwReg: 0, dwOc: 0, operator: 0, isShiftHeader: false }
   ];
 
-  // Manpower calculation constant: 950 parcel per MP
   const MP_CAPACITY_PER_PERSON = 950;
 
-  // Projection Inbound Dataset (Agustus - September 2026)
-  // Format tanggal disimpan sebagai YYYY-MM-DD supaya cocok dengan input type="date"
   let projectionInboundData = [
     { week: 31, month: 8, date: '2026-08-01', dateDisplay: '01-Aug-2026', inbound: 123054 },
     { week: 31, month: 8, date: '2026-08-02', dateDisplay: '02-Aug-2026', inbound: 121169 },
@@ -1950,31 +1889,22 @@
     { week: 40, month: 9, date: '2026-09-29', dateDisplay: '29-Sep-2026', inbound: null },
     { week: 40, month: 9, date: '2026-09-30', dateDisplay: '30-Sep-2026', inbound: null }
   ];
-  // Tambahkan field operator (Actual Operator Dedicated) default 0 untuk setiap baris projection
   projectionInboundData.forEach(row => { row.operator = row.operator || 0; });
 
   const THRESHOLDS = {
-    TRANSPORTING: 390,      // 6 jam 30 menit
-    PENDING_BONGKAR: 30,    // 30 menit
-    PROSES_BONGKAR: 120     // 2 jam
+    TRANSPORTING: 390,
+    PENDING_BONGKAR: 30,
+    PROSES_BONGKAR: 120
   };
 
-  // ==== FIREBASE SYNC (biar data LH Tracking & Forecast MP kebaca real-time di semua
-  // device, sama kayak modul Rest Time Monitoring / Performance Bagger / Outbound
-  // Monitoring. Sebelumnya modul Inbound ini belum konek Firebase sama sekali, jadi
-  // semua data (hasil import CSV, edit Count Head, edit Projection Inbound, edit
-  // Pending Loading/Packed) cuma nyangkut di browser device itu doang & ilang pas
-  // di-refresh / gak keliatan di device lain). ====
   let fbDb = null;
-  const FB_ROOT = "prDcInboundTracking"; // node root khusus modul Inbound di Realtime Database
+  const FB_ROOT = "prDcInboundTracking";
 
   function sanitizeFbKey(key) {
-    // Key Firebase Realtime Database gak boleh mengandung karakter . # $ [ ] /
     return String(key).replace(/[.#$\[\]\/]/g, '_');
   }
 
   function serializeTrip(t) {
-    // Date object gak bisa disimpen langsung ke Firebase, jadi diubah ke ISO string dulu
     return Object.assign({}, t, {
       stdOrigin: t.stdOrigin ? t.stdOrigin.toISOString() : null,
       staDest: t.staDest ? t.staDest.toISOString() : null,
@@ -1985,7 +1915,6 @@
   }
 
   function deserializeTrip(t) {
-    // Balikin ISO string dari Firebase jadi Date object lagi (pakai parseDate yang udah ada)
     return Object.assign({}, t, {
       stdOrigin: parseDate(t.stdOrigin),
       staDest: parseDate(t.staDest),
@@ -1996,7 +1925,7 @@
   }
 
   function initInboundFirebaseSync() {
-    if (fbDb) return; // udah pernah init, gak perlu ulang
+    if (fbDb) return;
     try {
       fbDb = firebase.database();
     } catch (e) {
@@ -2004,10 +1933,6 @@
       return;
     }
 
-    // Seed dataset default (SEKALI SAJA, kalau node-nya masih kosong di Firebase) biar
-    // device pertama yang buka nanem starting dataset Count Head & Projection Inbound
-    // bawaan ke database online — device-device berikutnya narik value yang SAMA dari
-    // Firebase, bukan masing-masing punya default lokal sendiri yang bisa beda-beda.
     fbDb.ref(FB_ROOT + '/countHead').once('value').then(function (snap) {
       if (!snap.exists()) fbDb.ref(FB_ROOT + '/countHead').set(countHeadData);
     }).catch(function (err) { console.error('Gagal cek/seed Count Head:', err); });
@@ -2020,7 +1945,6 @@
       if (!snap.exists()) fbDb.ref(FB_ROOT + '/manualForecast').set(manualForecast);
     }).catch(function (err) { console.error('Gagal cek/seed Manual Forecast:', err); });
 
-    // Sinkron LH Tracking (hasil import CSV) - real-time, semua device lihat data yang sama
     fbDb.ref(FB_ROOT + '/lhTracking').on('value', function (snap) {
       const val = snap.val() || {};
       const merged = {};
@@ -2033,21 +1957,18 @@
       renderAll();
     }, function (err) { console.error('Gagal baca data LH Tracking dari Firebase:', err); });
 
-    // Sinkron Count Head Calculator (By Actual Inbound)
     fbDb.ref(FB_ROOT + '/countHead').on('value', function (snap) {
       const val = snap.val();
       if (Array.isArray(val) && val.length) countHeadData = val;
       renderCountHeadTable();
     }, function (err) { console.error('Gagal baca data Count Head dari Firebase:', err); });
 
-    // Sinkron Projection Inbound (termasuk kolom Actual Operator Dedicated yang bisa diedit)
     fbDb.ref(FB_ROOT + '/projectionInbound').on('value', function (snap) {
       const val = snap.val();
       if (Array.isArray(val) && val.length) projectionInboundData = val;
       renderProjectionTable();
     }, function (err) { console.error('Gagal baca data Projection Inbound dari Firebase:', err); });
 
-    // Sinkron Pending Loading Banjarmasin 2 DC & Pending Packed Palangka Raya DC
     fbDb.ref(FB_ROOT + '/manualForecast').on('value', function (snap) {
       const val = snap.val();
       if (val) manualForecast = val;
@@ -2055,7 +1976,6 @@
     }, function (err) { console.error('Gagal baca data Pending Loading/Packed dari Firebase:', err); });
   }
 
-  // Upload Listener
   document.getElementById('csvInput').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -2086,8 +2006,7 @@
       }
     }
   });
-
-  // Dynamic Filters Listener
+  
   ['filterSearch', 'filterDate', 'filterVendor', 'filterStatus', 'filterRemarks', 'filterVehicle'].forEach(id => {
     document.getElementById(id).addEventListener('change', renderAll);
     document.getElementById(id).addEventListener('keyup', renderAll);
@@ -2104,14 +2023,12 @@
     renderAll();
   });
 
-  // Projection Inbound Date Filter Listener
   document.getElementById('filterProjectionDate').addEventListener('change', renderProjectionTable);
   document.getElementById('btnResetProjectionFilter').addEventListener('click', () => {
     document.getElementById('filterProjectionDate').value = '';
     renderProjectionTable();
   });
 
-  // Auto Refresh Timer
   setInterval(() => {
     refreshTimerSeconds--;
     if (refreshTimerSeconds <= 0) {
@@ -2137,7 +2054,7 @@
   function processAndMergeData(rows) {
     const currentCsvTripNums = new Set();
     const currentCsvGroups = {};
-    const fbUpdates = {}; // dikumpulin dulu, di-push sekaligus ke Firebase di akhir
+    const fbUpdates = {};
 
     rows.forEach(row => {
       const routeName = row['LH Trip Name'] || '';
@@ -2209,9 +2126,6 @@
     updateDropdownOptions();
     renderAll();
 
-    // Push hasil import ke Firebase biar semua device (bukan cuma browser ini) lihat
-    // data yang sama. Kalau koneksi/Firebase belum siap, dashboard tetep kepakai
-    // (data lokal di atas udah kerender), cuma gak ke-sync ke device lain.
     if (fbDb && Object.keys(fbUpdates).length) {
       fbDb.ref().update(fbUpdates).catch(function (err) {
         console.error('Gagal sync data LH Tracking ke database online:', err);
@@ -2258,7 +2172,6 @@
     renderAll();
   }
 
-  /* Inline Editing Functions for Top Forecast */
   function enableInlineEdit(key) {
     const isBanjarmasin = key === 'pendingBanjarmasin';
     const spanVal = document.getElementById(isBanjarmasin ? 'fctPendingBanjarmasin' : 'fctPendingPalangka');
@@ -2311,9 +2224,6 @@
     }
   }
 
-  /* Count Head Table Render & Editing Functions (8-Hour Rolling Cumulative Sum) */
-  // Translate label "Shift N" di data Count Head (data-nya tetep canonical 'Shift 1'/'Shift 2'/'Shift 3',
-  // cuma tampilannya ikut bahasa aktif)
   function trShiftLabel(raw) {
     if (!raw) return raw;
     const m = /^Shift (\d+)$/.exec(raw);
@@ -2325,12 +2235,11 @@
     tbody.innerHTML = '';
 
     countHeadData.forEach((row, index) => {
-      // Menghitung akumulasi Manpower selama 8 jam kerja (8 jam ke belakang)
       let sumDwReg = 0;
       let sumDwOc = 0;
       let sumOperator = 0;
 
-      const startIndex = Math.max(0, index - 7); // Ambil window hingga 8 jam
+      const startIndex = Math.max(0, index - 7);
       for (let i = startIndex; i <= index; i++) {
         sumDwReg += countHeadData[i].dwReg || 0;
         sumDwOc += countHeadData[i].dwOc || 0;
@@ -2366,7 +2275,7 @@
     const currentValue = row[field] || '';
 
     const cell = event.currentTarget;
-    if (cell.querySelector('input')) return; // Sudah terbuka input
+    if (cell.querySelector('input')) return;
 
     const input = document.createElement('input');
     input.type = 'number';
@@ -2412,7 +2321,6 @@
     renderProjectionTable();
   }
 
-  /* Switch Tab Panel: By Actual Inbound <-> By Projection Inbound */
   function switchMpTab(tab) {
     const btnActual = document.getElementById('tabBtnActual');
     const btnProjection = document.getElementById('tabBtnProjection');
@@ -2432,7 +2340,6 @@
     }
   }
 
-  /* Toggle Show/Hide Tabel Manpower per Shift (By Actual Inbound) */
   function toggleActualTable() {
     const wrapper = document.getElementById('actualTableWrapper');
     const icon = document.getElementById('actualToggleIcon');
@@ -2447,7 +2354,6 @@
     }
   }
 
-  /* Toggle Show/Hide Tabel Detail Projection Inbound */
   function toggleProjectionTable() {
     const wrapper = document.getElementById('projectionTableWrapper');
     const icon = document.getElementById('projectionToggleIcon');
@@ -2462,19 +2368,12 @@
     }
   }
 
-  /* By Projection Inbound Table & Manpower Needs Calculation
-     Formula: Needs Daily Worker = (Projection Inbound + 30%) / 950 per MP - Actual Operator Dedicated */
   function renderProjectionTable() {
     const tbody = document.getElementById('projectionTableBody');
     const filterDate = document.getElementById('filterProjectionDate').value;
 
     tbody.innerHTML = projectionInboundData.map((row, index) => {
       const isMatch = filterDate && row.date === filterDate;
-      // Pakai != (bukan !==) supaya undefined ikut ke-treat sama kayak null.
-      // Firebase RTDB otomatis BUANG field yang value-nya null pas di-.set(),
-      // jadi row yang tadinya inbound: null bakal balik sebagai row TANPA
-      // field inbound sama sekali (alias undefined) begitu dibaca lagi -
-      // ini yang bikin .toLocaleString() error "Cannot read properties of undefined".
       const plus30 = row.inbound != null ? Math.round(row.inbound * 1.3) : null;
       const operatorVal = row.operator || 0;
       const needsDw = row.inbound != null ? Math.max(0, Math.ceil(plus30 / MP_CAPACITY_PER_PERSON) - operatorVal) : null;
@@ -2491,7 +2390,6 @@
       `;
     }).join('');
 
-    // Auto-fill summary cards sesuai filter tanggal
     const matchedRow = projectionInboundData.find(row => row.date === filterDate);
     if (matchedRow && matchedRow.inbound != null) {
       const plus30 = Math.round(matchedRow.inbound * 1.3);
@@ -2508,7 +2406,6 @@
     }
   }
 
-  /* Edit Actual Operator Dedicated pada tabel By Projection Inbound */
   function editProjectionOperatorCell(rowIndex) {
     const row = projectionInboundData[rowIndex];
     const currentValue = row.operator || '';
@@ -2614,7 +2511,6 @@
         remarksText = 'Transporting'; remarksClass = 'rm-transport'; cntTransit++;
       }
 
-      // Hitung Total Active Parcel
       if (remarksText === 'Proses Bongkar' || remarksText === 'Pending Bongkar' || remarksText === 'Transporting' || remarksText === 'Loading Origin') {
         activeParcelSum += qtyParcelVal;
       }
@@ -2667,7 +2563,6 @@
         }
       }
 
-      // Vendor Performance
       if (vendorName && vendorName !== '-') {
         if (!vendorPerf[vendorName]) vendorPerf[vendorName] = { total: 0, ontime: 0, late: 0 };
         vendorPerf[vendorName].total++;
@@ -2705,7 +2600,6 @@
     renderPerformanceTables(vendorPerf);
     renderForecast(activeParcelSum);
 
-    // Apply Filters
     const search = document.getElementById('filterSearch').value.toLowerCase();
     const fDate = document.getElementById('filterDate').value;
     const fVendor = document.getElementById('filterVendor').value;
@@ -2787,8 +2681,6 @@
     }
   }
 
-  // Mapping teks status/remarks internal (dipakai buat logic filter) ke i18n key,
-  // supaya badge di tabel ikut translate tanpa ubah logic pembanding di atas.
   const STATUS_TEXT_I18N_KEY = {
     'Early Arrived': 'filter.status.earlyArrived',
     'On Time': 'filter.status.onTime',
@@ -2870,12 +2762,8 @@
     return `${hours}:${mins}`;
   }
 
-  // Initial Call
   renderAll();
 
-  // Baru mulai sync Firebase SETELAH status login kevalidasi (biar gak kena
-  // permission-denied karena Security Rules butuh auth != null) - persis pola yang
-  // dipakai di outbound.html.
   if (window.firebase && firebase.auth) {
     firebase.auth().onAuthStateChanged(function (user) {
       if (user) { initInboundFirebaseSync(); initFeedbackBoardSync(); }
@@ -2884,22 +2772,17 @@
 </script>
 
 <script>
-  // ==== SIDEBAR TOGGLE ====
   function toggleAppSidebar() {
     document.getElementById('appSidebar').classList.toggle('open');
     document.getElementById('appSidebarBackdrop').classList.toggle('open');
   }
 
-  // ESC buat nutup sidebar (ikutin pola tombol Esc di modul lain)
   document.addEventListener('keydown', function (e) {
     if (e.key !== 'Escape' && e.key !== 'Esc') return;
     const sidebar = document.getElementById('appSidebar');
     if (sidebar && sidebar.classList.contains('open')) toggleAppSidebar();
   });
 
-  // Open/Hide grup sidebar (Inbound / Productivity / Outbound Monitoring). Sengaja GAK
-  // diinget lewat localStorage — tiap buka halaman / pindah tab, semua grup default Hide,
-  // user wajib Open manual biar Sidebar-nya tetep rapi.
   function toggleSidebarGroup(group) {
     const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
     const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
@@ -2923,13 +2806,8 @@
   }
   collapseAllSidebarGroups();
 
-  // ==== APP-SHELL BRIDGE ====
-  // Kalau halaman ini dibuka langsung (bukan lewat index.html app-shell), link sidebar
-  // tetap jalan normal (pindah halaman biasa). Tapi kalau dibuka di dalam iframe shell,
-  // klik link ke modul lain di-intercept dan diteruskan ke shell lewat postMessage,
-  // biar shell yang toggle tab tanpa reload sama sekali.
   (function () {
-    if (window.self === window.top) return; // diakses langsung, biarin behavior default
+    if (window.self === window.top) return;
 
     function hijack(id, tab, submenu) {
       var el = document.getElementById(id);
@@ -2946,7 +2824,6 @@
     hijack("navToOutboundOccupancy", "outbound", "occupancy");
     hijack("navToInventoryControl", "inventory-control");
 
-    // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
     window.addEventListener("message", function (e) {
       var data = e.data;
       if (!data || data.source !== "pkydc") return;
@@ -2956,18 +2833,10 @@
 </script>
 
 <script>
-  // ==== PAPAN SARAN & MASUKAN ====
-  // Pakai node prDcGlobal/feedback — path INI yang beneran ada di Firebase Rules
-  // (read/write udah diizinin buat semua user login kecuali akun yang di-blacklist),
-  // dan ini juga node yang sama dipakai modul Inventory Control, jadi papannya
-  // beneran "1 buat semua modul" (bukan cuma niatnya doang).
   const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
   let fbFeedbackDb = null;
   let fbFeedbackListenerAttached = false;
 
-  // createdAt bisa berupa number (epoch ms, dari rest-time.html) ATAU string ISO
-  // (dari modul ini/inventory-control.html) karena papannya digabung dari beberapa modul.
-  // Normalisasi dulu ke angka biar sortir gak crash pas ketemu tipe campuran.
   function feedbackCreatedAtToTime(v) {
     if (typeof v === 'number') return v;
     if (typeof v === 'string') { const t = new Date(v).getTime(); return isNaN(t) ? 0 : t; }
@@ -2994,7 +2863,6 @@
     }
     fbFeedbackListenerAttached = true;
 
-    // limitToLast biar gak narik SEMUA histori tiap buka (cukup 200 terbaru)
     fbFeedbackDb.ref(FB_FEEDBACK_ROOT).limitToLast(200).on("value", function (snap) {
       const val = snap.val() || {};
       const items = Object.keys(val).map(function (k) {
@@ -3038,8 +2906,6 @@
     renderFeedbackDashboardPreview(items);
   }
 
-  // Preview ringkas (5 terbaru) yang nampil langsung di halaman utama, biar semua
-  // orang bisa lihat Saran & Masukan tanpa perlu buka popup dulu.
   function renderFeedbackDashboardPreview(items) {
     const container = document.getElementById("fbDashboardPreviewList");
     if (!container) return;
@@ -3101,7 +2967,6 @@
     });
   }
 
-  // ESC buat nutup papan Saran & Masukan juga (konsisten sama pola Esc buat Sidebar)
   document.addEventListener("keydown", function (e) {
     if (e.key !== "Escape" && e.key !== "Esc") return;
     const backdrop = document.getElementById("fbBoardBackdrop");
