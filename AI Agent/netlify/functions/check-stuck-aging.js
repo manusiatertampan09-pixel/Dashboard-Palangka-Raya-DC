@@ -1,12 +1,3 @@
-/**
- * netlify/functions/check-stuck-aging.js
- * ------------------------------------------------------------------
- * Alert PARCEL STUCK (aging lewat D-1) per HUB, lengkap dengan daftar
- * TO Number. Function terpisah dari check-occupancy-alerts (Early Loading),
- * punya state & interval sendiri.
- *
- * Jadwal di netlify.toml: tiap 5 menit (interval kirimnya dijaga di kode).
- */
 const zlib = require("zlib");
 const { db, getSeatalkAccessToken } = require("./_seatalk-common");
 const ROUTES = require("./_outbound-routes");
@@ -15,17 +6,16 @@ const U = require("./_alert-utils");
 const FB_ROOT = U.FB_ROOT;
 const STATE_PATH = FB_ROOT + "/stuckAlertState";
 
-const INCLUDE_OUTER = false;      // true = hub di luar daftar route (Outer Island dkk) ikut dicek
-const STUCK_MIN_AGING = 3;        // aging >= 3 hari (D-3 ke atas, alias lebih dari D-2) dianggap stuck
-const STUCK_MIN_PARCEL = 1;       // minimal parcel stuck per hub biar dialert
-const STUCK_SHOW_TO = true;       // tampilin daftar TO Number parcel yang stuck
-const STUCK_MAX_TO_PER_HUB = 20;  // maks TO Number per hub (sisanya diringkas "+N TO lainnya")
-const STUCK_INTERVAL_MINUTES = 70; // jarak antar alert. 0 = alert di setiap function jalan
-const INTERVAL_GRACE_MS = 2 * 60 * 1000; // toleransi biar jadwal cron 5 menit gak ngegeser ke 75 menit
-const MAX_IMPORT_AGE_MIN = 180;   // import yang lebih tua dari ini dianggap basi, gak dialert
+const INCLUDE_OUTER = false;
+const STUCK_MIN_AGING = 3;
+const STUCK_MIN_PARCEL = 1;
+const STUCK_SHOW_TO = true;
+const STUCK_MAX_TO_PER_HUB = 20;
+const STUCK_INTERVAL_MINUTES = 70;
+const INTERVAL_GRACE_MS = 2 * 60 * 1000;
+const MAX_IMPORT_AGE_MIN = 180;
 const MENTION_LEAD = `Parcel stuck lewat ${U.agingLabel(STUCK_MIN_AGING - 1)}, mohon segera ditindaklanjuti`;
 
-// Catat parcel stuck per hub, dipecah per bucket aging (D-6 = D-6+).
 function addStuck(target, aging, row) {
   target.stuck++;
   const to = row && row.toNo != null ? String(row.toNo).trim() : "";
@@ -34,7 +24,6 @@ function addStuck(target, aging, row) {
   target.buckets[k] = (target.buckets[k] || 0) + 1;
 }
 
-// Dikelompokkan PER HUB (bukan per route gabungan).
 function aggregateStuck(rows) {
   const todayDay = U.wibDayNumber(new Date());
   const knownHubs = new Set();
@@ -67,7 +56,6 @@ function buildStuckBlock(item) {
     `Breakdown : ${breakdown}\n` +
     `Longest Aging : ${U.agingLabel(item.maxAging)}`;
 
-  // Daftar TO Number, aging paling tua duluan.
   if (STUCK_SHOW_TO && item.stuckTos.length) {
     const sorted = item.stuckTos
       .slice()
@@ -79,7 +67,6 @@ function buildStuckBlock(item) {
   return text;
 }
 
-// Semua jalur keluar dicatat ke log Netlify biar kelihatan KENAPA notif gak kekirim.
 function done(msg) {
   console.log("[stuck-alert] " + msg);
   return { statusCode: 200, body: msg };
@@ -88,7 +75,6 @@ function done(msg) {
 exports.handler = async () => {
   const groupId = process.env.SEATALK_TARGET_GROUP_ID;
 
-  // Cek interval dulu (murah) sebelum narik data gede.
   const state = (await db().ref(STATE_PATH).get()).val() || {};
   const lastAlertAt = state.lastAlertAt || 0;
   if (STUCK_INTERVAL_MINUTES > 0) {
@@ -127,7 +113,6 @@ exports.handler = async () => {
     stuckItems.map(buildStuckBlock),
     U.MAX_MSG_CHARS - mentionText.length - 2
   );
-  // Tag + Cc ditempel di pesan terakhir (1x aja, biar gak spam notif).
   if (mentionText) messages[messages.length - 1] += "\n\n" + mentionText;
   for (const text of messages) {
     U.assertSent(await U.sendAlertText(token, groupId, text), "teks stuck");
