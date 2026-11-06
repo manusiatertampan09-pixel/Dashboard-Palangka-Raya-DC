@@ -3,7 +3,6 @@
   functions = "netlify/functions"
   publish = "."
 
-# Alert Early Loading (per route)
 [functions."check-occupancy-alerts"]
   schedule = "*/70 * * * *"
   included_files = [
@@ -11,6 +10,5 @@
     "netlify/functions/node_modules/dejavu-fonts-ttf/ttf/*.ttf"
   ]
 
-# Alert Parcel Stuck (per hub). Interval 70 menit dijaga di kode.
 [functions."check-stuck-aging"]
   schedule = "*/5 * * * *"
