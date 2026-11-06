@@ -1,8 +1,6 @@
 const zlib = require("zlib");
 const { db, getSeatalkAccessToken } = require("./_seatalk-common");
 const ROUTES = require("./_outbound-routes");
-// NOTE: _alert-image di-require lazy di dalam try (lihat bagian kirim gambar),
-// supaya kalau modul gambar bermasalah, alert teks tetap terkirim.
 
 const SEATALK_API_BASE = "https://openapi.seatalk.io";
 
@@ -42,7 +40,6 @@ const CC_EMAILS = [
 
 const mentionTag = (email) => `<mention-tag target="seatalk://user?email=${email}"/>`;
 
-// Baris tag + cc yang ditempel di akhir pesan alert.
 function buildMentionText() {
   if (!ENABLE_MENTION) return "";
   const parts = [];
