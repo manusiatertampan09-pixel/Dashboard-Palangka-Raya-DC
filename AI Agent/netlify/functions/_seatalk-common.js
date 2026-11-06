@@ -14,7 +14,7 @@ function getFirebaseApp() {
 
   return admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: process.env.FIREBASE_DATABASE_URL, // contoh: https://xxx-default-rtdb.asia-southeast1.firebasedatabase.app
+    databaseURL: process.env.FIREBASE_DATABASE_URL,
   });
 }
 
@@ -28,8 +28,6 @@ function nowWIB() {
 function todayStr() {
   return nowWIB().toISOString().slice(0, 10);
 }
-
-// ================= SEATALK BOT API =================
 
 async function getSeatalkAccessToken() {
   const res = await fetch(`${SEATALK_API_BASE}/auth/app_access_token`, {
@@ -122,12 +120,10 @@ async function answerInventoryQuestion(text) {
   return `Daftar Stock Asset:\n${lines.join("\n")}${items.length > 20 ? "\n…dan lainnya" : ""}`;
 }
 
-// ================= INBOUND (LH Tracking) =================
 const INBOUND_LH_PATH = "prDcInboundTracking/lhTracking";
 const INBOUND_LATE_THRESHOLD_HOURS = 6.5;
 const INBOUND_EARLY_THRESHOLD_HOURS = 6.0;
 
-// Niru PERSIS computeStatus() di inbound.html / report-agent.html.
 function computeTripStatus(t) {
   const std = t.stdOrigin ? new Date(t.stdOrigin) : null;
   const sta = t.staDest ? new Date(t.staDest) : null;
@@ -191,16 +187,6 @@ async function answerInboundQuestion(text) {
   );
 }
 
-// ================= OUTBOUND MONITORING (Aging Backlog) =================
-// CATATAN KETERBATASAN: outbound.html nyimpen data import di Firebase dalam
-// format COLUMNAR + GZIP base64 (field "dataGz") biar payload gede (puluhan
-// ribu parcel) tetep hemat. Bot ini bisa decompress & baca row mentahnya
-// (Node.js zlib kompatibel sama gzip yang dipakai browser CompressionStream
-// di outbound.html), TAPI perhitungan "Occupancy %" di dashboard butuh
-// setting kapasitas per-destination yang cuma kesimpen di localStorage
-// BROWSER (bukan Firebase) — jadi itu BELUM BISA dijawab bot sampai
-// settingnya dipindah ke database. Yang reliable dihitung dari data mentah:
-// total parcel & jumlah backlog kritis (aging D-3 ke atas) secara total.
 
 function fromColumnar(columnar) {
   if (!columnar || !columnar.fields || !columnar.length) return [];
@@ -242,15 +228,9 @@ async function answerOutboundQuestion(text) {
   );
 }
 
-// ================= REST TIME & ASSET USAGE (PDA) =================
-// NOTE: bagian ini TIDAK lagi masuk router chat (answerModuleQuestion).
-// getRestAssetData & computeRestAssetLiveStatus tetap dipertahankan karena
-// kemungkinan masih dipakai alert terjadwal (check-ops-alerts.js) —
-// alert "Operator Baru Kena Istirahat >60 Menit".
 const MON_ROOT = "prDcMonitoring";
-const MON_WINDOW_DAYS = 3; // disamain kayak window di rest-time.html/report-agent.html
+const MON_WINDOW_DAYS = 3;
 
-// Niru PERSIS parseDateTime di rest-time.html (format "YYYY-MM-DD HH:mm:ss", lokal WIB).
 function monParseDateTime(str) {
   if (!str) return null;
   const t = String(str).split(/[- :]/);
@@ -281,13 +261,9 @@ async function getRestAssetData() {
   };
 }
 
-// Niru PERSIS computeRestAssetLiveStatus() di report-agent.html (Odyssey),
-// yang sendirinya niru checkRestOvertimeAlert()/getActiveAssetLock() di
-// rest-time.html.
 function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap) {
   const now = nowWIB();
 
-  // --- Operator yang lagi Break Out & udah >60 menit ---
   const byOpsRest = {};
   logs.forEach((l) => { (byOpsRest[l.opsId] = byOpsRest[l.opsId] || []).push(l); });
   const operatorIstirahatLebih60Menit = [];
@@ -308,7 +284,6 @@ function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap) {
   });
   operatorIstirahatLebih60Menit.sort((a, b) => b.durasiMenit - a.durasiMenit);
 
-  // --- PDA yang aksi terakhirnya "Pinjam PDA" (belum "Kembali PDA") ---
   const byAssetSn = {};
   assetLogs.forEach((l) => { (byAssetSn[l.serialNumber] = byAssetSn[l.serialNumber] || []).push(l); });
   const pdaBelumKembali = [];
@@ -329,8 +304,6 @@ function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap) {
   return { operatorIstirahatLebih60Menit, pdaBelumKembali };
 }
 
-// Dipertahankan (dan tetap di-export) biar file lain yang mungkin masih
-// meng-import-nya gak error, tapi sudah TIDAK terdaftar di router chat.
 async function answerRestTimeQuestion(text) {
   const lower = text.toLowerCase();
   if (!/\bpda\b|istirahat|\bbreak\b|check ?in|check ?out|rest time/.test(lower)) return null;
@@ -353,8 +326,6 @@ async function answerRestTimeQuestion(text) {
   return `⏳ Operator istirahat >60 menit (${status.operatorIstirahatLebih60Menit.length}):\n${lines.join("\n")}`;
 }
 
-// ================= PERFORMANCE BAGGER =================
-// Struktur: prDcPerformanceBagger/dailyRecords/{tanggal}/{opsId} = {name, agency, packed, statusInfo}
 
 async function getTodayBaggerRecords() {
   const snap = await db().ref("prDcPerformanceBagger/dailyRecords/" + todayStr()).get();
@@ -385,13 +356,6 @@ async function answerPerformanceBaggerQuestion(text) {
   return lines.join("\n");
 }
 
-// ================= ROUTER LINTAS MODUL =================
-// Dipanggil dari seatalk-webhook.js. Urutan cek sengaja spesifik dulu
-// (Inbound/Bagger/Outbound) baru Inventory paling akhir, niru pola routing
-// keyword yang sama kayak Odyssey (report-agent.html) — masing-masing
-// handler return null kalau teksnya gak nyangkut ke modulnya, jadi lanjut
-// dicoba ke handler berikutnya.
-// Rest Time/PDA sengaja TIDAK ada di daftar ini (udah gak dipakai lewat chat).
 async function answerModuleQuestion(text) {
   const handlers = [
     answerInboundQuestion,
