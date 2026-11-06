@@ -70,13 +70,11 @@
     padding: 44px 48px 54px;
   }
 
-  /* ---- illustration side ---- */
   .illus-wrap { flex: 1; display: flex; justify-content: center; }
   .illus-wrap img {
     width: auto; max-width: 100%; height: auto; max-height: 420px;
   }
 
-  /* ---- form side ---- */
   .form-wrap { flex: 1; max-width: 360px; }
   .form-wrap h1 {
     font-size: 26px; font-weight: 800; color: var(--navy); margin-bottom: 26px; letter-spacing: -0.01em;
@@ -144,7 +142,6 @@
     <div class="form-wrap">
       <h1>LOGIN PENGGUNA</h1>
 
-      <!-- STEP LOGIN -->
       <div id="loginStep">
         <div class="field">
           <div class="input-icon">
@@ -177,7 +174,6 @@
         Firebase Console → Authentication → Users.</p>
       </div>
 
-      <!-- STEP LUPA PASSWORD -->
       <div id="forgotStep" class="hidden">
         <p class="hint" style="margin-top:0;margin-bottom:16px;">Masukin email akun lu, nanti kita kirimin link buat bikin password baru.</p>
         <div class="field">
@@ -197,7 +193,6 @@
         </p>
       </div>
 
-      <!-- STEP GANTI PASSWORD (pakai password lama) -->
       <div id="changeStep" class="hidden">
         <p class="hint" style="margin-top:0;margin-bottom:16px;">Isi email, password lama, lalu password baru. Kalau lupa password lama, balik ke login terus pilih "Lupa password?".</p>
         <div class="field">
@@ -242,8 +237,6 @@
   const params = new URLSearchParams(window.location.search);
   const redirectTarget = params.get("redirect") || "rest-time.html";
 
-  // Config default udah ditanam di sini (sama kayak di rest-time.html), jadi auto-connect
-  // begitu link dibuka, gak perlu paste manual lagi di tiap device.
   const DEFAULT_FB_CONFIG = {
     apiKey: "AIzaSyBn1bdUH8uRc_hFq0h4liWd8vLDOLYZFMA",
     authDomain: "dashboardpalangkarayadc.firebaseapp.com",
@@ -261,37 +254,22 @@
     try {
       if (!firebase.apps.length) firebase.initializeApp(config);
     } catch (e) {
-      // Config tertanam sudah pasti valid; kalau error di sini berarti ada masalah lain
-      // (mis. project di-nonaktifkan), bukan sesuatu yang bisa diperbaiki dari sisi user.
       document.getElementById("loginError").innerText = "❌ Gagal konek ke database: " + e.message;
       return;
     }
 
-    // SESSION persistence: sesi login cuma nempel di tab ini aja, begitu tab/window
-    // ditutup, sesi ilang otomatis (gak kayak default LOCAL yang tetep login walau ditutup).
     firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION).catch(function (e) {
       console.error("Gagal set persistence:", e);
     });
 
-    // Kalau ternyata udah login (session masih aktif), langsung redirect
     firebase.auth().onAuthStateChanged(function (user) {
-      // isChangingPassword: pas proses ganti password kita sengaja login sebentar buat
-      // verifikasi password lama, jangan sampai kebawa redirect ke dashboard.
       if (user && !isChangingPassword) window.location.href = redirectTarget;
     });
   }
 
-  // SECURITY FIX: dulu ada opsi "Ganti config Firebase" yang bisa dipencet SIAPAPUN
-  // (bahkan sebelum login) buat ngarahin seluruh app ke project Firebase lain — bisa
-  // dipakai buat phishing kredensial (form login keliatan sama persis, tapi ngirim
-  // email/password ke Firebase project punya orang lain). Sekarang config SELALU pakai
-  // DEFAULT_FB_CONFIG yang ditanam di kode ini, gak bisa diubah dari tampilan sama
-  // sekali. Kalau memang perlu pindah project Firebase, ubah DEFAULT_FB_CONFIG di kode
-  // ini terus redeploy.
   if (localStorage.getItem(FB_CONFIG_KEY)) localStorage.removeItem(FB_CONFIG_KEY); // bersihin sisa config lama
   initFirebaseAndShowLogin(DEFAULT_FB_CONFIG);
 
-  // Login pake Enter key
   document.getElementById("loginPassword").addEventListener("keydown", function (e) {
     if (e.key === "Enter") doLogin();
   });
@@ -324,10 +302,6 @@
       });
   }
 
-  // ==== LUPA PASSWORD ====
-  // Pindah dari step login ke step forgot-password (dan sebaliknya), pesan
-  // error/sukses dibersihin tiap kali pindah biar gak nyangkut dari percobaan
-  // sebelumnya.
   function showForgotStep() {
     document.getElementById("loginError").innerText = "";
     document.getElementById("loginSuccess").innerText = "";
@@ -336,8 +310,6 @@
     document.getElementById("forgotStep").classList.remove("hidden");
     document.getElementById("forgotError").innerText = "";
     document.getElementById("forgotSuccess").innerText = "";
-    // Kalau user udah sempet ngetik email di form login, bawa otomatis ke sini
-    // biar gak perlu ngetik ulang.
     const loginEmailVal = document.getElementById("loginEmail").value.trim();
     if (loginEmailVal) document.getElementById("forgotEmail").value = loginEmailVal;
     document.getElementById("forgotEmail").focus();
@@ -352,9 +324,6 @@
     document.getElementById("loginStep").classList.remove("hidden");
   }
 
-  // ==== GANTI PASSWORD (pakai password lama) ====
-  // Verifikasi identitas = login pakai email + password lama, baru updatePassword().
-  // Lupa password lama tetap lewat "Lupa password?" (link ke email).
   function showChangeStep() {
     document.getElementById("loginError").innerText = "";
     document.getElementById("loginSuccess").innerText = "";
@@ -407,7 +376,6 @@
         } else {
           errEl.innerText = "❌ Gagal ganti password: " + err.message;
         }
-        // kalau sempet ke-login tapi updatePassword gagal, keluarin lagi
         if (firebase.auth().currentUser) firebase.auth().signOut();
       })
       .finally(function () {
@@ -417,10 +385,6 @@
       });
   }
 
-  // Kirim email reset password lewat Firebase Authentication. Firebase SENGAJA
-  // gak ngasih tau kalau emailnya emang gak terdaftar (demi keamanan, biar orang
-  // luar gak bisa nebak-nebak email mana yang punya akun), makanya pesan
-  // suksesnya generic aja ("kalau emailnya kedaftar, link udah dikirim").
   function doForgotPassword() {
     const email = document.getElementById("forgotEmail").value.trim();
     const errEl = document.getElementById("forgotError");
@@ -447,8 +411,6 @@
         } else if (err.code === "auth/too-many-requests") {
           errEl.innerText = "❌ Kebanyakan percobaan, coba lagi beberapa menit lagi.";
         } else {
-          // auth/user-not-found sengaja gak dibedain pesannya dari yang sukses,
-          // biar gak bocorin email mana yang beneran terdaftar.
           okEl.innerText = "✅ Kalau email itu kedaftar, link reset password udah dikirim. Cek inbox (atau folder spam) ya.";
         }
       })
