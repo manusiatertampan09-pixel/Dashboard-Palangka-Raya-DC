@@ -8,19 +8,10 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-<!-- Firebase SDK — sama persis pola yang dipakai di inbound.html / outbound.html.
-     auth-guard.js yang nyimpen firebaseConfig asli & handle login redirect.
-     Taruh file ini di folder project yang SAMA dengan auth-guard.js biar konek otomatis.
-     Chat AI-nya manggil Google Gemini API lewat proxy Netlify Function di
-     netlify/functions/gemini-proxy.js — API key disimpan aman di server
-     (env variable GEMINI_API_KEY), gak pernah ke-expose di browser. -->
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
 
-<!-- Markdown render + syntax highlight blok kode. Dipakai buat nge-render
-     balasan agent (bold/italic/list/link/code fence) jadi HTML beneran,
-     bukan teks polos kayak sebelumnya. -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
@@ -78,16 +69,12 @@
     border:1px solid var(--line); border-radius:var(--radius); overflow:hidden;
   }
   #chatLog{flex:1; overflow-y:auto; padding:18px; display:flex; flex-direction:column; gap:12px;}
-  /* Scrollbar chat dibikin tipis & nyatu sama tema gelap, bukan scrollbar
-     tebal default browser yang norak nongol di kanan. */
   #chatLog{scrollbar-width:thin; scrollbar-color:var(--line) transparent;}
   #chatLog::-webkit-scrollbar{width:6px;}
   #chatLog::-webkit-scrollbar-track{background:transparent;}
   #chatLog::-webkit-scrollbar-thumb{background:var(--line); border-radius:10px;}
   #chatLog::-webkit-scrollbar-thumb:hover{background:var(--muted);}
 
-  /* --chat-msg-max-width & --chat-font-size diatur dari JS (panel Setting),
-     nilai di sini cuma fallback default kalau user belum pernah ngatur apa-apa. */
   .msg{max-width:var(--chat-msg-max-width, min(78%, 720px)); display:flex; flex-direction:column; gap:6px;
     animation:msgIn .28s cubic-bezier(.34,1.2,.64,1) both;}
   @keyframes msgIn{
@@ -116,7 +103,6 @@
   .typewriter-cursor{display:inline-block; width:2px; height:13px; background:var(--cyan); margin-left:2px; vertical-align:-2px; animation:caretBlink .8s step-end infinite;}
   @keyframes caretBlink{0%,100%{opacity:1;}50%{opacity:0;}}
 
-  /* ===== Markdown rendering di dalam bubble agent ===== */
   .bubble p{margin:0 0 8px;}
   .bubble p:last-child{margin-bottom:0;}
   .bubble strong{color:#fff;}
@@ -127,7 +113,6 @@
   .bubble pre{background:#0d1117; border:1px solid var(--line); border-radius:8px; padding:10px 12px; overflow-x:auto; margin:6px 0;}
   .bubble pre code{background:transparent; padding:0; font-size:12.5px; line-height:1.5;}
 
-  /* ===== Quick-reply shortcut chips ===== */
   .quick-replies{display:flex; flex-wrap:wrap; gap:6px; align-self:flex-start; max-width:100%;}
   .quick-reply-chip{
     background:var(--panel-2); border:1px solid var(--line); color:var(--text);
@@ -136,7 +121,6 @@
   }
   .quick-reply-chip:hover{border-color:var(--amber); color:var(--amber);}
 
-  /* ===== Mini header chat: avatar + judul + New Chat ===== */
   .chat-header{
     display:flex; align-items:center; gap:8px; padding:10px 14px;
     border-bottom:1px solid var(--line); background:var(--panel);
@@ -151,7 +135,6 @@
   }
   .new-chat-btn:hover{color:var(--red); border-color:var(--red);}
 
-  /* ===== Lightbox gambar in-app ===== */
   .lightbox-overlay{
     position:fixed; inset:0; background:rgba(10,13,18,.88); z-index:99999;
     display:none; align-items:center; justify-content:center; padding:24px; cursor:zoom-out;
@@ -213,7 +196,6 @@
     display:flex; flex-direction:column; gap:8px; padding:12px; border-top:1px solid var(--line); background:var(--panel);
   }
 
-  /* ===== Command Bar / AI Command Palette (slash commands + ⌘K) ===== */
   .cmd-palette{
     position:absolute; left:12px; right:12px; bottom:100%; margin-bottom:10px;
     background:var(--panel-2); border:1px solid var(--line); border-radius:12px;
@@ -276,12 +258,6 @@
   details.note-details .inner{padding:10px 2px 2px; line-height:1.6;}
   details.note-details code{background:var(--panel-2); padding:1px 5px; border-radius:4px; font-family:'IBM Plex Mono',monospace;}
 
-  /* ===== Row utama: sidebar riwayat sesi (kiri) + chat-panel (kanan) =====
-     Sengaja dipisah dari .wrap (yang tetep flex-column) biar chat-panel
-     LAMA gak keganggu struktur/CSS-nya — cuma dibungkus sejajar sama
-     sidebar baru. Sidebar defaultnya ketutup (class "hidden") biar area
-     chat tetep full kepake kayak sebelumnya, user tinggal klik tombol
-     "Riwayat" di header buat buka/tutup. */
   .main-row{flex:1; display:flex; gap:12px; min-height:0;}
   .sessions-sidebar{
     width:220px; flex:none; display:flex; flex-direction:column; gap:8px;
@@ -320,10 +296,8 @@
   .session-item .session-meta{font-size:10px; color:var(--muted);}
   .sessions-empty{font-size:11px; color:var(--muted); padding:8px 4px; line-height:1.5;}
 
-  /* ===== Tombol-tombol aksi tambahan di chat-header (Riwayat/Sound/Setting) ===== */
   .header-actions{display:flex; align-items:center; gap:6px; position:relative;}
 
-  /* ===== Popover Setting (ukuran font & lebar chat) ===== */
   .settings-popover{
     position:absolute; top:36px; right:0; background:var(--panel-2); border:1px solid var(--line);
     border-radius:10px; padding:12px; width:190px; z-index:50; display:none; flex-direction:column; gap:10px;
@@ -344,21 +318,8 @@
 <body>
 <div class="wrap">
 
-  <!-- Header "The Odyssey" DIHAPUS dari sini — judulnya sekarang cuma
-       ditampilin sekali di title bar popup (index.html), biar area di bawah
-       ini (chat-panel) bisa FULL kepake buat percakapan, gak keulang 2x.
-       #statusLine ("mode: mock data") masih dipertahanin di script bawah
-       lewat elemen tersembunyi biar kode JS yang nulis ke situ gak error
-       karena elemen ilang. -->
   <div class="sub" id="statusLine" style="display:none;">mode: mock data</div>
 
-  <!-- Topbar (stat "N trip tercatat" + tombol "Refresh Data") juga DISEMBUNYIIN
-       dari sini — tombol "Refresh Data"-nya udah dipindah ke title bar popup
-       di index.html (biar sebaris sama "The Odyssey"), dan klik di sana
-       nge-postMessage ke sini (lihat listener "odysseyRefresh" di script
-       bawah) buat manggil loadData() yang sama persis. Elemen-elemen di
-       dalam sini dibiarin tetep ada (bukan dihapus) biar kode JS yang masih
-       nulis ke situ (quickStat, refreshBtn) gak error. -->
   <div class="topbar" style="display:none;">
     <span class="stat" id="quickStat"><b>0</b> trip tercatat</span>
     <div class="spacer"></div>
@@ -366,9 +327,6 @@
   </div>
 
   <div class="main-row">
-    <!-- Sidebar riwayat sesi chat — default ketutup (lihat class "hidden"), dibuka
-         lewat tombol 🗂 di header biar area chat gak keambil ruang kalau gak dipake.
-         Isinya di-fetch dari Firebase (per-user, lihat ODYSSEY_CHAT_ROOT di script). -->
     <div class="sessions-sidebar hidden" id="sessionsSidebar">
       <div class="sessions-sidebar-header">
         <span>Riwayat Chat</span>
@@ -455,42 +413,29 @@
 const FB_ROOT = "prDcInboundTracking";
 const LH_PATH = FB_ROOT + "/lhTracking";
 
-// ===== Path Firebase modul Rest Time & Asset Usage (rest-time.html) =====
-// Root beda sendiri (BUKAN turunan FB_ROOT trip Inbound di atas) — persis
-// sama seperti yang dipakai rest-time.html biar Odyssey baca sumber data
-// yang sama persis dengan yang keliatan di dashboard modul itu.
 const MON_ROOT = "prDcMonitoring";
-const MON_LOGS_PATH = MON_ROOT + "/logs";           // log Rest Time (Check In/Break Out/Break In/Selesai)
-const MON_ASSET_PATH = MON_ROOT + "/assetLogs";     // log Asset Usage (Pinjam PDA/Kembali PDA)
-const MON_MASTER_PATH = MON_ROOT + "/master";       // data karyawan: {opsId: {name, dept, agency}}
-const MON_STATION_PATH = MON_ROOT + "/pdaStationMap"; // mapping SN PDA -> station
-const MON_WINDOW_DAYS = 3; // disamain kayak LOGS_WINDOW_DAYS di rest-time.html, biar gak dump histori kelamaan
+const MON_LOGS_PATH = MON_ROOT + "/logs";
+const MON_ASSET_PATH = MON_ROOT + "/assetLogs";
+const MON_MASTER_PATH = MON_ROOT + "/master";
+const MON_STATION_PATH = MON_ROOT + "/pdaStationMap";
+const MON_WINDOW_DAYS = 3;
 
 let currentTrips = [];
-let currentRestLogs = [];   // array log Rest Time, MON_WINDOW_DAYS hari terakhir
-let currentAssetLogs = [];  // array log Asset Usage, MON_WINDOW_DAYS hari terakhir
-let monMasterKaryawan = {}; // {opsId: {name, dept, agency}}
-let monPdaStationMap = {};  // {serialNumber: "Inbound"|"Sec Sort"|...}
-let chatHistory = []; // {role:'user'|'assistant', content:'...'}
+let currentRestLogs = [];
+let currentAssetLogs = [];
+let monMasterKaryawan = {};
+let monPdaStationMap = {};
+let chatHistory = [];
 let firebaseReady = false;
-let dailyBriefingShown = false; // "AI Daily Briefing" cuma boleh nongol SEKALI per sesi buka Odyssey
+let dailyBriefingShown = false;
 
-// ===== Path Firebase buat histori chat per-user (fitur "simpen histori
-// chat ke Firebase, bisa dibuka lagi lewat sidebar") — Root SENDIRI, beda
-// dari FB_ROOT (data trip) & MON_ROOT (Rest Time/Asset), biar histori
-// obrolan gak numpuk campur sama data operasional. Struktur:
-// prDcOdysseyChats/{uid}/{sessionId} = {title, updatedAt, messages:[...]}. */
 const ODYSSEY_CHAT_ROOT = "prDcOdysseyChats";
-let currentSessionId = null; // null = sesi ini belum pernah kesimpen (chat baru)
-let saveSessionTimer = null; // debounce biar gak nulis ke Firebase tiap ketikan/balesan
+let currentSessionId = null;
+let saveSessionTimer = null;
 
-// ===== Sound effect halus pas kirim/terima pesan (Web Audio API, gak butuh
-// file audio eksternal) — bisa dimute lewat tombol 🔊 di header, state-nya
-// disimpen di localStorage biar kepake terus tiap buka halaman ini lagi. */
 let odysseyAudioCtx = null;
-let soundEnabled = localStorage.getItem("odysseySoundEnabled") !== "0"; // default ON
+let soundEnabled = localStorage.getItem("odysseySoundEnabled") !== "0";
 
-// ===== Mock data (dipakai kalau live toggle mati / firebase belum siap) =====
 function generateMockData(dateStr){
   const base = dateStr || new Date().toISOString().slice(0,10);
   function iso(h,m){ return base + "T" + String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":00"; }
@@ -503,7 +448,6 @@ function generateMockData(dateStr){
   ];
 }
 
-// ===== Firebase live fetch =====
 function fetchLiveTrips(){
   return new Promise((resolve, reject) => {
     if (!window.firebase || !firebase.apps || !firebase.apps.length){
@@ -524,11 +468,6 @@ function fetchLiveTrips(){
   });
 }
 
-// ===== Firebase live fetch — Rest Time & Asset Usage (prDcMonitoring) =====
-// Ambil 4 node sekaligus (logs, assetLogs, master, pdaStationMap) paralel.
-// "logs" & "assetLogs" dibatasin MON_WINDOW_DAYS hari terakhir (sama kayak
-// window yang ditampilin rest-time.html sendiri) biar dump JSON ke AI gak
-// membengkak nyeret histori lama yang gak relevan buat pertanyaan real-time.
 function getMonWindowStartDate(){
   const d = new Date();
   d.setDate(d.getDate() - MON_WINDOW_DAYS);
@@ -555,10 +494,6 @@ function fetchRestAssetData(){
       const logsVal = logsSnap.val() || {};
       const assetVal = assetSnap.val() || {};
       resolve({
-        // "_key" WAJIB disertain (dulu kebuang) — dipakai buat nyari-balik entry Firebase asli pas ada
-        // aksi Edit Jam / Delete Activity dari Odyssey. AI TETAP gak pernah disuruh nebak "_key" ini
-        // sendiri (beda dari kasus assetId Stock) — sistem yang nyari entry-nya lewat opsId+tanggal
-        // pas eksekusi, _key ini cuma dipakai internal buat targetin update/remove-nya.
         logs: Object.keys(logsVal).map(k => Object.assign({ _key: k }, logsVal[k])),
         assetLogs: Object.keys(assetVal).map(k => Object.assign({ _key: k }, assetVal[k])),
         master: masterSnap.val() || {},
@@ -568,22 +503,15 @@ function fetchRestAssetData(){
   });
 }
 
-// ================= REST TIME & ASSET USAGE - HELPER & AKSI TULIS (dari Odyssey) =================
-// parseDateTime niru PERSIS fungsi sama persis di rest-time.html (format "YYYY-MM-DD HH:mm:ss", lokal
-// WIB, BUKAN ISO/UTC) — dipakai bareng buat hitung durasi statusLiveTerkini di bawah.
 function monParseDateTime(str){
   if (!str) return null;
   const t = String(str).split(/[- :]/);
   return new Date(t[0], t[1]-1, t[2], t[3]||0, t[4]||0, t[5]||0);
 }
 
-// Hitung 2 status live yang paling sering ditanya, DI SINI (JS) — bukan diserahin ke AI — niru persis
-// checkRestOvertimeAlert() (>60 menit) & getActiveAssetLock()/last-action check (PDA belum kembali) di
-// rest-time.html, biar jawabannya selalu konsisten sama yang ditampilin dashboard aslinya.
 function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap){
   const now = new Date();
 
-  // --- Operator yang lagi Break Out & udah >60 menit ---
   const byOpsRest = {};
   logs.forEach(function (l) { (byOpsRest[l.opsId] = byOpsRest[l.opsId] || []).push(l); });
   const operatorIstirahatLebih60Menit = [];
@@ -604,7 +532,6 @@ function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap){
   });
   operatorIstirahatLebih60Menit.sort(function (a, b) { return b.durasiMenit - a.durasiMenit; });
 
-  // --- PDA yang aksi terakhirnya "Pinjam PDA" (belum "Kembali PDA") ---
   const byAssetSn = {};
   assetLogs.forEach(function (l) { (byAssetSn[l.serialNumber] = byAssetSn[l.serialNumber] || []).push(l); });
   const belumKembaliFlat = [];
@@ -631,9 +558,6 @@ function computeRestAssetLiveStatus(logs, assetLogs, master, stationMap){
   };
 }
 
-// Edit Jam by OpsID — niru persis makeTimeEditable() di rest-time.html: kalau entry breakType itu udah
-// ada di tanggal itu, UPDATE timestamp-nya; kalau belum pernah ada sama sekali, BIKIN BARU (cycleNum
-// default 1, sama kayak perilaku "Input Manual" di dashboard aslinya).
 async function monUpdateLogTime(opsId, breakType, dateStr, newTime){
   const db = firebase.database();
   const targetLog = currentRestLogs.find(function (l) { return l.opsId === opsId && l.workingDate === dateStr && l.breakType === breakType; });
@@ -646,10 +570,6 @@ async function monUpdateLogTime(opsId, breakType, dateStr, newTime){
   }
 }
 
-// Delete Activity — niru persis removeOpsIdLog() di rest-time.html: hapus SEMUA log opsId itu di
-// tanggal itu, buat modul "rest" (Rest Time) ATAU "asset" (Asset Usage PDA). WAJIB dicek
-// window.__authCanDelete DULU (Firebase Rules-nya emang butuh whitelist admin buat delete — beda dari
-// create/update yang kebuka buat semua user authenticated).
 async function monDeleteActivity(opsId, dateStr, module){
   if (!window.__authCanDelete){
     throw new Error("Kamu gak punya akses buat hapus data di modul ini (cuma admin tertentu yang bisa). Hubungi admin kalau ini kesalahan.");
@@ -665,8 +585,6 @@ async function monDeleteActivity(opsId, dateStr, module){
   return matched.length;
 }
 
-// Kartu konfirmasi Rest Time & Asset Usage — pola SAMA PERSIS kayak renderInventoryActionConfirmCard:
-// TIDAK ADA yang kesimpen sebelum user klik "Konfirmasi & Simpan".
 function renderRestActionConfirmCard(action){
   const chatLog = document.getElementById("chatLog");
   if (!chatLog || !action || !action.type) return;
@@ -763,31 +681,20 @@ function renderRestActionConfirmCard(action){
 }
 
 
-// ===== Path Firebase modul OUTBOUND (outbound.html) — Aging & Packer Backlog + Occupancy & Shift.
-// Root beda sendiri, SAMA PERSIS yang dipakai outbound.html, biar Odyssey baca sumber data yang
-// sama persis dengan yang keliatan di dashboard Outbound. =====
 const FB_OUTBOUND_ROOT = "prDcOutboundMonitoring";
-let currentOutboundRaw = [];    // array parcel Outbound (hasil decompress data import terakhir)
-let currentOutboundMeta = null; // {fileName, importedAt, importedBy} import terakhir modul Outbound
+let currentOutboundRaw = [];
+let currentOutboundMeta = null;
 
-// ===== Modul PERFORMANCE BAGGER (monitoring produktivitas packer/bagger harian, sumber import PDVT) =====
 const FB_PB_ROOT = "prDcPerformanceBagger";
-let currentPbDailyRecords = {}; // {tanggal(YYYY-MM-DD): {opsId: {name, agency, packed, statusInfo, importedAt, importedBy}}} bulan berjalan, live Firebase
-let currentPbImportLogs = [];   // riwayat import PDVT terakhir (max 20, sesuai yang ditampilin dashboard)
+let currentPbDailyRecords = {};
+let currentPbImportLogs = [];
 
-// ===== Modul INVENTORY CONTROL (Stock, Log Activity Usage & Highlight, Asset IT & NCA, Audit Log) =====
 const FB_INV_ROOT = "inventoryControl";
-const INV_FACILITY = "SOC"; // SOC & EHA sekarang 1 cabang Firebase gabungan (inventoryControl/SOC/...) —
-                             // "SOC" di sini CUMA nama path internal, pembeda SOC/EHA yang beneran cuma
-                             // di field "devisi" tiap Log Activity Usage. SAMA PERSIS pola inventory-control.html.
-let currentInvStock = {};      // { assetId: {name, category, unit, qty, minStock, note, updatedAt, updatedBy, createdAt, createdBy} }
-let currentInvUsageLogs = {};  // { logId: {assetId, assetName, unit, qtyUsed, workingDate(YYYY-MM-DD), devisi(SOC/EHA), createdAt, createdBy} } — 500 log terakhir
-let currentInvAssetItNca = {}; // { itemId: {name, jenis(IT/NCA), qty, serial, pic, lokasi, status, note, updatedAt, updatedBy} }
-let currentInvAuditLog = {};   // { logId: {module, action(create/update/delete), itemName, detail, changedAt, changedBy} } — 300 log terakhir
-
-// Data import Outbound disimpen di Firebase dalam bentuk COLUMNAR + GZIP base64 (biar hemat kuota,
-// SAMA PERSIS teknik yang dipakai outbound.html sendiri) — jadi harus di-decode balik di sini dulu
-// sebelum dipakai buat jawab pertanyaan.
+const INV_FACILITY = "SOC";
+let currentInvStock = {};
+let currentInvUsageLogs = {};
+let currentInvAssetItNca = {};
+let currentInvAuditLog = {};
 function outboundBase64ToUint8(base64){
   const binary = atob(base64);
   const bytes = new Uint8Array(binary.length);
@@ -843,9 +750,6 @@ function fetchOutboundData(){
   });
 }
 
-// ===== Jadwal keberangkatan Linehaul modul Outbound (Occupancy & Shift Departure Schedule) — config
-// STATIS (bukan dari Firebase), di-COPY PERSIS dari konstanta "linehaulSchedule" di outbound.html,
-// biar Odyssey tau jadwal per rute tanpa perlu sumber data tambahan. =====
 const outboundLinehaulSchedule = [
   { dest: "Sebangau Hub - Jekan Raya Hub", slot: 1, time: "21:00", hubs: ["Sebangau Hub", "Jekan Raya Hub"] },
   { dest: "Sebangau Hub - Jekan Raya Hub", slot: 2, time: "03:00", hubs: ["Sebangau Hub", "Jekan Raya Hub"] },
@@ -929,8 +833,6 @@ outboundLinehaulSchedule.forEach(function (s) {
 });
 Object.keys(outboundHubDepartureMinutesMap).forEach(function (h) { outboundHubDepartureMinutesMap[h].sort(function (a, b) { return a - b; }); });
 
-// SAMA PERSIS logic getDeliveryShiftForItem() di outbound.html — shift sebuah parcel ditentukan dari
-// keberangkatan hub terdekat SESUDAH jam packing, bukan cuma dibagi rata jam packing / 8 jam.
 function outboundDeliveryShiftForItem(item){
   if (!item.completeDateObj) return item.shift;
   const packMinutes = item.completeDateObj.getHours() * 60 + item.completeDateObj.getMinutes();
@@ -942,7 +844,6 @@ function outboundDeliveryShiftForItem(item){
   const mm = String(nextMinutes % 60).padStart(2, "0");
   return outboundShiftFromTimeStr(hh + ":" + mm);
 }
-// SAMA PERSIS logic getDepartureStatus() di outbound.html
 function outboundDepartureStatusText(timeStr){
   const now = new Date();
   const parts = timeStr.split(":");
@@ -952,7 +853,6 @@ function outboundDepartureStatusText(timeStr){
   if (diffMinutes <= 30) return "Segera (kurang dari 30 menit)";
   return "Terjadwal";
 }
-// SAMA PERSIS logic getRouteAlert() di outbound.html
 function outboundRouteAlert(pct){
   if (pct > 150) return { level: "CRITICAL", text: "Need Early Load + Slot Tambahan (Follow Up Team MM)" };
   if (pct > 100) return { level: "URGENT", text: "Need Early Loading Segera (Follow Up Team MM)" };
@@ -960,10 +860,6 @@ function outboundRouteAlert(pct){
   return { level: "AMAN", text: "Kondisi Normal, Belum Perlu Tindakan" };
 }
 
-// Setting kapasitas & SLA modul Outbound — dibaca dari localStorage KALAU report-agent.html satu
-// origin sama outbound.html (sesuai pola app shell di project ini), biar angkanya nyambung PERSIS
-// sama yang di-setting Shift Lead di System Settings dashboard Outbound. Kalau gak ketemu (origin
-// beda / localStorage kosong), fallback ke DEFAULT BAWAAN outbound.html sendiri.
 function outboundGetNum(key, fallback){
   const v = parseFloat(localStorage.getItem(key));
   return isNaN(v) ? fallback : v;
@@ -977,12 +873,6 @@ function outboundGetSettings(){
   };
 }
 
-// Bikin RINGKASAN AGREGAT modul Outbound (Aging & Packer Backlog + Occupancy & Shift) dari data
-// mentah per-parcel — REPLIKASI PERSIS logic hitung di outbound.html (renderDashboard(),
-// renderPackerLeaderboard(), renderShiftTable(), renderExecutiveSummary(), dst), biar angka yang
-// Odyssey sebut ke user SAMA PERSIS kayak yang keliatan di dashboard Outbound. Sengaja GAK ngirim
-// ribuan baris parcel mentah ke AI (boros token & lambat) — cukup ringkasan agregatnya aja, yang
-// notabene udah mencakup semua sudut pandang (per rute, per packer, per shift, per destinasi).
 function buildOutboundSummary(rawData){
   const cfg = outboundGetSettings();
   const total = rawData.length;
@@ -994,7 +884,6 @@ function buildOutboundSummary(rawData){
   const capPctRaw = cfg.maxStagingCapacity > 0 ? (total / cfg.maxStagingCapacity) * 100 : 0;
   const criticalPctOfTotal = total > 0 ? (criticalParcels / total) * 100 : 0;
 
-  // Breakdown Volume & Aging Days Inner Island (per rute linehaul terjadwal)
   const routeVolumes = outboundLinehaulRoutes.map(function (r) {
     return { label: r.label, total: 0, parcel: 0, bulky: 0, d0: 0, d1: 0, d2: 0, d3: 0, d4: 0, d5: 0, d6: 0, dMore: 0 };
   });
@@ -1027,15 +916,12 @@ function buildOutboundSummary(rawData){
       outerIslandMap[item.receiverName].parcel++;
     }
   });
-  // Cap (%) Inner Island pakai kapasitas tetap 4000/rute (SAMA PERSIS outbound.html)
   routeVolumes.forEach(function (r) { r.capPct = Number(((r.total / 4000) * 100).toFixed(1)); });
   routeVolumes.sort(function (a, b) { return b.total - a.total; });
-  // Cap (%) Outer Island pakai DESTINATION_CAPACITY per destinasi (setting System Settings)
   const outerIslandList = Object.values(outerIslandMap).map(function (r) {
     return Object.assign({}, r, { capPct: Number((cfg.destCapacity > 0 ? (r.total / cfg.destCapacity) * 100 : 0).toFixed(1)) });
   }).sort(function (a, b) { return b.total - a.total; });
 
-  // Priority Action Center — Top 5 Rute Occupancy Tertinggi (gabungan Inner + Outer)
   const top5Priority = routeVolumes.map(function (r) { return { label: r.label, total: r.total, pct: (r.total / 4000) * 100, category: "Inner" }; })
     .concat(outerIslandList.map(function (r) { return { label: r.name, total: r.total, pct: (r.total / 2000) * 100, category: "Outer" }; }))
     .sort(function (a, b) { return b.pct - a.pct; }).slice(0, 5)
@@ -1044,7 +930,6 @@ function buildOutboundSummary(rawData){
       return { rute: r.label, kategori: r.category, totalParcel: r.total, persenOccupancy: Number(r.pct.toFixed(1)), levelAlert: alert.level, rekomendasiAksi: alert.text };
     });
 
-  // Packer Leaderboard (Root Cause backlog kritis per operator)
   const packerMap = {};
   rawData.forEach(function (item) {
     const p = item.lastPacker && item.lastPacker !== "-" ? item.lastPacker : "Unassigned / Unknown";
@@ -1064,19 +949,16 @@ function buildOutboundSummary(rawData){
     return Object.assign({}, p, { kontribusiBacklogKritisPct: totalCriticalAll > 0 ? Number(((p.criticalD6 / totalCriticalAll) * 100).toFixed(1)) : 0 });
   }).sort(function (a, b) { return b.total - a.total; }).slice(0, 30); // batasin Top 30 biar payload gak membengkak
 
-  // Perbandingan Volume Parcel per Shift (pakai jadwal keberangkatan hub, bukan cuma jam packing)
   let s1 = 0, s2 = 0, s3 = 0;
   rawData.forEach(function (d) {
     const sh = outboundDeliveryShiftForItem(d);
     if (sh === "Shift 1") s1++; else if (sh === "Shift 2") s2++; else s3++;
   });
 
-  // Shift Departure Schedule & Heatmap Monitoring (jadwal + status real-time SEKARANG)
   const shiftSchedule = outboundLinehaulSchedule.map(function (s) {
     return { rute: s.dest, slot: s.slot, jamKeberangkatan: s.time, shift: outboundShiftFromTimeStr(s.time), statusSekarang: outboundDepartureStatusText(s.time) };
   }).sort(function (a, b) { return a.jamKeberangkatan.localeCompare(b.jamKeberangkatan); });
 
-  // Verdict keseluruhan DC — SAMA PERSIS logic renderExecutiveSummary() di outbound.html
   const worst = top5Priority.length > 0 ? top5Priority[0] : null;
   const routeCritical = worst && (worst.levelAlert === "CRITICAL" || worst.levelAlert === "URGENT");
   const routeWatch = worst && worst.levelAlert === "WATCH";
@@ -1106,12 +988,7 @@ function buildOutboundSummary(rawData){
   };
 }
 
-// ===== Roster staff & target achievement modul Performance Bagger — di-COPY PERSIS dari konstanta
-// "STAFF_ROSTER" & "ACHIEVEMENT_THRESHOLD" di performance-bagger.html (sama kayak pola
-// outboundLinehaulSchedule di atas: config statis, bukan dari Firebase, jadi harus disalin manual
-// kalau roster/target di dashboard-nya berubah biar Odyssey gak ketinggalan info). =====
 const PB_STAFF_ROSTER = [
-  // -- Dedicated Operator --
   { name: "Muhammad Arifin 2", opsId: "Ops854217", agency: "MYROBIN", status: "Dedicated Operator" },
   { name: "Muhammad Ramadani", opsId: "Ops767061", agency: "UGBM", status: "Dedicated Operator" },
   { name: "Rivqy Akbar Riswana", opsId: "Ops664556", agency: "MYROBIN", status: "Dedicated Operator" },
@@ -1157,7 +1034,6 @@ const PB_STAFF_ROSTER = [
   { name: "DEFRI ANDREADI", opsId: "Ops1872555", agency: "MYROBIN", status: "Dedicated Operator" },
   { name: "AHMAD MUTALIB", opsId: "Ops1872558", agency: "IPI", status: "Dedicated Operator" },
 
-  // -- DW Reguler Pria --
   { name: "MUHAMMAD NAZRIL ILHAM", opsId: "Ops1935449", agency: "IPI", status: "DW Reguler Pria" },
   { name: "AKMAL LUNABIL", opsId: "Ops1472837", agency: "UGBM", status: "DW Reguler Pria" },
   { name: "DANO ALAM", opsId: "Ops1455291", agency: "UGBM", status: "DW Reguler Pria" },
@@ -1201,7 +1077,6 @@ const PB_STAFF_ROSTER = [
   { name: "PAULUS THALAWANG WOGE NDORE", opsId: "Ops1956235", agency: "IPI", status: "DW Reguler Pria" },
   { name: "TRIO PATRAMAN JOSAFAT SIANTURI", opsId: "Ops1733568", agency: "MYROBIN", status: "DW Reguler Pria" },
 
-  // -- DW Reguler Wanita --
   { name: "YANTI", opsId: "Ops1461807", agency: "MYROBIN", status: "DW Reguler Wanita" },
   { name: "FEBRILIYA ROFIKA SARI", opsId: "Ops1474257", agency: "IPI", status: "DW Reguler Wanita" },
   { name: "NATALIA SIMAMORA", opsId: "Ops1357681", agency: "UGBM", status: "DW Reguler Wanita" },
@@ -1228,16 +1103,12 @@ const PB_ACHIEVEMENT_THRESHOLD = {
 
 function pbPad2(n){ return String(n).padStart(2, "0"); }
 
-// "Kemarin" versi tanggal lokal device (SAMA PERSIS getYesterdayDateStr() di performance-bagger.html) —
-// dipakai buat kolom "D+1 Packed (Quick View D+1)".
 function pbYesterdayLocal(){
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.getFullYear() + "-" + pbPad2(d.getMonth() + 1) + "-" + pbPad2(d.getDate());
 }
 
-// Range & label bulan berjalan (SAMA PERSIS currentMonthRange() di performance-bagger.html, tanpa
-// parameter monthStr karena Odyssey selalu ambil bulan berjalan device SEKARANG).
 function pbCurrentMonthRangeLocal(){
   const now = new Date();
   const y = now.getFullYear();
@@ -1250,10 +1121,6 @@ function pbCurrentMonthRangeLocal(){
   };
 }
 
-// Ambil data LIVE dari Firebase root "prDcPerformanceBagger" — SAMA PERSIS sumber yang dipakai
-// dashboard performance-bagger.html (bulan berjalan buat dailyRecords, + 20 log import terakhir).
-// Data ini tersimpan sebagai JSON polos (BUKAN gzip/columnar kayak modul Outbound), jadi gak perlu
-// decompress, cukup baca langsung.
 function fetchPerformanceBaggerData(){
   return new Promise((resolve, reject) => {
     if (!window.firebase || !firebase.apps || !firebase.apps.length){
@@ -1280,11 +1147,6 @@ function fetchPerformanceBaggerData(){
   });
 }
 
-// Hitung agregat per operator — REPLIKASI PERSIS logic computePbAggregates() di performance-bagger.html
-// (total packed, rata-rata/hari, achievedDays vs target, d1Packed "kemarin", underStreak/overStreak
-// beruntun di bawah/atas target [ngabaikan hari Off Duty/Cuti/Sakit/Izin], growth 3 hari terakhir vs
-// 3 hari sebelumnya, badge Speed Demon/Most Consistent/On Fire) — supaya angka yang dijawab Odyssey
-// PERSIS sama kayak yang ditampilin di tabel dashboard Performance Bagger, bukan ngitung versi sendiri.
 function computePbAggregatesForAgent(dailyRecords){
   const agg = {};
   const targetDateStr = pbYesterdayLocal();
@@ -1359,10 +1221,6 @@ function computePbAggregatesForAgent(dailyRecords){
   return agg;
 }
 
-// Ringkasan lengkap modul Performance Bagger buat dikirim ke AI — mencakup semua sudut pandang yang
-// ada di dashboard (Hall of Fame Top 3, ringkasan achievement rate keseluruhan, breakdown per agency,
-// daftar Red Flag/Needs Coaching, ranking lengkap SEMUA operator di roster + badge & streak-nya, dan
-// riwayat import PDVT terakhir).
 function buildPerformanceBaggerSummary(dailyRecords, importLogs){
   const range = pbCurrentMonthRangeLocal();
   const agg = computePbAggregatesForAgent(dailyRecords);
@@ -1432,11 +1290,6 @@ function buildPerformanceBaggerSummary(dailyRecords, importLogs){
   };
 }
 
-// ===== Devisi otomatis (SOC/EHA) modul Inventory Control — di-COPY PERSIS dari EHA_EMAILS/
-// getDevisiForEmail/DEVISI_LABELS di inventory-control.html (config statis, harus disalin manual
-// kalau daftar emailnya berubah, sama kayak roster Performance Bagger di atas). Dipakai sebagai
-// fallback kalau ada Log Usage lama yang belum punya field "devisi" tersimpan (SAMA PERSIS fallback
-// yang dipakai renderUsageDashboard() di dashboard-nya: (l.devisi || getDevisiForEmail(l.createdBy))). =====
 const INV_EHA_EMAILS = [
   "yoga.parera@spxexpress.com",
   "yuyun.lestari@spx-external.com",
@@ -1457,9 +1310,6 @@ function invTodayStrLocal(){
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
 }
 
-// Ambil data LIVE dari Firebase root "inventoryControl/SOC" — SAMA PERSIS sumber yang dipakai
-// dashboard inventory-control.html (Stock semua, Log Usage 500 terakhir, Asset IT & NCA semua,
-// Audit Log 300 terakhir — limit-nya disamain kayak listener di dashboard aslinya).
 function fetchInventoryControlData(){
   return new Promise((resolve, reject) => {
     if (!window.firebase || !firebase.apps || !firebase.apps.length){
@@ -1488,12 +1338,6 @@ function fetchInventoryControlData(){
   });
 }
 
-// Ringkasan lengkap modul Inventory Control buat dikirim ke AI — gabungan data MENTAH (Stock, Asset
-// IT & NCA, Audit Log terbaru) SUPAYA Odyssey bisa jawab pertanyaan detail apa aja, PLUS bagian
-// "sudahDihitungFinal" yang angkanya udah dihitung persis sama kayak dashboard (Low Stock + estimasi
-// habis & saran reorder, KPI Highlight Usage hari ini/bulan ini/delta vs bulan lalu, Top Asset
-// Terpakai bulan ini, breakdown pemakaian per Devisi SOC vs EHA) — biar AI GAK ngitung ulang pakai
-// cara/asumsi sendiri buat angka-angka yang emang udah final di dashboard.
 function buildInventoryControlSummary(stock, usageLogsRaw, assetItNca, auditLogRaw){
   const today = invTodayStrLocal();
   const monthPrefix = today.slice(0, 7);
@@ -1519,7 +1363,7 @@ function buildInventoryControlSummary(stock, usageLogsRaw, assetItNca, auditLogR
     if (d.slice(0, 7) === lastMonthPrefix) lastMonthTotal += q;
   });
 
-  let monthDeltaPct = null; // null = gak ada perbandingan (dua-duanya 0)
+  let monthDeltaPct = null;
   let monthDeltaKeterangan = "Belum ada data bulan ini maupun bulan lalu";
   if (!(lastMonthTotal === 0 && monthTotal === 0)) {
     if (lastMonthTotal === 0) {
@@ -1533,8 +1377,6 @@ function buildInventoryControlSummary(stock, usageLogsRaw, assetItNca, auditLogR
   const topAssetBulanIni = Object.keys(monthAssetTotals).sort(function (a, b) { return monthAssetTotals[b] - monthAssetTotals[a]; })
     .map(function (name, idx) { return { rank: idx + 1, nama: name, totalTerpakaiBulanIni: monthAssetTotals[name] }; });
 
-  // Rata-rata pemakaian/hari per Asset, 30 hari terakhir (buat estimasi habis stock) — SAMA PERSIS
-  // logic renderUsageHighlight() di dashboard.
   const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 29);
   const cutoffStr = cutoff.getFullYear() + "-" + String(cutoff.getMonth() + 1).padStart(2, "0") + "-" + String(cutoff.getDate()).padStart(2, "0");
   const last30Totals = {};
@@ -1572,8 +1414,6 @@ function buildInventoryControlSummary(stock, usageLogsRaw, assetItNca, auditLogR
     const minStock = Number(a.minStock) || 0;
     const qty = Number(a.qty) || 0;
     return {
-      // "assetId" ini KEY ASLI di Firebase (bukan hasil generate/tebakan) — WAJIB dipakai apa adanya
-      // kalau nyiapin "inventoryAction" (Update Stock/Usage Log), JANGAN pernah dimodif/disingkat/ditebak.
       assetId: a.assetId,
       nama: a.name || "-", kategori: a.category || "-", unit: a.unit || "-",
       qty: qty, minStock: minStock, statusStock: (minStock > 0 && qty <= minStock) ? "Menipis" : "Aman",
@@ -1634,13 +1474,6 @@ function buildInventoryControlSummary(stock, usageLogsRaw, assetItNca, auditLogR
   };
 }
 
-// ================= INVENTORY CONTROL - AKSI TULIS (Update Stock & Submit Usage Log) =================
-// PENTING soal Firebase Rules: kita SENGAJA gak pernah overwrite whole node "stock/{id}" (itu butuh
-// whitelist admin di rules). Update qty pakai .transaction() cuma di path "stock/{id}/qty" +
-// .update() cuma di "updatedAt"/"updatedBy" — dua-duanya nested rule-nya cuma butuh auth != null &
-// bukan email yang di-banned (securty-swat / mmpalangkarayadc), SAMA PERSIS pola proceedSubmitUsageLog()
-// di inventory-control.html. Ini bikin fitur ini jalan buat SEMUA user yang emang udah punya akses ke
-// modul Inventory Control, gak perlu whitelist tambahan.
 function invLogAudit(module, action, itemName, detail){
   const db = firebase.database();
   const facilityRoot = FB_INV_ROOT + "/" + INV_FACILITY;
@@ -1651,12 +1484,7 @@ function invLogAudit(module, action, itemName, detail){
   return db.ref(facilityRoot + "/auditLog").push().set(payload).catch(function (e) { console.error("invLogAudit gagal:", e); });
 }
 
-// Update Stock: nambah/ngurangin qty asset yang UDAH ADA di Stock. delta boleh positif (restock) atau
-// negatif (koreksi manual) — beda dari Usage Log yang otomatis ngurangin qty + nyatet history pemakaian.
 async function invUpdateStockQty(assetId, delta, assetNameFallback){
-  // Pengaman WAJIB: jangan pernah percaya assetId dari AI mentah-mentah. Kalau ID ini gak beneran ada
-  // di Stock saat ini, Firebase .transaction() bakal bikin NODE BARU kosong (cuma field qty doang) —
-  // itu row sampah, bukan koreksi ke item yang dimaksud. Makanya divalidasi dulu di sini SEBELUM nulis.
   if (!currentInvStock[assetId]){
     throw new Error("Asset ID \"" + assetId + "\" gak ketemu di Stock saat ini — kemungkinan AI salah tangkep/nebak ID, dibatalkan biar gak bikin data sampah. Coba sebutin ulang nama barangnya lebih spesifik.");
   }
@@ -1674,9 +1502,6 @@ async function invUpdateStockQty(assetId, delta, assetNameFallback){
   return newQty;
 }
 
-// Submit Usage Log: bikin entry log baru + otomatis ngurangin qty stock terkait (transaction), niru
-// persis proceedSubmitUsageLog() di inventory-control.html — SATU per SATU berurutan biar aman kalau ada
-// yang gagal di tengah jalan.
 async function invSubmitUsageLog(items, dateStr, devisi, stockSnapshot){
   const db = firebase.database();
   const facilityRoot = FB_INV_ROOT + "/" + INV_FACILITY;
@@ -1701,9 +1526,6 @@ async function invSubmitUsageLog(items, dateStr, devisi, stockSnapshot){
   await invLogAudit("Log Usage", "create", itemNames, "Tanggal: " + dateStr + ", Divisi: " + (INV_DEVISI_LABELS[resolvedDevisi] || resolvedDevisi) + " (via Odyssey)");
 }
 
-// Kartu konfirmasi di chat — Odyssey CUMA nyiapin rencana aksi (parsed.inventoryAction dari Gemini),
-// TIDAK PERNAH nulis langsung ke Firebase. Baru beneran kesimpen kalau user klik "Konfirmasi & Simpan"
-// di sini. Ini pengaman wajib karena AI bisa aja salah tangkep nama barang/qty dari kalimat user.
 function renderInventoryActionConfirmCard(action){
   const chatLog = document.getElementById("chatLog");
   if (!chatLog || !action || !Array.isArray(action.items) || !action.items.length) return;
@@ -1732,8 +1554,6 @@ function renderInventoryActionConfirmCard(action){
   list.style.fontSize = "14px"; list.style.marginBottom = "10px"; list.style.lineHeight = "1.7";
   const lines = [];
   if (action.type === "usage_log" && action.date) lines.push("Tanggal: " + action.date);
-  // Validasi assetId SEBELUM ditampilin — kalau ID-nya gak ketemu di Stock saat ini (AI kemungkinan
-  // salah tangkep/nebak), tandain di sini biar user liat masalahnya SEBELUM klik simpan, bukan sesudah.
   let hasInvalidItem = false;
   action.items.forEach(function (it) {
     const known = currentInvStock[it.assetId];
@@ -1806,7 +1626,6 @@ function renderInventoryActionConfirmCard(action){
   chatLog.scrollTop = chatLog.scrollHeight;
 }
 
-// ===== Replikasi persis logic status di inbound.html =====
 function computeStatus(t){
   const atdOrigin = t.atdOrigin ? new Date(t.atdOrigin) : null;
   const ataDest = t.ataDest ? new Date(t.ataDest) : null;
@@ -1827,12 +1646,6 @@ function computeStatus(t){
   return { statusText, etaDateObj };
 }
 
-// Format tanggal pakai KOMPONEN WAKTU LOKAL (WIB) — SAMA PERSIS kayak
-// formatDateYYYYMMDD() di inbound.html. JANGAN pakai .toISOString().slice(0,10)
-// buat ambil tanggal, karena toISOString() itu UTC: trip yang ATD Origin-nya
-// jam 00:00-06:59 pagi WIB bakal "mundur" ke tanggal UTC sebelumnya (H-1),
-// jadi gak match sama kolom "Tanggal" di dashboard Inbound yang pakai local time.
-// Ini yang bikin AI Agent salah nyortir trip pas ditanya "hari ini".
 function formatDateYYYYMMDDLocal(d){
   const pad = n => String(n).padStart(2,"0");
   return d.getFullYear() + "-" + pad(d.getMonth()+1) + "-" + pad(d.getDate());
@@ -1860,25 +1673,16 @@ function normalizeTrip(t){
   };
 }
 
-// ===== Deteksi "Convoy" (fitur baru) =====
-// Definisi convoy: 2 (atau lebih) unit yang ATA Destination-nya berjarak
-// DI BAWAH 40 menit satu sama lain, di tanggal yang sama. Cara hitungnya:
-// per tanggal, urutin trip yang UDAH punya ataDest dari yang paling pagi,
-// lalu "rantai"-in trip yang jaraknya ke trip sebelumnya < 40 menit jadi
-// satu grup. Grup yang cuma isi 1 trip (gak ada temen deketnya) dibuang —
-// itu bukan convoy. Dihitung SEKALI di sini (JS), bukan diserahin ke AI,
-// biar hasilnya konsisten & gak meleset kayak kalau AI disuruh
-// ngira-ngira selisih waktu sendiri dari puluhan trip.
 function computeConvoyGroups(trips){
   const byDate = {};
   trips.forEach(function (t){
-    if (!t.ataDest || !t.tanggal) return; // convoy cuma valid buat trip yang UDAH sampai
+    if (!t.ataDest || !t.tanggal) return;
     const ataMs = new Date(t.ataDest).getTime();
     if (isNaN(ataMs)) return;
     (byDate[t.tanggal] = byDate[t.tanggal] || []).push(Object.assign({}, t, { ataMs: ataMs }));
   });
 
-  const CONVOY_WINDOW_MS = 40 * 60 * 1000; // di bawah 40 menit
+  const CONVOY_WINDOW_MS = 40 * 60 * 1000;
   const groups = [];
   Object.keys(byDate).forEach(function (tanggal){
     const arr = byDate[tanggal].sort(function (a, b){ return a.ataMs - b.ataMs; });
@@ -1909,14 +1713,6 @@ function computeConvoyGroups(trips){
   });
 }
 
-// ===== AI "Daily Briefing" (fitur baru) =====
-// Begitu Odyssey kebuka & data live udah kevalidasi login, langsung nembak
-// 1 pesan ringkasan operasional ("30 detik briefing") tanpa nunggu user
-// nanya duluan: jumlah Late Arrival & In Transit HARI INI, jumlah unit
-// Convoy yang kedeteksi, anomali vendor (late rate hari ini naik jauh
-// dibanding rata-rata 7 hari sebelumnya), dan daftar prioritas nomor trip
-// yang paling perlu dicek. Semua dihitung di JS (bukan diserahin ke AI)
-// biar angkanya konsisten & gak ngarang, sama kayak computeConvoyGroups().
 function greetingSalutation(now){
   const h = now.getHours();
   if (h >= 4 && h < 11) return "Selamat pagi";
@@ -1925,10 +1721,6 @@ function greetingSalutation(now){
   return "Selamat malam";
 }
 
-// Bandingin late rate per vendor HARI INI vs rata-rata 7 hari sebelumnya.
-// Butuh minimal 2 trip hari ini & minimal 3 trip di periode baseline biar
-// gak ngasih alert dari sampel kekecilan (1 trip telat = "naik 100%" tapi
-// gak berarti apa-apa). Ambang alert: naik >=15 poin persen.
 function detectVendorLateRateAnomaly(todayTrips, baselineTrips){
   function rateByVendor(list){
     const map = {};
@@ -1957,11 +1749,6 @@ function detectVendorLateRateAnomaly(todayTrips, baselineTrips){
   return best;
 }
 
-// Urutin trip Late Arrival buat daftar "Priority": trip yang MASIH di jalan
-// & udah lewat ETA didahuluin (masih bisa dikejar/ditindaklanjuti sekarang),
-// baru trip yang UDAH sampe tapi telat (cuma tinggal dicatat, gak ada yang
-// bisa dilakuin lagi). Di dalam grup yang sama, makin lama telatnya makin
-// diprioritasin duluan.
 function rankPriorityTrips(lateTrips, now){
   return lateTrips.slice().sort(function (a, b){
     const aStillOnRoad = a.ataDest ? 0 : 1;
@@ -2017,9 +1804,6 @@ function buildDailyBriefingText(trips){
   return lines.join("\n");
 }
 
-// Cuma jalan sekali per sesi (dailyBriefingShown), dan cuma kalau data live
-// Firebase udah kevalidasi login (firebaseReady) — di mode mock/offline
-// AI-nya gak ngasih briefing ngarang, sama kayak aturan modul lain.
 function maybeShowDailyBriefing(){
   if (dailyBriefingShown || !firebaseReady) return;
   dailyBriefingShown = true;
@@ -2027,14 +1811,10 @@ function maybeShowDailyBriefing(){
 }
 
 async function loadData(){
-  // Auto: kalau session login (auth-guard.js) udah kevalidasi, langsung sync live
-  // dari Firebase. Kalau belum login / firebase belum siap, fallback ke data contoh.
   const isLive = firebaseReady;
   document.getElementById("statusLine").textContent = "mode: " + (isLive?"live firebase":"mock data") + " — memuat...";
   try{
     const raw = isLive ? await fetchLiveTrips() : generateMockData();
-    // Semua tanggal ditampung tanpa difilter — AI Agent yang nyortir sendiri
-    // berdasarkan field "tanggal" tiap trip waktu ada pertanyaan soal tanggal tertentu.
     currentTrips = raw.map(normalizeTrip);
     document.getElementById("quickStat").innerHTML = "<b>"+currentTrips.length+"</b> trip tercatat";
     document.getElementById("statusLine").textContent = "mode: " + (isLive?"live firebase":"mock data");
@@ -2043,9 +1823,6 @@ async function loadData(){
     document.getElementById("statusLine").textContent = "gagal ambil data live: " + e.message;
   }
 
-  // Data Rest Time & Asset Usage (prDcMonitoring) — cuma ada versi live, gak
-  // ada mock, karena kalau lagi gak login/offline AI-nya emang WAJIB ngaku
-  // terus terang gak ada data (bukan ngarang), sama kayak mode DW/Queue Report.
   if (isLive){
     try{
       const mon = await fetchRestAssetData();
@@ -2061,9 +1838,6 @@ async function loadData(){
     currentRestLogs = []; currentAssetLogs = []; monMasterKaryawan = {}; monPdaStationMap = {};
   }
 
-  // Data modul OUTBOUND (Aging & Packer Backlog + Occupancy & Shift) — prDcOutboundMonitoring.
-  // Sama kayak Rest Time/Asset Usage: cuma ada versi live, gak ada mock — kalau lagi gak login/offline
-  // AI-nya WAJIB ngaku terus terang gak ada data, bukan ngarang.
   if (isLive){
     try{
       const ob = await fetchOutboundData();
@@ -2077,9 +1851,6 @@ async function loadData(){
     currentOutboundRaw = []; currentOutboundMeta = null;
   }
 
-  // Data modul PERFORMANCE BAGGER (produktivitas packer/bagger harian) — prDcPerformanceBagger.
-  // Sama kayak Outbound/Rest Time/Asset Usage: cuma ada versi live, gak ada mock — kalau lagi gak
-  // login/offline AI-nya WAJIB ngaku terus terang gak ada data, bukan ngarang.
   if (isLive){
     try{
       const pb = await fetchPerformanceBaggerData();
@@ -2093,9 +1864,6 @@ async function loadData(){
     currentPbDailyRecords = {}; currentPbImportLogs = [];
   }
 
-  // Data modul INVENTORY CONTROL (Stock, Log Activity Usage, Asset IT & NCA, Audit Log) —
-  // inventoryControl/SOC. Sama kayak modul lain: cuma ada versi live, gak ada mock — kalau lagi gak
-  // login/offline AI-nya WAJIB ngaku terus terang gak ada data, bukan ngarang.
   if (isLive){
     try{
       const inv = await fetchInventoryControlData();
@@ -2143,22 +1911,11 @@ function renderAttachCard(units){
   </table></div>`;
 }
 
-// ===== Fitur "Explain Why?" & "Details" (fitur baru) =====
-// Tujuannya: user bisa AUDIT reasoning AI tanpa nge-prompt ulang. Caranya —
-// begitu balasan agent kelar, kita gak nanya AI lagi, tapi nyisir ULANG teks
-// balasan itu buat nyari entity (vendor/driver/trip) yang paling relevan
-// disebut di situ, lalu hitung breakdown status-nya LANGSUNG dari currentTrips
-// (data yang emang jadi sumber balasan AI tadi) — sama kayak filosofi
-// computeConvoyGroups()/buildDailyBriefingText(): angka dihitung sekali di JS
-// biar konsisten, bukan diserahin ke AI buat diitung ulang & bisa ngarang.
 function buildExplainData(replyText){
   const trips = (typeof currentTrips !== "undefined" && currentTrips) || [];
   if (!trips.length) return null;
   const lower = (replyText || "").toLowerCase();
 
-  // Prioritas deteksi entity yang disebut di balasan: Vendor > Driver > No Trip.
-  // Vendor didahuluin karena paling sering jadi subjek pertanyaan performa
-  // ("Vendor mana yang paling sering telat?").
   let entityLabel = null, entityValue = null, matchTrips = null;
 
   const vendorNames = [...new Set(trips.map(t => t.vendorName).filter(v => v && v !== "-"))];
@@ -2183,9 +1940,6 @@ function buildExplainData(replyText){
     }
   }
 
-  // Scope waktu: dibaca dari kata kunci yang kesebut di balasan sendiri, biar
-  // breakdown-nya konsisten sama periode yang lagi dibahas AI ("bulan ini",
-  // "hari ini", "minggu ini"/"7 hari"). Default: semua data yang lagi kemuat.
   let scopeLabel = "yang tercatat";
   let scopeTrips = matchTrips || trips;
   const now = new Date();
@@ -2265,15 +2019,6 @@ function buildDetailsPanel(data){
   return panel;
 }
 
-// Render markdown (bold/italic/list/link/code fence) jadi HTML, lalu jalanin
-// syntax highlighting di tiap blok <pre><code>. Dipanggil buat bubble agent
-// SETELAH typewriter kelar ngetik (biar gak parsing HTML di tengah animasi).
-// Line tunggal (bukan baris kosong) dari "replyLines" harus tetep dianggap
-// ganti baris pas di-render markdown — default marked.js NGE-GABUNG newline
-// tunggal jadi satu paragraf (butuh baris kosong buat paragraf baru), yang
-// bikin baris-baris kayak "(0)Antri" / "(1)In Progress" numpuk jadi satu
-// baris panjang. "breaks:true" nyamain perilakunya sama kayak sebelumnya
-// (white-space:pre-wrap versi plain text) tapi tetep dapet markdown+highlight.
 if (window.marked && marked.setOptions){
   marked.setOptions({ breaks: true, gfm: true });
 }
@@ -2285,13 +2030,10 @@ function renderMarkdownInto(bubbleEl, rawText){
       try{ hljs.highlightElement(block); }catch(e){ /* abaikan kalau hljs gagal */ }
     });
   }catch(e){
-    bubbleEl.textContent = rawText; // fallback plain text kalau marked/hljs gagal load
+    bubbleEl.textContent = rawText;
   }
 }
 
-// Efek ngetik karakter-per-karakter buat balasan agent. Ngetik teks MENTAH
-// (textContent, bukan innerHTML) dulu biar gak ada tag html "kepotong" di
-// tengah jalan, baru begitu kelar di-render ulang jadi markdown+highlight.
 function typewriterInto(bubbleEl, fullText, onDone){
   const cursor = document.createElement("span");
   cursor.className = "typewriter-cursor";
@@ -2313,12 +2055,6 @@ function typewriterInto(bubbleEl, fullText, onDone){
   })();
 }
 
-// Mapping nama model "mentah" (dari value dropdown ATAU dari field
-// data.modelUsed/data.model yang dibalikin proxy) ke nama tampilan yang
-// gak nyebut vendor/tier aslinya (Gemini/Flash/Flash Lite) — biar konsisten
-// dipakai di dropdown MAUPUN badge label balasan (termasuk pas mode "Auto"
-// & proxy fallback ke model lain, yang balikin id mentah kayak
-// "gemini-3.6-flash").
 const ODYSSEY_MODEL_NAMES = {
   "gemini-2.5-flash-lite": "Odyssey 2.5",
   "gemini-2.5-flash": "Odyssey 2.5 Pro",
@@ -2335,12 +2071,6 @@ function friendlyModelName(rawId){
   return ODYSSEY_MODEL_NAMES[rawId] || "Odyssey";
 }
 
-// Urutan sama persis kayak GEMINI_MODEL_CHAIN di gemini-proxy.js — dipakai
-// buat retry SISI KLIEN (lihat askAgent) waktu satu model jawab tapi
-// hasilnya BUKAN rate limit, melainkan output-nya gak valid JSON (ini gak
-// ke-detect sama proxy karena proxy cuma ngecek status HTTP/RESOURCE_EXHAUSTED,
-// bukan ngerti isi balasan). Kalau ada model baru ditambah di proxy, tambahin
-// juga di sini biar auto-switch-nya ikut jalan.
 const ODYSSEY_MODEL_CHAIN = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-flash",
@@ -2353,11 +2083,6 @@ const ODYSSEY_MODEL_CHAIN = [
   "gemini-3.8-flash"
 ];
 
-// Bikin bunyi "blip" halus pakai oscillator, bukan file audio — biar ringan
-// & gak perlu nge-load asset tambahan. "sent" nadanya naik dikit (lebih
-// "aktif"), "received" nadanya turun pelan (lebih "lembut"). Volume sengaja
-// dijaga kecil (gain rendah) + envelope cepet biar kesannya "halus", gak
-// ganggu kayak notifikasi HP.
 function ensureAudioCtx(){
   if (!odysseyAudioCtx){
     try{ odysseyAudioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
@@ -2407,9 +2132,6 @@ document.getElementById("soundToggleBtn").addEventListener("click", () => {
 });
 applySoundToggleIcon();
 
-// param "instant": true kalau ini balesan LAMA yang lagi dimuat ulang dari
-// histori Firebase (klik sesi di sidebar) — langsung tampil penuh, gak perlu
-// efek ngetik typewriter lagi kayak balesan yang baru dateng.
 function addMessage(role, text, attachUnits, imageDataUrl, modelLabel, instant){
   playChatSound(role === "user" ? "sent" : "received");
   const log = document.getElementById("chatLog");
@@ -2470,9 +2192,6 @@ function addMessage(role, text, attachUnits, imageDataUrl, modelLabel, instant){
   row.appendChild(col);
   wrap.appendChild(row);
 
-  // Balasan agent: ngetik dulu (typewriter) baru di-render jadi markdown +
-  // syntax highlight begitu kelar. Kalau instant=true (lagi muat ulang sesi
-  // lama dari sidebar riwayat), langsung render penuh tanpa animasi ngetik.
   if (role !== "user" && bubble){
     if (instant){
       renderMarkdownInto(bubble, text);
@@ -2519,9 +2238,6 @@ function addMessage(role, text, attachUnits, imageDataUrl, modelLabel, instant){
     actionsRow.className = "msg-actions";
     actionsRow.appendChild(copyBtn);
 
-    // "Explain": nampilin breakdown angka (Late/On Time/Early + late rate) di
-    // BALIK jawaban AI, dihitung langsung dari currentTrips — jadi user bisa
-    // audit reasoning-nya tanpa harus nge-prompt ulang.
     const explainBtn = document.createElement("button");
     explainBtn.className = "copy-btn explain-btn";
     explainBtn.type = "button";
@@ -2540,8 +2256,6 @@ function addMessage(role, text, attachUnits, imageDataUrl, modelLabel, instant){
     });
     actionsRow.appendChild(explainBtn);
 
-    // "Details": nampilin tabel trip mentah (No Trip/Vendor/Berangkat/Tiba/
-    // Status) yang jadi dasar breakdown di atas, buat yang mau cek satu-satu.
     const detailsBtn = document.createElement("button");
     detailsBtn.className = "copy-btn details-btn";
     detailsBtn.type = "button";
@@ -2582,7 +2296,6 @@ function removeTyping(){
   if (el) el.remove();
 }
 
-// ===== Lightbox gambar in-app (ganti window.open tab baru) =====
 function openLightbox(url){
   const overlay = document.getElementById("lightboxOverlay");
   document.getElementById("lightboxImg").src = url;
@@ -2598,13 +2311,6 @@ document.getElementById("lightboxOverlay").addEventListener("click", (e) => {
 document.getElementById("lightboxCloseBtn").addEventListener("click", closeLightbox);
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeLightbox(); });
 
-// ===== Command Bar / AI Command Palette =====
-// Ketik "/" di chat input buat munculin daftar shortcut command (/late, /convoy,
-// /report, /vendor, /queue, /stock, /dw, /summary), atau tetep bisa ngetik
-// pertanyaan natural language bebas kayak biasa. Setiap command di-map ke kalimat
-// pertanyaan yang udah kena kata kunci deteksi topik di askAgent() (lihat
-// dwKeywords/queueKeywords/inventoryControlKeywords/dataKeywords di atas), jadi
-// hasilnya sama persis kayak user ngetik manual.
 const SLASH_COMMANDS = [
   { cmd: "/late",    icon: "🕒", label: "Late Arrival",    desc: "Cek unit yang Late Arrival hari ini",         query: "Ada unit Late Arrival hari ini?" },
   { cmd: "/convoy",  icon: "🚚", label: "Convoy",           desc: "Cek unit yang jalan Convoy/beriringan",       query: "Ada unit Convoy hari ini?" },
@@ -2632,7 +2338,7 @@ function renderCmdPalette(matches){
     item.className = "cmd-palette-item" + (i === 0 ? " active" : "");
     item.innerHTML = `<span class="cmd-icon">${c.icon}</span><div class="cmd-text"><span class="cmd-name">${c.cmd}</span><span class="cmd-desc">${c.label} — ${c.desc}</span></div>`;
     item.addEventListener("mousedown", (e) => {
-      e.preventDefault(); // biar input gak keburu blur sebelum kita proses klik
+      e.preventDefault();
       runSlashCommand(c);
     });
     wrap.appendChild(item);
@@ -2670,8 +2376,6 @@ function runSlashCommand(c){
   input.value = "";
   commitSend(c.query);
 }
-// Return true kalau tombolnya udah ditangani sama command palette (biar keydown
-// handler utama di chatInput gak ikut2an proses, misal Enter buat kirim biasa).
 function handleCmdPaletteKeydown(e){
   if (!isCmdPaletteOpen()) return false;
   if (e.key === "ArrowDown"){
@@ -2698,8 +2402,6 @@ function handleCmdPaletteKeydown(e){
   }
   return false;
 }
-// Shortcut global ⌘K / Ctrl+K — fokus ke chat input dari mana aja di halaman,
-// persis kayak command bar di app-app lain (Slack/Linear/dst).
 document.addEventListener("keydown", (e) => {
   const isCmdK = (e.key === "k" || e.key === "K") && (e.metaKey || e.ctrlKey);
   if (!isCmdK) return;
@@ -2709,7 +2411,6 @@ document.addEventListener("keydown", (e) => {
   input.select();
 });
 
-// ===== Quick-reply shortcut chips =====
 const QUICK_REPLIES = [
   "Ada unit Late Arrival hari ini?",
   "Ada unit Convoy hari ini?",
@@ -2733,31 +2434,28 @@ function addQuickReplies(){
   log.scrollTop = log.scrollHeight;
 }
 
-// ===== New Chat / reset percakapan =====
 function startNewChat(){
   document.getElementById("chatLog").innerHTML = "";
   chatHistory = [];
-  currentSessionId = null; // sesi baru — belum ada di Firebase sampe pesan pertama kekirim
+  currentSessionId = null;
   clearPendingImage();
   addMessage("agent", "Chat baru dimulai bro. Ada yang bisa gua bantu soal operasional Palangka Raya DC?");
   addQuickReplies();
-  refreshSessionsList(); // ngilangin highlight "active" dari sesi lama di sidebar
+  refreshSessionsList();
 }
 document.getElementById("newChatBtn").addEventListener("click", startNewChat);
 document.getElementById("newSessionBtn").addEventListener("click", startNewChat);
 
-// ===== Toggle sidebar riwayat chat =====
 document.getElementById("toggleSidebarBtn").addEventListener("click", () => {
   const sidebar = document.getElementById("sessionsSidebar");
   const wasHidden = sidebar.classList.contains("hidden");
   sidebar.classList.toggle("hidden");
-  if (wasHidden) refreshSessionsList(); // baru di-fetch pas dibuka, gak perlu polling terus-terusan
+  if (wasHidden) refreshSessionsList();
 });
 document.getElementById("closeSidebarBtn").addEventListener("click", () => {
   document.getElementById("sessionsSidebar").classList.add("hidden");
 });
 
-// ===== Popover Setting (ukuran font & lebar chat) =====
 document.getElementById("settingsBtn").addEventListener("click", (e) => {
   e.stopPropagation();
   document.getElementById("settingsPopover").classList.toggle("show");
@@ -2769,9 +2467,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// --chat-font-size & --chat-msg-max-width diaplikasiin ke :root biar kepake
-// sama semua bubble pesan (lama & baru) sekaligus, gak perlu loop ke tiap
-// elemen .msg yang udah kerender. Pilihan disimpen ke localStorage per-browser.
 const FONT_SIZE_MAP = { small: "13px", normal: "14px", large: "16px" };
 const CHAT_WIDTH_MAP = { narrow: "min(58%, 520px)", normal: "min(78%, 720px)", wide: "min(94%, 960px)" };
 function applyFontSize(key){
@@ -2797,18 +2492,12 @@ document.getElementById("chatWidthSelect").addEventListener("change", (e) => {
   applyChatWidth(e.target.value);
 });
 
-// ===== Simpen & muat histori chat per-user ke/dari Firebase =====
-// (bukan cuma di memory browser kayak sebelumnya — refresh/ganti device,
-// histori tetep ada selama masih login akun yang sama & masih online).
 function getCurrentUid(){
   try{
     const u = window.firebase && firebase.auth && firebase.auth().currentUser;
     return u ? u.uid : null;
   }catch(e){ return null; }
 }
-// Ubah email user yang lagi login jadi nama tampilan buat label chat.
-// Contoh: "irwan.faiz@spxexpress.com" -> "Irwan Faiz". Kalau gagal
-// (belum login / gak ada email di akun), fallback ke "Lo" kayak sebelumnya.
 function getCurrentUserLabel(){
   try{
     const u = window.firebase && firebase.auth && firebase.auth().currentUser;
@@ -2825,9 +2514,6 @@ function getCurrentUserLabel(){
 function newSessionId(){
   return "sess_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
 }
-// Jangan simpen base64 gambar mentah ke Firebase (bisa berat banget & bikin
-// database bengkak) — pas nyimpen histori, konten gambar diganti placeholder
-// teks aja. Gambar tetep kepake normal buat sesi yang lagi jalan (di memory).
 function sanitizeMessagesForSave(history){
   return history.map(function(m){
     if (Array.isArray(m.content)){
@@ -2838,10 +2524,10 @@ function sanitizeMessagesForSave(history){
   });
 }
 function scheduleSaveSession(){
-  if (!firebaseReady) return; // mode mock/offline: histori cuma kesimpen di memory browser aja
+  if (!firebaseReady) return;
   if (!chatHistory.length) return;
   clearTimeout(saveSessionTimer);
-  saveSessionTimer = setTimeout(saveSessionNow, 900); // debounce biar gak nulis tiap detik
+  saveSessionTimer = setTimeout(saveSessionNow, 900);
 }
 function saveSessionNow(){
   const uid = getCurrentUid();
@@ -2934,16 +2620,10 @@ function loadSession(sessionId){
     .catch(function(e){ console.warn("Gagal muat sesi:", e.message); });
 }
 
-// Ubah pesan error teknis dari API jadi kalimat simpel yang enak dibaca user
-// biasa, bukan mentahan pesan Gemini/HTTP yang penuh istilah teknis.
 function simplifyErrorMessage(raw){
   const msg = String(raw || "");
 
-  // Kena limit pemakaian (rate limit / quota harian free tier Gemini, dll)
   if (/rate.?limit/i.test(msg) || /RESOURCE_EXHAUSTED/i.test(msg) || /quota/i.test(msg)){
-    // Kalau Gemini kasih tau berapa detik lagi harus nunggu (retryDelay/"try again
-    // in 12.3s"), hitung jadi jam WIB yang konkret. Kalau gak ada info itu, kasih
-    // estimasi umum.
     const waitMatch = msg.match(/try again in\s*([\d.]+)\s*s/i) || msg.match(/"retryDelay"\s*:\s*"([\d.]+)s"/i);
     if (waitMatch){
       const waitSeconds = parseFloat(waitMatch[1]);
@@ -2955,7 +2635,6 @@ function simplifyErrorMessage(raw){
     return "Anda telah melebihi limit penggunaan AI Agent bro. Mohon tunggu sekitar 1 menit lalu coba lagi ya.";
   }
 
-  // Model gak ketemu/gak bisa diakses, atau kena filter safety Gemini
   if (/does not exist|do not have access|not found|NOT_FOUND/i.test(msg)){
     return "Waduh, model AI-nya lagi bermasalah di sisi server bro. Coba lagi sebentar, atau kabarin admin kalau masih error terus.";
   }
@@ -2963,17 +2642,13 @@ function simplifyErrorMessage(raw){
     return "Waduh, jawabannya keblokir filter safety AI bro. Coba tulis ulang pertanyaannya dengan cara lain ya.";
   }
 
-  // Server function belum ke-deploy / respons bukan JSON
   if (/non-JSON|Server balikin respons/i.test(msg)){
     return "Waduh, server AI Agent-nya lagi gak bisa dihubungin bro. Coba refresh & tanya lagi sebentar ya.";
   }
 
-  // Fallback umum — gak nampilin detail teknis mentah ke user
   return "Waduh, gagal ngambil jawaban AI bro. Coba tanya ulang sebentar lagi ya.";
 }
 
-// Tanggal lokal device user (BUKAN dari isi gambar) — dipakai khusus buat
-// header Report Antrian Inbound ECO/STD, format DD/MM/YYYY.
 function getLocalDateStr(){
   const d = new Date();
   const dd = String(d.getDate()).padStart(2, "0");
@@ -2982,18 +2657,6 @@ function getLocalDateStr(){
   return `${dd}/${mm}/${yyyy}`;
 }
 
-// ===== KLASIFIKASI MODUL PAKAI AI (BARU) — fallback kalau regex kosakata di
-// atas gak nangkep apa-apa =====
-// Kata kunci di ACCESS_MAP/keywords atas itu daftar ISTILAH TETAP — kalau ada
-// karyawan yang nanya pakai singkatan/slang/typo baru yang belum pernah
-// dimasukin ke regex manapun, pertanyaannya bisa jatuh ke "obrolan santai"
-// padahal maksudnya nanya data. Fungsi ini jadi jaring pengaman kedua: SEKALI
-// panggilan ekstra & ringan ke Gemini (proxy yang sama), minta AI nebak modul
-// mana yang paling relevan dari pertanyaan mentahnya (bukan dari regex),
-// balikin array key modul. Dipanggil CUMA kalau regex bener-bener 0 match
-// tapi pertanyaannya kecium "data-ish" (lihat isDataQuery) — jadi gak nambah
-// panggilan API buat pertanyaan yang emang udah jelas jawabannya modul mana
-// (regex sendiri masih jadi jalur utama, cepat & gratis, ini cuma cadangan).
 const VALID_MODULE_KEYS = ["rest_asset", "outbound", "performance_bagger", "inventory_control", "inbound"];
 async function classifyModulesWithAI(question){
   try{
@@ -3043,8 +2706,6 @@ Kalau beneran gak ada satupun yang cocok (obrolan santai/pertanyaan umum), balas
 
 async function askAgent(question, imageDataUrl){
   addMessage("user", question, null, imageDataUrl);
-  // Kalau ada gambar, isi content jadi array format vision (OpenAI-compatible)
-  // biar bisa dikirim ke model yang bisa "lihat" gambar lewat proxy.
   const userContent = imageDataUrl
     ? [
         { type:"text", text: question || "Tolong lihat & jelasin gambar ini bro." },
@@ -3057,89 +2718,26 @@ async function askAgent(question, imageDataUrl){
 
   const lateCount = currentTrips.filter(t => t.status === "Late Arrival").length;
   const convoyGroups = computeConvoyGroups(currentTrips);
-
-  // Deteksi simpel: pertanyaan ini soal DATA TRIP (report/status/vendor/dll) atau
-  // cuma obrolan santai yang gak butuh data? Kalau cuma basa-basi ("bro", "makasih",
-  // "lu tau gua?"), JANGAN kirim seluruh dump data + template Report yang berat —
-  // itu yang bikin AI keder/salah format DAN boros token (gampang kepentok limit).
-  // Data & template berat cuma dikirim kalau emang relevan.
   const dataKeywords = /report|laporan|rekap|trip|late|telat|ngaret|molor|awal|early|convoy|beriringan|iring|konvoi|unit|vendor|driver|supir|sopir|status|hari ini|kemarin|besok|tanggal|durasi|lama|jadwal|\bsta\b|\beta\b|\bata\b|\batd\b|\bstd\b|\blt[\s-]?\d|nomor|plat|parcel|qty|jumlah|data|\bdc\b|banjarmasin|sampit|kapuas|pangkalan|gimana|update|progress|kondisi/i;
-  // Report kedua: DW (Daily Worker) Fulfillment — beda topik dari trip Inbound,
-  // datanya BUKAN dari currentTrips (Firebase) tapi dari GAMBAR tabel jadwal DW
-  // yang di-paste user (screenshot spreadsheet shift/permintaan/kehadiran).
   const dwKeywords = /\bdw\b|fulfillment|daily worker|reguler|on-?call|kebutuhan (dw|tenaga)|kekurangan (orang|tenaga|dw)|manpower|tenaga kerja harian|permintaan (dw|tenaga)/i;
   const isDwReport = dwKeywords.test(question || "");
-  // Report ketiga: ANTRIAN INBOUND (ECO vs STD) — beda lagi dari 2 report di atas.
-  // Datanya BUKAN dari currentTrips (Firebase) DAN BUKAN dari tabel jadwal DW,
-  // tapi dari GAMBAR board antrian "PalangkarayaDC" (kolom Route & Status) yang
-  // di-paste user. Sengaja dibikin gampang triger-nya: kalau user CUMA paste
-  // gambar tanpa ngetik apa-apa (dan itu bukan gambar tabel DW), langsung
-  // dianggap minta Report Antrian ini — sesuai request awal "kirim gambar,
-  // Odyssey langsung generate Report". Kalau user ngetik kata kunci terkait
-  // (antrian/eco/std/dll) itu juga triger, meski ada teks lain.
   const queueKeywords = /\bantrian\b|\beco\b|\bstd\b|antrian inbound|report antrian|queue report|lagi ngantri|antri berapa|truk ngantri|unloading queue/i;
   const isQueueReport = !isDwReport && (
     queueKeywords.test(question || "") ||
     (!!imageDataUrl && !(question || "").trim())
   );
-  // Topik keempat: REST TIME & ASSET USAGE MONITORING — beda modul lagi dari
-  // 3 topik di atas (trip Inbound / DW Fulfillment / Antrian Inbound). Datanya
-  // dari Firebase live (currentRestLogs, currentAssetLogs, monMasterKaryawan,
-  // monPdaStationMap), BUKAN dari gambar. Kata kunci sengaja dibikin luas biar
-  // nangkep istilah opsional yang biasa dipakai Shift Lead sehari-hari di
-  // lapangan (istirahat, PDA, pinjam/kembali, check in, dst).
-  // CATATAN FIX: kata "asset" polos (\basset\b) SENGAJA DIBUANG dari sini — sebelumnya bikin
-  // pertanyaan soal modul Inventory Control (mis. "Asset IT & NCA", "status asset", "jumlah asset")
-  // ke-tag duluan sebagai topik Rest Time/PDA (karena Rest Time dicek LEBIH DULU di urutan
-  // if/else-nya), padahal maksud user soal Inventory Control. Modul Rest Time tetep ke-cover kok
-  // lewat kata kunci lain yang emang spesifik ke PDA: \bpda\b, "asset usage" (frasa utuh), check-in/
-  // check-out, istirahat, pinjam, kembali, dst.
   const restAssetKeywords = /rest\s*time|istirahat|\bbreak\s*(in|out)?\b|check\s*-?\s*in\b|check\s*-?\s*out\b|\bcekin\b|\bcekout\b|\bpda\b|asset usage|serial number|\bsn\b|pinjam|kembali|balikin|tukar\s*pda|gantian\s*pda|ops\s*id|opsid|karyawan|operator|\bstation\b|\bidle\b|overtime|kelamaan|kelamaan istirahat|terkunci|\block\b|\bcycle\b|agency|departemen|\bdept\b|lagi istirahat|masih istirahat|belum balik|belum check\s*in/i;
-  // CATATAN PERUBAHAN: kelima topik data di bawah ini (Rest/Asset, Outbound,
-  // Performance Bagger, Inventory Control, Inbound) SEKARANG independen satu
-  // sama lain (sebelumnya nge-chain "!isXQuery" ke topik sebelumnya, jadi
-  // cuma SATU topik yang bisa menang tiap pertanyaan). Independennya biar
-  // pertanyaan yang nyenggol lebih dari satu modul sekaligus (misal "asset
-  // usage sama stock ATK gimana?") bisa kedeteksi dua-duanya, lalu datanya
-  // digabung jadi satu system prompt di bagian bawah (lihat matchedModules).
   const isRestAssetQuery = !isDwReport && !isQueueReport && restAssetKeywords.test(question || "");
-  // Topik kelima: MODUL OUTBOUND — Aging & Packer Backlog + Occupancy & Shift Departure. Beda lagi
-  // dari 4 topik di atas (trip Inbound / DW Fulfillment / Antrian Inbound / Rest Time & Asset Usage).
-  // Datanya dari Firebase live (currentOutboundRaw, diringkas lewat buildOutboundSummary()), SAMA
-  // PERSIS sumber & logic hitung yang dipakai dashboard outbound.html. Kata kunci sengaja dibikin
-  // luas biar nangkep istilah sehari-hari modul ini (aging, backlog, packer, staging, occupancy,
-  // shift keberangkatan, linehaul, rute/hub, D0-D6+, bulky/HV/liquid, dst).
-  // Topik keenam: MODUL PERFORMANCE BAGGER — beda lagi dari 5 topik di atas, ini soal produktivitas
-  // PACKING HARIAN per operator (bukan soal parcel/aging di staging kayak modul Outbound). Datanya
-  // dari Firebase live (currentPbDailyRecords, currentPbImportLogs), diringkas lewat
-  // buildPerformanceBaggerSummary(). Dicek SEBELUM kata kunci Outbound biar kata "packer" polos gak
-  // kebajak ke modul Outbound (yang istilahnya lebih spesifik: "packer leaderboard"/"packer backlog").
   const performanceBaggerKeywords = /performance bagger|\bbagger\b|\bpdvt\b|\bopsid\b|ops\s*id|hall of fame|achievement rate|red flag|needs coaching|butuh coaching|speed demon|\bon fire\b|most consistent|dedicated operator|dw reguler|dw on call|quick view|\bd\+1\b|import roster|rapor pdf|performance slip|target packing|packing target|achievement.*(target|packing)|produktivitas (packer|bagger|packing)|capaian (packing|target)|ranking (operator|packer|bagger)|leaderboard (packing|operator)|operator paling (produktif|rajin|malas)|siapa yang (paling|belum) (packing|capai target)/i;
   const isPerformanceBaggerQuery = !isDwReport && !isQueueReport && performanceBaggerKeywords.test(question || "");
-  // Topik ketujuh: MODUL INVENTORY CONTROL — soal database Stock (barang consumable), Asset IT & NCA
-  // (non-consumable per unit), Log Activity Usage/Highlight Usage (pemakaian harian per Devisi SOC/EHA),
-  // dan Audit Log. Beda total dari 6 topik di atas. Dicek SEBELUM keyword Outbound & Performance Bagger
-  // biar kata "stock"/"asset" di sini gak ketuker sama istilah modul lain.
   const inventoryControlKeywords = /inventory control|\binventaris\b|\bstock\b|\bstok\b|min\s*stock|stock menipis|barang menipis|barang habis|habis stok|\breorder\b|\bpic\b|no\.?\s*serial|nomor serial|asset it\b|\bnca\b|non.?consumable|audit log|riwayat pemakaian|riwayat mutasi|log activity|highlight usage|top asset|qty terpakai|devisi (soc|eha)|\bsoc\b|\beha\b|sortation center|exception handling|kondisi asset|status asset|jumlah asset|kategori asset|\batk\b|kertas thermal|spare part|barang consumable|siapa pegang|siapa yang pegang|mutasi asset|label ?nca|cetak label|print label|laptop rusak|kursi rusak|meja rusak/i;
   const isInventoryControlQuery = !isDwReport && !isQueueReport && inventoryControlKeywords.test(question || "");
   const outboundKeywords = /\baging\b|backlog|\bpacker\b|packing method|\bstaging\b|occupancy|okupansi|kapasitas (gudang|staging|dc)|gudang (penuh|munpuk|numpuk)|penuh\b|sisa slot|shift departure|keberangkatan|\blinehaul\b|line ?haul|\blh\b|\bd-?day\b|\bd[0-6]\b|>\s*d-?6|\bbulky\b|high value|\bhv\b|\bliquid\b|inner island|outer island|\bhub\b|\brute\b|breakdown volume|priority action|root cause|receiver name|destinasi|leaderboard|jadwal keberangkatan|slot linehaul|\bto number\b|\btransfer order\b|numpuk|muatan|parcel numpuk|parcel menumpuk/i;
   const isOutboundQuery = !isDwReport && !isQueueReport && outboundKeywords.test(question || "");
-  // Topik kedelapan: TRIP INBOUND murni (Line Haul origin->DC, Late/Early Arrival,
-  // Convoy, vendor/driver truk) — sebelumnya ini "diam-diam" jadi satu-satunya
-  // fallback tiap kali gak ada topik lain yang cocok (lihat mode LENGKAP paling
-  // bawah). Sekarang dikasih regex sendiri biar bisa IKUT digabung kalau
-  // pertanyaannya nyenggol topik lain juga (misal "trip hari ini sama occupancy
-  // gudang gimana?").
   const inboundTripKeywords = /\btrip\b|late arrival|early arrived|in transit|\borigin\b|\bdestination\b|nomor trip|\blt\s*\d|beriringan|iring-?iringan|\bsta\b|\beta\b|\bata\b|\batd\b|no\.?\s*polisi|plat nomor|\bvendor\b|\bdriver\b|supir|sopir/i;
   const isInboundQuery = !isDwReport && !isQueueReport && inboundTripKeywords.test(question || "");
   const isDataQuery = isDwReport || isQueueReport || isRestAssetQuery || isPerformanceBaggerQuery || isInventoryControlQuery || isOutboundQuery || isInboundQuery || dataKeywords.test(question || "") || !!imageDataUrl;
 
-  // ===== GABUNGAN MODUL (BARU) =====
-  // Kumpulin SEMUA modul data (non-gambar) yang kedeteksi cocok dari regex di
-  // atas — bisa 0, 1, atau lebih dari 1. Kalau lebih dari satu, system prompt
-  // di bawah bakal digabung (lihat moduleBlocks) biar Odyssey bisa jawab
-  // pertanyaan yang nyenggol beberapa modul sekaligus dalam SATU balasan,
-  // bukan cuma modul yang kebetulan menang urutan prioritas kayak sebelumnya.
   var matchedModules = [];
   if (isRestAssetQuery) matchedModules.push("rest_asset");
   if (isOutboundQuery) matchedModules.push("outbound");
@@ -3147,13 +2745,6 @@ async function askAgent(question, imageDataUrl){
   if (isInventoryControlQuery) matchedModules.push("inventory_control");
   if (isInboundQuery) matchedModules.push("inbound");
 
-  // Kalau regex kosakata di atas GAK NANGKEP satupun modul spesifik, TAPI
-  // pertanyaannya masih kecium "data-ish" (dataKeywords generik/ada gambar),
-  // kemungkinan besar user pakai istilah/singkatan/typo yang belum ke-cover
-  // regex — coba tanya ke AI dulu (classifyModulesWithAI) sebelum nyerah ke
-  // mode obrolan santai. Gak dipanggil kalau mode DW/Queue (itu emang exclusive
-  // & butuh gambar, bukan soal kosakata) atau kalau regex UDAH ketemu modulnya
-  // (hemat 1 panggilan API ekstra buat kasus yang udah jelas).
   if (!isDwReport && !isQueueReport && matchedModules.length === 0 && isDataQuery && !imageDataUrl){
     matchedModules = await classifyModulesWithAI(question);
   }
@@ -3176,10 +2767,6 @@ baris kode jadi 1 item array terpisah (persis kayak baris asli kodenya, boleh di
 indentasi), JANGAN digabung jadi satu string panjang dengan escape \\n. Kalau ada tanda kutip dua (")
 DI DALAM baris kode/teks, WAJIB di-escape jadi \\" biar JSON-nya tetep valid.`;
 
-  // Konten mode "Trip Inbound" ditaruh di fungsi terpisah (bukan langsung ditulis inline di if/else
-  // di bawah) supaya bisa dipanggil dari DUA tempat: (1) mode gabungan kalau isInboundQuery/hasil
-  // classifyModulesWithAI ikut nyantumin "inbound" di matchedModules, dan (2) jaring pengaman
-  // terakhir kalau entah kenapa gak ada satupun modul yang kedeteksi padahal isDataQuery true.
   function buildInboundModuleText(){
     return `
 PENTING soal riwayat obrolan: kalau di riwayat percakapan sebelumnya ada pembahasan topik LAIN (misal
@@ -3272,10 +2859,6 @@ Contoh buat jawaban singkat 1 baris, "replyLines" tetap array isi 1 item, misal:
 
   let systemPrompt;
   if (isDwReport){
-    // Mode DW FULFILLMENT REPORT — topik & sumber data BEDA dari trip Inbound:
-    // gak ada dump JSON dari Firebase di sini, datanya AI baca sendiri langsung
-    // dari GAMBAR tabel jadwal DW yang di-paste user (Ctrl+V) di pesan ini ATAU
-    // di riwayat pesan terakhir (kalau user nanya follow-up tanpa paste ulang).
     systemPrompt = `${basePersona}
 
 Pertanyaan kali ini soal REPORT FULFILLMENT DAILY WORKER (DW), bukan soal trip Inbound. Sumber datanya
@@ -3336,12 +2919,6 @@ GAP DW Oncall: (angka)  / [(persentase)%]
 
 ${jsonFormatRule}`;
   } else if (isQueueReport){
-    // Mode REPORT ANTRIAN INBOUND (ECO/STD) — sumber data JUGA dari GAMBAR
-    // (screenshot board "PalangkarayaDC"), sama kayak mode DW di atas, tapi
-    // kolom & kategorinya beda: yang dibaca cuma "Route" (buat pisahin
-    // ECO/STD) dan "Status" (buat hitung Antri/In Progress/Done/Incoming).
-    // Tanggal report PAKAI tanggal device lokal (getLocalDateStr()), BUKAN
-    // ditebak/diambil dari isi gambar.
     const todayStr = getLocalDateStr();
     systemPrompt = `${basePersona}
 
@@ -3407,30 +2984,11 @@ dari gambar, tapi kurungnya tetap dipertahankan persis kayak contoh: "(N)Antri",
 
 ${jsonFormatRule}`;
   } else if (matchedModules.length > 0){
-    // ===== MODE GABUNGAN (BARU) =====
-    // Dulu di sini urutan if/else-if biasa yang cuma bisa milih SATU modul
-    // (yang menang duluan di urutan prioritas). Sekarang moduleBlocks nampung
-    // blok instruksi+data buat SETIAP modul yang kedeteksi cocok (bisa 1, bisa
-    // lebih) dari matchedModules (lihat perhitungannya di atas, termasuk hasil
-    // fallback classifyModulesWithAI). Kalau lebih dari satu modul cocok,
-    // semua bloknya digabung jadi satu system prompt dikasih catatan
-    // "lintas-modul" di awal, biar Odyssey bisa jawab pertanyaan yang
-    // nyenggol beberapa modul sekaligus dalam SATU balasan.
     var moduleBlocks = [];
 
     if (matchedModules.includes("rest_asset")){
-    // Mode REST TIME & ASSET USAGE MONITORING — topik & sumber data BEDA lagi
-    // dari 3 mode di atas (trip Inbound / DW Fulfillment / Antrian Inbound).
-    // Datanya LIVE dari Firebase node "prDcMonitoring" (SAMA PERSIS sumber
-    // yang dipakai modul rest-time.html), bukan dari gambar yang di-paste user.
     const monWindowStart = getMonWindowStartDate();
-    // "statusLiveTerkini" dihitung DI SINI (JS, bukan diserahin ke AI) — niru persis logic
-    // checkRestOvertimeAlert() & getActiveAssetLock() di rest-time.html — biar 2 pertanyaan paling
-    // sering ("siapa yang kelamaan istirahat" & "PDA mana yang belum kembali") selalu akurat, gak
-    // bergantung AI ngitung ulang siklus/lock dari data mentah (rawan salah kayak kasus manual hitung).
     const monLiveStatus = computeRestAssetLiveStatus(currentRestLogs, currentAssetLogs, monMasterKaryawan, monPdaStationMap);
-    // "_key" dibuang dari yang dikirim ke Gemini (cuma dipakai internal pas eksekusi restAction) —
-    // biar AI gak kepikiran nyoba isi/acu ke _key sama sekali.
     const restLogsForPrompt = currentRestLogs.map(function (l) { const c = Object.assign({}, l); delete c._key; return c; });
     const assetLogsForPrompt = currentAssetLogs.map(function (l) { const c = Object.assign({}, l); delete c._key; return c; });
     moduleBlocks.push(`
@@ -3529,12 +3087,6 @@ konfirmasi di bawah."], "attachedUnits": [], "restAction": {"type": "edit_time",
     }
 
     if (matchedModules.includes("outbound")){
-    // Mode MODUL OUTBOUND — Aging & Packer Backlog + Occupancy & Shift Departure. Beda topik & beda
-    // sumber data dari 4 mode lain di atas. Data LIVE dari Firebase root "prDcOutboundMonitoring"
-    // (SAMA PERSIS sumber yang dipakai dashboard outbound.html), diringkas lewat buildOutboundSummary()
-    // biar gak ngirim ribuan baris parcel mentah ke AI — ringkasannya udah mencakup semua sudut
-    // pandang yang ada di dashboard: ringkasan eksekutif, breakdown per rute (Inner/Outer Island),
-    // volume per shift, Priority Action Center, Packer Leaderboard, dan Shift Departure Schedule.
     const outboundSummary = buildOutboundSummary(currentOutboundRaw);
     moduleBlocks.push(`
 Pertanyaan kali ini soal MODUL OUTBOUND — mencakup DUA sub-menu di dashboard itu: (1) "Aging & Packer
@@ -3592,16 +3144,6 @@ Loading segera."], "attachedUnits": []}`);
     }
 
     if (matchedModules.includes("performance_bagger")){
-    // Mode MODUL PERFORMANCE BAGGER — soal produktivitas PACKING HARIAN per operator (Dedicated
-    // Operator / DW Reguler Pria / DW Reguler Wanita / DW On Call), sumber import file PDVT harian
-    // atau raw mingguan. Beda topik dari trip Inbound, DW Fulfillment, Antrian Inbound, Rest
-    // Time/Asset Usage, MAUPUN modul Outbound (yang soal parcel/aging/backlog di staging area, BUKAN
-    // soal packing individu operator). Data LIVE dari Firebase root "prDcPerformanceBagger" (bulan
-    // berjalan, SAMA PERSIS sumber yang dipakai dashboard performance-bagger.html), diringkas lewat
-    // buildPerformanceBaggerSummary() biar udah mencakup semua sudut pandang dashboard: Hall of Fame,
-    // ringkasan achievement rate keseluruhan, breakdown per agency, daftar Red Flag/Needs Coaching,
-    // dan ranking lengkap SEMUA operator yang ada di roster (termasuk yang belum ada data sama sekali
-    // bulan ini, jumlahHariAdaData-nya bakal 0).
     const pbSummary = buildPerformanceBaggerSummary(currentPbDailyRecords, currentPbImportLogs);
     moduleBlocks.push(`
 Pertanyaan kali ini soal MODUL PERFORMANCE BAGGER — monitoring produktivitas PACKING HARIAN per
@@ -3654,12 +3196,6 @@ Flag/Needs Coaching, salah satunya [nama] udah 5 hari beruntun di bawah target."
     }
 
     if (matchedModules.includes("inventory_control")){
-    // Mode MODUL INVENTORY CONTROL — beda total dari 6 topik lain di atas. Modul ini punya 5 sub-menu
-    // yang jadi 1 kesatuan: Log Activity Usage (input pemakaian harian), Highlight Usage (dashboard
-    // KPI/leaderboard pemakaian), Stock (database barang consumable + Min Stock), Asset IT & NCA
-    // (database aset non-consumable per unit dengan PIC/lokasi/status), dan Audit Log (riwayat
-    // perubahan). Data LIVE dari Firebase root "inventoryControl/SOC" (SAMA PERSIS sumber yang dipakai
-    // dashboard inventory-control.html), diringkas + di-dump lewat buildInventoryControlSummary().
     const invSummary = buildInventoryControlSummary(currentInvStock, currentInvUsageLogs, currentInvAssetItNca, currentInvAuditLog);
     moduleBlocks.push(`
 Pertanyaan kali ini soal MODUL INVENTORY CONTROL — database Stock barang consumable, Asset IT & NCA
@@ -3744,9 +3280,6 @@ Stock — cek kartu konfirmasi di bawah ya sebelum gua simpen."], "attachedUnits
       moduleBlocks.push(buildInboundModuleText());
     }
 
-    // Gabungin semua blok modul yang cocok jadi satu system prompt. Kalau
-    // lebih dari satu modul, dikasih catatan pembuka biar AI-nya gak
-    // ngcampur-adukin angka antar modul & tetep nyebut sumbernya masing-masing.
     const crossModuleNote = moduleBlocks.length > 1
       ? `
 
@@ -3759,9 +3292,6 @@ beda-beda.`
     systemPrompt = `${basePersona}${crossModuleNote}
 ` + moduleBlocks.join("\n\n===== MODUL LAIN YANG JUGA RELEVAN =====\n");
   } else if (!isDataQuery){
-    // Mode RINGAN — obrolan/pertanyaan umum, gak nyangkut data trip. Prompt sengaja
-    // dibikin pendek soal instruksi dashboard-nya (biar gak numpuk & bikin AI keder),
-    // tapi persona di atas udah nyatain wawasannya luas gak cuma dashboard.
     systemPrompt = `${basePersona}
 
 Pertanyaan kali ini gak nyangkut data trip dashboard. Jawab santai & informatif sesuai konteks obrolan,
@@ -3772,21 +3302,10 @@ ${jsonFormatRule}
 
 Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
   } else {
-    // Mode LENGKAP (jaring pengaman) — seharusnya sekarang jarang kepake, karena
-    // isInboundQuery/classifyModulesWithAI biasanya udah nyantumin "inbound" ke
-    // matchedModules di atas duluan. Ini cuma fallback terakhir kalau entah kenapa
-    // isDataQuery true tapi gak ada satupun modul yang kedeteksi/di-klasifikasi.
     systemPrompt = `${basePersona}
 ` + buildInboundModuleText();
   }
 
-  // Gemini pakai format "contents": array {role:"user"|"model", parts:[...]}
-  // (BUKAN "assistant" kayak OpenAI/Groq — Gemini pakai "model"). Tiap part
-  // bisa {text:"..."} biasa, atau {inline_data:{mime_type, data}} buat gambar
-  // (base64 TANPA prefix "data:image/...;base64,", makanya di-strip di bawah).
-  // Batasin cuma N pesan TERAKHIR yang dikirim ulang ke API (bukan seluruh riwayat
-  // dari awal sesi) — biar prompt gak numpuk makin panjang makin berat tiap turn,
-  // yang bikin token per-request membengkak & gampang kena limit di percakapan panjang.
   const HISTORY_LIMIT = 12;
   const recentHistory = chatHistory.slice(-HISTORY_LIMIT);
   function toGeminiParts(content){
@@ -3810,39 +3329,15 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
   }));
 
   try{
-    // Panggil lewat Netlify Function proxy (bukan langsung ke Gemini) supaya
-    // API key gak pernah ke-expose di browser. Lihat netlify/functions/gemini-proxy.js
-    // Model (termasuk dukungan vision buat gambar) udah ditentuin di sisi proxy
-    // (GEMINI_MODEL_CHAIN) — model Gemini flash-nya udah multimodal jadi gak
-    // perlu ganti model/parameter khusus kalau ada gambar terlampir. Kalau
-    // user milih model tertentu di dropdown (bukan "Auto"), kirim sebagai
-    // preferred_model — proxy bakal nyoba model itu duluan, tapi tetep
-    // fallback ke chain default kalau model itu kena rate limit.
     const modelSelectEl = document.getElementById("modelSelect");
     const preferredModel = modelSelectEl ? modelSelectEl.value : "";
     const requestBodyBase = {
-      max_tokens: isDataQuery ? 3000 : 1500, // mode report dikasih jatah lebih gede
-      // Level thinking: mode data (trip JSON / DW report) butuh AI teliti nyisir
-      // data satu-satu DAN gak kebawa topik riwayat obrolan sebelumnya (misal abis
-      // ditanya report DW, terus ditanya Late Arrival trip — pernah kejadian
-      // AI ke-distract & jawabannya asal gara-gara "minimal" kekurangan mikir).
-      // Obrolan santai tetep "minimal" biar hemat token/latency.
+      max_tokens: isDataQuery ? 3000 : 1500,
       thinking_level: isDataQuery ? "low" : "minimal",
       system: systemPrompt,
       contents: contentsForApi
     };
 
-    // --- Loop retry sisi klien -------------------------------------------
-    // Proxy (gemini-proxy.js) UDAH otomatis ganti model kalau kena rate limit
-    // (429/RESOURCE_EXHAUSTED) — itu ke-handle di server, satu request aja
-    // cukup. TAPI ada kasus lain yang gak ke-detect proxy: model-nya JAWAB
-    // (status 200, bukan rate limit) tapi isinya BUKAN JSON valid (paling
-    // sering kejadian di model "lite" yang kurang nurut instruksi format).
-    // Ini gak bisa di-fix di server karena proxy gak ngerti skema JSON
-    // aplikasi (replyLines/attachedUnits). Jadi retry-nya di sini: kalau
-    // parse gagal, otomatis coba ulang pakai model LAIN di chain (bukan
-    // model yang barusan gagal) sampai maxAttempts kali, sebelum akhirnya
-    // nyerah & nampilin pesan "berantakan" ke user.
     const maxAttempts = 3;
     const usedModels = [];
     let attemptModel = preferredModel;
@@ -3866,9 +3361,6 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
       if (!response.ok){
         throw new Error((data && data.error && data.error.message) ? data.error.message : ((data && data.error) ? data.error : ("HTTP " + response.status + " (respons kosong)")));
       }
-      // Gemini balikin "candidates" (bukan "choices" kayak OpenAI/Groq). Kalau
-      // jawaban keblokir safety filter, candidates bisa kosong & alasannya ada
-      // di promptFeedback.blockReason.
       const candidate = (data.candidates && data.candidates[0]) || null;
       if (!candidate && data.promptFeedback && data.promptFeedback.blockReason){
         throw new Error("blockReason: " + data.promptFeedback.blockReason);
@@ -3877,28 +3369,20 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
         ? candidate.content.parts.map(p => (p && p.text) || "").join("")
         : "";
       text = partsText.trim();
-      // Bersihin code fence di mana pun posisinya (bukan cuma di awal/akhir persis)
       text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
 
-      // Ambil substring dari kurung kurawal PERTAMA sampai kurung kurawal
-      // TERAKHIR — jadi kalau AI masih nyelipin kalimat pembuka/penutup di luar
-      // JSON (padahal udah dilarang), itu gak bikin JSON.parse langsung gagal.
       const firstBrace = text.indexOf("{");
       const lastBrace = text.lastIndexOf("}");
       if (firstBrace !== -1 && lastBrace > firstBrace){
         text = text.slice(firstBrace, lastBrace + 1);
       }
 
-      // Coba parse langsung dulu. Kalau AI-nya (Gemini) masih ngasal — misal nulis
-      // enter/tab literal, over-escape jadi "\\n" dobel, pakai tanda kutip
-      // "pintar" (smart quotes), atau nyisain trailing comma — di dalam string
-      // JSON, JSON.parse bisa gagal atau kebaca aneh.
       const attempts = [
         text,
-        text.replace(/\r\n|\r|\n/g, "\\n").replace(/\t/g, "\\t"), // newline/tab literal -> escaped
-        text.replace(/\\\\n/g, "\\n").replace(/\\\\t/g, "\\t"),    // over-escaped \\n -> \n
-        text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"'), // smart quotes -> lurus
-        text.replace(/,\s*([\]}])/g, "$1")                         // hapus trailing comma sebelum ] / }
+        text.replace(/\r\n|\r|\n/g, "\\n").replace(/\t/g, "\\t"),
+        text.replace(/\\\\n/g, "\\n").replace(/\\\\t/g, "\\t"),
+        text.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"'),
+        text.replace(/,\s*([\]}])/g, "$1")
       ];
       for (const candidateText of attempts){
         try{ parsed = JSON.parse(candidateText); ok = true; break; }
@@ -3908,19 +3392,13 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
       rawModelUsed = (data && (data.modelUsed || data.model)) || attemptModel || "";
       if (rawModelUsed) usedModels.push(rawModelUsed);
 
-      if (ok) break; // sukses, gak perlu retry ke model lain
+      if (ok) break;
 
-      // Parse gagal -> siapin model lain buat percobaan berikutnya (kalau
-      // masih ada jatah attempt & masih ada model yang belum dicoba).
       const nextModel = ODYSSEY_MODEL_CHAIN.find(m => !usedModels.includes(m));
       if (!nextModel || attemptNum === maxAttempts) break;
       attemptModel = nextModel;
     }
 
-    // Last resort kalau SEMUA percobaan (termasuk ganti-ganti model) tetep
-    // gagal: jangan lempar mentahan JSON ke chat — tarik isi array
-    // "replyLines" pakai regex biar user tetap dapet teks yang bisa dibaca
-    // manusia dulu, sebelum bener-bener nyerah ke pesan "berantakan".
     if (!ok){
       const linesMatch = text.match(/"replyLines"\s*:\s*\[([\s\S]*?)\]\s*,\s*"attachedUnits"/);
       if (linesMatch){
@@ -3935,9 +3413,6 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
     }
     if (!ok) parsed = { replyLines: ["Waduh, format balasan AI-nya berantakan bro, udah gua coba ganti-ganti model tapi tetep gagal — coba tanya ulang sekali lagi ya."], attachedUnits: [] };
 
-    // Susun teks final dari array replyLines (baris baru beneran, bukan hasil
-    // escape dari AI) — kalau AI masih pakai format lama "reply" (string biasa),
-    // tetap didukung biar gak putus kompatibilitas.
     let replyText = "...";
     if (Array.isArray(parsed.replyLines)){
       replyText = parsed.replyLines.map(l => String(l)).join("\n");
@@ -3945,12 +3420,6 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
       replyText = parsed.reply;
     }
 
-    // Label model yang jawab: pakai model TERAKHIR yang beneran sukses jawab
-    // (bisa beda dari pilihan dropdown user kalau proxy fallback rate-limit
-    // ATAU loop retry di atas ganti model gara-gara output berantakan), atau
-    // "Auto" kalau dropdown-nya "Auto" & gak ada info model dari proxy.
-    // Selalu lewat friendlyModelName() biar nama vendor/tier asli
-    // (Gemini/Flash/Flash Lite) gak pernah nongol di UI.
     const modelLabel = friendlyModelName(rawModelUsed || preferredModel);
 
     removeTyping();
@@ -3958,9 +3427,6 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
     chatHistory.push({role:"assistant", content: replyText});
     scheduleSaveSession();
 
-    // Kalau Gemini nyiapin rencana aksi tulis (Update Stock / Submit Usage Log) buat modul Inventory
-    // Control, tampilin kartu konfirmasi — TIDAK ADA yang kesimpen ke Firebase sebelum user klik
-    // "Konfirmasi & Simpan" di kartu itu.
     if (parsed.inventoryAction && Array.isArray(parsed.inventoryAction.items) && parsed.inventoryAction.items.length){
       renderInventoryActionConfirmCard(parsed.inventoryAction);
     }
@@ -3976,7 +3442,6 @@ Contoh: {"replyLines": ["Wih nanya gitu bro 😄"], "attachedUnits": []}`;
 
 document.getElementById("refreshBtn").addEventListener("click", loadData);
 
-// Pasang logo asli The Odyssey di avatar header (dari data URI global).
 (function setHeaderAvatar(){
   const headerAvatar = document.getElementById("chatHeaderAvatar");
   if (headerAvatar && window.__ODYSSEY_LOGO){
@@ -3987,17 +3452,12 @@ document.getElementById("refreshBtn").addEventListener("click", loadData);
   }
 })();
 
-// Tombol "Refresh Data" aslinya (di atas) udah disembunyiin — yang beneran
-// keliatan buat user itu tombol kembarannya di title bar popup, di luar
-// iframe ini (index.html). Klik di sana ngirim postMessage ke sini; begitu
-// ketrima, panggil loadData() yang sama kayak refreshBtn dulu manggilnya.
 window.addEventListener("message", function (e) {
   var data = e.data;
   if (!data || data.source !== "pkydc") return;
   if (data.type === "odysseyRefresh") loadData();
 });
 
-// ===== Attach gambar via paste (Ctrl+V) =====
 let pendingImageDataUrl = null;
 
 function setPendingImage(dataUrl){
@@ -4031,12 +3491,9 @@ function handlePasteEvent(e){
 document.getElementById("chatInput").addEventListener("paste", handlePasteEvent);
 document.getElementById("removeImgBtn").addEventListener("click", clearPendingImage);
 
-// commitSend() dipakai bareng sama tombol Kirim, tombol Enter, dan pemilihan
-// command dari Command Palette (biar logic "harus ada teks ATAU gambar" +
-// clear pending image gak keduplikasi di beberapa tempat).
 function commitSend(text){
   const q = (text || "").trim();
-  if (!q && !pendingImageDataUrl) return; // minimal harus ada teks ATAU gambar
+  if (!q && !pendingImageDataUrl) return;
   const img = pendingImageDataUrl;
   clearPendingImage();
   askAgent(q, img);
@@ -4049,24 +3506,21 @@ document.getElementById("sendBtn").addEventListener("click", () => {
   commitSend(q);
 });
 document.getElementById("chatInput").addEventListener("keydown", (e) => {
-  if (handleCmdPaletteKeydown(e)) return; // command palette lagi kebuka, biarin dia yang nangkep tombolnya
+  if (handleCmdPaletteKeydown(e)) return;
   if (e.key === "Enter") document.getElementById("sendBtn").click();
 });
 document.getElementById("chatInput").addEventListener("input", (e) => {
   updateCmdPalette(e.target.value);
 });
 
-// Sama kayak inbound.html: baru mulai sync Firebase SETELAH status login kevalidasi.
-// Begitu status login berubah (mis. auth-guard.js baru selesai validasi setelah
-// halaman ke-render), langsung auto-reload data dari live Firebase.
 if (window.firebase && firebase.auth){
   try{
     firebase.auth().onAuthStateChanged(function(user){
       const wasReady = firebaseReady;
       firebaseReady = !!user;
       if (firebaseReady && !wasReady){
-        loadData().then(maybeShowDailyBriefing); // briefing nyusul begitu data live-nya kelar dimuat
-        refreshSessionsList(); // baru bisa fetch riwayat begitu uid-nya kevalidasi
+        loadData().then(maybeShowDailyBriefing);
+        refreshSessionsList();
       }
     });
   }catch(e){ console.warn("Firebase auth belum siap:", e.message); }
@@ -4076,7 +3530,7 @@ if (window.firebase && firebase.auth){
   await loadData();
   addMessage("agent", "Halo bro, gua AI Agent buat mantau daily operasional & report Palangka Raya DC\"");
   addQuickReplies();
-  maybeShowDailyBriefing(); // kalau pas init() ini status login udah kevalidasi duluan, briefing langsung nyusul
+  maybeShowDailyBriefing();
 })();
 </script>
 </body>
