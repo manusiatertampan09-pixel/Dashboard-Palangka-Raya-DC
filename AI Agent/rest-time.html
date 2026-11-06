@@ -7,27 +7,22 @@
     <title>Internal Palangka Raya DC</title>
     <meta name="robots" content="noindex, nofollow, noarchive">
     <style>
-      /* Transisi antar halaman */
       @view-transition {
         navigation: auto;
       }
     </style>
     
-    <!-- MEMANGGIL FONT MODERN -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏳</text></svg>">
     
-    <!-- LIBRARY SHEETJS UNTUK MEMBACA FILE EXCEL (.XLSX / .XLS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- FIREBASE SDK UNTUK SINKRONISASI MULTI-DEVICE (REALTIME) -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
     <style>
-        /* CSS VARIABLE UNTUK LIGHT & DARK MODE */
         :root[data-theme="light"] {
             --bg-body: #f8fafc;
             --bg-card: #ffffff;
@@ -57,7 +52,6 @@
         
         .wrapper { display: flex; height: 100vh; width: 100vw; }
 
-        /* ==== TEMA MINIMALIS HITAM-PUTIH — font stack default Tailwind (sans) ==== */
         :root {
           --tw-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
             "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
@@ -113,7 +107,6 @@
           color: var(--text-sidebar-muted); margin: 16px 4px 9px; padding: 0 4px;
         }
         .app-sidebar-group-label:first-child { margin-top: 0; }
-        /* Group label yang bisa diklik buat Open/Hide (collapsible) */
         .app-sidebar-group-label.collapsible {
           display: flex; align-items: center; justify-content: space-between;
           cursor: pointer; user-select: none; border-radius: 6px; padding: 6px 4px;
@@ -142,7 +135,6 @@
         }
         .app-sidebar-footer button:hover { background: #1f1f1f; }
 
-        /* ===== Language Switcher & Saran/Masukan (di atas Logout) ===== */
         .app-sidebar-lang { margin-bottom: 10px; }
         .app-sidebar-lang label {
           display: block; font-size: 10.5px; font-weight: 700; letter-spacing: 0.5px;
@@ -204,7 +196,6 @@
         h1 { font-family: 'Poppins', sans-serif; font-size: 24px; color: #e67e22; text-align: center; margin: 0; font-weight: 700; letter-spacing: 0.5px; }
         h2 { font-size: 13px; text-align: center; margin: 3px 0 10px 0; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
         
-        /* MODAL SWITCHER / TAB HEADER */
         .module-switcher {
             display: flex; gap: 10px; margin-bottom: 12px; justify-content: center;
         }
@@ -351,7 +342,6 @@
         [data-theme="dark"] .row-reminder { background-color: #423b12 !important; }
         [data-theme="dark"] .row-gancang { background-color: #4c1d1d !important; }
 
-        /* ANIMASI KEDIP / PULSE HIGHLIGHT */
         @keyframes pulseHighlight {
             0% { background-color: rgba(230, 126, 34, 0.6); box-shadow: inset 0 0 12px rgba(230, 126, 34, 0.8); }
             50% { background-color: rgba(230, 126, 34, 0.15); box-shadow: inset 0 0 2px rgba(230, 126, 34, 0.3); }
@@ -359,7 +349,6 @@
         }
         .row-highlight { animation: pulseHighlight 1s ease-in-out 3; }
 
-        /* MODAL SETUP */
         .modal-overlay {
             position: fixed; inset: 0; background: rgba(15, 23, 42, 0.65);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
@@ -389,7 +378,6 @@
         .conn-connecting { background: #fef9c3; color: #a16207; }
         .conn-connecting .conn-dot { background: #f59e0b; }
     
-    /* Toast notifikasi in-app (ganti alert() bawaan browser) */
     .toast-stack {
       position: fixed; top: 16px; right: 16px; z-index: 9999;
       display: flex; flex-direction: column; gap: 10px; max-width: 340px;
@@ -416,7 +404,6 @@
 <script src="auth-guard.js"></script>
 <div class="toast-stack" id="toastStack"></div>
 <script>
-  // Toast notifikasi in-app, pengganti alert() bawaan browser. type: 'ok' | 'err' | 'info'
   function showToast(message, type, durationMs) {
     type = type || 'info';
     var icon = type === 'ok' ? '✅' : (type === 'err' ? '⛔' : 'ℹ️');
@@ -453,7 +440,6 @@
     </div>
 </div>
 
-<!-- ==== MODAL DATABASE ASSET (SN PDA per Station) ==== -->
 <div id="databaseAssetModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 640px; max-width: 95vw; max-height: 85vh; display:flex; flex-direction:column;">
         <h3 style="display:flex; align-items:center; justify-content:space-between;">
@@ -462,7 +448,6 @@
         </h3>
         <p id="databaseAssetPermNote" data-i18n="dbAsset.permNoteView">Daftar SN PDA terdaftar beserta station-nya.</p>
 
-        <!-- Form tambah SN baru: cuma keliatan buat email yang punya akses -->
         <div id="databaseAssetAddForm" style="display:none; gap:8px; margin-bottom:10px; flex-wrap:wrap;">
             <input type="text" id="newAssetSn" placeholder="Serial Number lengkap" data-i18n-placeholder="dbAsset.snPlaceholder" style="flex:1; min-width:180px; font-family:monospace; text-transform:uppercase;">
             <select id="newAssetStation" style="width:150px;"></select>
@@ -485,7 +470,6 @@
     </div>
 </div>
 
-<!-- ==== MODAL POPUP: DETAIL OPERATOR BELUM KEMBALI ==== -->
 <div id="operatorDetailModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 380px;">
         <h3 style="display:flex; align-items:center; justify-content:space-between; color:#b91c1c;">
@@ -516,7 +500,6 @@
     </div>
 </div>
 
-<!-- ==== MODAL POPUP: PDA SEDANG DIPINJAM (LOCK) ==== -->
 <div id="lockAlertModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 420px; text-align:center;">
         <div style="font-size:38px; line-height:1; margin-bottom:6px;">🔒</div>
@@ -529,7 +512,6 @@
     </div>
 </div>
 
-<!-- ==== MODAL POPUP: WAJIB PINJAM PDA YANG SAMA (SESI KE-2 DST, SATU PDA SATU NAMA) ==== -->
 <div id="wrongDeviceModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 420px; text-align:center;">
         <div style="font-size:38px; line-height:1; margin-bottom:6px;">🚫</div>
@@ -542,7 +524,6 @@
     </div>
 </div>
 
-<!-- ==== MODAL POPUP: BELUM CHECK IN DI REST TIME (WAJIB CHECK IN DULU SEBELUM PINJAM PDA) ==== -->
 <div id="notCheckedInModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 420px; text-align:center;">
         <div style="font-size:38px; line-height:1; margin-bottom:6px;">🚫</div>
@@ -555,11 +536,6 @@
     </div>
 </div>
 
-<!-- ==== MODAL POPUP: KARYAWAN ISTIRAHAT > 60 MENIT (REST TIME OVERTIME) ==== -->
-<!-- Bisa nampung LEBIH DARI 1 karyawan sekaligus (list bertambah kalau ada
-     yang overtime bareng), makanya field detail per-karyawan diganti jadi
-     satu container list (#restOvertimeListBody) yang di-render ulang oleh JS
-     tiap ada karyawan baru yang overtime / tiap ±30 detik selama modal ini kebuka. -->
 <div id="restOvertimeModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 420px; max-height: 82vh; display:flex; flex-direction:column; text-align:center;">
         <div style="font-size:38px; line-height:1; margin-bottom:6px;">⏰</div>
@@ -656,7 +632,6 @@
     </div>
 
     <main class="main-content">
-        <!-- MODAL SWITCHER PANEL -->
         <div class="module-switcher">
             <button class="tab-btn active" id="tabRestBtn" onclick="switchModule('rest')">⏳ <span data-i18n="nav.restTime">Rest Time Monitoring</span></button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchModule('asset')">📱 <span data-i18n="nav.assetUsage">Asset Usage Monitoring</span></button>
@@ -712,8 +687,6 @@
                 </div>
             </h3>
 
-            <!-- FILTER PERIODE TANGGAL: bisa 1 hari doang (Start = End) atau rentang -->
-            <!-- beberapa hari (2-3 hari dst) tinggal beda-in Start Date & End Date. -->
             <div style="display:flex; align-items:flex-end; gap:15px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--border-color);">
                 <div class="form-group">
                     <label data-i18n="date.start">📅 Start Date :</label>
@@ -735,7 +708,6 @@
                     <input type="text" id="inputOpsId" placeholder="Ketik/Scan OpsID..." data-i18n-placeholder="form.opsIdPlaceholder" required autocomplete="off" style="width: 140px;">
                 </div>
                 
-                <!-- INPUT TAMBAHAN KHUSUS ASSET USAGE -->
                 <div class="form-group" id="groupAssetSn" style="display: none;">
                     <label data-i18n="form.snLabel">5 Digit Last SN PDA :</label>
                     <input type="text" id="inputAssetSn" placeholder="cth: 01455" data-i18n-placeholder="form.snPlaceholder" maxlength="5" autocomplete="off" style="width: 130px; font-weight:700; color:#e67e22;">
@@ -780,7 +752,6 @@
                     <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="toggleSummaryBoxes()">🔼 <span data-i18n="summary.hide">Sembunyikan Ringkasan</span></button>
 
                     <div id="summaryBoxesArea">
-                    <!-- BOX METRIK REST TIME -->
                     <div class="center-box-wrapper" id="restBoxWrapper">
                         <div class="center-box">
                             <div class="box-title" style="color: #0f766e;" data-i18n="summary.totalMasuk">Total MP Masuk</div>
@@ -812,7 +783,6 @@
                         </div>
                     </div>
 
-                    <!-- BOX METRIK ASSET USAGE -->
                     <div class="center-box-wrapper" id="assetBoxWrapper" style="display: none;">
                         <div class="center-box">
                             <div class="box-title" style="color: #0f766e;" data-i18n="asset.totalPeminjam">Total Peminjam</div>
@@ -856,7 +826,6 @@
                 </div>
             </div>
 
-            <!-- TABEL REST TIME -->
             <div class="table-container" id="restTableContainer">
                 <table class="data-table" id="dataTableToExport">
                     <thead>
@@ -880,7 +849,6 @@
                 </table>
             </div>
 
-            <!-- TABEL ASSET USAGE -->
             <div class="table-container" id="assetTableContainer" style="display: none;">
                 <table class="data-table" id="assetDataTableToExport">
                     <thead>
@@ -908,7 +876,6 @@
 </div>
 
 <script>
-    // ==== DAFTAR SERIAL NUMBER ASSET PDA ====
     const PDA_SERIAL_NUMBERS = [
         "MT6552GL2WEXBJ01455", "MT6552GL2WEXBM01872", "MT6552GL2WEXCA00114", "MT6552GL2WEXCA00189",
         "MT6552GL2WEXCA00218", "MT6552GL2WEXCA00863", "MT6552GL2WEXCA00870", "MT6552GL2WEXCA00875",
@@ -944,11 +911,6 @@
         "MT93LHSGSEGA01842", "MT93LHSGSEGA01864", "MT93LHSGSEGA01865"
     ];
 
-    // ==== MAPPING SERIAL NUMBER PDA -> STATION KERJA (DEFAULT / SEED AWAL) ====
-    // Ini cuma dipakai SEKALI buat ngisi database Firebase pas pertama kali fitur ini
-    // jalan (kalau node "pdaStationMap" di Firebase masih kosong). Setelah itu, data
-    // asli & yang bisa diedit lewat modal "Database Asset" ada di Firebase, BUKAN di
-    // sini lagi. Jangan ngarepin ubah station di sini bakal langsung keliatan di app.
     const DEFAULT_PDA_STATION_MAP = {
         // Inbound
         "MT93LHSGSEFK01064": "Inbound",
@@ -986,9 +948,6 @@
     };
     const STATION_LIST = ["Inbound", "Sec Sort", "Bulky", "Assisted Sorting", "Outbound", "Runner"];
 
-    // Working copy yang ke-load & ke-sync realtime dari Firebase (node "pdaStationMap").
-    // Ini yang dipakai di seluruh app buat nentuin station sebuah SN, BUKAN
-    // DEFAULT_PDA_STATION_MAP di atas.
     let pdaStationMap = Object.assign({}, DEFAULT_PDA_STATION_MAP);
 
     function getStationForSN(snFull) {
@@ -1007,11 +966,6 @@
         }
     }
 
-    // ==== HITUNG PDA IDLE PER STATION ====
-    // "Idle" = device terdaftar di pdaStationMap TAPI aksi TERAKHIRnya di tanggal
-    // yang lagi difilter BUKAN "Pinjam PDA" (artinya: udah dikembalikan, atau emang
-    // dari awal belum pernah dipinjam sama sekali hari itu). Dihitung per Serial
-    // Number (bukan per opsId), soalnya 1 device bisa gonta-ganti peminjam dalam sehari.
     function computeStationIdleCounts(startStr, endStr) {
         let snLastAction = {};
         assetLogsArray.forEach(function (log) {
@@ -1062,18 +1016,16 @@
         sel.appendChild(optUnassigned);
     }
 
-    // ==== STATE UTAMA ====
-    let currentActiveModule = "rest"; // "rest" atau "asset"
+    let currentActiveModule = "rest";
     let masterKaryawan = {};   
     let logsArray = [];        
-    let assetLogsArray = [];   // Array log peminjaman PDA
+    let assetLogsArray = [];
     let debounceInputTimer = null;
     let lastCheckedCalendarDate = "";
     let lastSubmittedOpsId = null; 
 
-    // ==== STATE SORT TABEL REST TIME (Duration & Alert Status) ====
-    let restSortCol = null;  // null (default: urut tanggal/opsId) | "duration" | "alert"
-    let restSortDir = "desc"; // "desc" | "asc"
+    let restSortCol = null;
+    let restSortDir = "desc";
 
     let fbApp = null, fbDb = null;
     const FB_ROOT = "prDcMonitoring"; 
@@ -1112,15 +1064,12 @@
             .catch(function (err) { console.error("Gagal load logs tanggal lampau:", err); });
     }
 
-    // Versi rentang: dipanggil pas Start/End Date filter berubah. Loop tiap
-    // tanggal dalam rentang itu, dan buat yang jatohnya SEBELUM window realtime
-    // (LOGS_WINDOW_DAYS hari terakhir), tarik manual dari Firebase satu-satu.
     function ensureLogsLoadedForRange(startStr, endStr) {
         if (!startStr || !endStr || !fbDb) return;
         let cursor = new Date(startStr + "T00:00:00");
         let endDate = new Date(endStr + "T00:00:00");
         let guard = 0;
-        while (cursor <= endDate && guard < 366) { // guard biar gak infinite loop kalau input aneh
+        while (cursor <= endDate && guard < 366) {
             ensureLogsLoadedForDate(getWorkingDateStr(cursor));
             cursor.setDate(cursor.getDate() + 1);
             guard++;
@@ -1144,13 +1093,10 @@
         const txt = document.getElementById("connStatusText");
         if (!el) return;
         el.className = "conn-status " + (state === "online" ? "conn-online" : state === "offline" ? "conn-offline" : "conn-connecting");
-        // Kalau textOrKey adalah salah satu i18n key resmi kita, terjemahin. Kalau bukan (misal
-        // pesan error dinamis lama), tampilin apa adanya biar gak ada yang kececer.
         const knownKeys = ["conn.menghubungkan", "conn.gagalConfig", "conn.online", "conn.offlineReconnect"];
         lastConnState = state; lastConnKey = textOrKey;
         txt.innerText = knownKeys.indexOf(textOrKey) !== -1 ? t(textOrKey) : textOrKey;
     }
-    // Dipanggil ulang tiap ganti bahasa biar teks status koneksi ikut ke-translate tanpa nunggu event baru
     function refreshConnStatusLabel() {
         if (lastConnState && lastConnKey) setConnStatus(lastConnState, lastConnKey);
     }
@@ -1223,10 +1169,6 @@
             renderAll();
         });
 
-        // ==== SYNC "Database Asset" (mapping SN -> Station) ====
-        // Kalau di Firebase node ini masih kosong (pertama kali fitur ini jalan),
-        // seed sekali pake DEFAULT_PDA_STATION_MAP. Sesudahnya Firebase jadi
-        // satu-satunya sumber kebenaran; DEFAULT_PDA_STATION_MAP gak dipake lagi.
         fbDb.ref(FB_ROOT + "/pdaStationMap").once("value").then(function (snap) {
             if (!snap.exists()) fbDb.ref(FB_ROOT + "/pdaStationMap").set(DEFAULT_PDA_STATION_MAP);
         });
@@ -1262,7 +1204,6 @@
         });
     }
 
-    // ==== SWITCHER MODUL ====
     function switchModule(moduleType) {
         currentActiveModule = moduleType;
         const btnRest = document.getElementById("tabRestBtn");
@@ -1309,10 +1250,6 @@
         renderAll();
     }
 
-    // ==== MENCARI FULL SERIAL NUMBER DARI 5 DIGIT ====
-    // Cari dari PDA_SERIAL_NUMBERS (daftar inventaris awal) DIGABUNG sama SN-SN yang
-    // ditambahin belakangan lewat modal "Database Asset" (biar device baru langsung
-    // bisa dipakai buat pinjam tanpa perlu ubah kode).
     function findFullSerialNumber(last5) {
         if (!last5 || last5.length < 5) return null;
         const extraSN = Object.keys(pdaStationMap).filter(sn => PDA_SERIAL_NUMBERS.indexOf(sn) === -1);
@@ -1369,9 +1306,6 @@
         document.getElementById("appSidebarBackdrop").classList.toggle("open");
     }
 
-    // Open/Hide grup nav (Productivity / Inbound / Outbound Monitoring / SOC). Sengaja GAK
-    // diinget lewat localStorage — tiap buka halaman / pindah tab, semua grup default Hide,
-    // user wajib Open manual biar Sidebar-nya tetep rapi.
     function toggleSidebarGroup(group) {
         const label = document.querySelector('.app-sidebar-group-label[data-group="' + group + '"]');
         const body = document.querySelector('.app-sidebar-group[data-group-body="' + group + '"]');
@@ -1395,9 +1329,6 @@
     }
     collapseAllSidebarGroups();
 
-    // Tombol Dark/Light Mode sudah dihapus dari sidebar (disamain kayak Inventory Control).
-    // Fungsi ini disisakan (jaga-jaga dipanggil dari tempat lain / dipasang ulang nanti),
-    // tapi elemen themeBtn kemungkinan sudah gak ada — makanya di-guard null-check.
     function toggleTheme() {
         const html = document.documentElement;
         const themeBtn = document.getElementById("themeBtn");
@@ -1430,25 +1361,6 @@
         } catch (e) {}
     }
 
-    // ===== ALERT POP UP: KARYAWAN ISTIRAHAT > 60 MENIT =====
-    // - Dicek tiap kali renderRestMonitoring() jalan (dipanggil renderAll(),
-    //   yang sendiri ke-trigger tiap ±30 detik lewat updateClock() ATAU tiap
-    //   listener Firebase logs nembak data baru).
-    // - 1 karyawan cuma di-notif SEKALI per sesi Break Out (key = opsId +
-    //   tanggal + jam Break Out-nya), gak diulang tiap render walau dia masih
-    //   terus kebaca overtime di render berikutnya.
-    // - Kalau ada beberapa karyawan overtime bareng, di-antre (queue) —
-    //   muncul satu-satu, popup berikutnya baru nongol setelah yang sekarang
-    //   ditutup, biar gak numpuk semua sekaligus di layar.
-    // - Popup+sound CUMA muncul kalau browser tab ini yang lagi aktif/dibuka
-    //   (document.visibilityState === "visible"). Kalau user lagi pindah ke
-    //   tab lain, dia bakal nunggu di antrian & baru muncul begitu user balik
-    //   ke tab ini (ke-trigger via event "visibilitychange" di bawah).
-    // restOvertimeActiveItems  = karyawan yang lagi TAMPIL di modal yang kebuka sekarang
-    //                             (bisa lebih dari 1 — modal-nya list, bukan 1 orang per popup)
-    // restOvertimePendingItems = karyawan yang KE-DETECT overtime tapi modul
-    //                             Rest Time ini lagi gak ditampilin, nunggu
-    //                             di-flush begitu modul ini ditampilin lagi
     let restOvertimeNotifiedKeys = new Set();
     let restOvertimeActiveItems = [];
     let restOvertimePendingItems = [];
@@ -1456,19 +1368,8 @@
     let restOvertimeAudioUnlocked = false;
     let restTimeModuleWasVisible = true;
 
-    // Sinyal EKSPLISIT dari app shell (lewat postMessage, liat listener di
-    // script "APP-SHELL BRIDGE" paling bawah) soal modul Rest Time ini lagi
-    // ditampilin apa enggak. null = app shell belum pernah ngirim sinyal ini
-    // sama sekali (berarti app shell versi lama, belum di-update buat kirim
-    // sinyal ini) -> fallback ke deteksi berbasis CSS di bawah.
     let shellReportedVisible = null;
 
-    // Browser (Chrome dkk) nge-block audio.play() lewat JS kalau BELUM ada
-    // interaksi user (klik/ketik) di halaman ini duluan — makanya kadang popup
-    // muncul otomatis (dari background check) tapi suaranya gak keluar.
-    // Trik: begitu user klik/keydown APAPUN di halaman, diam-diam "unlock"
-    // elemen audio-nya sekali (play sekejap lalu langsung pause+reset), abis
-    // itu audio.play() programatik bebas dipanggil kapan aja tanpa diblokir.
     function unlockRestOvertimeAudio() {
         if (restOvertimeAudioUnlocked) return;
         const audio = document.getElementById("restOvertimeAudio");
@@ -1482,30 +1383,6 @@
     document.addEventListener("click", unlockRestOvertimeAudio);
     document.addEventListener("keydown", unlockRestOvertimeAudio);
 
-    // Halaman ini (rest-time.html) dimuat sebagai IFRAME di app shell
-    // (index.html) dan cuma disembunyikan (bukan direload/dimatikan) pas
-    // user pindah ke modul lain (Inventory Control, dst) — jadi script-nya
-    // TETAP JALAN di background.
-    //
-    // FIX (percobaan #1, TERNYATA BELUM CUKUP): sebelumnya cuma ngecek
-    // document.documentElement.clientWidth/clientHeight (ukuran dokumen
-    // iframe ini SENDIRI). Terus dicoba dibenerin pakai window.frameElement
-    // (ngecek langsung style & ukuran elemen <iframe>-nya di dokumen
-    // PARENT). Ternyata SUARANYA MASIH BOCOR — kesimpulannya app shell-nya
-    // kemungkinan besar nyimpen SEMUA iframe modul tetep "hidup" & "visible"
-    // sekaligus (display bukan none, ukuran bukan 0x0), terus modul yang
-    // aktif doang yang ditumpuk PALING ATAS (z-index) di depan iframe modul
-    // lain. Dari SISI DALAM iframe ini, itu gak bisa dibedain dari CSS/DOM
-    // biasa — iframe ini "keliatan" secara teknis walau aslinya ketutup
-    // iframe lain di atasnya.
-    //
-    // FIX beneran: minta app shell KASIH TAU LANGSUNG lewat postMessage pas
-    // dia ganti tab aktif (liat listener "activeTabChanged" di script
-    // "APP-SHELL BRIDGE" paling bawah, isinya set variabel
-    // shellReportedVisible). Itu satu-satunya sumber yang PASTI akurat.
-    // Kalau app shell belum di-update buat ngirim sinyal itu (shellReportedVisible
-    // masih null), baru fallback ke pengecekan CSS/ukuran iframe di bawah
-    // (yang sayangnya gak nangkep kasus "ketutup iframe lain" di atas).
     function isRestTimeModuleVisible() {
         if (document.visibilityState !== "visible") return false;
         if (shellReportedVisible !== null) return shellReportedVisible;
@@ -1516,13 +1393,10 @@
                 if (style.display === "none" || style.visibility === "hidden" || parseFloat(style.opacity) === 0) return false;
                 var rect = fe.getBoundingClientRect();
                 if (rect.width === 0 || rect.height === 0) return false;
-                // offsetParent null = ada ancestor display:none di tengah jalan
-                // (kecuali posisinya "fixed", yang emang wajar offsetParent-nya null)
                 if (fe.offsetParent === null && style.position !== "fixed") return false;
                 return true;
             }
         } catch (e) {
-            // Beda origin sama app shell -> gak bisa diakses, fallback ke bawah
         }
         return document.documentElement.clientWidth > 0 && document.documentElement.clientHeight > 0;
     }
@@ -1535,15 +1409,12 @@
         restOvertimeNotifiedKeys.add(key);
         let item = { key: key, opsId: opsId, dateStr: dateStr, breakOutTime: breakOutTime, name: name, agency: agency, dept: dept };
         if (!isRestTimeModuleVisible()) {
-            restOvertimePendingItems.push(item); // modul ini lagi gak ditampilin, taruh dulu di antrian
+            restOvertimePendingItems.push(item);
             return;
         }
         addRestOvertimeItem(item);
     }
 
-    // Nambahin 1 karyawan ke modal yang lagi kebuka (atau buka modal baru
-    // kalau belum ada yang lagi nampil) — BUKAN antre satu-satu, tapi
-    // langsung nambah baris baru ke list yang sama.
     function addRestOvertimeItem(item) {
         restOvertimeActiveItems.push(item);
         renderRestOvertimeList();
@@ -1551,7 +1422,7 @@
             restOvertimeModalShowing = true;
             document.getElementById("restOvertimeModal").style.display = "flex";
         }
-        playRestOvertimeSoundLoop(); // (re)start loop — juga jadi penekanan tambahan kalau ada karyawan baru nyusul
+        playRestOvertimeSoundLoop();
     }
 
     function renderRestOvertimeList() {
@@ -1579,8 +1450,6 @@
         if (countEl) countEl.innerText = restOvertimeActiveItems.length > 1 ? "(" + restOvertimeActiveItems.length + " karyawan)" : "";
     }
 
-    // Sound LOOP terus-terusan selama modal kebuka, baru berhenti begitu
-    // tombol "Oke, Sudah Ditindak" diklik (closeRestOvertimeModal).
     function playRestOvertimeSoundLoop() {
         try {
             const audio = document.getElementById("restOvertimeAudio");
@@ -1606,27 +1475,17 @@
         stopRestOvertimeSound();
     }
 
-    // Dipanggil dari 2 tempat: event "visibilitychange" (browser tab
-    // ganti/minimize) DAN dari tick updateClock() tiap detik (buat nangkep
-    // kasus modul ini disembunyiin app shell lewat CSS, yang gak
-    // memicu event visibilitychange sama sekali karena browser TAB-nya
-    // sendiri gak berubah status).
     function handleRestTimeModuleVisibilityChange() {
         let nowVisible = isRestTimeModuleVisible();
         if (nowVisible === restTimeModuleWasVisible) return;
         restTimeModuleWasVisible = nowVisible;
         if (nowVisible) {
-            // Balik ke modul ini: flush karyawan yang sempet ke-detect pas disembunyiin...
             if (restOvertimePendingItems.length > 0) {
                 restOvertimePendingItems.forEach(function (item) { addRestOvertimeItem(item); });
                 restOvertimePendingItems = [];
             }
-            // ...dan kalau ternyata popup-nya masih kebuka dari sebelumnya, lanjutin lagi suaranya.
             if (restOvertimeModalShowing) playRestOvertimeSoundLoop();
         } else {
-            // Pindah ke modul lain: BUNGKAM suaranya (biar gak keder-denger dari
-            // modul lain kayak Inventory Control), tapi popup/list-nya tetep
-            // disimpen apa adanya, nanti lanjut lagi begitu balik ke modul ini.
             stopRestOvertimeSound();
         }
     }
@@ -1637,12 +1496,6 @@
         return dateObj.getFullYear() + "-" + String(dateObj.getMonth() + 1).padStart(2, '0') + "-" + String(dateObj.getDate()).padStart(2, '0');
     }
 
-    // ==== FILTER PERIODE TANGGAL (Start Date - End Date) ====
-    // Ganti dari filter 1 hari doang jadi rentang tanggal. Kalau Start & End Date
-    // sama persis = filter 1 hari (perilaku lama). Kalau beda = tampilin data
-    // gabungan dari beberapa hari sekaligus. Format workingDate ("YYYY-MM-DD")
-    // bisa langsung dibandingin pake operator string (>=, <=) karena urutannya
-    // udah pas secara leksikografis.
     function getFilterDateRange() {
         let startEl = document.getElementById("filterTanggalStart");
         let endEl = document.getElementById("filterTanggalEnd");
@@ -1666,9 +1519,6 @@
         renderAll();
     }
 
-    // ==== TOGGLE RINGKASAN BOX METRIK (biar tabel data di bawahnya kebagian ====
-    // ruang lebih luas & gak kepotong / kudu discroll dulu buat keliatan).
-    // Preferensi disimpen di localStorage biar keinget lintas sesi/refresh.
     const SUMMARY_COLLAPSE_KEY = "pr_dc_summary_collapsed";
 
     function applySummaryBoxesState(collapsed) {
@@ -1780,13 +1630,6 @@
         });
         document.getElementById("inputOpsId").focus();
 
-        // FIX: dulu ini langsung konek DB begitu window.onload nembak, TANPA nunggu
-        // status login (firebase.auth()) beneran kelar di-resolve. Realtime Database
-        // Rules kita "auth != null", jadi kalau listener .on() ke-attach SEBELUM auth
-        // selesai, dia bakal ditolak rules (permission_denied) dan GAK otomatis nyoba
-        // lagi begitu login-nya kelar → layar diem, data gak pernah muncul. Sekarang
-        // nunggu onAuthStateChanged confirm ada user dulu (sama kayak pola di
-        // outbound.html), baru konek ke database.
         function startFbConnection() {
             const savedConfig = localStorage.getItem(FB_CONFIG_KEY);
             if (savedConfig) {
@@ -1814,11 +1657,6 @@
         let startEl = document.getElementById("filterTanggalStart");
         let endEl = document.getElementById("filterTanggalEnd");
         let isDateInputFocused = (document.activeElement === startEl || document.activeElement === endEl);
-        // Auto-geser filter ke tanggal baru pas lewat tengah malam, TAPI cuma
-        // kalau filter-nya masih "default hari ini" (Start = End = tanggal
-        // kemarin yang lagi dipantau). Kalau operator udah sengaja ubah jadi
-        // rentang custom (Start != End, atau nunjuk tanggal lampau), biarin
-        // gak ke-reset otomatis biar rentang yang dia pilih gak ilang.
         let isDefaultTodayRange = (startEl.value === lastCheckedCalendarDate && endEl.value === lastCheckedCalendarDate);
         if (currentCalendarDate !== lastCheckedCalendarDate && isDefaultTodayRange && !isDateInputFocused) {
             lastCheckedCalendarDate = currentCalendarDate;
@@ -1829,14 +1667,7 @@
         } else if (now.getSeconds() % 30 === 0) {
             renderAll();
         }
-        // Cek tiap detik apakah modul Rest Time ini masih ditampilin app shell
-        // atau lagi disembunyiin (pindah ke modul lain) — soalnya iframe modul
-        // ini tetep jalan di background walau disembunyiin, jadi harus dicek
-        // manual gini, bukan cuma nunggu event visibilitychange browser.
         handleRestTimeModuleVisibilityChange();
-        // Selagi popup overtime lagi kebuka, ikut refresh angka durasinya tiap
-        // detik (bukan cuma pas nambah karyawan baru) biar "62 Menit" dst
-        // keliatan jalan terus, gak beku di angka pas pertama muncul.
         if (restOvertimeModalShowing) renderRestOvertimeList();
     }
 
@@ -1870,16 +1701,6 @@
         return { cycleNum: nextCycleNum, action: nextAction, logDate: lastLog.workingDate };
     }
 
-    // FIX CROSSDAY: dulu fungsi ini cuma nengok log HARI INI doang (filter
-    // workingDate === actualDateStr), jadi begitu tanggal kerja ganti (lewat
-    // tengah malam / batas shift), sesi "Pinjam PDA" kemarin ke-anggap ilang
-    // & sistem ngira orangnya belum pernah pinjam -> minta "Pinjam" lagi
-    // padahal maunya "Kembali". Sekarang disamain logicnya kayak
-    // calculateNextState (Rest Time): liat SEMUA log opsId itu (lintas
-    // tanggal), kalau log terakhirnya masih "segar" (<=12 jam lalu) & belum
-    // di-"Kembali", next action-nya "Kembali PDA" — dan logDate-nya IKUT
-    // tanggal Pinjam-nya (bukan tanggal hari ini), biar 1 sesi Pinjam->Kembali
-    // gak kepotong 2 tanggal beda pas disimpen ke database.
     function calculateNextAssetState(opsId, actualDateStr) {
         let userLogs = assetLogsArray.filter(log => log.opsId.toLowerCase() === opsId.toLowerCase());
         userLogs.sort((a, b) => parseDateTime(a.timestamp) - parseDateTime(b.timestamp));
@@ -1891,8 +1712,6 @@
         let lastLog = userLogs[userLogs.length - 1];
         let hoursPassed = (new Date() - parseDateTime(lastLog.timestamp)) / (1000 * 60 * 60);
 
-        // Log terakhir udah lewat dari 12 jam -> anggap sesi lama emang udah
-        // kelar/expired, mulai bersih dari "Pinjam PDA" di tanggal sekarang.
         if (hoursPassed > 12) {
             return { action: "Pinjam PDA", logDate: actualDateStr };
         }
@@ -1904,12 +1723,6 @@
         }
     }
 
-    // ==== SISTEM LOCK "1 PDA = 1 ORANG" ====
-    // Nyari waktu Check In (modul Rest Time) yang jadi patokan buat 1 PDA yang
-    // lagi dipinjam. Ambil Check In TERAKHIR punya opsId itu yang jatuhnya
-    // SEBELUM/PAS waktu dia mulai Pinjam PDA (biar match sama shift yg lagi
-    // jalan). Kalau ternyata dia belum pernah Check In sebelum minjem (jarang,
-    // tapi jaga2), fallback ke waktu Pinjam-nya sendiri sebagai patokan.
     function getShiftCheckInTime(opsId, referenceTime) {
         let checkIns = logsArray
             .filter(function (log) { return log.opsId.toLowerCase() === opsId.toLowerCase() && log.breakType === "Check In"; })
@@ -1922,15 +1735,6 @@
         return candidate;
     }
 
-    // Ngecek apakah 1 Serial Number PDA lagi "locked" ke seseorang. Locked
-    // artinya:
-    //  - Aksi terakhir buat SN itu (lintas tanggal) = "Pinjam PDA" (belum
-    //    di-"Kembali" sama sekali), ATAU
-    //  - Aksi terakhirnya "Kembali PDA" TAPI itu Kembali SESI PERTAMA hari itu
-    //    (dianggap istirahat doang, orangnya bakal Pinjam lagi abis istirahat
-    //    -> PDA masih "milik" dia). Baru beneran lepas kalau Kembali-nya udah
-    //    sesi ke-2 atau lebih.
-    // Ditambah syarat: belum lewat (Jam Check In shift dia + 9 Jam kerja).
     function getActiveAssetLock(fullSn) {
         let snLogs = assetLogsArray.filter(function (log) { return log.serialNumber === fullSn; });
         if (snLogs.length === 0) return null;
@@ -1943,9 +1747,6 @@
             holderOpsId = lastLog.opsId;
             pinjamLog = lastLog;
         } else {
-            // Aksi terakhir "Kembali PDA" -> hitung ini Kembali sesi ke berapa
-            // buat opsId itu di tanggal itu (lintas SN, samain kayak kolom SESI
-            // di tabel: dihitung per opsId per hari).
             let kembaliKeCount = assetLogsArray.filter(function (log) {
                 return log.opsId.toLowerCase() === lastLog.opsId.toLowerCase()
                     && log.workingDate === lastLog.workingDate
@@ -1953,10 +1754,8 @@
                     && parseDateTime(log.timestamp) <= parseDateTime(lastLog.timestamp);
             }).length;
 
-            if (kembaliKeCount >= 2) return null; // Kembali sesi ke-2 dst -> beneran lepas, PDA bebas
+            if (kembaliKeCount >= 2) return null;
 
-            // Kembali sesi pertama (istirahat) -> masih dianggap locked. Cari
-            // Pinjam sebelumnya (SN & opsId yg sama) buat jadi basis waktu lock.
             holderOpsId = lastLog.opsId;
             let priorPinjams = assetLogsArray.filter(function (log) {
                 return log.serialNumber === fullSn
@@ -1965,32 +1764,20 @@
                     && parseDateTime(log.timestamp) <= parseDateTime(lastLog.timestamp);
             }).sort(function (a, b) { return parseDateTime(b.timestamp) - parseDateTime(a.timestamp); });
             pinjamLog = priorPinjams[0];
-            if (!pinjamLog) return null; // data anomali (Kembali tanpa Pinjam sebelumnya) -> anggap bebas
+            if (!pinjamLog) return null;
         }
 
         let pinjamTime = parseDateTime(pinjamLog.timestamp);
         let checkInTime = getShiftCheckInTime(holderOpsId, pinjamTime);
-        let lockBaseTime = checkInTime || pinjamTime; // fallback kalau belum ada log Check In
+        let lockBaseTime = checkInTime || pinjamTime;
         let lockExpiry = new Date(lockBaseTime.getTime() + (9 * 60 * 60 * 1000));
 
-        if (new Date() >= lockExpiry) return null; // udah lewat Check In + 9 Jam -> lock auto-reset
+        if (new Date() >= lockExpiry) return null;
 
         let userRaw = masterKaryawan[holderOpsId] || {};
         return { opsId: holderOpsId, name: userRaw.name || "Unknown", expiry: lockExpiry };
     }
 
-    // Ngecek apakah 1 OPERATOR (opsId) lagi "terikat" ke 1 Serial Number PDA
-    // tertentu, dari sesi Pinjam sebelumnya. Kalau iya, dia WAJIB Pinjam PDA
-    // yang SAMA itu lagi di sesi berikutnya (mis. abis Istirahat/Sesi Kedua),
-    // gak boleh gonta-ganti ke PDA lain. Ini kebalikan dari getActiveAssetLock
-    // (yang ngecek dari sisi PDA-nya): ini ngecek dari sisi ORANGnya.
-    //  - Kalau aksi terakhir opsId ini "Pinjam PDA" (belum "Kembali" sama
-    //    sekali) -> terikat ke SN itu.
-    //  - Kalau aksi terakhirnya "Kembali PDA" tapi itu baru Kembali SESI
-    //    PERTAMA (istirahat doang) -> masih terikat ke SN Pinjam sebelumnya.
-    //  - Baru bener2 bebas milih PDA lain kalau Kembali-nya udah sesi ke-2
-    //    (kerjaannya emang udah kelar), ATAU udah lewat (Check In + 9 Jam
-    //    Kerja) walau lupa "Kembali" sesi ke-2.
     function getOperatorRequiredSn(opsId) {
         let userLogs = assetLogsArray.filter(function (log) { return log.opsId.toLowerCase() === opsId.toLowerCase(); });
         if (userLogs.length === 0) return null;
@@ -2004,22 +1791,21 @@
                     && log.action === "Kembali PDA"
                     && parseDateTime(log.timestamp) <= parseDateTime(lastLog.timestamp);
             }).length;
-            if (kembaliKeCount >= 2) return null; // Kembali sesi ke-2 dst -> beneran kelar, bebas pilih PDA apapun
+            if (kembaliKeCount >= 2) return null;
         }
 
-        // Cari Pinjam terakhir punya opsId ini (buat tau SN mana yg wajib dipakai lagi)
         let pinjamLog = lastLog.action === "Pinjam PDA" ? lastLog :
             userLogs.filter(function (log) {
                 return log.action === "Pinjam PDA" && parseDateTime(log.timestamp) <= parseDateTime(lastLog.timestamp);
             }).sort(function (a, b) { return parseDateTime(b.timestamp) - parseDateTime(a.timestamp); })[0];
-        if (!pinjamLog) return null; // data anomali -> anggap bebas
+        if (!pinjamLog) return null;
 
         let pinjamTime = parseDateTime(pinjamLog.timestamp);
         let checkInTime = getShiftCheckInTime(opsId, pinjamTime);
         let baseTime = checkInTime || pinjamTime;
         let expiry = new Date(baseTime.getTime() + (9 * 60 * 60 * 1000));
 
-        if (new Date() >= expiry) return null; // udah lewat Check In + 9 Jam Kerja -> bebas pilih PDA lain
+        if (new Date() >= expiry) return null;
 
         return { sn: pinjamLog.serialNumber, last5: pinjamLog.last5Sn || pinjamLog.serialNumber.slice(-5), expiry: expiry };
     }
@@ -2051,12 +1837,6 @@
         if (snInput) { snInput.value = ""; snInput.focus(); }
     }
 
-    // ==== GATE: WAJIB CHECK IN DULU DI REST TIME SEBELUM PINJAM PDA ====
-    // Alur yang diminta: Check In (Rest Time) -> Pinjam Asset (Scan) -> Clear.
-    // Kalau operator langsung Pinjam Asset padahal belum ada Check In yang
-    // masih "segar" (<= 12 jam, samain kayak freshness check di
-    // calculateNextState/calculateNextAssetState), submit-nya ditolak & muncul
-    // popup "Terdeteksi Belum Check In".
     function hasActiveCheckIn(opsId) {
         let checkInTime = getShiftCheckInTime(opsId, new Date());
         if (!checkInTime) return false;
@@ -2118,7 +1898,6 @@
             if(state.action === "Pinjam PDA") { badge.style.background = "#ffedd5"; badge.style.color="#c2410c"; }
             else { badge.style.background = "#d1fae5"; badge.style.color="#047857"; }
 
-            // OTOMATIS SUBMIT PADA MODUL ASSET SAAT SN PDA MENCAPAI 5 DIGIT
             let snInputVal = document.getElementById("inputAssetSn").value.trim();
             clearTimeout(debounceInputTimer);
             if (snInputVal.length === 5) {
@@ -2184,7 +1963,6 @@
 
             fbDb.ref().update(updates).then(function () { playSound('success'); });
         } else {
-            // LOGIC UTAMA MODUL ASSET USAGE MONITORING
             let snInput = document.getElementById("inputAssetSn").value.trim();
             if (!snInput || snInput.length < 5) {
                 showToast("⚠️ Masukkan 5 Digit Terakhir Serial Number PDA!", 'info');
@@ -2201,28 +1979,17 @@
             let state = calculateNextAssetState(cleanOpsId, actualDateStr);
 
             if (state.action === "Pinjam PDA") {
-                // GATE 1: WAJIB CHECK IN DULU DI REST TIME. Kalau opsId ini
-                // belum ada Check In yang masih segar, tolak Pinjam PDA &
-                // suruh Check In dulu di Area Security.
                 if (!hasActiveCheckIn(cleanOpsId)) {
                     showNotCheckedInAlert(cleanOpsId);
                     return;
                 }
 
-                // GATE 2: WAJIB PINJAM PDA YANG SAMA (SATU PDA SATU NAMA).
-                // Kalau opsId ini masih "terikat" ke SN dari sesi Pinjam
-                // sebelumnya (mis. abis Istirahat, mau Pinjam lagi buat Sesi
-                // Kedua), tapi SN yang di-scan sekarang BEDA -> tolak submit
-                // & munculin popup wajib pakai PDA yang sama.
                 let requiredSn = getOperatorRequiredSn(cleanOpsId);
                 if (requiredSn && requiredSn.sn !== fullSn) {
                     showWrongDeviceAlert(requiredSn.last5, requiredSn.expiry);
                     return;
                 }
 
-                // GATE 3: SISTEM LOCK "1 PDA = 1 ORANG": kalau PDA ini masih
-                // locked ke orang lain (belum "Kembali PDA" & belum lewat
-                // Check In + 9 Jam), tolak submit-nya & munculin popup error.
                 let activeLock = getActiveAssetLock(fullSn);
                 if (activeLock && activeLock.opsId.toLowerCase() !== cleanOpsId.toLowerCase()) {
                     showLockAlert(activeLock.name, activeLock.opsId, activeLock.expiry);
@@ -2237,8 +2004,8 @@
                 last5Sn: snInput,
                 action: state.action, 
                 timestamp: timestampStr, 
-                workingDate: state.logDate, // FIX CROSSDAY: "Kembali PDA" ikut tanggal Pinjam-nya, bukan selalu tanggal hari ini
-                picEmail: window.__authUserEmail || "unknown" // email user yang login pas input, buat kolom "PIC Input"
+                workingDate: state.logDate,
+                picEmail: window.__authUserEmail || "unknown"
             };
 
             fbDb.ref().update(updates).then(function () { 
@@ -2264,16 +2031,12 @@
         let saveChange = function() {
             let newTime = input.value;
             if (newTime) {
-                const targetDateStr = dateStr; // tanggal baris ini persis (bukan filter global lagi, karena filter sekarang bisa rentang beberapa hari)
+                const targetDateStr = dateStr;
                 let userLogs = logsArray.filter(log => log.opsId === opsId && log.workingDate === targetDateStr);
                 let targetedLog = userLogs.find(l => l.breakType === type);
                 if (targetedLog) {
                     fbDb.ref(FB_ROOT + "/logs/" + targetedLog._key).update({ timestamp: `${targetDateStr} ${newTime}:00` });
                 } else {
-                    // INPUT MANUAL: status "${type}" ini belum ada lognya sekali pun
-                    // (mis. kelewat gara-gara Double Scan Rest Time bikin urutan
-                    // status jadi kacau) -> bikin log baru manual, bukan cuma
-                    // update log yang udah ada (soalnya emang belum ada).
                     const newKey = fbDb.ref(FB_ROOT + "/logs").push().key;
                     fbDb.ref(FB_ROOT + "/logs/" + newKey).set({
                         opsId: opsId,
@@ -2289,11 +2052,6 @@
         input.addEventListener("keypress", function(e) { if (e.key === 'Enter') { saveChange(); } });
     }
 
-    // ==== ROLLBACK STATUS (Fix Double Scan) ====
-    // Beda sama "Hapus" (yang ngapus SATU HARI PENUH punya opsId itu), rollback
-    // ini cuma ngapus SATU scan status doang (Check In / Break Out / Break In /
-    // Selesai) — yang paling baru kalo ternyata ada lebih dari 1 (kejadian
-    // Double Scan). Status yang lain di hari itu TETEP AMAN, gak ikut kehapus.
     function rollbackStatus(opsId, dateStr, type) {
         if (!fbDb) return;
         if (!window.__authCanDelete) { showToast("🚫 Kamu gak punya akses buat rollback status.", 'err'); return; }
@@ -2301,7 +2059,6 @@
         let matched = logsArray.filter(l => l.opsId === opsId && l.workingDate === dateStr && l.breakType === type);
         if (matched.length === 0) { showToast("Gak ada data buat di-rollback.", 'info'); return; }
 
-        // Kalo lebih dari 1 (Double Scan), ambil yang paling baru timestamp-nya buat dibatalin.
         matched.sort((a, b) => parseDateTime(b.timestamp) - parseDateTime(a.timestamp));
         let target = matched[0];
 
@@ -2313,9 +2070,6 @@
         });
     }
 
-    // Render tombol "Hapus" di kolom Action — cuma aktif buat email yang ada di
-    // DELETE_ALLOWED_EMAILS (auth-guard.js). Email lain tetap liat kolomnya tapi
-    // tombolnya disabled & abu-abu, gak bisa diklik.
     function renderDeleteAction(opsId, dateStr) {
         if (window.__authCanDelete) {
             return `<button class="btn-action-del" onclick="removeOpsIdLog('${opsId}', '${dateStr}')">${t('btn.hapus')}</button>`;
@@ -2327,7 +2081,7 @@
         if (!fbDb) return;
         if (!window.__authCanDelete) { showToast("🚫 Kamu gak punya akses buat hapus data. Hubungi admin kalau ini kesalahan.", 'err'); return; }
         if (confirm(`Hapus aktivitas ${opsId} tanggal ${dateStr}?`)) {
-            const targetDateStr = dateStr; // hapus cuma buat tanggal baris ini, bukan seluruh rentang filter
+            const targetDateStr = dateStr;
             const updates = {};
             if (currentActiveModule === 'rest') {
                 const matched = logsArray.filter(log => log.opsId === opsId && log.workingDate === targetDateStr);
@@ -2358,8 +2112,6 @@
         }
     }
 
-    // Nyalain/matiin tombol "Reset Data" sesuai akses (DELETE_ALLOWED_EMAILS di
-    // auth-guard.js) — dipanggil sekali begitu login kevalidasi.
     function applyDeletePermissionUI() {
         const btn = document.getElementById("btnResetData");
         if (!btn) return;
@@ -2371,10 +2123,6 @@
         }
     }
 
-    // ==== MODAL "DATABASE ASSET" (kelola SN PDA -> Station) ====
-    // Data-nya di Firebase node "pdaStationMap", ke-sync realtime lewat listener di
-    // startFirebaseApp(). Tambah/edit/hapus cuma diizinin buat email yang ada di
-    // DELETE_ALLOWED_EMAILS (auth-guard.js) — email lain cuma bisa liat (read-only).
     function openDatabaseAssetModal() {
         const canEdit = !!window.__authCanDelete;
         document.getElementById("databaseAssetAddForm").style.display = canEdit ? "flex" : "none";
@@ -2396,7 +2144,7 @@
 
     function renderDatabaseAssetTable() {
         const tbody = document.getElementById("databaseAssetTableBody");
-        if (!tbody) return; // modal belum pernah dibuka / elemen belum ada
+        if (!tbody) return;
         const canEdit = !!window.__authCanDelete;
         const sortedSN = Object.keys(pdaStationMap).sort();
 
@@ -2480,9 +2228,6 @@
         }
     }
 
-    // Balikin semua kontrol di "Filter Data Table" ke kondisi default (All / kosong),
-    // lalu render ulang tabel. Filter periode tanggal (Start/End) SENGAJA gak ikut
-    // di-reset karena itu bagian terpisah, bukan bagian dari "Filter Data Table".
     function resetTableFilters() {
         document.getElementById("filterShift").value = "All";
         document.getElementById("filterBreakType").value = "All";
@@ -2493,8 +2238,6 @@
         renderAll();
     }
 
-    // Klik header "Duration" / "Alert Status" buat sort tabel Rest Time.
-    // 3 tahap tiap kolom: Desc (paling lama/parah dulu) -> Asc -> balik ke default (urut tanggal/OpsID).
     function sortRestTable(col) {
         if (restSortCol !== col) { restSortCol = col; restSortDir = "desc"; }
         else if (restSortDir === "desc") { restSortDir = "asc"; }
@@ -2518,7 +2261,6 @@
         });
     }
 
-    // Urutan tingkat "keparahan" Alert Status buat sort (makin gede makin genting).
     function alertStatusSeverity(alertKey) {
         switch (alertKey) {
             case "Gancang Meakal": return 4;
@@ -2538,11 +2280,7 @@
         const tbody = document.getElementById("tableBody"); 
         tbody.innerHTML = "";
         
-        // FILTER RENTANG TANGGAL: 1 opsId bisa punya sesi di beberapa hari yang
-        // beda dalam rentang yang dipilih, jadi grouping-nya sekarang per
-        // PASANGAN (opsId, tanggal) — bukan per opsId doang kayak dulu (dulu
-        // cuma bisa 1 hari, jadi 1 opsId = 1 baris otomatis).
-        let checkedInPairs = []; // { opsId, date }
+        let checkedInPairs = [];
         let seenPairKeys = {};
         logsArray.forEach(log => {
             if (log.workingDate < range.start || log.workingDate > range.end) return;
@@ -2559,7 +2297,7 @@
         let totalDisiplin = 0, totalGancangMeakal = 0, totalUdahRestAtauSedangRest = 0;
         let deptViolatorMap = {}; 
         let targetRowElement = null;
-        let rowsToRender = []; // dikumpulin dulu (belum langsung ke-append), biar bisa di-sort by Duration/Alert Status
+        let rowsToRender = [];
 
         checkedInPairs.forEach(function (pair) {
             let opsId = pair.opsId;
@@ -2575,10 +2313,6 @@
             let breakOutTime = userLogs.find(l => l.breakType === "Break Out") ? parseDateTime(userLogs.find(l => l.breakType === "Break Out").timestamp) : null;
             let breakInTime = userLogs.find(l => l.breakType === "Break In") ? parseDateTime(userLogs.find(l => l.breakType === "Break In").timestamp) : null;
 
-            // ALERT REST TIME > 60 MENIT — sengaja dicek di sini, SEBELUM filter
-            // tabel (matchShift/matchDept/filterBreak/search) diterapkan di bawah.
-            // Jadi karyawan yang overtime tetap ke-detect popup-nya walaupun
-            // tabelnya lagi difilter ke Dept/Shift lain / lagi di-search.
             if (breakOutTime && !breakInTime) {
                 checkRestOvertimeAlert(opsId, targetDateStr, breakOutTime, name, agency, dept);
             }
@@ -2617,8 +2351,8 @@
             
             let estMasuk = "", durationStr = "";
             let alertBadge = '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main);">Belum Istirahat</span>';
-            let alertKey = "Belum Istirahat"; // dipakai buat sort by Alert Status
-            let sortDurationMinutes = -1; // -1 = "-" (belum ada durasi), dipakai buat sort by Duration
+            let alertKey = "Belum Istirahat";
+            let sortDurationMinutes = -1;
             let rowClass = "";
             
             if (breakOutTime) {
@@ -2656,9 +2390,6 @@
             if (rowClass) tr.className = rowClass + (isNewlySubmitted ? " row-highlight" : "");
             else if (isNewlySubmitted) tr.className = "row-highlight";
             
-            // Tombol "↩" rollback: cuma nongol kalau status itu ADA datanya & user
-            // punya akses hapus. Dipakai buat batalin 1 scan doang (mis. gara-gara
-            // Double Scan / salah pencet) tanpa harus hapus seluruh baris/hari itu.
             const rollbackBtn = function (type, exists) {
                 if (!exists || !window.__authCanDelete) return "";
                 return `<button class="btn-rollback" title="Rollback ${type} (batalin scan ini doang)" onclick="event.stopPropagation(); rollbackStatus('${opsId}', '${targetDateStr}', '${type}')">↩</button>`;
@@ -2682,9 +2413,6 @@
             rowsToRender.push({ tr, isNewlySubmitted, sortDurationMinutes, alertSeverity: alertStatusSeverity(alertKey) });
         });
 
-        // SORT: kalau kolom Duration/Alert Status lagi diaktifin (klik header),
-        // urutin rowsToRender sesuai itu. Kalau enggak (default), tetep urut
-        // sesuai urutan tanggal/OpsID kayak semula (checkedInPairs).
         if (restSortCol === "duration") {
             rowsToRender.sort((a, b) => restSortDir === "desc" ? b.sortDurationMinutes - a.sortDurationMinutes : a.sortDurationMinutes - b.sortDurationMinutes);
         } else if (restSortCol === "alert") {
@@ -2726,10 +2454,7 @@
         const tbody = document.getElementById("assetTableBody"); 
         tbody.innerHTML = "";
 
-        // FILTER RENTANG TANGGAL: sama kayak Rest Monitoring, grouping-nya per
-        // PASANGAN (opsId, tanggal) biar 1 opsId yang punya sesi pinjam PDA di
-        // beberapa hari beda dalam rentang yang dipilih tetep kepisah rapi.
-        let assetPairs = []; // { opsId, date }
+        let assetPairs = [];
         let seenAssetPairKeys = {};
         assetLogsArray.forEach(log => {
             if (log.workingDate < range.start || log.workingDate > range.end) return;
@@ -2740,8 +2465,8 @@
 
         let totalPinjamCount = 0, activePinjamCount = 0, doneKembaliCount = 0;
         let targetRowElement = null;
-        let belumKembaliList = [];  // buat highlight box "Operator Belum Kembali"
-        let activityLogList = [];   // buat box "Aktivitas Log Input"
+        let belumKembaliList = [];
+        let activityLogList = [];
 
         assetPairs.forEach(function (pair) {
             let opsId = pair.opsId;
@@ -2753,8 +2478,6 @@
             let userAssetLogs = assetLogsArray.filter(l => l.opsId === opsId && l.workingDate === targetDateStr);
             userAssetLogs.sort((a, b) => parseDateTime(a.timestamp) - parseDateTime(b.timestamp));
 
-            // Kumpulin tiap log jadi item Aktivitas Log Input (gak kepengaruh filter
-            // dept/status/pencarian di tabel utama, biar log-nya selalu utuh/akurat).
             userAssetLogs.forEach(function (log) {
                 activityLogList.push({
                     opsId: opsId, name: name, action: log.action,
@@ -2763,25 +2486,19 @@
                 });
             });
 
-            // Susun jadi sesi Pinjam->Kembali berpasangan, BUKAN cuma ambil log
-            // pertama doang. 1 operator bisa punya 2-3x sesi pinjam-kembali dalam
-            // sehari (Pinjam > Kembali > Pinjam > Kembali > ...), tiap pasangan
-            // (atau pinjam yang masih aktif/belum dikembaliin) jadi 1 baris sendiri.
             let cycles = [];
             let openPinjam = null;
             userAssetLogs.forEach(log => {
                 if (log.action === "Pinjam PDA") {
-                    if (openPinjam) cycles.push({ pinjam: openPinjam, kembali: null }); // jaga2 data anomali: pinjam baru padahal sesi lama belum ketutup
+                    if (openPinjam) cycles.push({ pinjam: openPinjam, kembali: null });
                     openPinjam = log;
                 } else if (log.action === "Kembali PDA") {
                     cycles.push({ pinjam: openPinjam, kembali: log });
                     openPinjam = null;
                 }
             });
-            if (openPinjam) cycles.push({ pinjam: openPinjam, kembali: null }); // sesi terakhir masih dipinjam, belum dikembaliin
+            if (openPinjam) cycles.push({ pinjam: openPinjam, kembali: null });
 
-            // Kumpulin sesi yang masih "Belum Kembali" buat highlight box (juga gak
-            // kepengaruh filter tabel, biar highlight-nya selalu nunjukkin kondisi asli).
             cycles.forEach(function (cycle) {
                 if (cycle.pinjam && !cycle.kembali) {
                     let pinjamTime = parseDateTime(cycle.pinjam.timestamp);
@@ -2815,10 +2532,6 @@
                 if (pinjamTime && !kembaliTime) activePinjamCount++;
                 if (pinjamTime && kembaliTime) doneKembaliCount++;
 
-                // PIC Input: email user yang login pas ngelakuin aksi TERAKHIR di sesi ini
-                // (kalau udah dikembalikan, berarti PIC yang input "Kembali PDA"; kalau
-                // masih dipinjam, berarti PIC yang input "Pinjam PDA"). Log lama (sebelum
-                // fitur ini ada) belum punya field picEmail, makanya di-fallback ke "-".
                 let picEmail = kembaliLog ? (kembaliLog.picEmail || "-") : (pinjamLog ? (pinjamLog.picEmail || "-") : "-");
 
                 let durationStr = "-";
@@ -2873,10 +2586,7 @@
         renderActivityLogTable(activityLogList);
     }
 
-    // ==== HIGHLIGHT BOX: OPERATOR BELUM MENGEMBALIKAN PDA ====
-    // Diurutin dari yang paling LAMA belum dibalikin. Kalau udah >= 4 jam
-    // belum dikembaliin, dikasih highlight merah + ikon ⚠️ biar gampang ketauan.
-    let lastBelumKembaliList = []; // dipake buat lookup pas nama operator diklik (detail modal)
+    let lastBelumKembaliList = [];
 
     function renderBelumKembaliTable(list) {
         const container = document.getElementById("assetBelumKembaliBody");
@@ -2919,7 +2629,6 @@
         document.getElementById("operatorDetailModal").style.display = "none";
     }
 
-    // ESC buat nutup popup/modal yang lagi kebuka (prioritas: yang paling "atas" duluan)
     document.addEventListener("keydown", function (e) {
         if (e.key !== "Escape" && e.key !== "Esc") return;
         const operatorDetailModal = document.getElementById("operatorDetailModal");
@@ -2941,9 +2650,6 @@
         if (sidebar && sidebar.classList.contains("open")) { toggleAppSidebar(); return; }
     });
 
-    // ==== AKTIVITAS LOG INPUT ====
-    // Feed kronologis (terbaru di atas) tiap kali ada Pinjam/Kembali PDA
-    // diinput hari itu. Dibatasin 15 item terakhir biar box-nya gak kepanjangan.
     function renderActivityLogTable(list) {
         const container = document.getElementById("assetActivityLogBody");
         if (!container) return;
@@ -2971,7 +2677,6 @@
         }).join("");
     }
 
-    // ==== I18N DICTIONARY (shell/sidebar & Saran-Masukan — modul lain nyusul bertahap) ====
     const APP_LANG_KEY = "pr_dc_app_language";
     const I18N_DICT = {
       id: {
@@ -3510,11 +3215,7 @@
       });
     }
 
-    // Refresh bagian-bagian modul Rest Time yang teksnya digenerate lewat JS (bukan
-    // cuma textContent statis), biar ikut ke-translate seketika pas bahasa diganti —
-    // tanpa nunggu reload atau nunggu event lain nembak duluan.
     function refreshDynamicModuleTexts() {
-      // Placeholder kolom pencarian & judul form ikut modul yang lagi aktif
       const searchGlobal = document.getElementById("searchGlobal");
       if (searchGlobal) searchGlobal.placeholder = t(currentActiveModule === 'rest' ? 'filter.cariPlaceholder' : 'filter.cariPlaceholderAsset');
       const formTitle = document.getElementById("formTitle");
@@ -3522,18 +3223,14 @@
       const subHeaderTitle = document.getElementById("subHeaderTitle");
       if (subHeaderTitle) subHeaderTitle.innerText = t(currentActiveModule === 'rest' ? 'header.subtitleRest' : 'header.subtitleAsset');
 
-      // Status koneksi Firebase (teksnya disimpen state-nya di lastConnState/lastConnKey)
       if (typeof refreshConnStatusLabel === 'function') refreshConnStatusLabel();
 
-      // Badge prediksi aksi kalau lagi nampilin placeholder default "Scan OpsID..."
       const badge = document.getElementById("predictedAction");
       if (badge && !document.getElementById("inputOpsId").value.trim()) badge.innerText = t('predicted.scan');
 
-      // Tombol toggle ringkasan (nyimpen state collapsed di localStorage)
       const collapsed = localStorage.getItem(SUMMARY_COLLAPSE_KEY) === "1";
       if (typeof applySummaryBoxesState === 'function') applySummaryBoxesState(collapsed);
 
-      // Kalau modal Database Asset lagi kebuka, render ulang isinya (tombol Hapus, "Belum Diassign", dst)
       const dbModal = document.getElementById("databaseAssetModal");
       if (dbModal && dbModal.style.display !== "none" && typeof renderDatabaseAssetTable === 'function') {
         const canEdit = !!window.__authCanDelete;
@@ -3541,7 +3238,6 @@
         renderDatabaseAssetTable();
       }
 
-      // Tabel utama & tabel asset dirender ulang biar tombol "Hapus" ikut ke-translate
       if (typeof renderAll === 'function') renderAll();
     }
 
@@ -3558,7 +3254,6 @@
     }
     initAppLanguageSwitcher();
 
-    // ==== SARAN & MASUKAN (papan terbuka realtime — semua user submit & baca) ====
     const FB_FEEDBACK_ROOT = "prDcGlobal/feedback";
     let fbFeedbackRef = null;
 
@@ -3577,7 +3272,7 @@
     }
 
     function initFeedbackBoardSync() {
-        if (fbFeedbackRef) return; // udah nyala dari sebelumnya, gak perlu attach listener dobel
+        if (fbFeedbackRef) return;
         try {
             const db = firebase.database();
             fbFeedbackRef = db.ref(FB_FEEDBACK_ROOT).orderByChild("createdAt").limitToLast(100);
@@ -3645,7 +3340,6 @@
 </script>
 
 <script>
-// ==== APP-SHELL BRIDGE ====
 (function () {
   if (window.self === window.top) return; 
 
@@ -3664,20 +3358,11 @@
   hijack("navToInbound", "inbound");
   hijack("navToInventoryControl", "inventory-control");
 
-  // Suruh nutup semua grup Sidebar tiap kali shell nge-switch balik ke tab ini
   window.addEventListener("message", function (e) {
     var data = e.data;
     if (!data || data.source !== "pkydc") return;
     if (data.type === "collapseSidebarGroups") collapseAllSidebarGroups();
 
-    // Sinyal eksplisit dari app shell soal tab/modul mana yang lagi aktif —
-    // dipakai buat isRestTimeModuleVisible() (liat definisinya di script
-    // sebelumnya) biar suara alert Istirahat >60 Menit gak bocor ke modul
-    // lain. Dua bentuk pesan yang didukung, app shell tinggal pilih salah satu:
-    //   1) { source:"pkydc", type:"activeTabChanged", tab:"rest-time" }
-    //      -> otomatis dicocokin ke window.__PAGE_TAB ("rest-time")
-    //   2) { source:"pkydc", type:"moduleVisibility", visible:true/false }
-    //      -> app shell yang nentuin sendiri true/false-nya
     if (data.type === "activeTabChanged" && typeof data.tab === "string") {
       shellReportedVisible = (data.tab === window.__PAGE_TAB);
       handleRestTimeModuleVisibilityChange();
