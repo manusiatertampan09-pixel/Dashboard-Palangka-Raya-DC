@@ -524,6 +524,18 @@
     </div>
 </div>
 
+<div id="preWorkBlockModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="width: 420px; text-align:center;">
+        <div id="preWorkBlockIcon" style="font-size:38px; line-height:1; margin-bottom:6px;">🚫</div>
+        <h3 id="preWorkBlockTitle" style="color:#b91c1c; text-align:center;">Check In Diblokir</h3>
+        <p id="preWorkBlockMain" style="text-align:center;"></p>
+        <p id="preWorkBlockSub" style="text-align:center; font-size:12px; color:var(--text-muted);"></p>
+        <div class="modal-actions" style="justify-content:center;">
+            <button class="btn-primary" onclick="closePreWorkBlockModal()">Oke</button>
+        </div>
+    </div>
+</div>
+
 <div id="notCheckedInModal" class="modal-overlay" style="display:none;">
     <div class="modal-box" style="width: 420px; text-align:center;">
         <div style="font-size:38px; line-height:1; margin-bottom:6px;">🚫</div>
@@ -841,7 +853,7 @@
                             <th style="width: 5%;" data-i18n="table.estMasuk">Est. Masuk</th>
                             <th style="width: 8%;" class="th-sortable" id="thSortDuration" onclick="sortRestTable('duration')"><span class="th-flex"><span data-i18n="table.duration">Duration</span><span class="sort-arrow" id="sortArrowDuration">⇅</span></span></th>
                             <th style="width: 13%;" class="th-sortable" id="thSortAlert" onclick="sortRestTable('alert')"><span class="th-flex"><span data-i18n="table.alertStatus">Alert Status</span><span class="sort-arrow" id="sortArrowAlert">⇅</span></span></th>
-                            <th style="width: 7%;" data-i18n="table.workEnd">Work End</th>
+                            <th style="width: 11%; white-space: nowrap;" data-i18n="table.preWorkStatus">Pre-Work Status</th>
                             <th style="width: 6%;" data-i18n="table.action">Action</th>
                         </tr>
                     </thead>
@@ -1020,6 +1032,394 @@
     let masterKaryawan = {};   
     let logsArray = [];        
     let assetLogsArray = [];
+
+    // ===== Pre-Work Status (Google Sheet "PreWork Helper") =====
+    // Sheet harus bisa dibaca via link ("Anyone with the link can view").
+    // - "Pre-Work Operator": A (Timestamp), D (Ops ID), E (Nama), J (DATE), K (OpsXXX), M (Status)
+    // - "Raw Data" (master): A (OPS ID), B (Staff Name)
+    const PREWORK_SHEET_ID = "1vuJf4-_9sVpWI2WnokZxVCcOyIrnci-qQckxoabNQ8w";
+    const PREWORK_SHEET_NAME = "Pre-Work Operator";
+    const PREWORK_RAW_SHEET_NAME = "Raw Data";
+    const PREWORK_REFRESH_MS = 60000;
+    let preWorkIndex = {};        // { opsLower: { "YYYY-MM-DD": [ { ts, status, nm } ] } }  (semua entri, dipilih pas render)
+    let preWorkNameIndex = {};    // { namaNormal: { "YYYY-MM-DD": { ts, ops, status } } }
+    let rawByOps = {};            // { opsLower: namaNormal }  (Raw Data)
+    let rawByName = {};           // { namaNormal: "OpsXXXX" | null (null = nama dobel dgn OpsID beda) }  (Raw Data)
+    let rawDataReady = false;
+    let preWorkState = "loading"; // "loading" | "ready" | "error"
+    let preWorkCbSeq = 0;
+
+    function preWorkYMD(d) {
+        return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
+    }
+
+    function preWorkNormName(n) {
+        return String(n || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+    }
+
+    // Terima cell gviz ({v, f}). Return Date atau null. order: "dmy" (Timestamp) / "mdy" (kolom DATE).
+    function preWorkParseDate(cell, order) {
+        if (!cell || cell.v === null || cell.v === undefined) return null;
+        const v = cell.v;
+        if (v instanceof Date) return v;
+        // serial number Google Sheets (mis. 46337 = 2026-11-11), kolom DATE kadang kebaca angka
+        if (typeof v === "number" && v > 20000 && v < 80000) {
+            return new Date(1899, 11, 30 + Math.floor(v));
+        }
+        if (typeof v === "string") {
+            let m = v.match(/^Date\((\d+),\s*(\d+),\s*(\d+)(?:,\s*(\d+),\s*(\d+),\s*(\d+))?/);
+            if (m) return new Date(+m[1], +m[2], +m[3], +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+            m = v.trim().match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::(\d{2}))?)?/);
+            if (m) {
+                const a = +m[1], b = +m[2];
+                const day = order === "mdy" ? b : a;
+                const mon = order === "mdy" ? a : b;
+                const dt = new Date(+m[3], mon - 1, day, +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+                // tolak tanggal ngaco (bulan >12 / hari ga valid) biar ga rollover diam-diam
+                if (mon < 1 || mon > 12 || dt.getMonth() !== mon - 1 || dt.getDate() !== day) return null;
+                return dt;
+            }
+        }
+        return null;
+    }
+
+    function preWorkBuildIndex(resp) {
+        const rows = (resp && resp.table && resp.table.rows) || [];
+        const idx = {};
+        const nameIdx = {};
+        rows.forEach(function (row) {
+            const c = row.c || [];
+            const val = function (i) { return c[i] && c[i].v !== null && c[i].v !== undefined ? String(c[i].v).trim() : ""; };
+            // urutan select: A(0) Timestamp, D(1) Ops ID, E(2) Nama, J(3) DATE, K(4) OpsXXX, M(5) Status
+            const opsOrig = val(4) || (val(1) ? "Ops" + val(1) : "");
+            if (!opsOrig) return;
+            const ops = opsOrig.toLowerCase();
+            const tsDate = preWorkParseDate(c[0], "dmy");
+            if (!tsDate) return; // baris header / baris rusak
+            const dayDate = preWorkParseDate(c[3], "mdy") || tsDate;
+            const dateStr = preWorkYMD(dayDate);
+            const status = val(5).toUpperCase();
+            const ts = tsDate.getTime();
+            const nm = preWorkNormName(val(2));
+            if (!idx[ops]) idx[ops] = {};
+            if (!idx[ops][dateStr]) idx[ops][dateStr] = [];
+            idx[ops][dateStr].push({ ts: ts, status: status, nm: nm });
+            if (nm) {
+                if (!nameIdx[nm]) nameIdx[nm] = {};
+                const prevN = nameIdx[nm][dateStr];
+                if (!prevN || ts >= prevN.ts) nameIdx[nm][dateStr] = { ts: ts, ops: opsOrig, status: status };
+            }
+        });
+        return { idx: idx, nameIdx: nameIdx };
+    }
+
+    function preWorkBuildRaw(resp) {
+        const rows = (resp && resp.table && resp.table.rows) || [];
+        const byOps = {}, byName = {};
+        rows.forEach(function (row) {
+            const c = row.c || [];
+            const ops = c[0] && c[0].v !== null && c[0].v !== undefined ? String(c[0].v).trim() : "";
+            const nm = preWorkNormName(c[1] && c[1].v);
+            if (!/^ops\d+$/i.test(ops) || !nm) return; // skip header / baris kosong
+            byOps[ops.toLowerCase()] = nm;
+            if (byName[nm] === undefined) byName[nm] = ops;
+            else if (byName[nm] !== null && byName[nm].toLowerCase() !== ops.toLowerCase()) byName[nm] = null;
+        });
+        return { byOps: byOps, byName: byName };
+    }
+
+    // Levenshtein distance (buat toleransi typo / beda pemisah kata di nama)
+    function preWorkLev(a, b) {
+        const m = a.length, n = b.length;
+        if (!m) return n;
+        if (!n) return m;
+        let prev = [];
+        for (let j = 0; j <= n; j++) prev[j] = j;
+        for (let i = 1; i <= m; i++) {
+            const cur = [i];
+            for (let j = 1; j <= n; j++) {
+                cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+            }
+            prev = cur;
+        }
+        return prev[n];
+    }
+
+    // Kemiripan huruf (spasi dibuang), 0..1
+    function preWorkSimilarity(a, b) {
+        const sa = a.replace(/ /g, ""), sb = b.replace(/ /g, "");
+        if (!sa || !sb) return 0;
+        if (sa === sb) return 1;
+        return 1 - preWorkLev(sa, sb) / Math.max(sa.length, sb.length);
+    }
+
+    // Cocokin nama Pre-Work vs nama yg diharapkan (Raw Data / web). Toleran buat singkatan, urutan, typo, & beda spasi.
+    // Kalau salah satu kosong -> dianggap cocok (ga bisa diverifikasi, jangan buang data).
+    function preWorkNameMatch(a, b) {
+        if (!a || !b) return true;
+        if (a === b) return true;
+        const ta = a.split(" "), tb = b.split(" ");
+        const small = ta.length <= tb.length ? ta : tb;
+        const big = ta.length <= tb.length ? tb : ta;
+        const hit = small.filter(function (w) { return big.indexOf(w) !== -1; }).length;
+        if (hit >= Math.max(1, Math.ceil(small.length * 0.6))) return true;
+        // fallback: bandingin kemiripan huruf (toleran typo / "risa latul" vs "risalatul")
+        return preWorkSimilarity(a, b) >= 0.75;
+    }
+
+    // Cari entri Pre-Work by nama di tanggal tertentu: exact dulu, lalu fuzzy (lebih ketat, cuma kemiripan huruf >= 0.8)
+    function preWorkFindByName(nm, dateStr) {
+        if (!nm) return null;
+        if (preWorkNameIndex[nm] && preWorkNameIndex[nm][dateStr]) return preWorkNameIndex[nm][dateStr];
+        let best = null;
+        Object.keys(preWorkNameIndex).forEach(function (k) {
+            const e = preWorkNameIndex[k][dateStr];
+            if (!e) return;
+            if (preWorkSimilarity(k, nm) >= 0.8 && (!best || e.ts > best.ts)) best = e;
+        });
+        return best;
+    }
+
+    function preWorkParseText(text) {
+        const m = text.match(/setResponse\(([\s\S]*)\);?\s*$/);
+        if (!m) throw new Error("Respon sheet tidak valid (sheet private / bukan JSON)");
+        return JSON.parse(m[1]);
+    }
+
+    function preWorkUrl(sheetName, select, handlerName) {
+        return "https://docs.google.com/spreadsheets/d/" + PREWORK_SHEET_ID + "/gviz/tq?tqx=out:json" + (handlerName ? ";responseHandler:" + handlerName : "")
+            + "&sheet=" + encodeURIComponent(sheetName) + "&tq=" + encodeURIComponent(select);
+    }
+
+    // Fallback kalau fetch diblok CORS: pakai tag <script> (JSONP)
+    function preWorkFetchViaScript(sheetName, select, timeoutMs) {
+        return new Promise(function (resolve, reject) {
+            const cbName = "__preWorkCb" + (++preWorkCbSeq);
+            const s = document.createElement("script");
+            const cleanup = function () { delete window[cbName]; if (s.parentNode) s.parentNode.removeChild(s); };
+            const timer = setTimeout(function () { cleanup(); reject(new Error("Timeout")); }, timeoutMs || 15000);
+            window[cbName] = function (resp) { clearTimeout(timer); cleanup(); resolve(resp); };
+            s.onerror = function () { clearTimeout(timer); cleanup(); reject(new Error("Gagal load sheet")); };
+            s.src = preWorkUrl(sheetName, select, cbName);
+            document.head.appendChild(s);
+        });
+    }
+
+    // Ingat jalur yg terakhir berhasil ("fetch" / "script"): kalau fetch ke-blok CORS, request berikutnya
+    // langsung lewat <script>, ga perlu nunggu fetch gagal dulu (itu bikin lambat 2x lipat).
+    let preWorkTransport = null;
+
+    function preWorkFetchGviz(sheetName, select, timeoutMs) {
+        const ms = timeoutMs || 15000;
+        const viaScript = function () {
+            return preWorkFetchViaScript(sheetName, select, ms).then(function (resp) { preWorkTransport = "script"; return resp; });
+        };
+        if (preWorkTransport === "script") return viaScript();
+        const ctrl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(function () { ctrl.abort(); }, ms) : null;
+        return fetch(preWorkUrl(sheetName, select, ""), ctrl ? { signal: ctrl.signal } : undefined)
+            .then(function (r) { if (!r.ok) throw new Error("HTTP " + r.status); return r.text(); })
+            .then(function (text) { if (timer) clearTimeout(timer); const resp = preWorkParseText(text); preWorkTransport = "fetch"; return resp; })
+            .catch(function () { if (timer) clearTimeout(timer); return viaScript(); });
+    }
+
+    // Tarik ulang CEPAT sebelum ngeblok Check In: cuma baris Pre-Work 2 hari terakhir (kolom Timestamp),
+    // tanpa Raw Data (jarang berubah) dan tanpa renderAll(). Payload kecil = jauh lebih cepat dari full load.
+    // Gagal / belum siap -> otomatis jatuh ke full load biasa.
+    function preWorkQuickRefresh() {
+        if (!rawDataReady || preWorkState !== "ready") return loadPreWorkSheet();
+        preWorkLastAttemptAt = Date.now();
+        const since = new Date();
+        since.setDate(since.getDate() - 1);
+        since.setHours(0, 0, 0, 0);
+        const sinceTs = since.getTime();
+        const q = "select A,D,E,J,K,M where A >= datetime '" + preWorkYMD(since) + " 00:00:00'";
+        return preWorkFetchGviz(PREWORK_SHEET_NAME, q, 6000)
+            .then(function (resp) {
+                const built = preWorkBuildIndex(resp);
+                // buang entri lama yg masuk jendela 2 hari ini (nanti diganti data baru), hari2 sebelumnya tetap dari full load
+                Object.keys(preWorkIndex).forEach(function (ops) {
+                    Object.keys(preWorkIndex[ops]).forEach(function (d) {
+                        preWorkIndex[ops][d] = preWorkIndex[ops][d].filter(function (e) { return e.ts < sinceTs; });
+                        if (!preWorkIndex[ops][d].length) delete preWorkIndex[ops][d];
+                    });
+                    if (!Object.keys(preWorkIndex[ops]).length) delete preWorkIndex[ops];
+                });
+                Object.keys(built.idx).forEach(function (ops) {
+                    if (!preWorkIndex[ops]) preWorkIndex[ops] = {};
+                    Object.keys(built.idx[ops]).forEach(function (d) {
+                        preWorkIndex[ops][d] = (preWorkIndex[ops][d] || []).concat(built.idx[ops][d]);
+                    });
+                });
+                Object.keys(built.nameIdx).forEach(function (nm) {
+                    if (!preWorkNameIndex[nm]) preWorkNameIndex[nm] = {};
+                    Object.keys(built.nameIdx[nm]).forEach(function (d) {
+                        const prev = preWorkNameIndex[nm][d], e = built.nameIdx[nm][d];
+                        if (!prev || e.ts >= prev.ts) preWorkNameIndex[nm][d] = e;
+                    });
+                });
+            })
+            .catch(function (err) {
+                console.warn("Quick refresh Pre-Work gagal, fallback full load:", err);
+                return loadPreWorkSheet();
+            });
+    }
+
+    function loadPreWorkSheet() {
+        preWorkLastAttemptAt = Date.now();
+        const pPre = preWorkFetchGviz(PREWORK_SHEET_NAME, "select A,D,E,J,K,M")
+            .then(function (resp) {
+                const built = preWorkBuildIndex(resp);
+                preWorkIndex = built.idx;
+                preWorkNameIndex = built.nameIdx;
+                preWorkState = "ready";
+            })
+            .catch(function (err) {
+                console.warn("Pre-Work sheet gagal dimuat:", err);
+                if (preWorkState !== "ready") preWorkState = "error"; // kalau sebelumnya sukses, pakai data lama
+            });
+        const pRaw = preWorkFetchGviz(PREWORK_RAW_SHEET_NAME, "select A,B")
+            .then(function (resp) {
+                const raw = preWorkBuildRaw(resp);
+                rawByOps = raw.byOps;
+                rawByName = raw.byName;
+                rawDataReady = true;
+            })
+            .catch(function (err) { console.warn("Sheet Raw Data gagal dimuat:", err); });
+        return Promise.all([pPre, pRaw]).then(function () { if (currentActiveModule === "rest") renderAll(); });
+    }
+
+    function preWorkSafe(t) { return String(t).replace(/[<>&"]/g, ""); }
+
+    function preWorkStatusBadge(status) {
+        if (!status) return '<span class="badge alert-reminder" style="white-space:nowrap;" title="Baris Pre-Work ada tapi kolom Status kosong">Status Kosong</span>';
+        if (status === "FIT") return '<span class="badge alert-disiplin">FIT</span>';
+        if (status === "UNFIT") return '<span class="badge alert-gancang">UNFIT</span>';
+        return '<span class="badge alert-reminder">' + preWorkSafe(status) + '</span>';
+    }
+
+    // Aturan (berdasarkan tanggal scan di web):
+    // 1. Ada input OpsID di Pre-Work Operator pada tanggal scan -> FIT / UNFIT sesuai kolom Status
+    // 2. Tidak ada, maka cari lewat NAMA (nama dari Raw Data berdasar OpsID web; kalau OpsID tidak ada di Raw Data, pakai nama di web):
+    //    - Nama itu ada di Pre-Work Operator pada tanggal scan, lalu bandingkan OpsID di Pre-Work vs OpsID di Raw Data (by nama):
+    //        berbeda -> Salah OpsID ; sama -> pakai Status dari baris Pre-Work itu
+    // 3. Selain itu: ada input di tanggal sebelumnya -> Belum Submit (oranye); tidak pernah ada -> Belum Submit (abu-abu)
+    //
+    // getPreWorkStatus() = SUMBER KEBENARAN status (dipakai badge tabel DAN blocker Check In, biar ga pernah beda).
+    // Return { code, status, pwOps, rawOps, hasEarlier, rawWarn }
+    // code: LOADING | ERROR | FIT | UNFIT | EMPTY | OTHER | SALAH_OPSID | BELUM_SUBMIT
+    function preWorkStatusResult(status) {
+        if (!status) return { code: "EMPTY", status: "" };
+        if (status === "FIT") return { code: "FIT", status: status };
+        if (status === "UNFIT") return { code: "UNFIT", status: status };
+        return { code: "OTHER", status: status };
+    }
+
+    function getPreWorkStatus(opsId, dateStr, opName) {
+        if (preWorkState === "loading") return { code: "LOADING" };
+        if (preWorkState === "error") return { code: "ERROR" };
+        const opsKey = String(opsId).toLowerCase();
+        const byDate = preWorkIndex[opsKey];
+        // nama yg diharapkan: dari Raw Data (by OpsID scan), fallback nama di web
+        const webNm = preWorkNormName(opName);
+        const expectedNm = rawByOps[opsKey] || (webNm !== "unknown" ? webNm : "");
+        // entri dgn nama ga cocok (mis. si A ngisi pakai OpsID si B) dibuang; sisanya ambil yg terbaru
+        const rec = ((byDate && byDate[dateStr]) || [])
+            .filter(function (r) { return preWorkNameMatch(r.nm, expectedNm); })
+            .sort(function (a, b) { return b.ts - a.ts; })[0] || null;
+        if (rec) return preWorkStatusResult(rec.status);
+
+        if (rawDataReady) {
+            const nm = rawByOps[opsKey] || preWorkNormName(opName);
+            const pw = (nm && nm !== "unknown") ? preWorkFindByName(nm, dateStr) : null;
+            const rawOps = nm ? rawByName[nm] : null;
+            if (pw && rawOps) {
+                if (pw.ops.toLowerCase() !== rawOps.toLowerCase()) {
+                    return { code: "SALAH_OPSID", pwOps: pw.ops, rawOps: rawOps };
+                }
+                return preWorkStatusResult(pw.status);
+            }
+        }
+
+        const hasEarlier = !!(byDate && Object.keys(byDate).some(function (d) { return d < dateStr; }));
+        return { code: "BELUM_SUBMIT", hasEarlier: hasEarlier, rawWarn: !rawDataReady };
+    }
+
+    function renderPreWorkBadge(opsId, dateStr, opName) {
+        const r = getPreWorkStatus(opsId, dateStr, opName);
+        switch (r.code) {
+            case "LOADING": return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main);">...</span>';
+            case "ERROR": return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main);" title="Sheet Pre-Work gagal dimuat">N/A</span>';
+            case "SALAH_OPSID":
+                return '<span class="badge alert-gancang" style="white-space:nowrap;" title="OpsID di Pre-Work: ' + preWorkSafe(r.pwOps) + ' | OpsID di Raw Data: ' + preWorkSafe(r.rawOps) + '">Salah OpsID</span>';
+            case "BELUM_SUBMIT": {
+                const rawWarn = r.rawWarn ? ' title="Sheet Raw Data gagal dimuat - cek nama/Salah OpsID tidak jalan, status bisa kurang akurat"' : "";
+                const rawMark = r.rawWarn ? "*" : "";
+                if (r.hasEarlier) return '<span class="badge alert-istirahat" style="white-space:nowrap;"' + rawWarn + '>Belum Submit' + rawMark + '</span>';
+                return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main); white-space:nowrap;"' + rawWarn + '>Belum Submit' + rawMark + '</span>';
+            }
+            default: return preWorkStatusBadge(r.status); // FIT / UNFIT / EMPTY / OTHER
+        }
+    }
+
+    // ===== BLOCKER CHECK IN (berdasarkan Pre-Work Status) =====
+    // FIT                      -> Pass
+    // UNFIT                    -> Block Check In - Take Out / Dipulangkan
+    // Belum Submit             -> Block Check In - Wajib Melakukan Pengisian Ulang
+    // Salah OpsID              -> Block Check In - Wajib Melakukan Pengisian Ulang
+    // Status Kosong / ga valid -> Block (perlakuan sama kayak Belum Submit: status ga bisa dipastiin = isi ulang)
+    // Sheet loading / gagal dimuat (LOADING / ERROR) -> JANGAN ngeblok semua operator gara2 sheet down: loloskan + toast warning
+    function getPreWorkGate(opsId, dateStr, opName) {
+        const r = getPreWorkStatus(opsId, dateStr, opName);
+        if (r.code === "FIT") return { block: false, r: r };
+        if (r.code === "LOADING" || r.code === "ERROR") return { block: false, unverified: true, r: r };
+        return { block: true, r: r };
+    }
+
+    let preWorkLastAttemptAt = 0;
+    let preWorkRefreshing = false;
+
+    function showPreWorkBlockModal(opsId, name, gate) {
+        const r = gate.r;
+        const strong = function (v) { return '<b style="color:var(--text-main);">' + v + '</b>'; };
+        const mono = function (v) { return '<b style="font-family:monospace; color:var(--text-main);">' + preWorkSafe(v) + '</b>'; };
+        const who = mono(opsId) + (name ? ' - ' + preWorkSafe(name) : '');
+        let icon, title, main, sub;
+        switch (r.code) {
+            case "UNFIT":
+                icon = "🚫"; title = "Status Pre-Work UNFIT!";
+                main = 'Check In diblokir. ' + strong('Take Out / Dipulangkan') + ', gak boleh masuk area kerja.';
+                sub = 'OpsID ' + who + ' berstatus UNFIT di Pre-Work hari ini.';
+                break;
+            case "SALAH_OPSID":
+                icon = "🆔"; title = "Salah Isi OpsID di Pre-Work!";
+                main = 'Check In diblokir. ' + strong('Wajib Melakukan Pengisian Ulang') + ' Pre-Work pakai OpsID yang benar, lalu Scan lagi.';
+                sub = 'OpsID kamu di Raw Data ' + mono(r.rawOps) + ', tapi yang diisi di Pre-Work ' + mono(r.pwOps) + '.';
+                break;
+            case "BELUM_SUBMIT":
+                icon = "📝"; title = "Pre-Work Belum Disubmit!";
+                main = 'Check In diblokir. ' + strong('Wajib Melakukan Pengisian Ulang') + ' Pre-Work, lalu Scan lagi.';
+                sub = 'OpsID ' + who + ' belum ada Pre-Work yang kebaca untuk hari ini.';
+                break;
+            default: // EMPTY / OTHER (status kosong / ga valid) -> perlakuan sama kayak Belum Submit
+                icon = "📝"; title = "Status Pre-Work Tidak Valid!";
+                main = 'Check In diblokir. ' + strong('Wajib Melakukan Pengisian Ulang') + ' Pre-Work, lalu Scan lagi.';
+                sub = 'Pre-Work OpsID ' + who + ' kebaca, tapi kolom Status-nya ' + (r.status ? 'tidak valid (' + strong(preWorkSafe(r.status)) + ')' : 'kosong') + '.';
+        }
+        document.getElementById("preWorkBlockIcon").innerText = icon;
+        document.getElementById("preWorkBlockTitle").innerText = title;
+        document.getElementById("preWorkBlockMain").innerHTML = main;
+        document.getElementById("preWorkBlockSub").innerHTML = sub;
+        document.getElementById("preWorkBlockModal").style.display = "flex";
+        playSound('warning');
+    }
+
+    function closePreWorkBlockModal() {
+        document.getElementById("preWorkBlockModal").style.display = "none";
+        let inputEl = document.getElementById("inputOpsId");
+        if (inputEl) { inputEl.value = ""; inputEl.focus(); }
+    }
+
     let debounceInputTimer = null;
     let lastCheckedCalendarDate = "";
     let lastSubmittedOpsId = null; 
@@ -1609,6 +2009,7 @@
         populateStationFilterOptions();
         applySummaryBoxesState(localStorage.getItem(SUMMARY_COLLAPSE_KEY) === "1");
         setInterval(updateClock, 1000); updateClock(); renderAll();
+        loadPreWorkSheet(); setInterval(loadPreWorkSheet, PREWORK_REFRESH_MS);
         
         document.getElementById("inputOpsId").addEventListener("keypress", function(e) { 
             if (e.key === 'Enter') { e.preventDefault(); clearTimeout(debounceInputTimer); submitLog(); }
@@ -1948,6 +2349,31 @@
 
         if (currentActiveModule === 'rest') {
             let state = calculateNextState(cleanOpsId, actualDateStr);
+
+            // BLOCKER CHECK IN: cek Pre-Work Status dulu (FIT = pass; UNFIT / Belum Submit / Salah OpsID = blok)
+            if (state.action === "Check In") {
+                const gate = getPreWorkGate(cleanOpsId, state.logDate, name);
+                if (gate.block) {
+                    lastSubmittedOpsId = null;
+                    if (preWorkRefreshing) return;
+                    // data sheet udah agak lama -> tarik ulang sekali sebelum ngeblok (operator baru aja isi ulang = ga perlu nunggu 60 detik)
+                    if (Date.now() - preWorkLastAttemptAt > 5000) {
+                        preWorkRefreshing = true;
+                        showToast("🔄 Cek ulang status Pre-Work...", 'info');
+                        const done = function () { preWorkRefreshing = false; submitLog(); };
+                        preWorkQuickRefresh().then(done, done);
+                        return;
+                    }
+                    showPreWorkBlockModal(cleanOpsId, name, gate);
+                    inputEl.value = ""; document.getElementById("inputNama").value = "";
+                    document.getElementById("inputNama").setAttribute("readonly", true);
+                    document.getElementById("predictedAction").innerText = t("predicted.scan");
+                    document.getElementById("predictedAction").style.background = "var(--table-header-bg)";
+                    return;
+                }
+                if (gate.unverified) showToast("⚠️ Status Pre-Work belum bisa diverifikasi (sheet loading / gagal dimuat). Check In tetap diloloskan.", 'info');
+            }
+
             let targetDateToSave = state.logDate;
             let existingLogs = logsArray.filter(log => log.opsId === cleanOpsId && log.workingDate === targetDateToSave);
             
@@ -2383,7 +2809,6 @@
                     }
                 }
             }
-            let workEndTime = userLogs.find(l => l.breakType === "Selesai") ? formatTime(parseDateTime(userLogs.find(l => l.breakType === "Selesai").timestamp)) : "";
             
             let tr = document.createElement("tr");
             let isNewlySubmitted = (lastSubmittedOpsId && opsId.toLowerCase() === lastSubmittedOpsId.toLowerCase());
@@ -2407,7 +2832,7 @@
                 <td><span class="badge badge-time" style="color:#c2410c; cursor:default; background:var(--table-header-bg);">${estMasuk || "-"}</span></td>
                 <td style="font-weight:700;">${durationStr || "-"}</td>
                 <td>${alertBadge}</td>
-                <td><span class="badge badge-time" ondblclick="makeTimeEditable(this, '${opsId}', 'Selesai', '${targetDateStr}')">${workEndTime || "-"}</span>${rollbackBtn('Selesai', !!workEndTime)}</td>
+                <td>${renderPreWorkBadge(opsId, targetDateStr, name)}</td>
                 <td>${renderDeleteAction(opsId, targetDateStr)}</td>
             `;
             rowsToRender.push({ tr, isNewlySubmitted, sortDurationMinutes, alertSeverity: alertStatusSeverity(alertKey) });
@@ -2633,6 +3058,7 @@
         if (e.key !== "Escape" && e.key !== "Esc") return;
         const operatorDetailModal = document.getElementById("operatorDetailModal");
         const dbAssetModal = document.getElementById("databaseAssetModal");
+        const preWorkBlockModal = document.getElementById("preWorkBlockModal");
         const notCheckedModal = document.getElementById("notCheckedInModal");
         const lockModal = document.getElementById("lockAlertModal");
         const wrongDeviceModal = document.getElementById("wrongDeviceModal");
@@ -2642,6 +3068,7 @@
 
         if (operatorDetailModal && operatorDetailModal.style.display === "flex") { closeOperatorDetail(); return; }
         if (dbAssetModal && dbAssetModal.style.display === "flex") { closeDatabaseAssetModal(); return; }
+        if (preWorkBlockModal && preWorkBlockModal.style.display === "flex") { closePreWorkBlockModal(); return; }
         if (notCheckedModal && notCheckedModal.style.display === "flex") { closeNotCheckedInAlert(); return; }
         if (lockModal && lockModal.style.display === "flex") { closeLockAlert(); return; }
         if (wrongDeviceModal && wrongDeviceModal.style.display === "flex") { closeWrongDeviceAlert(); return; }
@@ -2787,7 +3214,7 @@
         "table.estMasuk": "Est. Masuk",
         "table.duration": "Duration",
         "table.alertStatus": "Alert Status",
-        "table.workEnd": "Work End",
+        "table.preWorkStatus": "Pre-Work Status",
         "table.action": "Action",
         "asset.table.nameOperator": "Name Operator",
         "asset.table.sesi": "Sesi",
@@ -2915,7 +3342,7 @@
         "table.estMasuk": "Est. In",
         "table.duration": "Duration",
         "table.alertStatus": "Alert Status",
-        "table.workEnd": "Work End",
+        "table.preWorkStatus": "Pre-Work Status",
         "table.action": "Action",
         "asset.table.nameOperator": "Name Operator",
         "asset.table.sesi": "Session",
@@ -3043,7 +3470,7 @@
         "table.estMasuk": "復帰予定",
         "table.duration": "所要時間",
         "table.alertStatus": "アラート状況",
-        "table.workEnd": "退勤",
+        "table.preWorkStatus": "上班前状态",
         "table.action": "操作",
         "asset.table.nameOperator": "オペレーター氏名",
         "asset.table.sesi": "セッション",
@@ -3171,7 +3598,7 @@
         "table.estMasuk": "预计返回",
         "table.duration": "时长",
         "table.alertStatus": "警报状态",
-        "table.workEnd": "下班",
+        "table.preWorkStatus": "上班前状态",
         "table.action": "操作",
         "asset.table.nameOperator": "操作员姓名",
         "asset.table.sesi": "场次",
