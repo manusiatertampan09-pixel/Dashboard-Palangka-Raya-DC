@@ -910,7 +910,7 @@
                 <div class="form-group"><label>Dept :</label><select id="attnFilterDept" style="width:150px;" onchange="renderAttnPreWork()"><option value="All">All Dept</option></select></div>
                 <div class="form-group"><label>Status Pre-Work :</label>
                     <select id="attnFilterStatus" style="width:150px;" onchange="renderAttnPreWork()">
-                        <option value="All">All Status</option><option value="belum">Belum Isi</option><option value="salah">Salah OpsID</option>
+                        <option value="All">All Status</option><option value="belum">Belum Isi</option>
                         <option value="sudah">Sudah Isi</option><option value="unfit">UNFIT</option>
                     </select></div>
                 <div class="form-group"><label>Cari :</label><input type="text" id="attnSearch" placeholder="Nama / OpsID..." style="width:150px;" oninput="renderAttnPreWork()"></div>
@@ -921,7 +921,6 @@
             <div class="center-box"><div class="box-title" style="color:#0f766e;">Total Absen FMS</div><div class="actual-rest" style="background:#ccfbf1; color:#0f766e;"><div>(Clock In)</div><div id="attnTotal" class="counter-num">0</div></div></div>
             <div class="center-box"><div class="box-title" style="color:#047857;">Sudah Isi</div><div class="actual-rest" style="background:#d1fae5; color:#047857;"><div>(Pre-Work)</div><div id="attnSudah" class="counter-num">0</div></div></div>
             <div class="center-box"><div class="box-title" style="color:#b91c1c;">Belum Isi</div><div class="actual-rest" style="background:#fee2e2; color:#b91c1c;"><div>(Pre-Work)</div><div id="attnBelum" class="counter-num">0</div></div></div>
-            <div class="center-box"><div class="box-title" style="color:#c2410c;">Salah OpsID</div><div class="actual-rest" style="background:#ffedd5; color:#c2410c;"><div>(Isi Ulang)</div><div id="attnSalah" class="counter-num">0</div></div></div>
             <div class="center-box"><div class="box-title" style="color:#a16207;">UNFIT</div><div class="actual-rest" style="background:#fef9c3; color:#a16207;"><div>(Take Out)</div><div id="attnUnfit" class="counter-num">0</div></div></div>
         </div>
         <div id="attnNote" style="font-size:12px; color:var(--text-muted); display:none;"></div>
@@ -1350,16 +1349,13 @@
         return '<span class="badge alert-reminder">' + preWorkSafe(status) + '</span>';
     }
 
-    // Aturan (berdasarkan tanggal scan di web):
+    // Aturan (berdasarkan tanggal scan di web), key pencarian = OpsID saja:
     // 1. Ada input OpsID di Pre-Work Operator pada tanggal scan -> FIT / UNFIT sesuai kolom Status
-    // 2. Tidak ada, maka cari lewat NAMA (nama dari Raw Data berdasar OpsID web; kalau OpsID tidak ada di Raw Data, pakai nama di web):
-    //    - Nama itu ada di Pre-Work Operator pada tanggal scan, lalu bandingkan OpsID di Pre-Work vs OpsID di Raw Data (by nama):
-    //        berbeda -> Salah OpsID ; sama -> pakai Status dari baris Pre-Work itu
-    // 3. Selain itu: ada input di tanggal sebelumnya -> Belum Submit (oranye); tidak pernah ada -> Belum Submit (abu-abu)
+    // 2. Tidak ada -> Belum Submit
     //
     // getPreWorkStatus() = SUMBER KEBENARAN status (dipakai badge tabel DAN blocker Check In, biar ga pernah beda).
-    // Return { code, status, pwOps, rawOps, hasEarlier, rawWarn }
-    // code: LOADING | ERROR | FIT | UNFIT | EMPTY | OTHER | SALAH_OPSID | BELUM_SUBMIT
+    // Return { code, status, ts }
+    // code: LOADING | ERROR | FIT | UNFIT | EMPTY | OTHER | BELUM_SUBMIT
     function preWorkStatusResult(status, ts) {
         if (!status) return { code: "EMPTY", status: "", ts: ts };
         if (status === "FIT") return { code: "FIT", status: status, ts: ts };
@@ -1370,31 +1366,12 @@
     function getPreWorkStatus(opsId, dateStr, opName) {
         if (preWorkState === "loading") return { code: "LOADING" };
         if (preWorkState === "error") return { code: "ERROR" };
+        // Key pencarian = OpsID saja (nama & Raw Data tidak dipakai). Ambil submit terbaru di tanggal tsb.
         const opsKey = String(opsId).toLowerCase();
         const byDate = preWorkIndex[opsKey];
-        // nama yg diharapkan: dari Raw Data (by OpsID scan), fallback nama di web
-        const webNm = preWorkNormName(opName);
-        const expectedNm = rawByOps[opsKey] || (webNm !== "unknown" ? webNm : "");
-        // entri dgn nama ga cocok (mis. si A ngisi pakai OpsID si B) dibuang; sisanya ambil yg terbaru
-        const rec = ((byDate && byDate[dateStr]) || [])
-            .filter(function (r) { return preWorkNameMatch(r.nm, expectedNm); })
-            .sort(function (a, b) { return b.ts - a.ts; })[0] || null;
+        const rec = ((byDate && byDate[dateStr]) || []).slice().sort(function (a, b) { return b.ts - a.ts; })[0] || null;
         if (rec) return preWorkStatusResult(rec.status, rec.ts);
-
-        if (rawDataReady) {
-            const nm = rawByOps[opsKey] || preWorkNormName(opName);
-            const pw = (nm && nm !== "unknown") ? preWorkFindByName(nm, dateStr) : null;
-            const rawOps = nm ? rawByName[nm] : null;
-            if (pw && rawOps) {
-                if (pw.ops.toLowerCase() !== rawOps.toLowerCase()) {
-                    return { code: "SALAH_OPSID", pwOps: pw.ops, rawOps: rawOps, ts: pw.ts };
-                }
-                return preWorkStatusResult(pw.status, pw.ts);
-            }
-        }
-
-        const hasEarlier = !!(byDate && Object.keys(byDate).some(function (d) { return d < dateStr; }));
-        return { code: "BELUM_SUBMIT", hasEarlier: hasEarlier, rawWarn: !rawDataReady };
+        return { code: "BELUM_SUBMIT" };
     }
 
     function renderPreWorkBadge(opsId, dateStr, opName) {
@@ -1402,14 +1379,8 @@
         switch (r.code) {
             case "LOADING": return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main);">...</span>';
             case "ERROR": return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main);" title="Sheet Pre-Work gagal dimuat">N/A</span>';
-            case "SALAH_OPSID":
-                return '<span class="badge alert-gancang" style="white-space:nowrap;" title="OpsID di Pre-Work: ' + preWorkSafe(r.pwOps) + ' | OpsID di Raw Data: ' + preWorkSafe(r.rawOps) + '">Salah OpsID</span>';
-            case "BELUM_SUBMIT": {
-                const rawWarn = r.rawWarn ? ' title="Sheet Raw Data gagal dimuat - cek nama/Salah OpsID tidak jalan, status bisa kurang akurat"' : "";
-                const rawMark = r.rawWarn ? "*" : "";
-                if (r.hasEarlier) return '<span class="badge alert-istirahat" style="white-space:nowrap;"' + rawWarn + '>Belum Submit' + rawMark + '</span>';
-                return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main); white-space:nowrap;"' + rawWarn + '>Belum Submit' + rawMark + '</span>';
-            }
+            case "BELUM_SUBMIT":
+                return '<span class="badge alert-istirahat" style="white-space:nowrap;">Belum Submit</span>';
             default: return preWorkStatusBadge(r.status); // FIT / UNFIT / EMPTY / OTHER
         }
     }
@@ -1418,7 +1389,6 @@
     // FIT                      -> Pass
     // UNFIT                    -> Block Check In - Take Out / Dipulangkan
     // Belum Submit             -> Block Check In - Wajib Melakukan Pengisian Ulang
-    // Salah OpsID              -> Block Check In - Wajib Melakukan Pengisian Ulang
     // Status Kosong / ga valid -> Block (perlakuan sama kayak Belum Submit: status ga bisa dipastiin = isi ulang)
     // Sheet loading / gagal dimuat (LOADING / ERROR) -> JANGAN ngeblok semua operator gara2 sheet down: loloskan + toast warning
     function getPreWorkGate(opsId, dateStr, opName) {
@@ -1442,11 +1412,6 @@
                 icon = "🚫"; title = "Status Pre-Work UNFIT!";
                 main = 'Check In diblokir. ' + strong('Take Out / Dipulangkan') + ', gak boleh masuk area kerja.';
                 sub = 'OpsID ' + who + ' berstatus UNFIT di Pre-Work hari ini.';
-                break;
-            case "SALAH_OPSID":
-                icon = "🆔"; title = "Salah Isi OpsID di Pre-Work!";
-                main = 'Check In diblokir. ' + strong('Wajib Melakukan Pengisian Ulang') + ' Pre-Work pakai OpsID yang benar, lalu Scan lagi.';
-                sub = 'OpsID kamu di Raw Data ' + mono(r.rawOps) + ', tapi yang diisi di Pre-Work ' + mono(r.pwOps) + '.';
                 break;
             case "BELUM_SUBMIT":
                 icon = "📝"; title = "Pre-Work Belum Disubmit!";
@@ -2404,7 +2369,7 @@
         if (currentActiveModule === 'rest') {
             let state = calculateNextState(cleanOpsId, actualDateStr);
 
-            // BLOCKER CHECK IN: cek Pre-Work Status dulu (FIT = pass; UNFIT / Belum Submit / Salah OpsID = blok)
+            // BLOCKER CHECK IN: cek Pre-Work Status dulu (FIT = pass; UNFIT / Belum Submit = blok)
             if (state.action === "Check In") {
                 const gate = getPreWorkGate(cleanOpsId, state.logDate, name);
                 if (gate.block) {
@@ -3826,7 +3791,7 @@
 // Input: Raw Attendance FMS. Yang dicek hanya operator yang sudah Clock In; statusnya dari getPreWorkStatus() (sumber sama dengan modul Rest Time).
 let attnRows = [];
 const ATTN_DEPTS = ["soc operator", "eha operator"];
-const ATTN_ORDER = { BELUM_SUBMIT: 0, SALAH_OPSID: 1, UNFIT: 2, EMPTY: 3, OTHER: 3, LOADING: 4, ERROR: 4, FIT: 5 };
+const ATTN_ORDER = { BELUM_SUBMIT: 0, UNFIT: 1, EMPTY: 3, OTHER: 3, LOADING: 4, ERROR: 4, FIT: 5 };
 
 function attnNorm(h) { return String(h == null ? "" : h).replace(/^\uFEFF/, "").trim().toLowerCase(); }
 
@@ -3997,7 +3962,7 @@ function attnPwDate(r) {
 
 function attnGroupOf(code) {
     if (code === "FIT" || code === "UNFIT" || code === "EMPTY" || code === "OTHER") return "sudah";
-    return code === "BELUM_SUBMIT" ? "belum" : (code === "SALAH_OPSID" ? "salah" : "na");
+    return code === "BELUM_SUBMIT" ? "belum" : "na";
 }
 
 // Jam actual submit Pre-Work = kolom A (Timestamp) sheet "Pre-Work Operator". Kalau beda hari dgn tanggal Clock In, tanggalnya ikut ditampilkan.
@@ -4018,7 +3983,7 @@ function attnSubmitText(ts) {
 function attnStatusLabel(pw) {
     switch (pw.code) {
         case "FIT": return "FIT"; case "UNFIT": return "UNFIT"; case "BELUM_SUBMIT": return "Belum Submit";
-        case "SALAH_OPSID": return "Salah OpsID"; case "EMPTY": return "Status Kosong"; case "OTHER": return pw.status;
+        case "EMPTY": return "Status Kosong"; case "OTHER": return pw.status;
         default: return "N/A";
     }
 }
@@ -4059,7 +4024,6 @@ function renderAttnPreWork() {
     document.getElementById("attnTotal").innerText = v.base.length;
     document.getElementById("attnSudah").innerText = cnt(function (x) { return x.group === "sudah"; });
     document.getElementById("attnBelum").innerText = cnt(function (x) { return x.group === "belum"; });
-    document.getElementById("attnSalah").innerText = cnt(function (x) { return x.group === "salah"; });
     document.getElementById("attnUnfit").innerText = cnt(function (x) { return x.pw.code === "UNFIT"; });
     const na = cnt(function (x) { return x.group === "na"; }), note = document.getElementById("attnNote");
     note.style.display = na ? "block" : "none";
@@ -4070,7 +4034,7 @@ function renderAttnPreWork() {
     }
     const stCls = { "On Time": "alert-disiplin", "Late In": "alert-istirahat", "Early In": "badge-dept" };
     tbody.innerHTML = v.shown.map(function (x) {
-        const r = x.r, rowCls = (x.group === "belum" || x.group === "salah") ? ' class="row-gancang"' : "";
+        const r = x.r, rowCls = (x.group === "belum" || x.pw.code === "UNFIT") ? ' class="row-gancang"' : "";
         return '<tr' + rowCls + '><td>' + escapeHtml(r.date) + '</td><td><span class="badge badge-dept">' + escapeHtml(r.opsId) + '</span></td>' +
             '<td style="text-align:left; font-weight:600;">' + escapeHtml(r.name) + '</td><td><span class="badge badge-dept" style="font-weight:500;">' + escapeHtml(r.agency) + '</span></td>' +
             '<td><span class="badge badge-dept">' + escapeHtml(r.dept) + '</span></td><td>' + escapeHtml(r.shiftName) + '</td>' +
