@@ -311,6 +311,9 @@
             text-transform: uppercase; letter-spacing: 0.5px; position: sticky; top: 0; z-index: 10; box-shadow: inset 0 -2px 0 var(--border-color); 
         }
         .data-table tr:hover { background-color: var(--row-hover); }
+        /* Tabel Pre-Work FMS: header jangan wrap; kalau layar sempit, tabel scroll ke samping */
+        #attnTable { min-width: 1400px; }
+        #attnTable th { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
         .th-sortable { cursor: pointer; user-select: none; }
         .th-sortable .th-flex { display: inline-flex; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; transition: color 0.15s; }
         .th-sortable:hover .th-flex { color: #e67e22; }
@@ -647,8 +650,9 @@
         <div class="module-switcher">
             <button class="tab-btn active" id="tabRestBtn" onclick="switchModule('rest')">⏳ <span data-i18n="nav.restTime">Rest Time Monitoring</span></button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchModule('asset')">📱 <span data-i18n="nav.assetUsage">Asset Usage Monitoring</span></button>
+            <button class="tab-btn" id="tabAttnBtn" onclick="switchModule('attn')">📋 Pre-Work by Attendance FMS</button>
             <input type="file" id="filePicker" accept=".txt,.csv,.xlsx,.xls" style="display: none;" onchange="handleFileImport(this)">
-            <button class="btn-success" onclick="document.getElementById('filePicker').click()">📥 <span data-i18n="btn.importExcel">Import Excel (.xlsx) / CSV</span></button>
+            <button class="btn-success" id="btnImportMaster" onclick="document.getElementById('filePicker').click()">📥 <span data-i18n="btn.importExcel">Import Excel (.xlsx) / CSV</span></button>
         </div>
 
         <div class="input-panel">
@@ -884,6 +888,52 @@
                 </table>
             </div>
         </div>
+    <div class="main-layout" id="attnModule" style="display:none;">
+        <div class="input-panel" style="margin-bottom:0;">
+            <h3>
+                <span>📋 Pre-Work by Attendance FMS</span>
+                <span id="attnFileInfo" style="font-size:11px; font-weight:500; color:var(--text-muted);">Belum ada data. Import Raw Attendance dari FMS (.csv / .xlsx).</span>
+            </h3>
+            <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+                <input type="file" id="attnFilePicker" accept=".csv,.xlsx,.xls" style="display:none;" onchange="attnHandleFile(this)">
+                <button class="btn-primary" onclick="attnPickFile()">📥 Import Raw Attendance</button>
+                <div class="form-group"><label>📅 Start Date :</label><input type="date" id="attnDateStart" style="width:150px;" onchange="renderAttnPreWork()"></div>
+                <div class="form-group"><label>📅 End Date :</label><input type="date" id="attnDateEnd" style="width:150px;" onchange="renderAttnPreWork()"></div>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="attnSetToday()">Hari Ini</button>
+                <div class="form-group"><label>Shift :</label>
+                    <select id="attnFilterShift" style="width:150px;" onchange="renderAttnPreWork()">
+                        <option value="All">All Shift</option><option value="1">Shift 1 (00:00 - 09:00)</option>
+                        <option value="2">Shift 2 (08:00 - 17:00)</option><option value="3">Shift 3 (16:00 - 01:00)</option>
+                    </select></div>
+                <div class="form-group"><label>Dept :</label><select id="attnFilterDept" style="width:150px;" onchange="renderAttnPreWork()"><option value="All">All Dept</option></select></div>
+                <div class="form-group"><label>Status Pre-Work :</label>
+                    <select id="attnFilterStatus" style="width:150px;" onchange="renderAttnPreWork()">
+                        <option value="All">All Status</option><option value="belum">Belum Isi</option><option value="salah">Salah OpsID</option>
+                        <option value="sudah">Sudah Isi</option><option value="unfit">UNFIT</option>
+                    </select></div>
+                <div class="form-group"><label>Cari :</label><input type="text" id="attnSearch" placeholder="Nama / OpsID..." style="width:150px;" oninput="renderAttnPreWork()"></div>
+                <button class="btn-success" onclick="attnExportCsv()">📊 Export Excel</button>
+            </div>
+        </div>
+        <div class="center-box-wrapper">
+            <div class="center-box"><div class="box-title" style="color:#0f766e;">Total Absen FMS</div><div class="actual-rest" style="background:#ccfbf1; color:#0f766e;"><div>(Clock In)</div><div id="attnTotal" class="counter-num">0</div></div></div>
+            <div class="center-box"><div class="box-title" style="color:#047857;">Sudah Isi</div><div class="actual-rest" style="background:#d1fae5; color:#047857;"><div>(Pre-Work)</div><div id="attnSudah" class="counter-num">0</div></div></div>
+            <div class="center-box"><div class="box-title" style="color:#b91c1c;">Belum Isi</div><div class="actual-rest" style="background:#fee2e2; color:#b91c1c;"><div>(Pre-Work)</div><div id="attnBelum" class="counter-num">0</div></div></div>
+            <div class="center-box"><div class="box-title" style="color:#c2410c;">Salah OpsID</div><div class="actual-rest" style="background:#ffedd5; color:#c2410c;"><div>(Isi Ulang)</div><div id="attnSalah" class="counter-num">0</div></div></div>
+            <div class="center-box"><div class="box-title" style="color:#a16207;">UNFIT</div><div class="actual-rest" style="background:#fef9c3; color:#a16207;"><div>(Take Out)</div><div id="attnUnfit" class="counter-num">0</div></div></div>
+        </div>
+        <div id="attnNote" style="font-size:12px; color:var(--text-muted); display:none;"></div>
+        <div class="table-container">
+            <table class="data-table" id="attnTable">
+                <thead><tr>
+                    <th style="width:7%;">Date</th><th style="width:8%;">OpsID</th><th style="width:15%;">Name</th><th style="width:9%;">Agency</th>
+                    <th style="width:9%;">Departement</th><th style="width:14%;">Shift</th><th style="width:8%;">Clock In FMS</th>
+                    <th style="width:8%;">Status Absen</th><th style="width:10.5%;">Pre-Work Status</th><th style="width:11.5%;">Jam Submit Pre-Work</th>
+                </tr></thead>
+                <tbody id="attnTableBody"></tbody>
+            </table>
+        </div>
+    </div>
     </main>
 </div>
 
@@ -1286,7 +1336,7 @@
                 rawDataReady = true;
             })
             .catch(function (err) { console.warn("Sheet Raw Data gagal dimuat:", err); });
-        return Promise.all([pPre, pRaw]).then(function () { if (currentActiveModule === "rest") renderAll(); });
+        return Promise.all([pPre, pRaw]).then(function () { if (currentActiveModule === "rest" || currentActiveModule === "attn") renderAll(); });
     }
 
     function preWorkSafe(t) { return String(t).replace(/[<>&"]/g, ""); }
@@ -1308,11 +1358,11 @@
     // getPreWorkStatus() = SUMBER KEBENARAN status (dipakai badge tabel DAN blocker Check In, biar ga pernah beda).
     // Return { code, status, pwOps, rawOps, hasEarlier, rawWarn }
     // code: LOADING | ERROR | FIT | UNFIT | EMPTY | OTHER | SALAH_OPSID | BELUM_SUBMIT
-    function preWorkStatusResult(status) {
-        if (!status) return { code: "EMPTY", status: "" };
-        if (status === "FIT") return { code: "FIT", status: status };
-        if (status === "UNFIT") return { code: "UNFIT", status: status };
-        return { code: "OTHER", status: status };
+    function preWorkStatusResult(status, ts) {
+        if (!status) return { code: "EMPTY", status: "", ts: ts };
+        if (status === "FIT") return { code: "FIT", status: status, ts: ts };
+        if (status === "UNFIT") return { code: "UNFIT", status: status, ts: ts };
+        return { code: "OTHER", status: status, ts: ts };
     }
 
     function getPreWorkStatus(opsId, dateStr, opName) {
@@ -1327,7 +1377,7 @@
         const rec = ((byDate && byDate[dateStr]) || [])
             .filter(function (r) { return preWorkNameMatch(r.nm, expectedNm); })
             .sort(function (a, b) { return b.ts - a.ts; })[0] || null;
-        if (rec) return preWorkStatusResult(rec.status);
+        if (rec) return preWorkStatusResult(rec.status, rec.ts);
 
         if (rawDataReady) {
             const nm = rawByOps[opsKey] || preWorkNormName(opName);
@@ -1335,9 +1385,9 @@
             const rawOps = nm ? rawByName[nm] : null;
             if (pw && rawOps) {
                 if (pw.ops.toLowerCase() !== rawOps.toLowerCase()) {
-                    return { code: "SALAH_OPSID", pwOps: pw.ops, rawOps: rawOps };
+                    return { code: "SALAH_OPSID", pwOps: pw.ops, rawOps: rawOps, ts: pw.ts };
                 }
-                return preWorkStatusResult(pw.status);
+                return preWorkStatusResult(pw.status, pw.ts);
             }
         }
 
@@ -1606,6 +1656,8 @@
 
     function switchModule(moduleType) {
         currentActiveModule = moduleType;
+        attnApplyModuleVisibility(moduleType);
+        if (moduleType === 'attn') { renderAll(); return; }
         const btnRest = document.getElementById("tabRestBtn");
         const btnAsset = document.getElementById("tabAssetBtn");
         const restContainer = document.getElementById("restTableContainer");
@@ -2647,6 +2699,7 @@
     }
 
     function renderAll() {
+        if (currentActiveModule === 'attn') { renderAttnPreWork(); return; }
         if (currentActiveModule === 'rest') {
             renderRestMonitoring();
         } else {
@@ -3764,6 +3817,258 @@
             btn.disabled = false;
         });
     }
+</script>
+
+<script>
+// ===== Modul: Pre-Work by Attendance FMS =====
+// Input: Raw Attendance FMS. Yang dicek hanya operator yang sudah Clock In; statusnya dari getPreWorkStatus() (sumber sama dengan modul Rest Time).
+let attnRows = [];
+const ATTN_DEPTS = ["soc operator", "eha operator"];
+const ATTN_ORDER = { BELUM_SUBMIT: 0, SALAH_OPSID: 1, UNFIT: 2, EMPTY: 3, OTHER: 3, LOADING: 4, ERROR: 4, FIT: 5 };
+
+function attnNorm(h) { return String(h == null ? "" : h).replace(/^\uFEFF/, "").trim().toLowerCase(); }
+
+function attnParseCsv(text) {
+    text = text.replace(/^\uFEFF/, "");
+    const rows = []; let row = [], cell = "", q = false;
+    for (let i = 0; i < text.length; i++) {
+        const c = text[i];
+        if (q) { if (c === '"') { if (text[i + 1] === '"') { cell += '"'; i++; } else q = false; } else cell += c; }
+        else if (c === '"') q = true;
+        else if (c === ",") { row.push(cell); cell = ""; }
+        else if (c === "\n") { row.push(cell); rows.push(row); row = []; cell = ""; }
+        else if (c !== "\r") cell += c;
+    }
+    if (cell !== "" || row.length) { row.push(cell); rows.push(row); }
+    return rows;
+}
+
+function attnYmd(s) {
+    s = String(s || "").trim(); if (!s) return "";
+    let m = s.match(/^(\d{4})-(\d{2})-(\d{2})/); if (m) return m[1] + "-" + m[2] + "-" + m[3];
+    m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})/); if (m) return m[3] + "-" + m[2].padStart(2, "0") + "-" + m[1].padStart(2, "0");
+    const d = new Date(s); return isNaN(d) ? "" : getWorkingDateStr(d);
+}
+
+function attnShiftBucket(startTime) {
+    const m = String(startTime || "").match(/(\d{1,2}):\d{2}/); if (!m) return "";
+    const h = +m[1]; return h <= 7 ? "1" : (h <= 15 ? "2" : "3");
+}
+
+// Murni data (tanpa DOM): satu baris per OpsID per Clock In Date (ambil clock in paling awal). Baris tanpa Clock In dibuang.
+function attnBuildRows(rows) {
+    if (!rows.length) return { error: "File kosong." };
+    const head = rows[0].map(attnNorm), ix = function (n) { return head.indexOf(n); };
+    const iId = ix("staff id"), iName = ix("staff name"), iCd = ix("clock in date"), iCt = ix("clock in time");
+    const missing = [["Staff ID", iId], ["Staff Name", iName], ["Clock In Date", iCd], ["Clock In Time", iCt]].filter(function (p) { return p[1] < 0; }).map(function (p) { return p[0]; });
+    if (missing.length) return { error: "Kolom tidak ditemukan: " + missing.join(", ") + ". Pastikan ini file Raw Attendance dari FMS." };
+    const iAg = ix("agency"), iShift = ix("shift name"), iStart = ix("start time"), iSt = ix("clock in status");
+    let iDept = ix("event department"); if (iDept < 0) iDept = ix("profile department");
+    const get = function (r, i) { return i < 0 ? "" : String(r[i] == null ? "" : r[i]).trim(); };
+    const map = {}; let skipped = 0, excluded = 0, totalRows = 0;
+    rows.slice(1).forEach(function (r) {
+        const id = normalizeOpsId(get(r, iId)); if (!id) return;
+        totalRows++;
+        const cd = attnYmd(get(r, iCd)), ct = get(r, iCt);
+        if (!cd || !ct) { skipped++; return; }
+        if (ATTN_DEPTS.indexOf(get(r, iDept).toLowerCase()) < 0) { excluded++; return; }  // auto filter: hanya SOC Operator & EHA Operator
+        const rec = { opsId: id, name: get(r, iName), agency: get(r, iAg), dept: get(r, iDept), start: get(r, iStart), shiftName: get(r, iShift), shift: attnShiftBucket(get(r, iStart)), date: cd, time: ct, status: get(r, iSt) };
+        const key = id.toLowerCase() + "|" + cd;
+        if (!map[key] || rec.time < map[key].time) map[key] = rec;
+    });
+    const list = Object.keys(map).map(function (k) { return map[k]; });
+    const dates = list.map(function (r) { return r.date; }).sort();
+    return { list: list, skipped: skipped, excluded: excluded, totalRows: totalRows, min: dates[0] || "", max: dates[dates.length - 1] || "" };
+}
+
+function attnHandleFile(input) {
+    const file = input.files[0]; if (!file) return;
+    const isXlsx = /\.xlsx?$/i.test(file.name), reader = new FileReader();
+    reader.onload = function (e) {
+        try {
+            let rows;
+            if (isXlsx) {
+                const wb = XLSX.read(new Uint8Array(e.target.result), { type: "array" });
+                rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { header: 1, raw: false, defval: "" });
+            } else rows = attnParseCsv(e.target.result);
+            const res = attnBuildRows(rows);
+            if (res.error) { showToast("❌ " + res.error, "err"); input.value = ""; return; }
+            const meta = { fileName: file.name, count: res.list.length, min: res.min, max: res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
+            attnApplyData(res.list, meta, true);
+            attnSaveToFirebase(res.list, meta);
+        } catch (err) { console.error(err); showToast("❌ Gagal membaca file attendance.", "err"); }
+        input.value = "";
+    };
+    if (isXlsx) reader.readAsArrayBuffer(file); else reader.readAsText(file);
+}
+
+// ----- Simpan & muat dari Firebase: <FB_ROOT>/attendanceFms { fileName, count, min, max, skipped, excluded, importedBy, importedAt, rows: [[...], ...] }
+// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru menimpa data sebelumnya.
+let attnListenerRef = null;
+function attnRowToArr(r) { return [r.opsId, r.name, r.agency, r.dept, r.shiftName, r.shift, r.date, r.time, r.status, r.start]; }
+function attnRowFromArr(a) { return { opsId: a[0] || "", name: a[1] || "", agency: a[2] || "", dept: a[3] || "", shiftName: a[4] || "", shift: a[5] || "", date: a[6] || "", time: a[7] || "", status: a[8] || "", start: a[9] || "" }; }
+
+function attnInfoText(m) {
+    return m.fileName + " · " + m.count + " absen (" + m.min + " s/d " + m.max + ")" + (m.skipped ? " · " + m.skipped + " baris tanpa Clock In diabaikan" : "") +
+        (m.excluded ? " · " + m.excluded + " absen dept lain diabaikan (hanya SOC & EHA Operator)" : "") + (m.importedBy ? " · diimport " + m.importedBy + " " + m.importedAt : "");
+}
+
+function attnApplyData(list, meta, forceDates) {
+    attnRows = list;
+    const depts = Array.from(new Set(list.map(function (r) { return r.dept; }).filter(Boolean))).sort();
+    const sel = document.getElementById("attnFilterDept"), prev = sel.value;
+    sel.innerHTML = '<option value="All">All Dept</option>' + depts.map(function (d) { return '<option value="' + escapeHtml(d) + '">' + escapeHtml(d) + '</option>'; }).join("");
+    sel.value = depts.indexOf(prev) >= 0 ? prev : "All";
+    const ds = document.getElementById("attnDateStart"), de = document.getElementById("attnDateEnd");
+    if (forceDates || !ds.value) {
+        const today = getWorkingDateStr(new Date()), d = (today >= meta.min && today <= meta.max) ? today : meta.max;
+        ds.value = d; de.value = d;
+    }
+    document.getElementById("attnFileInfo").innerText = attnInfoText(meta);
+    if (currentActiveModule === "attn") renderAttnPreWork();
+}
+
+function attnSaveToFirebase(list, meta) {
+    if (!fbDb) { showToast("⚠️ Belum terhubung ke Firebase. Data hanya sementara di halaman ini.", "info"); return; }
+    fbDb.ref(FB_ROOT + "/attendanceFms").set(Object.assign({}, meta, { rows: list.map(attnRowToArr) }))
+        .then(function () { showToast("✅ " + list.length + " data absen FMS disimpan ke Firebase.", "ok"); })
+        .catch(function (err) { console.error(err); showToast("❌ Gagal simpan ke Firebase. Cek Security Rules untuk path attendanceFms.", "err"); });
+}
+
+// Listener dipasang sekali, baru saat tab ini pertama dibuka (biar page load Rest Time nggak ikut narik datanya).
+function attnAttachListener() {
+    if (attnListenerRef || !fbDb) return;
+    attnListenerRef = fbDb.ref(FB_ROOT + "/attendanceFms");
+    attnListenerRef.on("value", function (snap) {
+        const v = snap.val(); if (!v || !v.rows) return;
+        const meta = { fileName: v.fileName || "", count: v.count || 0, min: v.min || "", max: v.max || "", skipped: v.skipped || 0, excluded: v.excluded || 0, importedBy: v.importedBy || "", importedAt: v.importedAt || "" };
+        attnApplyData(Object.keys(v.rows).map(function (k) { return attnRowFromArr(v.rows[k]); }), meta, false);
+    });
+}
+
+function attnPickFile() {
+    if (!window.__authCanDelete) { showToast("🚫 Kamu gak punya akses buat import data attendance. Hubungi admin kalau ini kesalahan.", "err"); return; }
+    document.getElementById("attnFilePicker").click();
+}
+
+function attnSetToday() {
+    const t = getWorkingDateStr(new Date());
+    document.getElementById("attnDateStart").value = t; document.getElementById("attnDateEnd").value = t;
+    renderAttnPreWork();
+}
+
+// Pre-Work biasanya diisi sekitar 1 jam sebelum shift mulai, jadi untuk shift lewat tengah malam tanggalnya bisa hari sebelumnya.
+// Cari isian Pre-Work yang timestamp-nya jatuh di jendela [Start - 3 jam, Start + 2 jam] (apa pun isi kolom DATE-nya);
+// kalau nggak ada, cek tanggal (Start - 1 jam). Tanpa Start Time, pakai Clock In Date.
+function attnPwDate(r) {
+    const s = r.start ? new Date(r.start.replace(" ", "T")) : null;
+    if (!s || isNaN(s)) return r.date;
+    const byDate = preWorkIndex[r.opsId.toLowerCase()] || {}, lo = s.getTime() - 3 * 3600000, hi = s.getTime() + 2 * 3600000;
+    let hit = null;
+    Object.keys(byDate).forEach(function (d) { byDate[d].forEach(function (e) { if (e.ts >= lo && e.ts <= hi && (!hit || e.ts > hit.ts)) hit = { d: d, ts: e.ts }; }); });
+    return hit ? hit.d : preWorkYMD(new Date(s.getTime() - 3600000));
+}
+
+function attnGroupOf(code) {
+    if (code === "FIT" || code === "UNFIT" || code === "EMPTY" || code === "OTHER") return "sudah";
+    return code === "BELUM_SUBMIT" ? "belum" : (code === "SALAH_OPSID" ? "salah" : "na");
+}
+
+// Jam actual submit Pre-Work = kolom A (Timestamp) sheet "Pre-Work Operator". Kalau beda hari dgn tanggal Clock In, tanggalnya ikut ditampilkan.
+function attnSubmitCell(ts, refDate) {
+    if (!ts) return '<span style="color:var(--text-muted);">-</span>';
+    const d = new Date(ts), p2 = function (n) { return String(n).padStart(2, "0"); };
+    const jam = p2(d.getHours()) + ":" + p2(d.getMinutes()) + ":" + p2(d.getSeconds());
+    const tgl = p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + d.getFullYear();
+    const beda = preWorkYMD(d) !== refDate;
+    return '<span class="badge badge-time" style="cursor:default;" title="Submit: ' + tgl + ' ' + jam + '">' + jam + (beda ? ' <small style="opacity:.7;">(' + p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + ")</small>" : "") + "</span>";
+}
+function attnSubmitText(ts) {
+    if (!ts) return "";
+    const d = new Date(ts), p2 = function (n) { return String(n).padStart(2, "0"); };
+    return p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + "/" + d.getFullYear() + " " + p2(d.getHours()) + ":" + p2(d.getMinutes()) + ":" + p2(d.getSeconds());
+}
+
+function attnStatusLabel(pw) {
+    switch (pw.code) {
+        case "FIT": return "FIT"; case "UNFIT": return "UNFIT"; case "BELUM_SUBMIT": return "Belum Submit";
+        case "SALAH_OPSID": return "Salah OpsID"; case "EMPTY": return "Status Kosong"; case "OTHER": return pw.status;
+        default: return "N/A";
+    }
+}
+
+function attnVisibleRows() {
+    let start = document.getElementById("attnDateStart").value, end = document.getElementById("attnDateEnd").value || start;
+    if (!start) start = end = getWorkingDateStr(new Date());
+    if (end < start) { const x = start; start = end; end = x; }
+    const fShift = document.getElementById("attnFilterShift").value, fDept = document.getElementById("attnFilterDept").value;
+    const fStatus = document.getElementById("attnFilterStatus").value, q = document.getElementById("attnSearch").value.toLowerCase().trim();
+    const base = [];
+    attnRows.forEach(function (r) {
+        if (r.date < start || r.date > end) return;
+        if (fShift !== "All" && r.shift !== fShift) return;
+        if (fDept !== "All" && r.dept !== fDept) return;
+        if (q && r.opsId.toLowerCase().indexOf(q) < 0 && r.name.toLowerCase().indexOf(q) < 0) return;
+        const pwDate = attnPwDate(r), pw = getPreWorkStatus(r.opsId, pwDate, r.name);
+        base.push({ r: r, pw: pw, pwDate: pwDate, group: attnGroupOf(pw.code) });
+    });
+    const shown = base.filter(function (x) { return fStatus === "All" || fStatus === x.group || (fStatus === "unfit" && x.pw.code === "UNFIT"); });
+    // Urut berdasarkan Clock In: terbaru (jam paling akhir) di atas -> terlama di bawah
+    const attnTimeKey = function (r) { const t = String(r.time || "").split(":"); return r.date + " " + (t[0] || "0").padStart(2, "0") + ":" + (t[1] || "0").padStart(2, "0") + ":" + (t[2] || "0").padStart(2, "0"); };
+    shown.sort(function (a, b) { return attnTimeKey(b.r).localeCompare(attnTimeKey(a.r)); });
+    return { base: base, shown: shown };
+}
+
+function renderAttnPreWork() {
+    const v = attnVisibleRows(), tbody = document.getElementById("attnTableBody");
+    const cnt = function (f) { return v.base.filter(f).length; };
+    document.getElementById("attnTotal").innerText = v.base.length;
+    document.getElementById("attnSudah").innerText = cnt(function (x) { return x.group === "sudah"; });
+    document.getElementById("attnBelum").innerText = cnt(function (x) { return x.group === "belum"; });
+    document.getElementById("attnSalah").innerText = cnt(function (x) { return x.group === "salah"; });
+    document.getElementById("attnUnfit").innerText = cnt(function (x) { return x.pw.code === "UNFIT"; });
+    const na = cnt(function (x) { return x.group === "na"; }), note = document.getElementById("attnNote");
+    note.style.display = na ? "block" : "none";
+    note.innerText = na ? "⚠️ " + na + " operator belum bisa dicek: sheet Pre-Work masih dimuat atau gagal dimuat. Statusnya tampil N/A." : "";
+    if (!v.shown.length) {
+        tbody.innerHTML = '<tr><td colspan="10" style="padding:28px; color:var(--text-muted);">' + (attnRows.length ? "Tidak ada operator yang cocok dengan filter dan tanggal ini." : "Import Raw Attendance dari FMS untuk mulai mengecek Pre-Work.") + '</td></tr>';
+        return;
+    }
+    const stCls = { "On Time": "alert-disiplin", "Late In": "alert-istirahat", "Early In": "badge-dept" };
+    tbody.innerHTML = v.shown.map(function (x) {
+        const r = x.r, rowCls = (x.group === "belum" || x.group === "salah") ? ' class="row-gancang"' : "";
+        return '<tr' + rowCls + '><td>' + escapeHtml(r.date) + '</td><td><span class="badge badge-dept">' + escapeHtml(r.opsId) + '</span></td>' +
+            '<td style="text-align:left; font-weight:600;">' + escapeHtml(r.name) + '</td><td><span class="badge badge-dept" style="font-weight:500;">' + escapeHtml(r.agency) + '</span></td>' +
+            '<td><span class="badge badge-dept">' + escapeHtml(r.dept) + '</span></td><td>' + escapeHtml(r.shiftName) + '</td>' +
+            '<td><span class="badge badge-time" style="cursor:default;">' + escapeHtml(r.time.slice(0, 5)) + '</span></td>' +
+            '<td><span class="badge ' + (stCls[r.status] || "badge-dept") + '">' + escapeHtml(r.status || "-") + '</span></td>' +
+            '<td>' + renderPreWorkBadge(r.opsId, x.pwDate, r.name) + '</td>' +
+            '<td>' + attnSubmitCell(x.pw.ts, r.date) + '</td></tr>';
+    }).join("");
+}
+
+function attnExportCsv() {
+    const v = attnVisibleRows(); if (!v.shown.length) { showToast("⚠️ Tidak ada data untuk diexport.", "info"); return; }
+    const q = function (s) { return '"' + String(s == null ? "" : s).replace(/"/g, '""') + '"'; };
+    const lines = [["Date", "OpsID", "Name", "Agency", "Departement", "Shift", "Clock In FMS", "Status Absen", "Pre-Work Status", "Jam Submit Pre-Work"].map(q).join(",")];
+    v.shown.forEach(function (x) { const r = x.r; lines.push([r.date, r.opsId, r.name, r.agency, r.dept, r.shiftName, r.time, r.status, attnStatusLabel(x.pw), attnSubmitText(x.pw.ts)].map(q).join(",")); });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    a.download = "PreWork_by_Attendance_" + document.getElementById("attnDateStart").value + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+function attnApplyModuleVisibility(mod) {
+    const on = mod === "attn", $ = function (id) { return document.getElementById(id); };
+    const panel = document.querySelector("main.main-content > .input-panel"), layout = document.querySelector("main.main-content > .main-layout:not(#attnModule)");
+    if (panel) panel.style.display = on ? "none" : "";
+    if (layout) layout.style.display = on ? "none" : "";
+    $("attnModule").style.display = on ? "flex" : "none";
+    $("tabAttnBtn").classList.toggle("active", on);
+    $("btnImportMaster").style.display = on ? "none" : "";
+    if (on) attnAttachListener();
+    if (on) { $("tabRestBtn").classList.remove("active"); $("tabAssetBtn").classList.remove("active"); }
+}
 </script>
 
 <script>
