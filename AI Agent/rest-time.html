@@ -900,11 +900,13 @@
                 <div class="form-group"><label>📅 Start Date :</label><input type="date" id="attnDateStart" style="width:150px;" onchange="renderAttnPreWork()"></div>
                 <div class="form-group"><label>📅 End Date :</label><input type="date" id="attnDateEnd" style="width:150px;" onchange="renderAttnPreWork()"></div>
                 <button class="btn-primary" style="background-color:#64748b;" onclick="attnSetToday()">Hari Ini</button>
-                <div class="form-group"><label>Shift :</label>
-                    <select id="attnFilterShift" style="width:150px;" onchange="renderAttnPreWork()">
-                        <option value="All">All Shift</option><option value="1">Shift 1 (00:00 - 09:00)</option>
-                        <option value="2">Shift 2 (08:00 - 17:00)</option><option value="3">Shift 3 (16:00 - 01:00)</option>
-                    </select></div>
+                <div class="form-group"><label>🕐 Filter Jam Clock In :</label>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <input type="text" id="attnTimeFrom" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Dari jam (format 24 jam), contoh 05:30" style="width:90px; text-align:center;" oninput="attnTimeMask(this)" onblur="attnTimeFix(this)">
+                        <span style="font-size:12px; font-weight:600; color:var(--text-main); white-space:nowrap;">s.d</span>
+                        <input type="text" id="attnTimeTo" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Sampai jam (format 24 jam), contoh 07:00" style="width:90px; text-align:center;" oninput="attnTimeMask(this)" onblur="attnTimeFix(this)">
+                    </div></div>
+                <button class="btn-primary" style="background-color:#64748b;" title="Kosongkan filter jam" onclick="attnResetTime()">✕ Reset Jam</button>
                 <div class="form-group"><label>Dept :</label><select id="attnFilterDept" style="width:150px;" onchange="renderAttnPreWork()"><option value="All">All Dept</option></select></div>
                 <div class="form-group"><label>Status Pre-Work :</label>
                     <select id="attnFilterStatus" style="width:150px;" onchange="renderAttnPreWork()">
@@ -3951,6 +3953,30 @@ function attnPickFile() {
     document.getElementById("attnFilePicker").click();
 }
 
+// Input jam format 24 jam (HH:mm) - sengaja pakai text biar ga ikut setting AM/PM browser. Ketik angka aja, ":" otomatis.
+function attnTimeMask(el) {
+    let d = el.value.replace(/\D/g, "");
+    if (d.length && +d[0] > 2) d = "0" + d;   // ketik "5" langsung jadi "05"
+    d = d.slice(0, 4);
+    if (d.length >= 2 && +d.slice(0, 2) > 23) d = "23" + d.slice(2);
+    if (d.length === 4 && +d.slice(2) > 59) d = d.slice(0, 2) + "59";
+    el.value = d.length >= 3 ? d.slice(0, 2) + ":" + d.slice(2) : d;
+    renderAttnPreWork();
+}
+function attnTimeFix(el) {
+    const d = el.value.replace(/\D/g, "");
+    if (!d) { el.value = ""; }
+    else if (d.length <= 2) { el.value = d.padStart(2, "0") + ":00"; }
+    else if (d.length === 3) { el.value = d.slice(0, 2) + ":" + d.slice(2) + "0"; }
+    else { el.value = d.slice(0, 2) + ":" + d.slice(2, 4); }
+    renderAttnPreWork();
+}
+
+function attnResetTime() {
+    document.getElementById("attnTimeFrom").value = ""; document.getElementById("attnTimeTo").value = "";
+    renderAttnPreWork();
+}
+
 function attnSetToday() {
     const t = getWorkingDateStr(new Date());
     document.getElementById("attnDateStart").value = t; document.getElementById("attnDateEnd").value = t;
@@ -4001,12 +4027,20 @@ function attnVisibleRows() {
     let start = document.getElementById("attnDateStart").value, end = document.getElementById("attnDateEnd").value || start;
     if (!start) start = end = getWorkingDateStr(new Date());
     if (end < start) { const x = start; start = end; end = x; }
-    const fShift = document.getElementById("attnFilterShift").value, fDept = document.getElementById("attnFilterDept").value;
+    const fDept = document.getElementById("attnFilterDept").value;
+    // Filter jam Clock In (HH:mm). Kosong = ga difilter. Kalau "Dari" > "s.d" dianggap lewat tengah malam (mis. 22:00 s.d 06:00).
+    const attnMin = function (t) { const m = String(t || "").match(/^(\d{1,2}):(\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+    const mFrom = attnMin(document.getElementById("attnTimeFrom").value), mTo = attnMin(document.getElementById("attnTimeTo").value);
     const fStatus = document.getElementById("attnFilterStatus").value, q = document.getElementById("attnSearch").value.toLowerCase().trim();
     const base = [];
     attnRows.forEach(function (r) {
         if (r.date < start || r.date > end) return;
-        if (fShift !== "All" && r.shift !== fShift) return;
+        if (mFrom !== null || mTo !== null) {
+            const t = attnMin(r.time); if (t === null) return;
+            if (mFrom !== null && mTo !== null) { if (!(mFrom <= mTo ? (t >= mFrom && t <= mTo) : (t >= mFrom || t <= mTo))) return; }
+            else if (mFrom !== null) { if (t < mFrom) return; }
+            else if (t > mTo) return;
+        }
         if (fDept !== "All" && r.dept !== fDept) return;
         if (q && r.opsId.toLowerCase().indexOf(q) < 0 && r.name.toLowerCase().indexOf(q) < 0) return;
         const pwDate = attnPwDate(r), pw = getPreWorkStatus(r.opsId, pwDate, r.name);
