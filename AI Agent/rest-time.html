@@ -4029,9 +4029,22 @@ function attnHandleFile(input) {
             } else rows = attnParseCsv(e.target.result);
             const res = attnBuildRows(rows);
             if (res.error) { showToast("❌ " + res.error, "err"); input.value = ""; return; }
-            const meta = { fileName: file.name, count: res.list.length, min: res.min, max: res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
-            attnApplyData(res.list, meta, true);
-            attnSaveToFirebase(res.list, meta);
+            // MODE TUMPUK: data lama tetap dipertahankan. Kunci = OpsID + Clock In Date.
+            // Kalau kunci yang sama ada di file baru, baris lama diganti yang baru; kunci yang tidak ada di file baru tetap aman.
+            const mergedMap = {}; let added = 0, updated = 0;
+            attnRows.forEach(function (r) { mergedMap[r.opsId.toLowerCase() + "|" + r.date] = r; });
+            const hadOld = attnRows.length > 0;
+            res.list.forEach(function (r) {
+                const k = r.opsId.toLowerCase() + "|" + r.date;
+                if (mergedMap[k]) updated++; else added++;
+                mergedMap[k] = r;
+            });
+            const mergedList = Object.keys(mergedMap).map(function (k) { return mergedMap[k]; });
+            const mDates = mergedList.map(function (r) { return r.date; }).sort();
+            const meta = { fileName: file.name + (hadOld ? " (digabung dgn data lama)" : ""), count: mergedList.length, min: mDates[0] || res.min, max: mDates[mDates.length - 1] || res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
+            attnApplyData(mergedList, meta, true);
+            attnSaveToFirebase(mergedList, meta);
+            if (hadOld) showToast("➕ " + added + " absen baru, 🔄 " + updated + " diperbarui. Total sekarang " + mergedList.length + ".", "ok");
         } catch (err) { console.error(err); showToast("❌ Gagal membaca file attendance.", "err"); }
         input.value = "";
     };
@@ -4039,7 +4052,7 @@ function attnHandleFile(input) {
 }
 
 // ----- Simpan & muat dari Firebase: <FB_ROOT>/attendanceFms { fileName, count, min, max, skipped, excluded, importedBy, importedAt, rows: [[...], ...] }
-// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru menimpa data sebelumnya.
+// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru DIGABUNG dgn data lama (kunci OpsID+tanggal; kunci sama = diganti data baru).
 let attnListenerRef = null;
 function attnRowToArr(r) { return [r.opsId, r.name, r.agency, r.dept, r.shiftName, r.shift, r.date, r.time, r.status, r.start]; }
 function attnRowFromArr(a) { return { opsId: a[0] || "", name: a[1] || "", agency: a[2] || "", dept: a[3] || "", shiftName: a[4] || "", shift: a[5] || "", date: a[6] || "", time: a[7] || "", status: a[8] || "", start: a[9] || "" }; }
