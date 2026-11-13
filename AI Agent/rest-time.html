@@ -669,7 +669,7 @@
                 <div class="form-group"><label data-i18n="date.start">📅 Start Date :</label><input type="date" id="filterTanggalStart" style="width:150px;"></div>
                 <div class="form-group"><label data-i18n="date.end">📅 End Date :</label><input type="date" id="filterTanggalEnd" style="width:150px;"></div>
                 <button class="btn-primary" style="background-color:#64748b;" onclick="setDateRangeToday()" data-i18n="date.today">Hari Ini</button>
-                <div class="form-group"><label id="filterTimeLabel">🕐 Jam Check In :</label>
+                <div class="form-group"><label id="filterTimeLabel">🕐 Filter Jam Check In :</label>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <input type="text" id="filterTimeFrom" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Dari jam (format 24 jam), contoh 05:30" style="width:90px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
                         <span style="font-size:12px; font-weight:600; color:var(--text-main); white-space:nowrap;">s.d</span>
@@ -2680,7 +2680,7 @@
 
     function renderAll() {
         const lbl = document.getElementById("filterTimeLabel");
-        if (lbl) lbl.innerText = currentActiveModule === "asset" ? "🕐 Jam Pinjam PDA :" : "🕐 Jam Check In :";
+        if (lbl) lbl.innerText = currentActiveModule === "asset" ? "🕐 Filter Jam Pinjam PDA :" : "🕐 Filter Jam Check In :";
         if (currentActiveModule === 'attn') { renderAttnPreWork(); return; }
         if (currentActiveModule === 'rest') {
             renderRestMonitoring();
