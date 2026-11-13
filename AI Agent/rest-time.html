@@ -3861,8 +3861,7 @@ function attnHandleFile(input) {
             const res = attnBuildRows(rows);
             if (res.error) { showToast("❌ " + res.error, "err"); input.value = ""; return; }
             const meta = { fileName: file.name, count: res.list.length, min: res.min, max: res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
-            attnApplyData(res.list, meta, true);
-            attnSaveToFirebase(res.list, meta);
+            attnImportMerge(res, meta);
         } catch (err) { console.error(err); showToast("❌ Gagal membaca file attendance.", "err"); }
         input.value = "";
     };
@@ -3870,13 +3869,13 @@ function attnHandleFile(input) {
 }
 
 // ----- Simpan & muat dari Firebase: <FB_ROOT>/attendanceFms { fileName, count, min, max, skipped, excluded, importedBy, importedAt, rows: [[...], ...] }
-// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru menimpa data sebelumnya.
+// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru ditumpuk ke data sebelumnya (tidak menimpa).
 let attnListenerRef = null;
 function attnRowToArr(r) { return [r.opsId, r.name, r.agency, r.dept, r.shiftName, r.shift, r.date, r.time, r.status, r.start]; }
 function attnRowFromArr(a) { return { opsId: a[0] || "", name: a[1] || "", agency: a[2] || "", dept: a[3] || "", shiftName: a[4] || "", shift: a[5] || "", date: a[6] || "", time: a[7] || "", status: a[8] || "", start: a[9] || "" }; }
 
 function attnInfoText(m) {
-    return m.fileName + " · " + m.count + " absen (" + m.min + " s/d " + m.max + ")" + (m.skipped ? " · " + m.skipped + " baris tanpa Clock In diabaikan" : "") +
+    return "Import terakhir: " + m.fileName + " · total " + m.count + " absen (" + m.min + " s/d " + m.max + ")" + (m.skipped ? " · " + m.skipped + " baris tanpa Clock In diabaikan" : "") +
         (m.excluded ? " · " + m.excluded + " absen dept lain diabaikan (hanya SOC & EHA Operator)" : "") + (m.importedBy ? " · diimport " + m.importedBy + " " + m.importedAt : "");
 }
 
@@ -3895,10 +3894,43 @@ function attnApplyData(list, meta, forceDates) {
     if (currentActiveModule === "attn") renderAttnPreWork();
 }
 
-function attnSaveToFirebase(list, meta) {
+// Import ditumpuk: baris lama TIDAK dihapus. Kunci baris = OpsID + tanggal Clock In.
+// Kalau kunci sama sudah ada, yang dipakai Clock In paling awal (aturan sama seperti attnBuildRows); kalau jamnya sama, ambil dari file baru.
+function attnMergeRows(oldList, newList) {
+    const map = {}, key = function (r) { return String(r.opsId).toLowerCase() + "|" + r.date; };
+    let added = 0, updated = 0;
+    oldList.forEach(function (r) { if (r.opsId && r.date) map[key(r)] = r; });
+    newList.forEach(function (r) {
+        const k = key(r), cur = map[k];
+        if (!cur) { added++; map[k] = r; }
+        else if (r.time <= cur.time) { if (r.time < cur.time || JSON.stringify(attnRowToArr(r)) !== JSON.stringify(attnRowToArr(cur))) updated++; map[k] = r; }
+    });
+    return { list: Object.keys(map).map(function (k) { return map[k]; }), added: added, updated: updated };
+}
+
+function attnImportMerge(res, metaFile) {
+    const finish = function (oldList) {
+        const m = attnMergeRows(oldList, res.list);
+        const dates = m.list.map(function (r) { return r.date; }).sort();
+        const meta = Object.assign({}, metaFile, { count: m.list.length, min: dates[0] || "", max: dates[dates.length - 1] || "" });
+        attnApplyData(m.list, meta, true);
+        attnSaveToFirebase(m.list, meta, m);
+    };
+    if (!fbDb) { finish(attnRows); return; }
+    // Baca data terbaru dari Firebase dulu supaya yang ditumpuk adalah data server, bukan cuma yang kebetulan sudah tampil di layar.
+    fbDb.ref(FB_ROOT + "/attendanceFms/rows").once("value").then(function (snap) {
+        const v = snap.val();
+        finish(v ? Object.keys(v).map(function (k) { return attnRowFromArr(v[k]); }) : []);
+    }).catch(function (err) {
+        console.error(err);
+        showToast("❌ Gagal baca data lama dari Firebase. Import dibatalkan supaya data lama tidak hilang.", "err");
+    });
+}
+
+function attnSaveToFirebase(list, meta, stat) {
     if (!fbDb) { showToast("⚠️ Belum terhubung ke Firebase. Data hanya sementara di halaman ini.", "info"); return; }
     fbDb.ref(FB_ROOT + "/attendanceFms").set(Object.assign({}, meta, { rows: list.map(attnRowToArr) }))
-        .then(function () { showToast("✅ " + list.length + " data absen FMS disimpan ke Firebase.", "ok"); })
+        .then(function () { showToast("✅ Import ditumpuk: " + (stat ? stat.added + " baru, " + stat.updated + " diperbarui, " : "") + "total " + list.length + " absen tersimpan di Firebase.", "ok"); })
         .catch(function (err) { console.error(err); showToast("❌ Gagal simpan ke Firebase. Cek Security Rules untuk path attendanceFms.", "err"); });
 }
 
