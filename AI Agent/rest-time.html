@@ -658,64 +658,48 @@
         <div class="input-panel">
             <h3>
                 <span id="formTitle" data-i18n="form.titleRest">⚡ Form Input Aktivitas Operator (Scan / Input OpsID)</span>
-                <div id="inlineFilterBar" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:11px;">
-                    <span style="color:#e67e22; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.3px;" data-i18n="filter.title">🔍 Filter Data Table:</span>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <label id="filterTimeLabel" style="font-size:11px; margin:0;">🕐 Jam Check In :</label>
-                        <input type="text" id="filterTimeFrom" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Dari jam (format 24 jam), contoh 05:30" style="width: 64px; padding: 5px; font-size:11.5px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
-                        <span style="font-size:11px; font-weight:600; color:var(--text-main); white-space:nowrap;">s.d</span>
-                        <input type="text" id="filterTimeTo" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Sampai jam (format 24 jam), contoh 07:00" style="width: 64px; padding: 5px; font-size:11.5px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
-                        <button type="button" title="Kosongkan filter jam" onclick="filterTimeReset()" style="padding: 5px 8px; font-size:11.5px; font-weight:600; border-radius:6px; border:1px solid var(--border-color); background:var(--table-header-bg); color:var(--text-main); cursor:pointer; white-space:nowrap;">✕ Reset Jam</button>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;" data-i18n="filter.status">Status:</label>
-                        <select id="filterBreakType" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All" data-i18n="filter.allStatus">All Status</option>
-                            <option value="Break Out" data-i18n="filter.statusBreakOut">Sedang Istirahat / Dipinjam</option>
-                            <option value="Break In" data-i18n="filter.statusBreakIn">Selesai Istirahat / Kembali</option>
-                        </select>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;" data-i18n="filter.dept">Dept:</label>
-                        <select id="filterDept" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All" data-i18n="filter.allDept">All Dept</option>
-                            <option value="SOC Operator">SOC Operator</option>
-                            <option value="EHA Operator">EHA Operator</option>
-                            <option value="Admin">Admin</option>
-                            <option value="SOC Non Operator">SOC Non Operator</option>
-                            <option value="Cache Operator">Cache Operator</option>
-                            <option value="MM Operator">MM Operator</option>
-                        </select>
-                    </div>
-                    <div style="display:none; align-items:center; gap:5px;" id="filterStationGroup">
-                        <label style="font-size:11px; margin:0;" data-i18n="filter.station">Station:</label>
-                        <select id="filterStation" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All" data-i18n="filter.allStation">All Station</option>
-                        </select>
-                    </div>
-                    <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;" data-i18n="filter.cari">Cari:</label>
-                        <input type="text" id="searchGlobal" placeholder="Nama / OpsID / SN..." data-i18n-placeholder="filter.cariPlaceholder" style="width: 128px; padding: 5px; font-size:11.5px;" oninput="renderAll()">
-                    </div>
-                    <button type="button" onclick="resetTableFilters()" style="padding: 5px 10px; font-size:11.5px; font-weight:600; border-radius:6px; border:1px solid var(--border-color); background:var(--table-header-bg); color:var(--text-main); cursor:pointer; white-space:nowrap;" data-i18n="filter.resetBtn">↺ Reset Filter</button>
-                </div>
+                <span style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:flex-end; font-size:11px; font-weight:500; color:var(--text-muted);">
+                    <span style="font-weight:700; color:#e67e22; letter-spacing:0.3px;">PALANGKA RAYA DC</span>
+                    <span id="subHeaderTitle" data-i18n="header.subtitleRest">Daily Monitoring Dedicated Operator &amp; Daily Worker Rest Time</span>
+                    <span id="connStatus" class="conn-status conn-connecting" style="margin:0;"><span class="conn-dot"></span><span id="connStatusText" data-i18n="conn.menghubungkan">Menghubungkan...</span></span>
+                    <span id="clockDisplay" style="font-size:12px; font-weight:700; color:var(--text-main);">-</span>
+                </span>
             </h3>
-
-            <div style="display:flex; align-items:flex-end; gap:15px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--border-color);">
-                <div class="form-group">
-                    <label data-i18n="date.start">📅 Start Date :</label>
-                    <input type="date" id="filterTanggalStart" style="width: 150px;">
-                </div>
-                <div class="form-group">
-                    <label data-i18n="date.end">📅 End Date :</label>
-                    <input type="date" id="filterTanggalEnd" style="width: 150px;">
-                </div>
-                <div class="form-group" style="flex-direction: row; gap: 8px;">
-                    <button class="btn-primary" style="background-color:#64748b;" onclick="setDateRangeToday()" data-i18n="date.today">Hari Ini</button>
-                </div>
-                <div style="font-size:11px; color:var(--text-muted); padding-bottom:8px;" data-i18n="date.hint"><Ubah Tanggal></div>
+            <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap; margin-bottom:14px; padding-bottom:14px; border-bottom:1px dashed var(--border-color);">
+                <div class="form-group"><label data-i18n="date.start">📅 Start Date :</label><input type="date" id="filterTanggalStart" style="width:150px;"></div>
+                <div class="form-group"><label data-i18n="date.end">📅 End Date :</label><input type="date" id="filterTanggalEnd" style="width:150px;"></div>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="setDateRangeToday()" data-i18n="date.today">Hari Ini</button>
+                <div class="form-group"><label id="filterTimeLabel">🕐 Jam Check In :</label>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <input type="text" id="filterTimeFrom" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Dari jam (format 24 jam), contoh 05:30" style="width:90px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
+                        <span style="font-size:12px; font-weight:600; color:var(--text-main); white-space:nowrap;">s.d</span>
+                        <input type="text" id="filterTimeTo" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Sampai jam (format 24 jam), contoh 07:00" style="width:90px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
+                    </div></div>
+                <button class="btn-primary" style="background-color:#64748b;" title="Kosongkan filter jam" onclick="filterTimeReset()">✕ Reset Jam</button>
+                <div class="form-group"><label data-i18n="filter.dept">Dept:</label>
+                    <select id="filterDept" style="width:150px;" onchange="renderAll()">
+                        <option value="All" data-i18n="filter.allDept">All Dept</option>
+                        <option value="SOC Operator">SOC Operator</option>
+                        <option value="EHA Operator">EHA Operator</option>
+                        <option value="Admin">Admin</option>
+                        <option value="SOC Non Operator">SOC Non Operator</option>
+                        <option value="Cache Operator">Cache Operator</option>
+                        <option value="MM Operator">MM Operator</option>
+                    </select></div>
+                <div class="form-group"><label data-i18n="filter.status">Status:</label>
+                    <select id="filterBreakType" style="width:150px;" onchange="renderAll()">
+                        <option value="All" data-i18n="filter.allStatus">All Status</option>
+                        <option value="Break Out" data-i18n="filter.statusBreakOut">Sedang Istirahat / Dipinjam</option>
+                        <option value="Break In" data-i18n="filter.statusBreakIn">Selesai Istirahat / Kembali</option>
+                    </select></div>
+                <div class="form-group" id="filterStationGroup" style="display:none;"><label data-i18n="filter.station">Station:</label>
+                    <select id="filterStation" style="width:150px;" onchange="renderAll()">
+                        <option value="All" data-i18n="filter.allStation">All Station</option>
+                    </select></div>
+                <div class="form-group"><label data-i18n="filter.cari">Cari:</label>
+                    <input type="text" id="searchGlobal" placeholder="Nama / OpsID / SN..." data-i18n-placeholder="filter.cariPlaceholder" style="width:150px;" oninput="renderAll()"></div>
+                <button type="button" class="btn-primary" style="background-color:#64748b;" onclick="resetTableFilters()" data-i18n="filter.resetBtn">↺ Reset Filter</button>
             </div>
-
             <div class="form-row">
                 <div class="form-group">
                     <label data-i18n="form.opsId">OpsID :</label>
@@ -758,11 +742,6 @@
         <div class="main-layout">
             <div class="grid-header">
                 <div class="title-section">
-                    <h1>PALANGKA RAYA DC</h1>
-                    <h2 id="subHeaderTitle" data-i18n="header.subtitleRest">Daily Monitoring Dedicated Operator & Daily Worker Rest Time</h2>
-                    <div id="connStatus" class="conn-status conn-connecting"><span class="conn-dot"></span><span id="connStatusText" data-i18n="conn.menghubungkan">Menghubungkan...</span></div>
-                    <div style="text-align: center; font-size:13px; font-weight:700;" id="clockDisplay">-</div>
-
                     <button class="summary-toggle-btn" id="summaryToggleBtn" onclick="toggleSummaryBoxes()">🔼 <span data-i18n="summary.hide">Sembunyikan Ringkasan</span></button>
 
                     <div id="summaryBoxesArea">
@@ -2884,13 +2863,16 @@
                 <td>${renderPreWorkBadge(opsId, targetDateStr, name)}</td>
                 <td>${renderDeleteAction(opsId, targetDateStr)}</td>
             `;
-            rowsToRender.push({ tr, isNewlySubmitted, sortDurationMinutes, alertSeverity: alertStatusSeverity(alertKey) });
+            rowsToRender.push({ tr, isNewlySubmitted, sortDurationMinutes, alertSeverity: alertStatusSeverity(alertKey), checkInMs: checkInTime ? checkInTime.getTime() : -Infinity });
         });
 
         if (restSortCol === "duration") {
             rowsToRender.sort((a, b) => restSortDir === "desc" ? b.sortDurationMinutes - a.sortDurationMinutes : a.sortDurationMinutes - b.sortDurationMinutes);
         } else if (restSortCol === "alert") {
             rowsToRender.sort((a, b) => restSortDir === "desc" ? b.alertSeverity - a.alertSeverity : a.alertSeverity - b.alertSeverity);
+        } else {
+            // Default: Jam Check In terbaru (waktu lokal device) di paling atas; yang belum Check In di paling bawah
+            rowsToRender.sort((a, b) => a.checkInMs === b.checkInMs ? 0 : (b.checkInMs > a.checkInMs ? 1 : -1));
         }
 
         rowsToRender.forEach(function (row) {
@@ -2938,6 +2920,7 @@
         assetPairs.sort(function (a, b) { return a.date === b.date ? a.opsId.localeCompare(b.opsId) : a.date.localeCompare(b.date); });
 
         let totalPinjamCount = 0, activePinjamCount = 0, doneKembaliCount = 0;
+        let assetRowsToRender = [];
         let targetRowElement = null;
         let belumKembaliList = [];
         let activityLogList = [];
@@ -3043,9 +3026,15 @@
                     <td style="font-size:11px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:0;" title="${picEmail}">${picEmail}</td>
                     <td>${renderDeleteAction(opsId, targetDateStr)}</td>
                 `;
-                tbody.appendChild(tr);
-                if (isNewlySubmitted) targetRowElement = tr;
+                assetRowsToRender.push({ tr, isNewlySubmitted, ms: (pinjamTime || kembaliTime) ? (pinjamTime || kembaliTime).getTime() : -Infinity });
             });
+        });
+
+        // Jam Pinjam PDA terbaru (waktu lokal device) di paling atas
+        assetRowsToRender.sort((a, b) => a.ms === b.ms ? 0 : (b.ms > a.ms ? 1 : -1));
+        assetRowsToRender.forEach(function (row) {
+            tbody.appendChild(row.tr);
+            if (row.isNewlySubmitted) targetRowElement = row.tr;
         });
 
         if (targetRowElement) {
