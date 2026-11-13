@@ -314,6 +314,22 @@
         /* Tabel Pre-Work FMS: header jangan wrap; kalau layar sempit, tabel scroll ke samping */
         #attnTable { min-width: 1400px; }
         #attnTable th { white-space: nowrap; padding-left: 8px; padding-right: 8px; }
+
+        /* Tab Summary Pre-Work per Vendor */
+        .attn-sum-table { table-layout: auto; min-width: 560px; }
+        .attn-sum-table th { white-space: nowrap; }
+        .attn-sum-table td.sum-period { text-align: left; font-weight: 600; white-space: nowrap; }
+        .attn-sum-table td.sum-cell { white-space: nowrap; line-height: 1.25; }
+        .attn-sum-table td.sum-cell small { display: block; font-size: 11px; opacity: .8; font-weight: 500; }
+        .attn-sum-table tr.sum-total td { font-weight: 700; border-top: 2px solid var(--border-color); }
+        .sum-g { background:#d1fae5; color:#047857; } .sum-y { background:#fef9c3; color:#a16207; } .sum-r { background:#fee2e2; color:#b91c1c; }
+        :root[data-theme="dark"] .sum-g { background:#064e3b; color:#a7f3d0; } :root[data-theme="dark"] .sum-y { background:#713f12; color:#fde68a; } :root[data-theme="dark"] .sum-r { background:#7f1d1d; color:#fecaca; }
+        .attn-sum-table td.sum-cell[data-m] { cursor: pointer; }
+        .attn-sum-table td.sum-cell[data-m]:hover { outline: 2px solid #e67e22; outline-offset: -2px; filter: brightness(.96); }
+        .attn-sum-card { min-width: 150px; padding: 10px 16px; border-radius: 10px; text-align: center; border: 1px solid var(--border-color); }
+        .attn-sum-card .nm { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; opacity: .85; }
+        .attn-sum-card .pc { font-size: 26px; font-weight: 800; line-height: 1.2; }
+        .attn-sum-card .ct { font-size: 11px; font-weight: 600; opacity: .85; }
         .th-sortable { cursor: pointer; user-select: none; }
         .th-sortable .th-flex { display: inline-flex; align-items: center; justify-content: center; gap: 3px; white-space: nowrap; transition: color 0.15s; }
         .th-sortable:hover .th-flex { color: #e67e22; }
@@ -651,6 +667,7 @@
             <button class="tab-btn active" id="tabRestBtn" onclick="switchModule('rest')">⏳ <span data-i18n="nav.restTime">Rest Time Monitoring</span></button>
             <button class="tab-btn" id="tabAssetBtn" onclick="switchModule('asset')">📱 <span data-i18n="nav.assetUsage">Asset Usage Monitoring</span></button>
             <button class="tab-btn" id="tabAttnBtn" onclick="switchModule('attn')">📋 Pre-Work by Attendance FMS</button>
+            <button class="tab-btn" id="tabSumBtn" onclick="switchModule('sum')">📈 Summary Pre-Work per Vendor</button>
             <input type="file" id="filePicker" accept=".txt,.csv,.xlsx,.xls" style="display: none;" onchange="handleFileImport(this)">
             <button class="btn-success" id="btnImportMaster" onclick="document.getElementById('filePicker').click()">📥 <span data-i18n="btn.importExcel">Import Excel (.xlsx) / CSV</span></button>
         </div>
@@ -910,6 +927,65 @@
                 </tr></thead>
                 <tbody id="attnTableBody"></tbody>
             </table>
+        </div>
+    </div>
+    <div id="attnDrillModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this)attnDrillClose()">
+        <div class="modal-box" style="width:1050px; max-width:96vw; max-height:90vh; display:flex; flex-direction:column;">
+            <h3 id="attnDrillTitle" style="margin-bottom:4px;">Detail</h3>
+            <p id="attnDrillSub" style="margin-bottom:10px;"></p>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+                <button class="tab-btn active" id="attnDrillTab_all" onclick="attnDrillSetFilter('all')">Semua</button>
+                <button class="tab-btn" id="attnDrillTab_belum" onclick="attnDrillSetFilter('belum')">❌ Belum Submit</button>
+                <button class="tab-btn" id="attnDrillTab_sudah" onclick="attnDrillSetFilter('sudah')">✅ Sudah Submit</button>
+                <button class="tab-btn" id="attnDrillTab_unfit" onclick="attnDrillSetFilter('unfit')">⚠️ Un-Fit</button>
+                <button class="btn-success" style="margin-left:auto;" onclick="attnDrillExportCsv()">📊 Export Excel</button>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="attnDrillClose()">✕ Tutup</button>
+            </div>
+            <div class="table-container" style="overflow:auto; min-height:120px;">
+                <table class="data-table" style="table-layout:auto;">
+                    <thead><tr><th>Date</th><th>OpsID</th><th style="text-align:left;">Name</th><th>Agency</th><th>Departement</th><th>Shift</th><th>Clock In FMS</th><th>Pre-Work Status</th><th>Jam Submit Pre-Work</th></tr></thead>
+                    <tbody id="attnDrillBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="main-layout" id="attnSumModule" style="display:none;">
+        <div class="input-panel" style="margin-bottom:0;">
+            <h3>
+                <span>📈 Summary Achievement Submission Pre-Work per Vendor</span>
+                <span id="attnSumInfo" style="font-size:11px; font-weight:500; color:var(--text-muted);">Belum ada data. Import Raw Attendance di tab Pre-Work by Attendance FMS.</span>
+            </h3>
+            <div style="display:flex; align-items:flex-end; gap:12px; flex-wrap:wrap;">
+                <div class="form-group"><label>📅 Start Date :</label><input type="date" id="attnSumStart" style="width:150px;" onchange="attnRenderSummary()"></div>
+                <div class="form-group"><label>📅 End Date :</label><input type="date" id="attnSumEnd" style="width:150px;" onchange="attnRenderSummary()"></div>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="attnSumQuick('today')">Hari Ini</button>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="attnSumQuick('7d')">7 Hari</button>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="attnSumQuick('month')">Bulan Ini</button>
+                <button class="btn-primary" style="background-color:#64748b;" onclick="attnSumQuick('all')">Semua Data</button>
+                <div class="form-group"><label>Dept :</label><select id="attnSumDept" style="width:150px;" onchange="attnRenderSummary()"><option value="All">All Dept</option></select></div>
+                <button class="btn-success" onclick="attnSumExportCsv()">📊 Export Excel</button>
+            </div>
+            <div style="font-size:11px; color:var(--text-muted); margin-top:10px;">Achievement = Sudah Isi Pre-Work ÷ Total Clock In FMS, per Agency (vendor). Data dari Raw Attendance yang diimport di tab Pre-Work by Attendance FMS. Tanda * = periode terpotong rentang tanggal.</div>
+        </div>
+        <div class="center-box-wrapper" id="attnSumCards"></div>
+        <div id="attnSumNote" style="font-size:12px; color:var(--text-muted); display:none;"></div>
+        <div class="input-panel" style="margin-bottom:0;">
+            <h3><span>📅 Achievement Daily Submission</span></h3>
+            <div class="table-container" style="max-height:380px; overflow:auto;">
+                <table class="data-table attn-sum-table" id="attnSumTblDaily"><thead></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <div class="input-panel" style="margin-bottom:0;">
+            <h3><span>🗓️ Achievement Weekly Submission</span></h3>
+            <div class="table-container" style="max-height:380px; overflow:auto;">
+                <table class="data-table attn-sum-table" id="attnSumTblWeekly"><thead></thead><tbody></tbody></table>
+            </div>
+        </div>
+        <div class="input-panel" style="margin-bottom:0;">
+            <h3><span>📆 Achievement Monthly Submission</span></h3>
+            <div class="table-container" style="max-height:380px; overflow:auto;">
+                <table class="data-table attn-sum-table" id="attnSumTblMonthly"><thead></thead><tbody></tbody></table>
+            </div>
         </div>
     </div>
     </main>
@@ -1314,7 +1390,7 @@
                 rawDataReady = true;
             })
             .catch(function (err) { console.warn("Sheet Raw Data gagal dimuat:", err); });
-        return Promise.all([pPre, pRaw]).then(function () { if (currentActiveModule === "rest" || currentActiveModule === "attn") renderAll(); });
+        return Promise.all([pPre, pRaw]).then(function () { if (currentActiveModule === "rest" || currentActiveModule === "attn" || currentActiveModule === "sum") renderAll(); });
     }
 
     function preWorkSafe(t) { return String(t).replace(/[<>&"]/g, ""); }
@@ -1371,6 +1447,9 @@
     // Umur maksimal Pre-Work (jam) dihitung dari jam submit sampai jam Check In
     const PREWORK_MAX_AGE_HOURS = 3;
     function getPreWorkGate(opsId, dateStr, opName) {
+        // Pengaman: tanggal acuan minimal = tanggal kalender scan sekarang (hindari mismatch kalau dateStr basi, mis. masih 13 padahal sudah 14)
+        const todayStr = getWorkingDateStr(new Date());
+        if (!dateStr || dateStr < todayStr) dateStr = todayStr;
         let r = getPreWorkStatus(opsId, dateStr, opName);
         // Antisipasi miss match tanggal: Pre-Work harus disubmit di tanggal yang sama dengan Check In (jam 00.00 ke atas).
         // Isian Pre-Work yang jamnya sebelum 00.00 tanggal Check In (mis. 23.35 kemarin) tidak dianggap -> wajib isi ulang.
@@ -1651,7 +1730,7 @@
     function switchModule(moduleType) {
         currentActiveModule = moduleType;
         attnApplyModuleVisibility(moduleType);
-        if (moduleType === 'attn') { renderAll(); return; }
+        if (moduleType === 'attn' || moduleType === 'sum') { renderAll(); return; }
         const btnRest = document.getElementById("tabRestBtn");
         const btnAsset = document.getElementById("tabAssetBtn");
         const restContainer = document.getElementById("restTableContainer");
@@ -2124,28 +2203,38 @@
         return new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
     }
 
+    // Batas umur siklus (jam, dihitung dari scan terakhir) sebelum dianggap siklus baru -> scan berikutnya = Check In.
+    const REST_RESET_HOURS_DEFAULT = 12;          // Check In saja / belum Break Out
+    const REST_RESET_HOURS_BREAK_IN_NULL = 9;     // Check In & Break Out sudah, Break In belum (Null)
+
+    // Status siklus DIHITUNG dari log yang ada (bukan dari angka cycleNum), jadi kalau Break Out / Break In di-rollback
+    // otomatis balik ke langkah yang belum ada ("Scan Awal" langkah itu):
+    //   Check In  : Clear, Break Out : Null                    -> Break Out
+    //   Check In  : Clear, Break Out : Clear, Break In : Null  -> Break In (kalkulasi 9 jam, lewat 9 jam = Check In baru)
+    //   Check In  : Clear, Break Out : Clear, Break In : Clear -> langsung Next Date (Check In baru, tanggal scan sekarang)
     function calculateNextState(opsId, actualDateStr) {
         let userLogs = logsArray.filter(log => log.opsId.toLowerCase() === opsId.toLowerCase());
         userLogs.sort((a, b) => parseDateTime(a.timestamp) - parseDateTime(b.timestamp));
-        
-        if (userLogs.length === 0) return { cycleNum: 1, action: "Check In", logDate: actualDateStr };
-        
+        const newCycle = { cycleNum: 1, action: "Check In", logDate: actualDateStr };
+
+        if (userLogs.length === 0) return newCycle;
+
         let lastLog = userLogs[userLogs.length - 1];
         let hoursPassed = (new Date() - parseDateTime(lastLog.timestamp)) / (1000 * 60 * 60);
-        
-        if (hoursPassed > 12) {
-            return { cycleNum: 1, action: "Check In", logDate: actualDateStr };
-        }
-        
-        let nextCycleNum = lastLog.cycleNum + 1;
-        let modResult = (nextCycleNum - 1) % 4;
-        let nextAction = "Selesai";
-        
-        if (modResult === 0) nextAction = "Check In";
-        else if (modResult === 1) nextAction = "Break Out";
-        else if (modResult === 2) nextAction = "Break In";
-        
-        return { cycleNum: nextCycleNum, action: nextAction, logDate: lastLog.workingDate };
+
+        // Siklus berjalan = log di tanggal terakhir, mulai dari Check In terakhir
+        let dayLogs = userLogs.filter(l => l.workingDate === lastLog.workingDate), startIdx = -1;
+        for (let k = dayLogs.length - 1; k >= 0; k--) { if (dayLogs[k].breakType === "Check In") { startIdx = k; break; } }
+        const hasCI = startIdx >= 0, cyc = hasCI ? dayLogs.slice(startIdx) : dayLogs;
+        const has = function (t) { return cyc.some(l => l.breakType === t); };
+        const hasBO = has("Break Out"), hasBI = has("Break In"), legacyDone = has("Selesai");
+
+        // Check In & Break Out Clear, Break In Null -> pakai 9 jam; selain itu tetap 12 jam
+        const limit = (hasCI && hasBO && !hasBI) ? REST_RESET_HOURS_BREAK_IN_NULL : REST_RESET_HOURS_DEFAULT;
+
+        if (!hasCI || legacyDone || (hasBO && hasBI) || hoursPassed > limit) return newCycle;   // Check In baru = Next Date
+        if (!hasBO) return { cycleNum: 2, action: "Break Out", logDate: lastLog.workingDate };
+        return { cycleNum: 3, action: "Break In", logDate: lastLog.workingDate };
     }
 
     function calculateNextAssetState(opsId, actualDateStr) {
@@ -2742,6 +2831,7 @@
         const lbl = document.getElementById("filterTimeLabel");
         if (lbl) lbl.innerText = currentActiveModule === "asset" ? "🕐 Filter Jam Pinjam PDA :" : "🕐 Filter Jam Check In :";
         if (currentActiveModule === 'attn') { renderAttnPreWork(); return; }
+        if (currentActiveModule === 'sum') { attnRenderSummary(); return; }
         if (currentActiveModule === 'rest') {
             renderRestMonitoring();
         } else {
@@ -3972,6 +4062,7 @@ function attnApplyData(list, meta, forceDates) {
     }
     document.getElementById("attnFileInfo").innerText = attnInfoText(meta);
     if (currentActiveModule === "attn") renderAttnPreWork();
+    else if (currentActiveModule === "sum") attnRenderSummary();
 }
 
 function attnSaveToFirebase(list, meta) {
@@ -4135,16 +4226,233 @@ function attnExportCsv() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
+// ===== Tab Summary Pre-Work per Vendor: Achievement Daily / Weekly / Monthly Submission =====
+// Achievement = Sudah Isi (FIT/UNFIT/Status Kosong/Lainnya) / Total Clock In FMS, per periode & per Agency (vendor).
+// Sumber data sama dgn tab Pre-Work by Attendance FMS (attnRows + getPreWorkStatus), jadi angkanya selalu konsisten.
+const ATTN_SUM_GREEN = 95, ATTN_SUM_YELLOW = 80;   // ambang warna (%): >= GREEN hijau, >= YELLOW kuning, di bawahnya merah
+const ATTN_MON = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
+const ATTN_DAY = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+const ATTN_SUM_MODES = [["daily", "attnSumTblDaily", "Daily"], ["weekly", "attnSumTblWeekly", "Weekly"], ["monthly", "attnSumTblMonthly", "Monthly"]];
+
+function attnUtc(ymd) { const p = ymd.split("-"); return new Date(Date.UTC(+p[0], +p[1] - 1, +p[2])); }
+function attnUtcYmd(d) { return d.toISOString().slice(0, 10); }
+function attnPeriodKey(ymd, mode) {
+    if (mode === "monthly") return ymd.slice(0, 7);
+    if (mode === "weekly") { const d = attnUtc(ymd); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return attnUtcYmd(d); } // Senin minggu tsb
+    return ymd;
+}
+function attnPeriodBounds(key, mode) {   // awal & akhir periode, buat deteksi periode yg terpotong rentang tanggal
+    if (mode === "monthly") { const y = +key.slice(0, 4), m = +key.slice(5, 7); return [key + "-01", attnUtcYmd(new Date(Date.UTC(y, m, 0)))]; }
+    if (mode === "weekly") { const d = attnUtc(key); d.setUTCDate(d.getUTCDate() + 6); return [key, attnUtcYmd(d)]; }
+    return [key, key];
+}
+function attnPeriodLabel(key, mode) {
+    const p2 = function (n) { return String(n).padStart(2, "0"); };
+    if (mode === "monthly") return ATTN_MON[+key.slice(5, 7) - 1] + " " + key.slice(0, 4);
+    const d = attnUtc(key);
+    if (mode === "daily") return ATTN_DAY[d.getUTCDay()] + ", " + p2(d.getUTCDate()) + " " + ATTN_MON[d.getUTCMonth()] + " " + d.getUTCFullYear();
+    const e = attnUtc(key); e.setUTCDate(e.getUTCDate() + 6);
+    const th = attnUtc(key); th.setUTCDate(th.getUTCDate() + 3);                   // minggu ISO ditentukan hari Kamis
+    const wk = Math.ceil(((th - Date.UTC(th.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
+    return "W" + wk + " · " + p2(d.getUTCDate()) + " " + ATTN_MON[d.getUTCMonth()] + " – " + p2(e.getUTCDate()) + " " + ATTN_MON[e.getUTCMonth()] + " " + e.getUTCFullYear();
+}
+// Weekly baru tampil kalau rentang tanggal >= 7 hari, Monthly kalau >= 28 hari (Daily selalu tampil)
+const ATTN_SUM_MIN_DAYS = { daily: 1, weekly: 7, monthly: 28 };
+function attnSumVisible(mode, b) {
+    if (!b.start) return mode === "daily";
+    const span = Math.round((attnUtc(b.end) - attnUtc(b.start)) / 86400000) + 1;
+    return span >= ATTN_SUM_MIN_DAYS[mode];
+}
+function attnSumClass(pct) { return pct >= ATTN_SUM_GREEN ? "sum-g" : (pct >= ATTN_SUM_YELLOW ? "sum-y" : "sum-r"); }
+function attnSumPct(c) { return c && c.t ? (c.s / c.t) * 100 : null; }
+
+function attnSumQuick(kind) {
+    const today = getWorkingDateStr(new Date()), ds = document.getElementById("attnSumStart"), de = document.getElementById("attnSumEnd");
+    if (kind === "today") { ds.value = today; de.value = today; }
+    else if (kind === "7d") { const d = attnUtc(today); d.setUTCDate(d.getUTCDate() - 6); ds.value = attnUtcYmd(d); de.value = today; }
+    else if (kind === "month") { ds.value = today.slice(0, 8) + "01"; de.value = today; }
+    else { const dates = attnRows.map(function (r) { return r.date; }).sort(); ds.value = dates[0] || ""; de.value = dates[dates.length - 1] || ""; }
+    attnRenderSummary();
+}
+
+// Murni data (tanpa tabel): baris attendance dalam rentang + dept, lengkap dgn status Pre-Work
+function attnSumBase() {
+    let start = document.getElementById("attnSumStart").value, end = document.getElementById("attnSumEnd").value || start;
+    if (!start) start = end;
+    if (end < start) { const x = start; start = end; end = x; }
+    const fDept = document.getElementById("attnSumDept").value, base = [];
+    if (start) attnRows.forEach(function (r) {
+        if (r.date < start || r.date > end) return;
+        if (fDept !== "All" && r.dept !== fDept) return;
+        const pwDate = attnPwDate(r), pw = getPreWorkStatus(r.opsId, pwDate, r.name);
+        base.push({ r: r, pw: pw, pwDate: pwDate, group: attnGroupOf(pw.code) });
+    });
+    return { base: base, start: start, end: end };
+}
+
+function attnSummaryData(mode, b) {
+    const per = {}, vSet = {}, grand = {}, grandAll = { t: 0, s: 0, b: 0, u: 0 };
+    const tally = function (c, x) { c.t++; if (x.group === "sudah") c.s++; else if (x.group === "belum") c.b++; if (x.pw.code === "UNFIT") c.u++; };
+    b.base.forEach(function (x) {
+        const ag = String(x.r.agency || "").trim() || "(Tanpa Agency)", k = attnPeriodKey(x.r.date, mode);
+        vSet[ag] = (vSet[ag] || 0) + 1;
+        const o = per[k] || (per[k] = { cells: {}, tot: { t: 0, s: 0, b: 0, u: 0 } });
+        tally(o.cells[ag] || (o.cells[ag] = { t: 0, s: 0, b: 0, u: 0 }), x);
+        tally(o.tot, x);
+        tally(grand[ag] || (grand[ag] = { t: 0, s: 0, b: 0, u: 0 }), x);
+        tally(grandAll, x);
+    });
+    const vendors = Object.keys(vSet).sort(function (a, c) { return vSet[c] - vSet[a] || a.localeCompare(c); });
+    const periods = Object.keys(per).sort().reverse().map(function (k) {   // terbaru di atas
+        const bd = attnPeriodBounds(k, mode);
+        return { key: k, label: attnPeriodLabel(k, mode), partial: bd[0] < b.start || bd[1] > b.end, cells: per[k].cells, tot: per[k].tot };
+    });
+    return { periods: periods, vendors: vendors, grand: grand, grandAll: grandAll };
+}
+
+function attnSumCell(c, m, k, v) {   // m=mode, k=kunci periode ("*"=semua periode), v=vendor ("*"=semua vendor)
+    if (!c || !c.t) return '<td class="sum-cell" style="color:var(--text-muted);">-</td>';
+    const pct = attnSumPct(c);
+    return '<td class="sum-cell ' + attnSumClass(pct) + '" data-m="' + m + '" data-k="' + escapeHtml(k) + '" data-v="' + escapeHtml(v) + '" title="Klik untuk lihat operator yang sudah / belum submit"><b>' + pct.toFixed(1) + '%</b><small>' + c.s + ' / ' + c.t + '</small>' + (c.u ? '<small style="font-weight:700;">⚠️ Un-Fit ' + c.u + '</small>' : '') + '</td>';
+}
+
+function attnSumFillTable(tblId, d, mode) {
+    const tbl = document.getElementById(tblId), thead = tbl.tHead, tbody = tbl.tBodies[0];
+    if (!d.periods.length) {
+        thead.innerHTML = ""; tbody.innerHTML = '<tr><td style="padding:22px; color:var(--text-muted);">' + (attnRows.length ? "Tidak ada data absen pada rentang tanggal / dept ini." : "Import Raw Attendance dari FMS (tab Pre-Work by Attendance FMS) untuk melihat summary.") + "</td></tr>";
+        return;
+    }
+    thead.innerHTML = '<tr><th style="text-align:left;">Periode</th>' + d.vendors.map(function (a) { return "<th>" + escapeHtml(a) + "</th>"; }).join("") + "<th>Total</th></tr>";
+    const rows = d.periods.map(function (p) {
+        return '<tr><td class="sum-period"' + (p.partial ? ' title="Periode terpotong rentang tanggal"' : "") + ">" + escapeHtml(p.label) + (p.partial ? " *" : "") + "</td>" +
+            d.vendors.map(function (a) { return attnSumCell(p.cells[a], mode, p.key, a); }).join("") + attnSumCell(p.tot, mode, p.key, "*") + "</tr>";
+    });
+    rows.push('<tr class="sum-total"><td class="sum-period">TOTAL (rentang tanggal)</td>' + d.vendors.map(function (a) { return attnSumCell(d.grand[a], mode, "*", a); }).join("") + attnSumCell(d.grandAll, mode, "*", "*") + "</tr>");
+    tbody.innerHTML = rows.join("");
+}
+
+function attnRenderSummary() {
+    const ds = document.getElementById("attnSumStart"), de = document.getElementById("attnSumEnd"), sel = document.getElementById("attnSumDept");
+    if (!ds.value && !de.value && attnRows.length) {       // pertama kali dibuka: default = seluruh data yang sudah diimport
+        const dates = attnRows.map(function (r) { return r.date; }).sort(); ds.value = dates[0]; de.value = dates[dates.length - 1];
+    }
+    const depts = Array.from(new Set(attnRows.map(function (r) { return r.dept; }).filter(Boolean))).sort(), sig = depts.join("|");
+    if (sel.dataset.sig !== sig) {
+        const prev = sel.value;
+        sel.innerHTML = '<option value="All">All Dept</option>' + depts.map(function (x) { return '<option value="' + escapeHtml(x) + '">' + escapeHtml(x) + "</option>"; }).join("");
+        sel.value = depts.indexOf(prev) >= 0 ? prev : "All"; sel.dataset.sig = sig;
+    }
+    const b = attnSumBase(), dd = {};
+    ATTN_SUM_MODES.forEach(function (m) {
+        const vis = attnSumVisible(m[0], b), panel = document.getElementById(m[1]).closest(".input-panel");
+        panel.style.display = vis ? "" : "none";
+        dd[m[0]] = attnSummaryData(m[0], b);
+        if (vis) attnSumFillTable(m[1], dd[m[0]], m[0]);
+    });
+    document.getElementById("attnSumInfo").innerText = b.start ? (b.start + " s/d " + b.end + " · " + b.base.length + " absen") : "Belum ada data. Import Raw Attendance di tab Pre-Work by Attendance FMS.";
+    const g = dd.daily, cards = g.vendors.map(function (a) { return [a, g.grand[a]]; }); if (g.vendors.length) cards.push(["Total", g.grandAll]);
+    document.getElementById("attnSumCards").innerHTML = cards.map(function (x) {
+        const pct = attnSumPct(x[1]);
+        return '<div class="attn-sum-card ' + attnSumClass(pct) + '"><div class="nm">' + escapeHtml(x[0]) + '</div><div class="pc">' + pct.toFixed(1) + '%</div><div class="ct">' + x[1].s + ' / ' + x[1].t + " submit</div>" + (x[1].u ? '<div class="ct" style="font-weight:800;">⚠️ Un-Fit ' + x[1].u + "</div>" : "") + "</div>";
+    }).join("");
+    const na = b.base.filter(function (x) { return x.group === "na"; }).length, note = document.getElementById("attnSumNote");
+    note.style.display = na ? "block" : "none";
+    note.innerText = na ? "⚠️ " + na + " operator belum bisa dicek: sheet Pre-Work masih dimuat atau gagal dimuat. Dihitung belum submit sementara." : "";
+}
+
+function attnSumExportCsv() {
+    const b = attnSumBase(); if (!b.base.length) { showToast("⚠️ Tidak ada data untuk diexport.", "info"); return; }
+    const q = function (s) { return '"' + String(s == null ? "" : s).replace(/"/g, '""') + '"'; };
+    const lines = [["Level", "Periode", "Vendor", "Total Clock In", "Sudah Isi", "Belum Isi", "Un-Fit", "Achievement (%)"].map(q).join(",")];
+    ATTN_SUM_MODES.forEach(function (m) {
+        if (!attnSumVisible(m[0], b)) return;
+        const d = attnSummaryData(m[0], b);
+        const push = function (label, vendor, c) { if (c && c.t) lines.push([m[2], label, vendor, c.t, c.s, c.b, c.u, attnSumPct(c).toFixed(1)].map(q).join(",")); };
+        d.periods.forEach(function (p) { d.vendors.forEach(function (a) { push(p.label, a, p.cells[a]); }); push(p.label, "TOTAL", p.tot); });
+        d.vendors.forEach(function (a) { push("TOTAL (rentang tanggal)", a, d.grand[a]); }); push("TOTAL (rentang tanggal)", "TOTAL", d.grandAll);
+    });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    a.download = "PreWork_Achievement_per_Vendor_" + b.start + "_" + b.end + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+// ===== Drill-down: klik angka % -> daftar operator Sudah / Belum submit Pre-Work =====
+let attnDrillItems = [], attnDrillFilter = "all", attnDrillMeta = "";
+function attnSumVendorOf(r) { return String(r.agency || "").trim() || "(Tanpa Agency)"; }
+function attnSumDrill(mode, key, vendor) {
+    const b = attnSumBase();
+    attnDrillItems = b.base.filter(function (x) {
+        return (key === "*" || attnPeriodKey(x.r.date, mode) === key) && (vendor === "*" || attnSumVendorOf(x.r) === vendor);
+    }).sort(function (a, c) {   // Belum submit dulu, lalu urut nama
+        const ga = a.group === "sudah" ? 1 : 0, gc = c.group === "sudah" ? 1 : 0;
+        return ga - gc || a.r.date.localeCompare(c.r.date) || String(a.r.name).localeCompare(String(c.r.name));
+    });
+    const pl = key === "*" ? "Seluruh rentang " + b.start + " s/d " + b.end : attnPeriodLabel(key, mode);
+    attnDrillMeta = (vendor === "*" ? "Semua Vendor" : vendor) + " · " + pl;
+    document.getElementById("attnDrillTitle").innerText = "📋 Detail Submit Pre-Work — " + (vendor === "*" ? "Semua Vendor" : vendor);
+    document.getElementById("attnDrillSub").innerText = "Periode: " + pl + " (" + mode + ")";
+    attnDrillSetFilter("all");
+    document.getElementById("attnDrillModal").style.display = "flex";
+}
+function attnDrillClose() { document.getElementById("attnDrillModal").style.display = "none"; }
+function attnDrillSetFilter(f) {
+    attnDrillFilter = f;
+    ["all", "belum", "sudah", "unfit"].forEach(function (x) { document.getElementById("attnDrillTab_" + x).classList.toggle("active", x === f); });
+    const n = function (g) { return attnDrillItems.filter(function (x) { return g === "unfit" ? x.pw.code === "UNFIT" : (g === "belum" ? x.group !== "sudah" : x.group === "sudah"); }).length; };
+    document.getElementById("attnDrillTab_all").innerText = "Semua (" + attnDrillItems.length + ")";
+    document.getElementById("attnDrillTab_belum").innerText = "❌ Belum Submit (" + n("belum") + ")";
+    document.getElementById("attnDrillTab_sudah").innerText = "✅ Sudah Submit (" + n("sudah") + ")";
+    document.getElementById("attnDrillTab_unfit").innerText = "⚠️ Un-Fit (" + n("unfit") + ")";
+    attnDrillRender();
+}
+function attnDrillVisible() {
+    return attnDrillItems.filter(function (x) {
+        if (attnDrillFilter === "all") return true;
+        if (attnDrillFilter === "unfit") return x.pw.code === "UNFIT";
+        return attnDrillFilter === "sudah" ? x.group === "sudah" : x.group !== "sudah";
+    });
+}
+function attnDrillRender() {
+    const list = attnDrillVisible(), tb = document.getElementById("attnDrillBody");
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="9" style="padding:22px; color:var(--text-muted);">Tidak ada data.</td></tr>'; return; }
+    tb.innerHTML = list.map(function (x) {
+        const r = x.r;
+        return '<tr' + (x.group !== "sudah" || x.pw.code === "UNFIT" ? ' class="row-gancang"' : "") + "><td>" + escapeHtml(r.date) + '</td><td><span class="badge badge-dept">' + escapeHtml(r.opsId) + "</span></td>" +
+            '<td style="text-align:left; font-weight:600;">' + escapeHtml(r.name) + '</td><td><span class="badge badge-dept" style="font-weight:500;">' + escapeHtml(r.agency) + "</span></td>" +
+            '<td><span class="badge badge-dept">' + escapeHtml(r.dept) + "</span></td><td>" + escapeHtml(r.shiftName) + "</td>" +
+            '<td><span class="badge badge-time" style="cursor:default;">' + escapeHtml(String(r.time || "").slice(0, 5)) + "</span></td>" +
+            "<td>" + renderPreWorkBadge(r.opsId, x.pwDate, r.name) + "</td><td>" + attnSubmitCell(x.pw.ts, r.date) + "</td></tr>";
+    }).join("");
+}
+function attnDrillExportCsv() {
+    const list = attnDrillVisible(); if (!list.length) { showToast("⚠️ Tidak ada data untuk diexport.", "info"); return; }
+    const q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+    const lines = [["Date", "OpsID", "Name", "Agency", "Departement", "Shift", "Clock In FMS", "Status Absen", "Pre-Work Status", "Jam Submit Pre-Work"].map(q).join(",")];
+    list.forEach(function (x) { const r = x.r; lines.push([r.date, r.opsId, r.name, r.agency, r.dept, r.shiftName, String(r.time || "").slice(0, 5), r.status, attnStatusLabel(x.pw), attnSubmitText(x.pw.ts)].map(q).join(",")); });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob(["\uFEFF" + lines.join("\r\n")], { type: "text/csv;charset=utf-8" }));
+    a.download = "PreWork_Detail_" + attnDrillMeta.replace(/[^A-Za-z0-9]+/g, "_") + "_" + attnDrillFilter + ".csv";
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+document.addEventListener("click", function (e) {
+    const td = e.target.closest && e.target.closest("#attnSumModule td.sum-cell[data-m]");
+    if (td) attnSumDrill(td.dataset.m, td.dataset.k, td.dataset.v);
+});
+document.addEventListener("keydown", function (e) { if (e.key === "Escape") attnDrillClose(); });
+
 function attnApplyModuleVisibility(mod) {
-    const on = mod === "attn", $ = function (id) { return document.getElementById(id); };
-    const panel = document.querySelector("main.main-content > .input-panel"), layout = document.querySelector("main.main-content > .main-layout:not(#attnModule)");
-    if (panel) panel.style.display = on ? "none" : "";
-    if (layout) layout.style.display = on ? "none" : "";
-    $("attnModule").style.display = on ? "flex" : "none";
-    $("tabAttnBtn").classList.toggle("active", on);
-    $("btnImportMaster").style.display = on ? "none" : "";
-    if (on) attnAttachListener();
-    if (on) { $("tabRestBtn").classList.remove("active"); $("tabAssetBtn").classList.remove("active"); }
+    const isAttn = mod === "attn", isSum = mod === "sum", other = isAttn || isSum, $ = function (id) { return document.getElementById(id); };
+    const panel = document.querySelector("main.main-content > .input-panel"), layout = document.querySelector("main.main-content > .main-layout:not(#attnModule):not(#attnSumModule)");
+    if (panel) panel.style.display = other ? "none" : "";
+    if (layout) layout.style.display = other ? "none" : "";
+    $("attnModule").style.display = isAttn ? "flex" : "none";
+    $("attnSumModule").style.display = isSum ? "flex" : "none";
+    $("tabAttnBtn").classList.toggle("active", isAttn);
+    $("tabSumBtn").classList.toggle("active", isSum);
+    $("btnImportMaster").style.display = other ? "none" : "";
+    if (other) attnAttachListener();
+    if (other) { $("tabRestBtn").classList.remove("active"); $("tabAssetBtn").classList.remove("active"); }
 }
 </script>
 
