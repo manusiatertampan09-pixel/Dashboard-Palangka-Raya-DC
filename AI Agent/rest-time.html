@@ -661,13 +661,11 @@
                 <div id="inlineFilterBar" style="display:flex; align-items:center; gap:12px; flex-wrap:wrap; font-size:11px;">
                     <span style="color:#e67e22; font-weight:700; text-transform:uppercase; font-size:11px; letter-spacing:0.3px;" data-i18n="filter.title">🔍 Filter Data Table:</span>
                     <div style="display:flex; align-items:center; gap:5px;">
-                        <label style="font-size:11px; margin:0;" data-i18n="filter.shift">Shift:</label>
-                        <select id="filterShift" style="width: 128px; padding: 5px; font-size:11.5px;" onchange="renderAll()">
-                            <option value="All" data-i18n="filter.allShift">All Shift</option>
-                            <option value="1" data-i18n="filter.shift1">Shift 1 (00:00 - 09:00)</option>
-                            <option value="2" data-i18n="filter.shift2">Shift 2 (08:00 - 17:00)</option>
-                            <option value="3" data-i18n="filter.shift3">Shift 3 (16:00 - 01:00)</option>
-                        </select>
+                        <label id="filterTimeLabel" style="font-size:11px; margin:0;">🕐 Jam Check In :</label>
+                        <input type="text" id="filterTimeFrom" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Dari jam (format 24 jam), contoh 05:30" style="width: 64px; padding: 5px; font-size:11.5px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
+                        <span style="font-size:11px; font-weight:600; color:var(--text-main); white-space:nowrap;">s.d</span>
+                        <input type="text" id="filterTimeTo" placeholder="HH:mm" maxlength="5" inputmode="numeric" autocomplete="off" title="Sampai jam (format 24 jam), contoh 07:00" style="width: 64px; padding: 5px; font-size:11.5px; text-align:center;" oninput="filterTimeMask(this)" onblur="filterTimeFix(this)">
+                        <button type="button" title="Kosongkan filter jam" onclick="filterTimeReset()" style="padding: 5px 8px; font-size:11.5px; font-weight:600; border-radius:6px; border:1px solid var(--border-color); background:var(--table-header-bg); color:var(--text-main); cursor:pointer; white-space:nowrap;">✕ Reset Jam</button>
                     </div>
                     <div style="display:flex; align-items:center; gap:5px;">
                         <label style="font-size:11px; margin:0;" data-i18n="filter.status">Status:</label>
@@ -2665,7 +2663,45 @@
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
+    // ===== Filter Jam (HH:mm s.d HH:mm) - sama kayak Pre-Work by Attendance FMS =====
+    // Kosong = ga difilter. Kalau "Dari" > "s.d" dianggap lewat tengah malam (mis. 22:00 s.d 06:00).
+    function filterTimeMask(el) {
+        let d = el.value.replace(/\D/g, "");
+        if (d.length && +d[0] > 2) d = "0" + d;
+        d = d.slice(0, 4);
+        if (d.length >= 2 && +d.slice(0, 2) > 23) d = "23" + d.slice(2);
+        if (d.length === 4 && +d.slice(2) > 59) d = d.slice(0, 2) + "59";
+        el.value = d.length >= 3 ? d.slice(0, 2) + ":" + d.slice(2) : d;
+        renderAll();
+    }
+    function filterTimeFix(el) {
+        const d = el.value.replace(/\D/g, "");
+        if (!d) { el.value = ""; }
+        else if (d.length <= 2) { el.value = d.padStart(2, "0") + ":00"; }
+        else if (d.length === 3) { el.value = d.slice(0, 2) + ":" + d.slice(2) + "0"; }
+        else { el.value = d.slice(0, 2) + ":" + d.slice(2, 4); }
+        renderAll();
+    }
+    function filterTimeReset() {
+        document.getElementById("filterTimeFrom").value = ""; document.getElementById("filterTimeTo").value = "";
+        renderAll();
+    }
+    function getTimeFilter() {
+        const toMin = function (t) { const m = String(t || "").match(/^(\d{1,2}):(\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+        return { from: toMin(document.getElementById("filterTimeFrom").value), to: toMin(document.getElementById("filterTimeTo").value) };
+    }
+    // true kalau jam (Date) lolos filter. Tanpa filter -> selalu true; filter aktif tapi jam kosong -> false.
+    function matchTimeFilter(dateObj, tf) {
+        if (tf.from === null && tf.to === null) return true;
+        if (!dateObj || isNaN(dateObj)) return false;
+        const t = dateObj.getHours() * 60 + dateObj.getMinutes();
+        if (tf.from !== null && tf.to !== null) return tf.from <= tf.to ? (t >= tf.from && t <= tf.to) : (t >= tf.from || t <= tf.to);
+        return tf.from !== null ? t >= tf.from : t <= tf.to;
+    }
+
     function renderAll() {
+        const lbl = document.getElementById("filterTimeLabel");
+        if (lbl) lbl.innerText = currentActiveModule === "asset" ? "🕐 Jam Pinjam PDA :" : "🕐 Jam Check In :";
         if (currentActiveModule === 'attn') { renderAttnPreWork(); return; }
         if (currentActiveModule === 'rest') {
             renderRestMonitoring();
@@ -2675,7 +2711,7 @@
     }
 
     function resetTableFilters() {
-        document.getElementById("filterShift").value = "All";
+        document.getElementById("filterTimeFrom").value = ""; document.getElementById("filterTimeTo").value = "";
         document.getElementById("filterBreakType").value = "All";
         document.getElementById("filterDept").value = "All";
         const stationEl = document.getElementById("filterStation");
@@ -2719,7 +2755,7 @@
 
     function renderRestMonitoring() {
         const range = getFilterDateRange();
-        const filterShift = document.getElementById("filterShift").value; 
+        const timeFilter = getTimeFilter();
         const filterBreak = document.getElementById("filterBreakType").value;
         const filterDept = document.getElementById("filterDept").value;
         const searchQuery = document.getElementById("searchGlobal").value.toLowerCase().trim();
@@ -2763,14 +2799,7 @@
                 checkRestOvertimeAlert(opsId, targetDateStr, breakOutTime, name, agency, dept);
             }
             
-            let matchShift = false;
-            if (filterShift === "All") matchShift = true;
-            else if (checkInTime) {
-                let checkInHour = checkInTime.getHours();
-                if (filterShift === "1" && checkInHour >= 0 && checkInHour <= 7) matchShift = true;
-                else if (filterShift === "2" && checkInHour >= 8 && checkInHour <= 15) matchShift = true;
-                else if (filterShift === "3" && checkInHour >= 16 && checkInHour <= 23) matchShift = true;
-            }
+            const matchShift = matchTimeFilter(checkInTime, timeFilter);
             let currentStatus = "Belum Istirahat";
             if (breakOutTime && !breakInTime) currentStatus = "Break Out";
             if (breakOutTime && breakInTime) currentStatus = "Break In";
@@ -2891,7 +2920,7 @@
 
     function renderAssetMonitoring() {
         const range = getFilterDateRange();
-        const filterShift = document.getElementById("filterShift").value; 
+        const timeFilter = getTimeFilter();
         const filterBreak = document.getElementById("filterBreakType").value;
         const filterDept = document.getElementById("filterDept").value;
         const filterStation = document.getElementById("filterStation").value;
@@ -2972,6 +3001,7 @@
                 let matchStatus = (filterBreak === "All" || filterBreak === currentStatus);
                 let matchStation = (filterStation === "All" || (filterStation === "Unassigned" ? !station : station === filterStation));
                 if (!matchStatus || !matchStation) return;
+                if (!matchTimeFilter(pinjamTime || kembaliTime, timeFilter)) return;
 
                 totalPinjamCount++;
                 if (pinjamTime && !kembaliTime) activePinjamCount++;
@@ -3861,7 +3891,8 @@ function attnHandleFile(input) {
             const res = attnBuildRows(rows);
             if (res.error) { showToast("❌ " + res.error, "err"); input.value = ""; return; }
             const meta = { fileName: file.name, count: res.list.length, min: res.min, max: res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
-            attnImportMerge(res, meta);
+            attnApplyData(res.list, meta, true);
+            attnSaveToFirebase(res.list, meta);
         } catch (err) { console.error(err); showToast("❌ Gagal membaca file attendance.", "err"); }
         input.value = "";
     };
@@ -3869,13 +3900,13 @@ function attnHandleFile(input) {
 }
 
 // ----- Simpan & muat dari Firebase: <FB_ROOT>/attendanceFms { fileName, count, min, max, skipped, excluded, importedBy, importedAt, rows: [[...], ...] }
-// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru ditumpuk ke data sebelumnya (tidak menimpa).
+// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru menimpa data sebelumnya.
 let attnListenerRef = null;
 function attnRowToArr(r) { return [r.opsId, r.name, r.agency, r.dept, r.shiftName, r.shift, r.date, r.time, r.status, r.start]; }
 function attnRowFromArr(a) { return { opsId: a[0] || "", name: a[1] || "", agency: a[2] || "", dept: a[3] || "", shiftName: a[4] || "", shift: a[5] || "", date: a[6] || "", time: a[7] || "", status: a[8] || "", start: a[9] || "" }; }
 
 function attnInfoText(m) {
-    return "Import terakhir: " + m.fileName + " · total " + m.count + " absen (" + m.min + " s/d " + m.max + ")" + (m.skipped ? " · " + m.skipped + " baris tanpa Clock In diabaikan" : "") +
+    return m.fileName + " · " + m.count + " absen (" + m.min + " s/d " + m.max + ")" + (m.skipped ? " · " + m.skipped + " baris tanpa Clock In diabaikan" : "") +
         (m.excluded ? " · " + m.excluded + " absen dept lain diabaikan (hanya SOC & EHA Operator)" : "") + (m.importedBy ? " · diimport " + m.importedBy + " " + m.importedAt : "");
 }
 
@@ -3894,43 +3925,10 @@ function attnApplyData(list, meta, forceDates) {
     if (currentActiveModule === "attn") renderAttnPreWork();
 }
 
-// Import ditumpuk: baris lama TIDAK dihapus. Kunci baris = OpsID + tanggal Clock In.
-// Kalau kunci sama sudah ada, yang dipakai Clock In paling awal (aturan sama seperti attnBuildRows); kalau jamnya sama, ambil dari file baru.
-function attnMergeRows(oldList, newList) {
-    const map = {}, key = function (r) { return String(r.opsId).toLowerCase() + "|" + r.date; };
-    let added = 0, updated = 0;
-    oldList.forEach(function (r) { if (r.opsId && r.date) map[key(r)] = r; });
-    newList.forEach(function (r) {
-        const k = key(r), cur = map[k];
-        if (!cur) { added++; map[k] = r; }
-        else if (r.time <= cur.time) { if (r.time < cur.time || JSON.stringify(attnRowToArr(r)) !== JSON.stringify(attnRowToArr(cur))) updated++; map[k] = r; }
-    });
-    return { list: Object.keys(map).map(function (k) { return map[k]; }), added: added, updated: updated };
-}
-
-function attnImportMerge(res, metaFile) {
-    const finish = function (oldList) {
-        const m = attnMergeRows(oldList, res.list);
-        const dates = m.list.map(function (r) { return r.date; }).sort();
-        const meta = Object.assign({}, metaFile, { count: m.list.length, min: dates[0] || "", max: dates[dates.length - 1] || "" });
-        attnApplyData(m.list, meta, true);
-        attnSaveToFirebase(m.list, meta, m);
-    };
-    if (!fbDb) { finish(attnRows); return; }
-    // Baca data terbaru dari Firebase dulu supaya yang ditumpuk adalah data server, bukan cuma yang kebetulan sudah tampil di layar.
-    fbDb.ref(FB_ROOT + "/attendanceFms/rows").once("value").then(function (snap) {
-        const v = snap.val();
-        finish(v ? Object.keys(v).map(function (k) { return attnRowFromArr(v[k]); }) : []);
-    }).catch(function (err) {
-        console.error(err);
-        showToast("❌ Gagal baca data lama dari Firebase. Import dibatalkan supaya data lama tidak hilang.", "err");
-    });
-}
-
-function attnSaveToFirebase(list, meta, stat) {
+function attnSaveToFirebase(list, meta) {
     if (!fbDb) { showToast("⚠️ Belum terhubung ke Firebase. Data hanya sementara di halaman ini.", "info"); return; }
     fbDb.ref(FB_ROOT + "/attendanceFms").set(Object.assign({}, meta, { rows: list.map(attnRowToArr) }))
-        .then(function () { showToast("✅ Import ditumpuk: " + (stat ? stat.added + " baru, " + stat.updated + " diperbarui, " : "") + "total " + list.length + " absen tersimpan di Firebase.", "ok"); })
+        .then(function () { showToast("✅ " + list.length + " data absen FMS disimpan ke Firebase.", "ok"); })
         .catch(function (err) { console.error(err); showToast("❌ Gagal simpan ke Firebase. Cek Security Rules untuk path attendanceFms.", "err"); });
 }
 
