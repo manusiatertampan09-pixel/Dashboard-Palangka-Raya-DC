@@ -1137,16 +1137,20 @@
     let logsArray = [];        
     let assetLogsArray = [];
 
+    // ===== Pre-Work Status (Google Sheet "PreWork Helper") =====
+    // Sheet harus bisa dibaca via link ("Anyone with the link can view").
+    // - "Pre-Work Operator": A (Timestamp), D (Ops ID), E (Nama), J (DATE), K (OpsXXX), M (Status)
+    // - "Raw Data" (master): A (OPS ID), B (Staff Name)
     const PREWORK_SHEET_ID = "1vuJf4-_9sVpWI2WnokZxVCcOyIrnci-qQckxoabNQ8w";
     const PREWORK_SHEET_NAME = "Pre-Work Operator";
     const PREWORK_RAW_SHEET_NAME = "Raw Data";
     const PREWORK_REFRESH_MS = 60000;
-    let preWorkIndex = {};
-    let preWorkNameIndex = {};
-    let rawByOps = {};
-    let rawByName = {};
+    let preWorkIndex = {};        // { opsLower: { "YYYY-MM-DD": [ { ts, status, nm } ] } }  (semua entri, dipilih pas render)
+    let preWorkNameIndex = {};    // { namaNormal: { "YYYY-MM-DD": { ts, ops, status } } }
+    let rawByOps = {};            // { opsLower: namaNormal }  (Raw Data)
+    let rawByName = {};           // { namaNormal: "OpsXXXX" | null (null = nama dobel dgn OpsID beda) }  (Raw Data)
     let rawDataReady = false;
-    let preWorkState = "loading";
+    let preWorkState = "loading"; // "loading" | "ready" | "error"
     let preWorkCbSeq = 0;
 
     function preWorkYMD(d) {
@@ -1157,10 +1161,12 @@
         return String(n || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
     }
 
+    // Terima cell gviz ({v, f}). Return Date atau null. order: "dmy" (Timestamp) / "mdy" (kolom DATE).
     function preWorkParseDate(cell, order) {
         if (!cell || cell.v === null || cell.v === undefined) return null;
         const v = cell.v;
         if (v instanceof Date) return v;
+        // serial number Google Sheets (mis. 46337 = 2026-11-11), kolom DATE kadang kebaca angka
         if (typeof v === "number" && v > 20000 && v < 80000) {
             return new Date(1899, 11, 30 + Math.floor(v));
         }
@@ -1173,6 +1179,7 @@
                 const day = order === "mdy" ? b : a;
                 const mon = order === "mdy" ? a : b;
                 const dt = new Date(+m[3], mon - 1, day, +(m[4] || 0), +(m[5] || 0), +(m[6] || 0));
+                // tolak tanggal ngaco (bulan >12 / hari ga valid) biar ga rollover diam-diam
                 if (mon < 1 || mon > 12 || dt.getMonth() !== mon - 1 || dt.getDate() !== day) return null;
                 return dt;
             }
@@ -1187,11 +1194,12 @@
         rows.forEach(function (row) {
             const c = row.c || [];
             const val = function (i) { return c[i] && c[i].v !== null && c[i].v !== undefined ? String(c[i].v).trim() : ""; };
+            // urutan select: A(0) Timestamp, D(1) Ops ID, E(2) Nama, J(3) DATE, K(4) OpsXXX, M(5) Status
             const opsOrig = val(4) || (val(1) ? "Ops" + val(1) : "");
             if (!opsOrig) return;
             const ops = opsOrig.toLowerCase();
             const tsDate = preWorkParseDate(c[0], "dmy");
-            if (!tsDate) return;
+            if (!tsDate) return; // baris header / baris rusak
             const dayDate = preWorkParseDate(c[3], "mdy") || tsDate;
             const dateStr = preWorkYMD(dayDate);
             const status = val(5).toUpperCase();
@@ -1216,7 +1224,7 @@
             const c = row.c || [];
             const ops = c[0] && c[0].v !== null && c[0].v !== undefined ? String(c[0].v).trim() : "";
             const nm = preWorkNormName(c[1] && c[1].v);
-            if (!/^ops\d+$/i.test(ops) || !nm) return;
+            if (!/^ops\d+$/i.test(ops) || !nm) return; // skip header / baris kosong
             byOps[ops.toLowerCase()] = nm;
             if (byName[nm] === undefined) byName[nm] = ops;
             else if (byName[nm] !== null && byName[nm].toLowerCase() !== ops.toLowerCase()) byName[nm] = null;
@@ -1224,6 +1232,7 @@
         return { byOps: byOps, byName: byName };
     }
 
+    // Levenshtein distance (buat toleransi typo / beda pemisah kata di nama)
     function preWorkLev(a, b) {
         const m = a.length, n = b.length;
         if (!m) return n;
@@ -1240,6 +1249,7 @@
         return prev[n];
     }
 
+    // Kemiripan huruf (spasi dibuang), 0..1
     function preWorkSimilarity(a, b) {
         const sa = a.replace(/ /g, ""), sb = b.replace(/ /g, "");
         if (!sa || !sb) return 0;
@@ -1247,6 +1257,8 @@
         return 1 - preWorkLev(sa, sb) / Math.max(sa.length, sb.length);
     }
 
+    // Cocokin nama Pre-Work vs nama yg diharapkan (Raw Data / web). Toleran buat singkatan, urutan, typo, & beda spasi.
+    // Kalau salah satu kosong -> dianggap cocok (ga bisa diverifikasi, jangan buang data).
     function preWorkNameMatch(a, b) {
         if (!a || !b) return true;
         if (a === b) return true;
@@ -1255,9 +1267,11 @@
         const big = ta.length <= tb.length ? tb : ta;
         const hit = small.filter(function (w) { return big.indexOf(w) !== -1; }).length;
         if (hit >= Math.max(1, Math.ceil(small.length * 0.6))) return true;
+        // fallback: bandingin kemiripan huruf (toleran typo / "risa latul" vs "risalatul")
         return preWorkSimilarity(a, b) >= 0.75;
     }
 
+    // Cari entri Pre-Work by nama di tanggal tertentu: exact dulu, lalu fuzzy (lebih ketat, cuma kemiripan huruf >= 0.8)
     function preWorkFindByName(nm, dateStr) {
         if (!nm) return null;
         if (preWorkNameIndex[nm] && preWorkNameIndex[nm][dateStr]) return preWorkNameIndex[nm][dateStr];
@@ -1281,6 +1295,7 @@
             + "&sheet=" + encodeURIComponent(sheetName) + "&tq=" + encodeURIComponent(select);
     }
 
+    // Fallback kalau fetch diblok CORS: pakai tag <script> (JSONP)
     function preWorkFetchViaScript(sheetName, select, timeoutMs) {
         return new Promise(function (resolve, reject) {
             const cbName = "__preWorkCb" + (++preWorkCbSeq);
@@ -1294,6 +1309,8 @@
         });
     }
 
+    // Ingat jalur yg terakhir berhasil ("fetch" / "script"): kalau fetch ke-blok CORS, request berikutnya
+    // langsung lewat <script>, ga perlu nunggu fetch gagal dulu (itu bikin lambat 2x lipat).
     let preWorkTransport = null;
 
     function preWorkFetchGviz(sheetName, select, timeoutMs) {
@@ -1310,6 +1327,9 @@
             .catch(function () { if (timer) clearTimeout(timer); return viaScript(); });
     }
 
+    // Tarik ulang CEPAT sebelum ngeblok Check In: cuma baris Pre-Work 2 hari terakhir (kolom Timestamp),
+    // tanpa Raw Data (jarang berubah) dan tanpa renderAll(). Payload kecil = jauh lebih cepat dari full load.
+    // Gagal / belum siap -> otomatis jatuh ke full load biasa.
     function preWorkQuickRefresh() {
         if (!rawDataReady || preWorkState !== "ready") return loadPreWorkSheet();
         preWorkLastAttemptAt = Date.now();
@@ -1321,6 +1341,7 @@
         return preWorkFetchGviz(PREWORK_SHEET_NAME, q, 6000)
             .then(function (resp) {
                 const built = preWorkBuildIndex(resp);
+                // buang entri lama yg masuk jendela 2 hari ini (nanti diganti data baru), hari2 sebelumnya tetap dari full load
                 Object.keys(preWorkIndex).forEach(function (ops) {
                     Object.keys(preWorkIndex[ops]).forEach(function (d) {
                         preWorkIndex[ops][d] = preWorkIndex[ops][d].filter(function (e) { return e.ts < sinceTs; });
@@ -1359,7 +1380,7 @@
             })
             .catch(function (err) {
                 console.warn("Pre-Work sheet gagal dimuat:", err);
-                if (preWorkState !== "ready") preWorkState = "error";
+                if (preWorkState !== "ready") preWorkState = "error"; // kalau sebelumnya sukses, pakai data lama
             });
         const pRaw = preWorkFetchGviz(PREWORK_RAW_SHEET_NAME, "select A,B")
             .then(function (resp) {
@@ -1381,6 +1402,13 @@
         return '<span class="badge alert-reminder">' + preWorkSafe(status) + '</span>';
     }
 
+    // Aturan (berdasarkan tanggal scan di web), key pencarian = OpsID saja:
+    // 1. Ada input OpsID di Pre-Work Operator pada tanggal scan -> FIT / UNFIT sesuai kolom Status
+    // 2. Tidak ada -> Belum Submit
+    //
+    // getPreWorkStatus() = SUMBER KEBENARAN status (dipakai badge tabel DAN blocker Check In, biar ga pernah beda).
+    // Return { code, status, ts }
+    // code: LOADING | ERROR | FIT | UNFIT | EMPTY | OTHER | BELUM_SUBMIT
     function preWorkStatusResult(status, ts) {
         if (!status) return { code: "EMPTY", status: "", ts: ts };
         if (status === "FIT") return { code: "FIT", status: status, ts: ts };
@@ -1391,6 +1419,7 @@
     function getPreWorkStatus(opsId, dateStr, opName) {
         if (preWorkState === "loading") return { code: "LOADING" };
         if (preWorkState === "error") return { code: "ERROR" };
+        // Key pencarian = OpsID saja (nama & Raw Data tidak dipakai). Ambil submit terbaru di tanggal tsb.
         const opsKey = String(opsId).toLowerCase();
         const byDate = preWorkIndex[opsKey];
         const rec = ((byDate && byDate[dateStr]) || []).slice().sort(function (a, b) { return b.ts - a.ts; })[0] || null;
@@ -1405,15 +1434,25 @@
             case "ERROR": return '<span class="badge" style="background:var(--table-header-bg); color:var(--text-main);" title="Sheet Pre-Work gagal dimuat">N/A</span>';
             case "BELUM_SUBMIT":
                 return '<span class="badge alert-istirahat" style="white-space:nowrap;">Belum Submit</span>';
-            default: return preWorkStatusBadge(r.status);
+            default: return preWorkStatusBadge(r.status); // FIT / UNFIT / EMPTY / OTHER
         }
     }
 
+    // ===== BLOCKER CHECK IN (berdasarkan Pre-Work Status) =====
+    // FIT                      -> Pass
+    // UNFIT                    -> Block Check In - Take Out / Dipulangkan
+    // Belum Submit             -> Block Check In - Wajib Melakukan Pengisian Ulang
+    // Status Kosong / ga valid -> Block (perlakuan sama kayak Belum Submit: status ga bisa dipastiin = isi ulang)
+    // Sheet loading / gagal dimuat (LOADING / ERROR) -> JANGAN ngeblok semua operator gara2 sheet down: loloskan + toast warning
+    // Umur maksimal Pre-Work (jam) dihitung dari jam submit sampai jam Check In
     const PREWORK_MAX_AGE_HOURS = 3;
     function getPreWorkGate(opsId, dateStr, opName) {
+        // Pengaman: tanggal acuan minimal = tanggal kalender scan sekarang (hindari mismatch kalau dateStr basi, mis. masih 13 padahal sudah 14)
         const todayStr = getWorkingDateStr(new Date());
         if (!dateStr || dateStr < todayStr) dateStr = todayStr;
         let r = getPreWorkStatus(opsId, dateStr, opName);
+        // Antisipasi miss match tanggal: Pre-Work harus disubmit di tanggal yang sama dengan Check In (jam 00.00 ke atas).
+        // Isian Pre-Work yang jamnya sebelum 00.00 tanggal Check In (mis. 23.35 kemarin) tidak dianggap -> wajib isi ulang.
         if (r.code !== "LOADING" && r.code !== "ERROR") {
             const midnight = new Date(dateStr + "T00:00:00").getTime();
             const prevDate = getWorkingDateStr(new Date(midnight - 86400000));
@@ -1427,6 +1466,7 @@
                 r = early ? { code: "BEFORE_MIDNIGHT", status: early.status, ts: early.ts } : { code: "BELUM_SUBMIT" };
             }
         }
+        // Pre-Work Expired: submit lebih dari 3 jam sebelum jam Check In (UNFIT tetap diprioritaskan: Take Out / Dipulangkan)
         if (r.ts && r.code !== "UNFIT" && (Date.now() - r.ts) > PREWORK_MAX_AGE_HOURS * 3600000) {
             r = { code: "EXPIRED", status: r.status, ts: r.ts };
         }
@@ -1435,6 +1475,10 @@
         return { block: true, r: r };
     }
 
+    // ===== BLOCKER CHECK IN SHIFT 00.00 (terlalu awal / sebelum jam 00.00) =====
+    // Operator Shift 00.00 sering scan duluan di 23.40-23.59 (beda tanggal). Check In wajib setelah jam 00.00.
+    // Cuma berlaku untuk aksi Check In beneran (Break Out / Break In / Selesai tidak disentuh).
+    // Batas awal jendela blokir (menit dari 00:00). 23:30 = 1410. Ubah di sini kalau mau lebih awal / lebih telat.
     const SHIFT0_BLOCK_FROM_MIN = 23 * 60 + 30;
     function isShift00EarlyCheckIn(dateObj) {
         return (dateObj.getHours() * 60 + dateObj.getMinutes()) >= SHIFT0_BLOCK_FROM_MIN;
@@ -1446,6 +1490,17 @@
         document.getElementById("preWorkBlockTitle").innerText = "Check In Terlalu Awal!";
         document.getElementById("preWorkBlockMain").innerHTML = '<b style="color:var(--text-main);">Check In Wajib di atas Jam 00.00</b>';
         document.getElementById("preWorkBlockSub").innerHTML = 'OpsID ' + who + ' (Shift 00.00) belum boleh Check In sebelum jam 00.00. Silakan Scan lagi setelah jam 00.00.';
+        document.getElementById("preWorkBlockModal").style.display = "flex";
+        playSound('warning');
+    }
+
+    // ===== POPUP KARYAWAN BARU (Rest Time): OpsID yang di-scan belum ada di Database Karyawan =====
+    function showUnknownStaffModal(opsId) {
+        const who = '<b style="font-family:monospace; color:var(--text-main);">' + preWorkSafe(opsId) + '</b>';
+        document.getElementById("preWorkBlockIcon").innerText = "🆕";
+        document.getElementById("preWorkBlockTitle").innerText = "Karyawan Baru";
+        document.getElementById("preWorkBlockMain").innerHTML = '<b style="color:var(--text-main);">Tolong Update Raw Staff Profile</b>';
+        document.getElementById("preWorkBlockSub").innerHTML = 'OpsID ' + who + ' belum ada di Database Karyawan. Scan belum tercatat. Update Raw Staff Profile dulu, lalu Scan lagi.';
         document.getElementById("preWorkBlockModal").style.display = "flex";
         playSound('warning');
     }
@@ -1480,7 +1535,7 @@
                 main = 'Check In diblokir. ' + strong('Wajib Melakukan Pengisian Ulang') + ' Pre-Work, lalu Scan lagi.';
                 sub = 'OpsID ' + who + ' belum ada Pre-Work yang kebaca untuk hari ini.';
                 break;
-            default:
+            default: // EMPTY / OTHER (status kosong / ga valid) -> perlakuan sama kayak Belum Submit
                 icon = "📝"; title = "Status Pre-Work Tidak Valid!";
                 main = 'Check In diblokir. ' + strong('Wajib Melakukan Pengisian Ulang') + ' Pre-Work, lalu Scan lagi.';
                 sub = 'Pre-Work OpsID ' + who + ' kebaca, tapi kolom Status-nya ' + (r.status ? 'tidak valid (' + strong(preWorkSafe(r.status)) + ')' : 'kosong') + '.';
@@ -1501,6 +1556,7 @@
 
     let debounceInputTimer = null;
     let lastCheckedCalendarDate = "";
+    let followToday = true;   // true = filter tanggal otomatis ikut tanggal device (pindah sendiri pas lewat tengah malam)
     let lastSubmittedOpsId = null; 
 
     let restSortCol = null;
@@ -1983,7 +2039,7 @@
         let todayStr = getWorkingDateStr(new Date());
         let start = (startEl && startEl.value) ? startEl.value : todayStr;
         let end = (endEl && endEl.value) ? endEl.value : start;
-        if (end < start) { let tmp = start; start = end; end = tmp; }
+        if (end < start) { let tmp = start; start = end; end = tmp; } // jaga2 kalau kebalik
         return { start: start, end: end };
     }
 
@@ -1996,6 +2052,7 @@
         let todayStr = getWorkingDateStr(new Date());
         document.getElementById("filterTanggalStart").value = todayStr;
         document.getElementById("filterTanggalEnd").value = todayStr;
+        followToday = true; lastCheckedCalendarDate = todayStr;
         ensureLogsLoadedForRange(todayStr, todayStr);
         renderAll();
     }
@@ -2100,16 +2157,19 @@
         });
         document.getElementById("inputAssetSn").addEventListener("input", handleOpsIdInputAutomated);
         document.getElementById("inputOpsId").addEventListener("input", handleOpsIdInputAutomated);
-        document.getElementById("filterTanggalStart").addEventListener("change", function () {
+        // Start/End dijaga biar gak kebalik (mis. Start 14, End 13 -> sebelumnya diam-diam ditukar & nampilin 2 hari)
+        function onFilterDateChanged(changed) {
+            const sEl = document.getElementById("filterTanggalStart"), eEl = document.getElementById("filterTanggalEnd");
+            if (sEl.value && eEl.value && eEl.value < sEl.value) { if (changed === "start") eEl.value = sEl.value; else sEl.value = eEl.value; }
+            const today = getWorkingDateStr(new Date());
+            followToday = (sEl.value === today && eEl.value === today);
+            lastCheckedCalendarDate = today;
             let range = getFilterDateRange();
             ensureLogsLoadedForRange(range.start, range.end);
             renderAll();
-        });
-        document.getElementById("filterTanggalEnd").addEventListener("change", function () {
-            let range = getFilterDateRange();
-            ensureLogsLoadedForRange(range.start, range.end);
-            renderAll();
-        });
+        }
+        document.getElementById("filterTanggalStart").addEventListener("change", function () { onFilterDateChanged("start"); });
+        document.getElementById("filterTanggalEnd").addEventListener("change", function () { onFilterDateChanged("end"); });
         document.getElementById("inputOpsId").focus();
 
         function startFbConnection() {
@@ -2139,8 +2199,10 @@
         let startEl = document.getElementById("filterTanggalStart");
         let endEl = document.getElementById("filterTanggalEnd");
         let isDateInputFocused = (document.activeElement === startEl || document.activeElement === endEl);
-        let isDefaultTodayRange = (startEl.value === lastCheckedCalendarDate && endEl.value === lastCheckedCalendarDate);
+        // Ikut tanggal device kalau range-nya memang "hari ini" (followToday) ATAU keduanya masih di tanggal acuan lama
+        let isDefaultTodayRange = followToday || (startEl.value === lastCheckedCalendarDate && endEl.value === lastCheckedCalendarDate);
         if (currentCalendarDate !== lastCheckedCalendarDate && isDefaultTodayRange && !isDateInputFocused) {
+            followToday = true;
             lastCheckedCalendarDate = currentCalendarDate;
             startEl.value = currentCalendarDate;
             endEl.value = currentCalendarDate;
@@ -2159,9 +2221,15 @@
         return new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
     }
 
-    const REST_RESET_HOURS_DEFAULT = 12;
-    const REST_RESET_HOURS_BREAK_IN_NULL = 9;
+    // Batas umur siklus (jam), DIHITUNG DARI CHECK IN siklus berjalan. Lewat batas ini (belum Break Out / belum Break In)
+    // -> siklus dianggap Expired, scan berikutnya kembali ke Check In baru.
+    const REST_RESET_HOURS = 9;
 
+    // Status siklus DIHITUNG dari log yang ada (bukan dari angka cycleNum), jadi kalau Break Out / Break In di-rollback
+    // otomatis balik ke langkah yang belum ada ("Scan Awal" langkah itu):
+    //   Check In  : Clear, Break Out : Null                    -> Break Out (lewat 9 jam dari Check In = Expired -> Check In baru)
+    //   Check In  : Clear, Break Out : Clear, Break In : Null  -> Break In  (lewat 9 jam dari Check In = Expired -> Check In baru)
+    //   Check In  : Clear, Break Out : Clear, Break In : Clear -> langsung Next Date (Check In baru, tanggal scan sekarang)
     function calculateNextState(opsId, actualDateStr) {
         let userLogs = logsArray.filter(log => log.opsId.toLowerCase() === opsId.toLowerCase());
         userLogs.sort((a, b) => parseDateTime(a.timestamp) - parseDateTime(b.timestamp));
@@ -2170,17 +2238,18 @@
         if (userLogs.length === 0) return newCycle;
 
         let lastLog = userLogs[userLogs.length - 1];
-        let hoursPassed = (new Date() - parseDateTime(lastLog.timestamp)) / (1000 * 60 * 60);
 
+        // Siklus berjalan = log di tanggal terakhir, mulai dari Check In terakhir
         let dayLogs = userLogs.filter(l => l.workingDate === lastLog.workingDate), startIdx = -1;
         for (let k = dayLogs.length - 1; k >= 0; k--) { if (dayLogs[k].breakType === "Check In") { startIdx = k; break; } }
         const hasCI = startIdx >= 0, cyc = hasCI ? dayLogs.slice(startIdx) : dayLogs;
         const has = function (t) { return cyc.some(l => l.breakType === t); };
         const hasBO = has("Break Out"), hasBI = has("Break In"), legacyDone = has("Selesai");
 
-        const limit = (hasCI && hasBO && !hasBI) ? REST_RESET_HOURS_BREAK_IN_NULL : REST_RESET_HOURS_DEFAULT;
+        // Umur siklus = sejak Check In siklus ini (bukan sejak scan terakhir). Lewat 9 jam = Expired.
+        const hoursPassed = hasCI ? (new Date() - parseDateTime(dayLogs[startIdx].timestamp)) / (1000 * 60 * 60) : 0;
 
-        if (!hasCI || legacyDone || (hasBO && hasBI) || hoursPassed > limit) return newCycle;
+        if (!hasCI || legacyDone || (hasBO && hasBI) || hoursPassed > REST_RESET_HOURS) return newCycle;   // Check In baru = Next Date
         if (!hasBO) return { cycleNum: 2, action: "Break Out", logDate: lastLog.workingDate };
         return { cycleNum: 3, action: "Break In", logDate: lastLog.workingDate };
     }
@@ -2374,7 +2443,7 @@
 
             clearTimeout(debounceInputTimer);
             if (rawInput.trim().length >= 5) { 
-                debounceInputTimer = setTimeout(function() { submitLog(); }, 400); 
+                debounceInputTimer = setTimeout(function() { submitLog(true); }, 400); 
             }
         } else {
             let state = calculateNextAssetState(exactKey || formattedOpsId, actualDateStr);
@@ -2390,7 +2459,7 @@
         }
     }
 
-    function submitLog() {
+    function submitLog(isAuto) {
         let inputEl = document.getElementById("inputOpsId");
         let rawInput = inputEl.value;
         let opsId = normalizeOpsId(rawInput);
@@ -2410,6 +2479,19 @@
             document.getElementById("inputNama").value = name;
             document.getElementById("inputDept").value = dept;
         } else {
+            if (currentActiveModule === 'rest') {
+                // Rest Time: OpsID tidak ada di Database Karyawan -> popup, scan TIDAK dicatat
+                if (Object.keys(masterKaryawan).length === 0) { showToast("⚠️ Database karyawan belum termuat, coba Scan lagi sebentar.", 'info'); return; }
+                // Auto-submit (debounce) jangan bunyi kalau ID masih diketik / belum lengkap; Enter tetap selalu memunculkan popup
+                if (isAuto === true && !/^ops\d{6,}$/i.test(opsId)) return;
+                lastSubmittedOpsId = null;
+                showUnknownStaffModal(opsId);
+                inputEl.value = ""; document.getElementById("inputNama").value = "";
+                document.getElementById("inputNama").setAttribute("readonly", true);
+                document.getElementById("predictedAction").innerText = t("predicted.scan");
+                document.getElementById("predictedAction").style.background = "var(--table-header-bg)";
+                return;
+            }
             if (!name || name === "Belum Terdaftar") {
                 document.getElementById("inputNama").removeAttribute("readonly");
                 document.getElementById("inputNama").value = "";
@@ -2433,7 +2515,9 @@
         if (currentActiveModule === 'rest') {
             let state = calculateNextState(cleanOpsId, actualDateStr);
 
+            // BLOCKER CHECK IN: cek Pre-Work Status dulu (FIT = pass; UNFIT / Belum Submit = blok)
             if (state.action === "Check In") {
+                // BLOCKER SHIFT 00.00: Check In sebelum jam 00.00 ditolak (dicek duluan, sebelum Pre-Work)
                 if (isShift00EarlyCheckIn(now)) {
                     lastSubmittedOpsId = null;
                     showEarlyCheckInBlockModal(cleanOpsId, name);
@@ -2447,6 +2531,7 @@
                 if (gate.block) {
                     lastSubmittedOpsId = null;
                     if (preWorkRefreshing) return;
+                    // data sheet udah agak lama -> tarik ulang sekali sebelum ngeblok (operator baru aja isi ulang = ga perlu nunggu 60 detik)
                     if (Date.now() - preWorkLastAttemptAt > 5000) {
                         preWorkRefreshing = true;
                         showToast("🔄 Cek ulang status Pre-Work...", 'info');
@@ -2736,6 +2821,8 @@
         document.body.appendChild(link); link.click(); document.body.removeChild(link);
     }
 
+    // ===== Filter Jam (HH:mm s.d HH:mm) - sama kayak Pre-Work by Attendance FMS =====
+    // Kosong = ga difilter. Kalau "Dari" > "s.d" dianggap lewat tengah malam (mis. 22:00 s.d 06:00).
     function filterTimeMask(el) {
         let d = el.value.replace(/\D/g, "");
         if (d.length && +d[0] > 2) d = "0" + d;
@@ -2761,6 +2848,7 @@
         const toMin = function (t) { const m = String(t || "").match(/^(\d{1,2}):(\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : null; };
         return { from: toMin(document.getElementById("filterTimeFrom").value), to: toMin(document.getElementById("filterTimeTo").value) };
     }
+    // true kalau jam (Date) lolos filter. Tanpa filter -> selalu true; filter aktif tapi jam kosong -> false.
     function matchTimeFilter(dateObj, tf) {
         if (tf.from === null && tf.to === null) return true;
         if (!dateObj || isNaN(dateObj)) return false;
@@ -2820,7 +2908,7 @@
             case "Reminder": return 3;
             case "Istirahat": return 2;
             case "Disiplin": return 1;
-            default: return 0;
+            default: return 0; // Belum Istirahat
         }
     }
 
@@ -2963,6 +3051,7 @@
         } else if (restSortCol === "alert") {
             rowsToRender.sort((a, b) => restSortDir === "desc" ? b.alertSeverity - a.alertSeverity : a.alertSeverity - b.alertSeverity);
         } else {
+            // Default: Jam Check In terbaru (waktu lokal device) di paling atas; yang belum Check In di paling bawah
             rowsToRender.sort((a, b) => a.checkInMs === b.checkInMs ? 0 : (b.checkInMs > a.checkInMs ? 1 : -1));
         }
 
@@ -3121,6 +3210,7 @@
             });
         });
 
+        // Jam Pinjam PDA terbaru (waktu lokal device) di paling atas
         assetRowsToRender.sort((a, b) => a.ms === b.ms ? 0 : (b.ms > a.ms ? 1 : -1));
         assetRowsToRender.forEach(function (row) {
             tbody.appendChild(row.tr);
@@ -3155,7 +3245,7 @@
         list.sort((a, b) => b.diffMins - a.diffMins);
         lastBelumKembaliList = list;
         container.innerHTML = list.map(function (item, idx) {
-            let isOverdue = item.diffMins >= 240;
+            let isOverdue = item.diffMins >= 240; // >= 4 jam belum kembali dianggap overdue
             let hours = Math.floor(item.diffMins / 60), mins = item.diffMins % 60;
             let durStr = `${hours}j ${mins}m`;
             return `<div class="mini-log-row">
@@ -3201,6 +3291,7 @@
         if (notCheckedModal && notCheckedModal.style.display === "flex") { closeNotCheckedInAlert(); return; }
         if (lockModal && lockModal.style.display === "flex") { closeLockAlert(); return; }
         if (wrongDeviceModal && wrongDeviceModal.style.display === "flex") { closeWrongDeviceAlert(); return; }
+        // Modal setup Firebase cuma boleh di-ESC kalau tombol Batal-nya kelihatan (allowCancel true / bukan setup wajib pertama kali)
         if (fbModal && fbModal.style.display === "flex" && fbCancelBtn && fbCancelBtn.style.display !== "none") { closeFirebaseModal(); return; }
         if (sidebar && sidebar.classList.contains("open")) { toggleAppSidebar(); return; }
     });
@@ -3895,6 +3986,8 @@
 </script>
 
 <script>
+// ===== Modul: Pre-Work by Attendance FMS =====
+// Input: Raw Attendance FMS. Yang dicek hanya operator yang sudah Clock In; statusnya dari getPreWorkStatus() (sumber sama dengan modul Rest Time).
 let attnRows = [];
 const ATTN_DEPTS = ["soc operator", "eha operator"];
 const ATTN_ORDER = { BELUM_SUBMIT: 0, UNFIT: 1, EMPTY: 3, OTHER: 3, LOADING: 4, ERROR: 4, FIT: 5 };
@@ -3928,6 +4021,7 @@ function attnShiftBucket(startTime) {
     const h = +m[1]; return h <= 7 ? "1" : (h <= 15 ? "2" : "3");
 }
 
+// Murni data (tanpa DOM): satu baris per OpsID per Clock In Date (ambil clock in paling awal). Baris tanpa Clock In dibuang.
 function attnBuildRows(rows) {
     if (!rows.length) return { error: "File kosong." };
     const head = rows[0].map(attnNorm), ix = function (n) { return head.indexOf(n); };
@@ -3943,7 +4037,7 @@ function attnBuildRows(rows) {
         totalRows++;
         const cd = attnYmd(get(r, iCd)), ct = get(r, iCt);
         if (!cd || !ct) { skipped++; return; }
-        if (ATTN_DEPTS.indexOf(get(r, iDept).toLowerCase()) < 0) { excluded++; return; }
+        if (ATTN_DEPTS.indexOf(get(r, iDept).toLowerCase()) < 0) { excluded++; return; }  // auto filter: hanya SOC Operator & EHA Operator
         const rec = { opsId: id, name: get(r, iName), agency: get(r, iAg), dept: get(r, iDept), start: get(r, iStart), shiftName: get(r, iShift), shift: attnShiftBucket(get(r, iStart)), date: cd, time: ct, status: get(r, iSt) };
         const key = id.toLowerCase() + "|" + cd;
         if (!map[key] || rec.time < map[key].time) map[key] = rec;
@@ -3965,6 +4059,8 @@ function attnHandleFile(input) {
             } else rows = attnParseCsv(e.target.result);
             const res = attnBuildRows(rows);
             if (res.error) { showToast("❌ " + res.error, "err"); input.value = ""; return; }
+            // MODE TUMPUK: data lama tetap dipertahankan. Kunci = OpsID + Clock In Date.
+            // Kalau kunci yang sama ada di file baru, baris lama diganti yang baru; kunci yang tidak ada di file baru tetap aman.
             const mergedMap = {}; let added = 0, updated = 0;
             attnRows.forEach(function (r) { mergedMap[r.opsId.toLowerCase() + "|" + r.date] = r; });
             const hadOld = attnRows.length > 0;
@@ -3985,6 +4081,8 @@ function attnHandleFile(input) {
     if (isXlsx) reader.readAsArrayBuffer(file); else reader.readAsText(file);
 }
 
+// ----- Simpan & muat dari Firebase: <FB_ROOT>/attendanceFms { fileName, count, min, max, skipped, excluded, importedBy, importedAt, rows: [[...], ...] }
+// Baris disimpan sebagai array pendek (urutan kolom di bawah) supaya ukuran kecil; import baru DIGABUNG dgn data lama (kunci OpsID+tanggal; kunci sama = diganti data baru).
 let attnListenerRef = null;
 function attnRowToArr(r) { return [r.opsId, r.name, r.agency, r.dept, r.shiftName, r.shift, r.date, r.time, r.status, r.start]; }
 function attnRowFromArr(a) { return { opsId: a[0] || "", name: a[1] || "", agency: a[2] || "", dept: a[3] || "", shiftName: a[4] || "", shift: a[5] || "", date: a[6] || "", time: a[7] || "", status: a[8] || "", start: a[9] || "" }; }
@@ -4017,6 +4115,7 @@ function attnSaveToFirebase(list, meta) {
         .catch(function (err) { console.error(err); showToast("❌ Gagal simpan ke Firebase. Cek Security Rules untuk path attendanceFms.", "err"); });
 }
 
+// Listener dipasang sekali, baru saat tab ini pertama dibuka (biar page load Rest Time nggak ikut narik datanya).
 function attnAttachListener() {
     if (attnListenerRef || !fbDb) return;
     attnListenerRef = fbDb.ref(FB_ROOT + "/attendanceFms");
@@ -4032,6 +4131,7 @@ function attnPickFile() {
     document.getElementById("attnFilePicker").click();
 }
 
+// Input jam format 24 jam (HH:mm) - sengaja pakai text biar ga ikut setting AM/PM browser. Ketik angka aja, ":" otomatis.
 function attnTimeMask(el) {
     let d = el.value.replace(/\D/g, "");
     if (d.length && +d[0] > 2) d = "0" + d;   // ketik "5" langsung jadi "05"
@@ -4061,6 +4161,9 @@ function attnSetToday() {
     renderAttnPreWork();
 }
 
+// Pre-Work biasanya diisi sekitar 1 jam sebelum shift mulai, jadi untuk shift lewat tengah malam tanggalnya bisa hari sebelumnya.
+// Cari isian Pre-Work yang timestamp-nya jatuh di jendela [Start - 3 jam, Start + 2 jam] (apa pun isi kolom DATE-nya);
+// kalau nggak ada, cek tanggal (Start - 1 jam). Tanpa Start Time, pakai Clock In Date.
 function attnPwDate(r) {
     const s = r.start ? new Date(r.start.replace(" ", "T")) : null;
     if (!s || isNaN(s)) return r.date;
@@ -4070,11 +4173,38 @@ function attnPwDate(r) {
     return hit ? hit.d : preWorkYMD(new Date(s.getTime() - 3600000));
 }
 
-function attnGroupOf(code) {
-    if (code === "FIT" || code === "UNFIT" || code === "EMPTY" || code === "OTHER") return "sudah";
-    return code === "BELUM_SUBMIT" ? "belum" : "na";
+// Waktu Clock In FMS (ms) = kolom "Clock In Date" + "Clock In Time" (BUKAN r.start, itu jam mulai shift).
+// Dipakai sebagai acuan umur Pre-Work (bukan jam sekarang), jadi data lama yang sudah terlanjur masuk ikut dihitung ulang tiap render.
+function attnClockInMs(r) {
+    const m = String(r.time || "").match(/^(\d{1,2}):(\d{2})(?::(\d{2}))?/);
+    if (!r.date || !m) return null;
+    const d = new Date(r.date + "T" + m[1].padStart(2, "0") + ":" + m[2] + ":" + (m[3] || "00"));
+    return isNaN(d) ? null : d.getTime();
 }
 
+// Status Pre-Work utk 1 baris attendance. Aturan sama dgn blocker Check In: submit lebih dari PREWORK_MAX_AGE_HOURS (3 jam)
+// sebelum Clock In FMS = EXPIRED (harus submit ulang sebelum Clock In). UNFIT tetap diprioritaskan.
+function attnPwFor(r) {
+    const pwDate = attnPwDate(r);
+    let pw = getPreWorkStatus(r.opsId, pwDate, r.name);
+    const ci = attnClockInMs(r);
+    if (ci !== null && pw.ts && pw.code !== "UNFIT" && (ci - pw.ts) > PREWORK_MAX_AGE_HOURS * 3600000) {
+        pw = { code: "EXPIRED", status: pw.status, ts: pw.ts };
+    }
+    return { pwDate: pwDate, pw: pw };
+}
+
+function attnPwBadge(x) {
+    if (x.pw.code === "EXPIRED") return '<span class="badge alert-reminder" style="white-space:nowrap;" title="Submit Pre-Work lebih dari ' + PREWORK_MAX_AGE_HOURS + ' jam sebelum Clock In. Wajib submit ulang sebelum Clock In.">⌛ Expired</span>';
+    return renderPreWorkBadge(x.r.opsId, x.pwDate, x.r.name);
+}
+
+function attnGroupOf(code) {
+    if (code === "FIT" || code === "UNFIT" || code === "EMPTY" || code === "OTHER") return "sudah";
+    return (code === "BELUM_SUBMIT" || code === "EXPIRED") ? "belum" : "na";
+}
+
+// Jam actual submit Pre-Work = kolom A (Timestamp) sheet "Pre-Work Operator". Kalau beda hari dgn tanggal Clock In, tanggalnya ikut ditampilkan.
 function attnSubmitCell(ts, refDate) {
     if (!ts) return '<span style="color:var(--text-muted);">-</span>';
     const d = new Date(ts), p2 = function (n) { return String(n).padStart(2, "0"); };
@@ -4091,7 +4221,7 @@ function attnSubmitText(ts) {
 
 function attnStatusLabel(pw) {
     switch (pw.code) {
-        case "FIT": return "FIT"; case "UNFIT": return "UNFIT"; case "BELUM_SUBMIT": return "Belum Submit";
+        case "FIT": return "FIT"; case "UNFIT": return "UNFIT"; case "BELUM_SUBMIT": return "Belum Submit"; case "EXPIRED": return "Expired";
         case "EMPTY": return "Status Kosong"; case "OTHER": return pw.status;
         default: return "N/A";
     }
@@ -4102,6 +4232,7 @@ function attnVisibleRows() {
     if (!start) start = end = getWorkingDateStr(new Date());
     if (end < start) { const x = start; start = end; end = x; }
     const fDept = document.getElementById("attnFilterDept").value;
+    // Filter jam Clock In (HH:mm). Kosong = ga difilter. Kalau "Dari" > "s.d" dianggap lewat tengah malam (mis. 22:00 s.d 06:00).
     const attnMin = function (t) { const m = String(t || "").match(/^(\d{1,2}):(\d{2})/); return m ? (+m[1]) * 60 + (+m[2]) : null; };
     const mFrom = attnMin(document.getElementById("attnTimeFrom").value), mTo = attnMin(document.getElementById("attnTimeTo").value);
     const fStatus = document.getElementById("attnFilterStatus").value, q = document.getElementById("attnSearch").value.toLowerCase().trim();
@@ -4116,10 +4247,11 @@ function attnVisibleRows() {
         }
         if (fDept !== "All" && r.dept !== fDept) return;
         if (q && r.opsId.toLowerCase().indexOf(q) < 0 && r.name.toLowerCase().indexOf(q) < 0) return;
-        const pwDate = attnPwDate(r), pw = getPreWorkStatus(r.opsId, pwDate, r.name);
+        const pwx = attnPwFor(r), pwDate = pwx.pwDate, pw = pwx.pw;
         base.push({ r: r, pw: pw, pwDate: pwDate, group: attnGroupOf(pw.code) });
     });
     const shown = base.filter(function (x) { return fStatus === "All" || fStatus === x.group || (fStatus === "unfit" && x.pw.code === "UNFIT"); });
+    // Urut berdasarkan Clock In: terbaru (jam paling akhir) di atas -> terlama di bawah
     const attnTimeKey = function (r) { const t = String(r.time || "").split(":"); return r.date + " " + (t[0] || "0").padStart(2, "0") + ":" + (t[1] || "0").padStart(2, "0") + ":" + (t[2] || "0").padStart(2, "0"); };
     shown.sort(function (a, b) { return attnTimeKey(b.r).localeCompare(attnTimeKey(a.r)); });
     return { base: base, shown: shown };
@@ -4147,7 +4279,7 @@ function renderAttnPreWork() {
             '<td><span class="badge badge-dept">' + escapeHtml(r.dept) + '</span></td><td>' + escapeHtml(r.shiftName) + '</td>' +
             '<td><span class="badge badge-time" style="cursor:default;">' + escapeHtml(r.time.slice(0, 5)) + '</span></td>' +
             '<td><span class="badge ' + (stCls[r.status] || "badge-dept") + '">' + escapeHtml(r.status || "-") + '</span></td>' +
-            '<td>' + renderPreWorkBadge(r.opsId, x.pwDate, r.name) + '</td>' +
+            '<td>' + attnPwBadge(x) + '</td>' +
             '<td>' + attnSubmitCell(x.pw.ts, r.date) + '</td></tr>';
     }).join("");
 }
@@ -4163,6 +4295,10 @@ function attnExportCsv() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
+// ===== Tab Summary Pre-Work per Vendor: Achievement Daily / Weekly / Monthly Submission =====
+// Achievement = Sudah Isi (FIT/UNFIT/Status Kosong/Lainnya) / Total Clock In FMS, per periode & per Agency (vendor).
+// Sumber data sama dgn tab Pre-Work by Attendance FMS (attnRows + getPreWorkStatus), jadi angkanya selalu konsisten.
+const ATTN_SUM_GREEN = 95, ATTN_SUM_YELLOW = 80;   // ambang warna (%): >= GREEN hijau, >= YELLOW kuning, di bawahnya merah
 const ATTN_MON = ["Jan", "Feb", "Mar", "Apr", "Mei", "Jun", "Jul", "Agu", "Sep", "Okt", "Nov", "Des"];
 const ATTN_DAY = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
 const ATTN_SUM_MODES = [["daily", "attnSumTblDaily", "Daily"], ["weekly", "attnSumTblWeekly", "Weekly"], ["monthly", "attnSumTblMonthly", "Monthly"]];
@@ -4171,10 +4307,10 @@ function attnUtc(ymd) { const p = ymd.split("-"); return new Date(Date.UTC(+p[0]
 function attnUtcYmd(d) { return d.toISOString().slice(0, 10); }
 function attnPeriodKey(ymd, mode) {
     if (mode === "monthly") return ymd.slice(0, 7);
-    if (mode === "weekly") { const d = attnUtc(ymd); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return attnUtcYmd(d); }
+    if (mode === "weekly") { const d = attnUtc(ymd); d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7)); return attnUtcYmd(d); } // Senin minggu tsb
     return ymd;
 }
-function attnPeriodBounds(key, mode) {
+function attnPeriodBounds(key, mode) {   // awal & akhir periode, buat deteksi periode yg terpotong rentang tanggal
     if (mode === "monthly") { const y = +key.slice(0, 4), m = +key.slice(5, 7); return [key + "-01", attnUtcYmd(new Date(Date.UTC(y, m, 0)))]; }
     if (mode === "weekly") { const d = attnUtc(key); d.setUTCDate(d.getUTCDate() + 6); return [key, attnUtcYmd(d)]; }
     return [key, key];
@@ -4185,10 +4321,11 @@ function attnPeriodLabel(key, mode) {
     const d = attnUtc(key);
     if (mode === "daily") return ATTN_DAY[d.getUTCDay()] + ", " + p2(d.getUTCDate()) + " " + ATTN_MON[d.getUTCMonth()] + " " + d.getUTCFullYear();
     const e = attnUtc(key); e.setUTCDate(e.getUTCDate() + 6);
-    const th = attnUtc(key); th.setUTCDate(th.getUTCDate() + 3);
+    const th = attnUtc(key); th.setUTCDate(th.getUTCDate() + 3);                   // minggu ISO ditentukan hari Kamis
     const wk = Math.ceil(((th - Date.UTC(th.getUTCFullYear(), 0, 1)) / 86400000 + 1) / 7);
     return "W" + wk + " · " + p2(d.getUTCDate()) + " " + ATTN_MON[d.getUTCMonth()] + " – " + p2(e.getUTCDate()) + " " + ATTN_MON[e.getUTCMonth()] + " " + e.getUTCFullYear();
 }
+// Weekly baru tampil kalau rentang tanggal >= 7 hari, Monthly kalau >= 28 hari (Daily selalu tampil)
 const ATTN_SUM_MIN_DAYS = { daily: 1, weekly: 7, monthly: 28 };
 function attnSumVisible(mode, b) {
     if (!b.start) return mode === "daily";
@@ -4207,6 +4344,7 @@ function attnSumQuick(kind) {
     attnRenderSummary();
 }
 
+// Murni data (tanpa tabel): baris attendance dalam rentang + dept, lengkap dgn status Pre-Work
 function attnSumBase() {
     let start = document.getElementById("attnSumStart").value, end = document.getElementById("attnSumEnd").value || start;
     if (!start) start = end;
@@ -4215,7 +4353,7 @@ function attnSumBase() {
     if (start) attnRows.forEach(function (r) {
         if (r.date < start || r.date > end) return;
         if (fDept !== "All" && r.dept !== fDept) return;
-        const pwDate = attnPwDate(r), pw = getPreWorkStatus(r.opsId, pwDate, r.name);
+        const pwx = attnPwFor(r), pwDate = pwx.pwDate, pw = pwx.pw;
         base.push({ r: r, pw: pw, pwDate: pwDate, group: attnGroupOf(pw.code) });
     });
     return { base: base, start: start, end: end };
@@ -4234,14 +4372,14 @@ function attnSummaryData(mode, b) {
         tally(grandAll, x);
     });
     const vendors = Object.keys(vSet).sort(function (a, c) { return vSet[c] - vSet[a] || a.localeCompare(c); });
-    const periods = Object.keys(per).sort().reverse().map(function (k) {
+    const periods = Object.keys(per).sort().reverse().map(function (k) {   // terbaru di atas
         const bd = attnPeriodBounds(k, mode);
         return { key: k, label: attnPeriodLabel(k, mode), partial: bd[0] < b.start || bd[1] > b.end, cells: per[k].cells, tot: per[k].tot };
     });
     return { periods: periods, vendors: vendors, grand: grand, grandAll: grandAll };
 }
 
-function attnSumCell(c, m, k, v) {
+function attnSumCell(c, m, k, v) {   // m=mode, k=kunci periode ("*"=semua periode), v=vendor ("*"=semua vendor)
     if (!c || !c.t) return '<td class="sum-cell" style="color:var(--text-muted);">-</td>';
     const pct = attnSumPct(c);
     return '<td class="sum-cell ' + attnSumClass(pct) + '" data-m="' + m + '" data-k="' + escapeHtml(k) + '" data-v="' + escapeHtml(v) + '" title="Klik untuk lihat operator yang sudah / belum submit"><b>' + pct.toFixed(1) + '%</b><small>' + c.s + ' / ' + c.t + '</small>' + (c.u ? '<small style="font-weight:700;">⚠️ Un-Fit ' + c.u + '</small>' : '') + '</td>';
@@ -4308,6 +4446,7 @@ function attnSumExportCsv() {
     document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
 
+// ===== Drill-down: klik angka % -> daftar operator Sudah / Belum submit Pre-Work =====
 let attnDrillItems = [], attnDrillFilter = "all", attnDrillMeta = "";
 function attnSumVendorOf(r) { return String(r.agency || "").trim() || "(Tanpa Agency)"; }
 function attnSumDrill(mode, key, vendor) {
@@ -4352,7 +4491,7 @@ function attnDrillRender() {
             '<td style="text-align:left; font-weight:600;">' + escapeHtml(r.name) + '</td><td><span class="badge badge-dept" style="font-weight:500;">' + escapeHtml(r.agency) + "</span></td>" +
             '<td><span class="badge badge-dept">' + escapeHtml(r.dept) + "</span></td><td>" + escapeHtml(r.shiftName) + "</td>" +
             '<td><span class="badge badge-time" style="cursor:default;">' + escapeHtml(String(r.time || "").slice(0, 5)) + "</span></td>" +
-            "<td>" + renderPreWorkBadge(r.opsId, x.pwDate, r.name) + "</td><td>" + attnSubmitCell(x.pw.ts, r.date) + "</td></tr>";
+            "<td>" + attnPwBadge(x) + "</td><td>" + attnSubmitCell(x.pw.ts, r.date) + "</td></tr>";
     }).join("");
 }
 function attnDrillExportCsv() {
