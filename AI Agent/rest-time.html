@@ -347,6 +347,14 @@
         .alert-gancang { background-color: #fee2e2; color: #b91c1c; font-weight: 700; }
         .alert-istirahat { background-color: #ffedd5; color: #c2410c; font-weight: 700; }
         .alert-reminder { background-color: #fef9c3; color: #a16207; font-weight: 700; }
+        .badge-cycle-gap { background-color: #fce7f3; color: #be185d; font-weight: 700; white-space: nowrap; cursor: help; margin-left: 4px; }
+        #attnCards .center-box[data-f] { cursor: pointer; transition: transform .15s, box-shadow .15s, border-color .15s; user-select: none; }
+        #attnCards .center-box[data-f]:hover { transform: translateY(-2px); box-shadow: 0 6px 12px -2px rgba(0,0,0,.14); }
+        #attnCards .center-box[data-f]:focus-visible { outline: 2px solid #e67e22; outline-offset: 2px; }
+        #attnCards .center-box.attn-card-active { border-color: #e67e22; box-shadow: 0 0 0 2px rgba(230,126,34,.35); }
+        .attn-pv-warn { background: #fef9c3; color: #a16207; border-radius: 8px; padding: 8px 10px; font-size: 12px; font-weight: 600; margin-bottom: 8px; line-height: 1.5; }
+        .attn-pv-line { padding: 6px 0; border-top: 1px solid var(--border-color); font-size: 12.5px; line-height: 1.55; color: var(--text-main); }
+        .attn-pv-line:first-child { border-top: none; }
         .badge-station-inbound { background-color: #dbeafe; color: #1d4ed8; font-weight: 700; }
         .badge-station-secsort { background-color: #ede9fe; color: #6d28d9; font-weight: 700; }
         .badge-station-bulky { background-color: #ccfbf1; color: #0f766e; font-weight: 700; }
@@ -539,6 +547,43 @@
         <p style="text-align:center; font-size:12px; color:var(--text-muted);">Bebas pilih PDA lain kalau statusnya udah "Kembali" di Sesi Kedua, atau udah lewat jam <b id="wrongDeviceExpiry" style="color:var(--text-main);"></b> (Check In + 9 Jam Kerja).</p>
         <div class="modal-actions" style="justify-content:center;">
             <button class="btn-primary" onclick="closeWrongDeviceAlert()">Oke</button>
+        </div>
+    </div>
+</div>
+
+<div id="attnImportLogModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="width: 880px; max-width: 95vw; max-height: 85vh; display:flex; flex-direction:column;">
+        <h3 style="display:flex; align-items:center; justify-content:space-between;">
+            <span>📜 Update Log — Import Raw Attendance</span>
+            <button onclick="attnCloseImportLog()" style="background:none; box-shadow:none; color:var(--text-muted); font-size:18px; padding:0 6px;">✕</button>
+        </h3>
+        <p id="attnImportLogNote">Riwayat siapa saja yang meng-import Raw Attendance FMS (terbaru di atas).</p>
+        <div style="overflow:auto; border:1px solid var(--border-color); border-radius:8px;">
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead><tr style="background:var(--table-header-bg); color:var(--text-main); text-align:left;">
+                    <th style="padding:8px 10px; white-space:nowrap;">Waktu</th><th style="padding:8px 10px;">Diimport oleh</th><th style="padding:8px 10px;">File</th>
+                    <th style="padding:8px 10px; text-align:center;">Baru</th><th style="padding:8px 10px; text-align:center;">Diperbarui</th><th style="padding:8px 10px; text-align:center;">Total</th><th style="padding:8px 10px; white-space:nowrap;">Rentang Tanggal</th>
+                </tr></thead>
+                <tbody id="attnImportLogBody"></tbody>
+            </table>
+        </div>
+        <div class="modal-actions" style="justify-content:flex-end; margin-top:12px;">
+            <button class="btn-primary" onclick="attnCloseImportLog()">Tutup</button>
+        </div>
+    </div>
+</div>
+
+<div id="attnPreviewModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box" style="width: 600px; max-width: 95vw; max-height: 88vh; display:flex; flex-direction:column;">
+        <h3>🔍 Preview Import Raw Attendance</h3>
+        <p id="attnPvFile" style="word-break:break-all; margin-bottom:8px;"></p>
+        <div id="attnPvHead" style="font-size:14px; line-height:1.6; color:var(--text-main); padding:10px 12px; background:var(--table-header-bg); border-radius:8px; margin-bottom:10px;"></div>
+        <div id="attnPvWarn"></div>
+        <div id="attnPvDetail" style="overflow:auto;"></div>
+        <p style="margin:10px 0 0; font-size:11.5px;">Belum ada data yang disimpan. Data baru masuk setelah klik <b>Simpan</b>.</p>
+        <div class="modal-actions">
+            <button class="btn-primary" style="background-color:#64748b;" onclick="attnPreviewCancel()">Batal</button>
+            <button class="btn-success" onclick="attnPreviewConfirm()">💾 Simpan</button>
         </div>
     </div>
 </div>
@@ -909,13 +954,14 @@
                     </select></div>
                 <div class="form-group"><label>Cari :</label><input type="text" id="attnSearch" placeholder="Nama / OpsID..." style="width:150px;" oninput="renderAttnPreWork()"></div>
                 <button class="btn-success" onclick="attnExportCsv()">📊 Export Excel</button>
+                <button class="btn-primary" style="background-color:#475569;" title="Riwayat siapa saja yang Import Raw Attendance" onclick="attnOpenImportLog()">📜 Update Log</button>
             </div>
         </div>
-        <div class="center-box-wrapper">
-            <div class="center-box"><div class="box-title" style="color:#0f766e;">Total Absen FMS</div><div class="actual-rest" style="background:#ccfbf1; color:#0f766e;"><div>(Clock In)</div><div id="attnTotal" class="counter-num">0</div></div></div>
-            <div class="center-box"><div class="box-title" style="color:#047857;">Sudah Isi</div><div class="actual-rest" style="background:#d1fae5; color:#047857;"><div>(Pre-Work)</div><div id="attnSudah" class="counter-num">0</div></div></div>
-            <div class="center-box"><div class="box-title" style="color:#b91c1c;">Belum Isi</div><div class="actual-rest" style="background:#fee2e2; color:#b91c1c;"><div>(Pre-Work)</div><div id="attnBelum" class="counter-num">0</div></div></div>
-            <div class="center-box"><div class="box-title" style="color:#a16207;">UNFIT</div><div class="actual-rest" style="background:#fef9c3; color:#a16207;"><div>(Take Out)</div><div id="attnUnfit" class="counter-num">0</div></div></div>
+        <div class="center-box-wrapper" id="attnCards">
+            <div class="center-box" data-f="All" tabindex="0" role="button" title="Klik untuk tampilkan semua status"><div class="box-title" style="color:#0f766e;">Total Absen FMS</div><div class="actual-rest" style="background:#ccfbf1; color:#0f766e;"><div>(Clock In)</div><div id="attnTotal" class="counter-num">0</div></div></div>
+            <div class="center-box" data-f="sudah" tabindex="0" role="button" title="Klik untuk filter: Sudah Isi (klik lagi untuk reset)"><div class="box-title" style="color:#047857;">Sudah Isi</div><div class="actual-rest" style="background:#d1fae5; color:#047857;"><div>(Pre-Work)</div><div id="attnSudah" class="counter-num">0</div></div></div>
+            <div class="center-box" data-f="belum" tabindex="0" role="button" title="Klik untuk filter: Belum Isi (klik lagi untuk reset)"><div class="box-title" style="color:#b91c1c;">Belum Isi</div><div class="actual-rest" style="background:#fee2e2; color:#b91c1c;"><div>(Pre-Work)</div><div id="attnBelum" class="counter-num">0</div></div></div>
+            <div class="center-box" data-f="unfit" tabindex="0" role="button" title="Klik untuk filter: UNFIT (klik lagi untuk reset)"><div class="box-title" style="color:#a16207;">UNFIT</div><div class="actual-rest" style="background:#fef9c3; color:#a16207;"><div>(Take Out)</div><div id="attnUnfit" class="counter-num">0</div></div></div>
         </div>
         <div id="attnNote" style="font-size:12px; color:var(--text-muted); display:none;"></div>
         <div class="table-container">
@@ -2254,6 +2300,71 @@
         return { cycleNum: 3, action: "Break In", logDate: lastLog.workingDate };
     }
 
+    // ===== Penanda siklus tidak lengkap =====
+    // Siklus = satu Check In + Break Out / Break In sesudahnya (sampai Check In berikutnya). Siklus dianggap BOLONG kalau:
+    //   - Check In tapi tidak Break Out, atau Break Out tapi tidak Break In, DAN
+    //   - umurnya sudah lewat REST_RESET_HOURS (9 jam) = Expired. Umur dihitung dari Check In sampai Check In berikutnya
+    //     (siklus yang sudah diganti), atau sampai sekarang (siklus terakhir). Aturan sama dgn calculateNextState.
+    // Dihitung per OpsID dari seluruh logsArray, jadi baris siklus baru juga bisa menandai siklus sebelumnya yang bolong
+    // (termasuk beda tanggal). Cakupan terbatas ke log yang sudah termuat (window LOGS_WINDOW_DAYS + tanggal yang dibuka).
+    function buildCycleGapIndex() {
+        const byUser = {}, idx = {}, now = Date.now(), limit = REST_RESET_HOURS * 3600000;
+        logsArray.forEach(function (l) {
+            if (!l || !l.opsId) return;
+            const k = String(l.opsId).toLowerCase();
+            (byUser[k] = byUser[k] || []).push(l);
+        });
+        Object.keys(byUser).forEach(function (u) {
+            const logs = byUser[u].map(function (l) { const d = parseDateTime(l.timestamp); return { l: l, t: d ? d.getTime() : NaN }; })
+                .filter(function (x) { return !isNaN(x.t); }).sort(function (a, b) { return a.t - b.t; });
+            const cycles = [];
+            logs.forEach(function (x) { if (x.l.breakType === "Check In") cycles.push({ ci: x.t, date: x.l.workingDate, bo: null, bi: null, done: false, gap: null }); });
+            if (!cycles.length) return;
+            logs.forEach(function (x) {
+                const bt = x.l.breakType; if (bt === "Check In") return;
+                let c = null;
+                for (let i = cycles.length - 1; i >= 0; i--) { if (cycles[i].ci <= x.t) { c = cycles[i]; break; } }
+                if (!c) c = cycles.find(function (cy) { return cy.date === x.l.workingDate; }) || null;   // jam Break Out / In diedit sampai sebelum Check In
+                if (!c) return;
+                if (bt === "Break Out") { if (c.bo === null) c.bo = x.t; }
+                else if (bt === "Break In") { if (c.bi === null) c.bi = x.t; }
+                else if (bt === "Selesai") c.done = true;
+            });
+            cycles.forEach(function (c, i) {
+                if (c.done || (c.bo !== null && c.bi !== null)) return;
+                const next = cycles[i + 1], age = (next ? next.ci : now) - c.ci;
+                if (age <= limit) return;   // masih dalam batas 9 jam, belum Expired
+                c.gap = c.bo === null ? "noBO" : "noBI"; c.ageH = age / 3600000; c.nextCi = next ? next.ci : null;
+            });
+            idx[u] = cycles;
+        });
+        return idx;
+    }
+
+    // Siklus bolong yg relevan utk satu baris (OpsID + tanggal): siklus di tanggal itu + siklus tepat sebelumnya (kalau beda tanggal)
+    function cycleGapsForRow(idx, opsId, dateStr) {
+        const cycles = idx[String(opsId).toLowerCase()]; if (!cycles) return [];
+        const first = cycles.findIndex(function (c) { return c.date === dateStr; }); if (first < 0) return [];
+        const out = cycles.filter(function (c) { return c.date === dateStr && c.gap; }).map(function (c) { return { c: c, prev: false }; });
+        const p = cycles[first - 1];
+        if (p && p.gap && p.date !== dateStr) out.unshift({ c: p, prev: true });
+        return out;
+    }
+
+    function renderCycleGapBadge(gaps) {
+        if (!gaps.length) return "";
+        const p2 = function (n) { return String(n).padStart(2, "0"); };
+        const fmt = function (ms) { const d = new Date(ms); return p2(d.getDate()) + "/" + p2(d.getMonth() + 1) + " " + p2(d.getHours()) + ":" + p2(d.getMinutes()); };
+        const tip = gaps.map(function (g) {
+            const c = g.c, what = c.gap === "noBO" ? "Check In tapi tidak Break Out" : "Break Out tapi tidak Break In";
+            const why = c.nextCi ? "lalu Check In baru " + fmt(c.nextCi) + " (" + Math.floor(c.ageH) + " jam sejak Check In)" : "sudah " + Math.floor(c.ageH) + " jam sejak Check In";
+            return (g.prev ? "Siklus sebelumnya " : "Siklus ") + fmt(c.ci) + ": " + what + ", " + why + ". Batas " + REST_RESET_HOURS + " jam = Expired.";
+        }).join("\n");
+        const g0 = gaps[gaps.length - 1], label = (g0.c.gap === "noBO" ? "Tanpa Break Out" : "Tanpa Break In");
+        const txt = "⌛ Expired" + (g0.prev ? " (siklus lalu)" : "") + " · " + label + (gaps.length > 1 ? " +" + (gaps.length - 1) : "");
+        return '<span class="badge badge-cycle-gap" title="' + escapeHtml(tip).replace(/\n/g, "&#10;") + '">' + escapeHtml(txt) + "</span>";
+    }
+
     function calculateNextAssetState(opsId, actualDateStr) {
         let userLogs = assetLogsArray.filter(log => log.opsId.toLowerCase() === opsId.toLowerCase());
         userLogs.sort((a, b) => parseDateTime(a.timestamp) - parseDateTime(b.timestamp));
@@ -2921,6 +3032,7 @@
         const tbody = document.getElementById("tableBody"); 
         tbody.innerHTML = "";
         
+        const cycleGapIdx = buildCycleGapIndex();
         let checkedInPairs = [];
         let seenPairKeys = {};
         logsArray.forEach(log => {
@@ -3039,7 +3151,7 @@
                 <td><span class="badge badge-time" ondblclick="makeTimeEditable(this, '${opsId}', 'Break In', '${targetDateStr}')">${breakInTime ? formatTime(breakInTime) : "-"}</span>${rollbackBtn('Break In', !!breakInTime)}</td>
                 <td><span class="badge badge-time" style="color:#c2410c; cursor:default; background:var(--table-header-bg);">${estMasuk || "-"}</span></td>
                 <td style="font-weight:700;">${durationStr || "-"}</td>
-                <td>${alertBadge}</td>
+                <td>${alertBadge}${renderCycleGapBadge(cycleGapsForRow(cycleGapIdx, opsId, targetDateStr))}</td>
                 <td>${renderPreWorkBadge(opsId, targetDateStr, name)}</td>
                 <td>${renderDeleteAction(opsId, targetDateStr)}</td>
             `;
@@ -3287,6 +3399,8 @@
 
         if (operatorDetailModal && operatorDetailModal.style.display === "flex") { closeOperatorDetail(); return; }
         if (dbAssetModal && dbAssetModal.style.display === "flex") { closeDatabaseAssetModal(); return; }
+        const attnLogModal = document.getElementById("attnImportLogModal");
+        if (attnLogModal && attnLogModal.style.display === "flex") { attnCloseImportLog(); return; }
         if (preWorkBlockModal && preWorkBlockModal.style.display === "flex") { closePreWorkBlockModal(); return; }
         if (notCheckedModal && notCheckedModal.style.display === "flex") { closeNotCheckedInAlert(); return; }
         if (lockModal && lockModal.style.display === "flex") { closeLockAlert(); return; }
@@ -4047,6 +4161,9 @@ function attnBuildRows(rows) {
     return { list: list, skipped: skipped, excluded: excluded, totalRows: totalRows, min: dates[0] || "", max: dates[dates.length - 1] || "" };
 }
 
+// ----- Preview sebelum import disimpan: file dibaca & dihitung dulu. Belum ada yang ditulis ke data / Firebase sampai klik Simpan. -----
+let attnPending = null;   // { fileName, res } hasil parse file yang menunggu Simpan / Batal
+
 function attnHandleFile(input) {
     const file = input.files[0]; if (!file) return;
     const isXlsx = /\.xlsx?$/i.test(file.name), reader = new FileReader();
@@ -4059,26 +4176,97 @@ function attnHandleFile(input) {
             } else rows = attnParseCsv(e.target.result);
             const res = attnBuildRows(rows);
             if (res.error) { showToast("❌ " + res.error, "err"); input.value = ""; return; }
-            // MODE TUMPUK: data lama tetap dipertahankan. Kunci = OpsID + Clock In Date.
-            // Kalau kunci yang sama ada di file baru, baris lama diganti yang baru; kunci yang tidak ada di file baru tetap aman.
-            const mergedMap = {}; let added = 0, updated = 0;
-            attnRows.forEach(function (r) { mergedMap[r.opsId.toLowerCase() + "|" + r.date] = r; });
-            const hadOld = attnRows.length > 0;
-            res.list.forEach(function (r) {
-                const k = r.opsId.toLowerCase() + "|" + r.date;
-                if (mergedMap[k]) updated++; else added++;
-                mergedMap[k] = r;
-            });
-            const mergedList = Object.keys(mergedMap).map(function (k) { return mergedMap[k]; });
-            const mDates = mergedList.map(function (r) { return r.date; }).sort();
-            const meta = { fileName: file.name + (hadOld ? " (digabung dgn data lama)" : ""), count: mergedList.length, min: mDates[0] || res.min, max: mDates[mDates.length - 1] || res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
-            attnApplyData(mergedList, meta, true);
-            attnSaveToFirebase(mergedList, meta);
-            if (hadOld) showToast("➕ " + added + " absen baru, 🔄 " + updated + " diperbarui. Total sekarang " + mergedList.length + ".", "ok");
+            if (!res.list.length) { showToast("⚠️ Tidak ada absen valid di file ini (butuh SOC / EHA Operator dengan Clock In). Import dibatalkan.", "info"); input.value = ""; return; }
+            attnPending = { fileName: file.name, res: res };
+            attnShowPreview();
         } catch (err) { console.error(err); showToast("❌ Gagal membaca file attendance.", "err"); }
         input.value = "";
     };
     if (isXlsx) reader.readAsArrayBuffer(file); else reader.readAsText(file);
+}
+
+// MODE TUMPUK: data lama tetap dipertahankan. Kunci = OpsID + Clock In Date.
+// Kalau kunci yang sama ada di file baru, baris lama diganti yang baru; kunci yang tidak ada di file baru tetap aman.
+// Murni hitungan (tanpa DOM / tulis data), dipakai preview dan simpan supaya angkanya konsisten.
+function attnComputeMerge(list) {
+    const map = {}; let added = 0, updated = 0, changed = 0;
+    attnRows.forEach(function (r) { map[r.opsId.toLowerCase() + "|" + r.date] = r; });
+    const hadOld = attnRows.length > 0, sig = function (r) { return attnRowToArr(r).join("\u0001"); };
+    list.forEach(function (r) {
+        const k = r.opsId.toLowerCase() + "|" + r.date;
+        if (map[k]) { updated++; if (sig(map[k]) !== sig(r)) changed++; } else added++;
+        map[k] = r;
+    });
+    return { merged: Object.keys(map).map(function (k) { return map[k]; }), added: added, updated: updated, changed: changed, hadOld: hadOld };
+}
+
+// OpsID di file yang belum terdaftar di master karyawan (cek tanpa beda huruf besar/kecil). loaded=false kalau master belum termuat.
+function attnMasterMissing(list) {
+    const keys = Object.keys(masterKaryawan || {});
+    if (!keys.length) return { loaded: false, missing: [] };
+    const have = {}, seen = {}, missing = [];
+    keys.forEach(function (k) { have[k.toLowerCase()] = 1; });
+    list.forEach(function (r) {
+        const k = r.opsId.toLowerCase();
+        if (!have[k] && !seen[k]) { seen[k] = 1; missing.push({ opsId: r.opsId, name: r.name }); }
+    });
+    return { loaded: true, missing: missing };
+}
+
+function attnPvDate(ymd) { const p = String(ymd || "").split("-"); return p.length === 3 ? (+p[2]) + " " + ATTN_MON[+p[1] - 1] + " " + p[0] : "-"; }
+function attnPvRange(a, b) {
+    if (!a) return "-";
+    if (a === b) return attnPvDate(a);
+    return a.slice(0, 7) === b.slice(0, 7) ? (+a.slice(8)) + "–" + attnPvDate(b) : attnPvDate(a) + " – " + attnPvDate(b);
+}
+
+function attnShowPreview() {
+    const p = attnPending, res = p.res, m = attnComputeMerge(res.list), mm = attnMasterMissing(res.list);
+    const esc = escapeHtml, b = function (t) { return "<b>" + t + "</b>"; }, ln = function (t) { return '<div class="attn-pv-line">' + t + "</div>"; };
+    document.getElementById("attnPvFile").innerText = "📄 " + p.fileName;
+    document.getElementById("attnPvHead").innerHTML = b(m.added) + " baru · " + b(m.updated) + " diperbarui · rentang " + b(esc(attnPvRange(res.min, res.max))) +
+        (mm.loaded ? " · " + b(mm.missing.length) + " OpsID belum ada di master" : "");
+
+    const warns = [];
+    if (m.hadOld) {   // salah file / salah bulan: rentang file terpaut jauh dari data yang sudah ada
+        const dates = attnRows.map(function (r) { return r.date; }).sort(), exMin = dates[0], exMax = dates[dates.length - 1];
+        const day = 86400000, gap = res.min > exMax ? Math.round((attnUtc(res.min) - attnUtc(exMax)) / day) : (res.max < exMin ? Math.round((attnUtc(exMin) - attnUtc(res.max)) / day) : 0);
+        if (gap > 7) warns.push("⚠️ Rentang file (" + attnPvRange(res.min, res.max) + ") terpaut " + gap + " hari dari data yang sudah ada (" + attnPvRange(exMin, exMax) + "). Pastikan ini file yang benar.");
+    }
+    if (!mm.loaded) warns.push("ℹ️ Data master karyawan belum termuat, jadi pengecekan OpsID belum bisa dilakukan.");
+    document.getElementById("attnPvWarn").innerHTML = warns.map(function (w) { return '<div class="attn-pv-warn">' + esc(w) + "</div>"; }).join("");
+
+    const rows = [];
+    rows.push(ln("🆕 " + b("Baru: " + m.added + " absen") + " akan ditambahkan."));
+    rows.push(ln("🔄 " + b("Diperbarui: " + m.updated + " absen") + (m.updated
+        ? " — baris lama dengan OpsID + tanggal yang sama akan <u>ditimpa</u> (" + m.changed + " isinya berubah, " + (m.updated - m.changed) + " sama persis)."
+        : " — tidak ada baris lama yang ditimpa.")));
+    rows.push(ln("📅 " + b("Rentang file:") + " " + esc(res.min) + " s/d " + esc(res.max) + (m.hadOld ? "<br><span style=\"color:var(--text-muted);\">Total setelah digabung: " + m.merged.length + " absen.</span>" : "")));
+    if (mm.loaded) {
+        const show = mm.missing.slice(0, 10).map(function (x) { return esc(x.opsId) + (x.name ? " (" + esc(x.name) + ")" : ""); }).join(", ");
+        rows.push(ln("👤 " + b("OpsID belum ada di master: " + mm.missing.length) + (mm.missing.length
+            ? "<br><span style=\"color:var(--text-muted);\">" + show + (mm.missing.length > 10 ? ", dan " + (mm.missing.length - 10) + " lainnya" : "") + "</span>"
+            : " — semua sudah terdaftar.")));
+    }
+    if (res.skipped || res.excluded) rows.push(ln("ℹ️ " + [res.skipped ? res.skipped + " baris tanpa Clock In diabaikan" : "", res.excluded ? res.excluded + " absen dept lain diabaikan (hanya SOC & EHA Operator)" : ""].filter(Boolean).join(" · ")));
+    document.getElementById("attnPvDetail").innerHTML = rows.join("");
+    document.getElementById("attnPreviewModal").style.display = "flex";
+}
+
+function attnPreviewClose() { attnPending = null; document.getElementById("attnPreviewModal").style.display = "none"; }
+function attnPreviewCancel() { attnPreviewClose(); showToast("Import dibatalkan. Data tidak berubah.", "info"); }
+
+function attnPreviewConfirm() {
+    const p = attnPending; if (!p) return;
+    attnPreviewClose();
+    const res = p.res, m = attnComputeMerge(res.list);   // dihitung ulang thd data terbaru (bisa berubah kalau orang lain import saat preview terbuka)
+    const mergedList = m.merged, added = m.added, updated = m.updated, hadOld = m.hadOld;
+    const mDates = mergedList.map(function (r) { return r.date; }).sort();
+    const meta = { fileName: p.fileName + (hadOld ? " (digabung dgn data lama)" : ""), count: mergedList.length, min: mDates[0] || res.min, max: mDates[mDates.length - 1] || res.max, skipped: res.skipped, excluded: res.excluded, importedBy: window.__authUserEmail || "unknown", importedAt: getWorkingDateStr(new Date()) + " " + new Date().toTimeString().slice(0, 5) };
+    const logEntry = { ts: Date.now(), at: meta.importedAt, by: meta.importedBy, file: p.fileName, added: added, updated: updated, total: mergedList.length, min: meta.min, max: meta.max, inFile: res.list.length, skipped: res.skipped, excluded: res.excluded };
+    attnApplyData(mergedList, meta, true);
+    attnSaveToFirebase(mergedList, meta, logEntry);
+    if (hadOld) showToast("➕ " + added + " absen baru, 🔄 " + updated + " diperbarui. Total sekarang " + mergedList.length + ".", "ok");
 }
 
 // ----- Simpan & muat dari Firebase: <FB_ROOT>/attendanceFms { fileName, count, min, max, skipped, excluded, importedBy, importedAt, rows: [[...], ...] }
@@ -4108,12 +4296,55 @@ function attnApplyData(list, meta, forceDates) {
     else if (currentActiveModule === "sum") attnRenderSummary();
 }
 
-function attnSaveToFirebase(list, meta) {
+// Riwayat import disimpan di <FB_ROOT>/attendanceFms/importLog/<pushKey> (satu entri per import, maks ATTN_LOG_MAX).
+// Data utama (meta + rows) pakai update per-field (bukan set) supaya importLog tidak ikut terhapus. Log ditulis TERPISAH
+// dari data, jadi kalau Security Rules menolak importLog, import data tetap berhasil.
+const ATTN_LOG_MAX = 200;
+let attnImportLog = [];   // [{ key, ts, at, by, file, added, updated, total, min, max, inFile, skipped, excluded }] terbaru di atas
+let attnLegacyMeta = null;
+
+function attnSaveToFirebase(list, meta, logEntry) {
     if (!fbDb) { showToast("⚠️ Belum terhubung ke Firebase. Data hanya sementara di halaman ini.", "info"); return; }
-    fbDb.ref(FB_ROOT + "/attendanceFms").set(Object.assign({}, meta, { rows: list.map(attnRowToArr) }))
-        .then(function () { showToast("✅ " + list.length + " data absen FMS disimpan ke Firebase.", "ok"); })
+    const base = FB_ROOT + "/attendanceFms/", up = {};
+    Object.keys(meta).forEach(function (k) { up[base + k] = meta[k]; });
+    up[base + "rows"] = list.map(attnRowToArr);
+    fbDb.ref().update(up)
+        .then(function () {
+            showToast("✅ " + list.length + " data absen FMS disimpan ke Firebase.", "ok");
+            if (!logEntry) return;
+            const lu = {}, key = fbDb.ref(base + "importLog").push().key;
+            lu[base + "importLog/" + key] = logEntry;
+            const over = attnImportLog.length + 1 - ATTN_LOG_MAX;   // buang entri paling lama kalau melebihi batas
+            if (over > 0) attnImportLog.slice(-over).forEach(function (e) { lu[base + "importLog/" + e.key] = null; });
+            return fbDb.ref().update(lu).catch(function (err) { console.error(err); showToast("⚠️ Data tersimpan, tapi Update Log gagal dicatat. Cek Security Rules path attendanceFms/importLog.", "info"); });
+        })
         .catch(function (err) { console.error(err); showToast("❌ Gagal simpan ke Firebase. Cek Security Rules untuk path attendanceFms.", "err"); });
 }
+
+function attnLogRange(e) { return e.min ? (e.min === e.max ? e.min : e.min + " s/d " + e.max) : "-"; }
+function attnLogCell(txt, extra, title) {
+    return '<td style="padding:7px 10px; border-top:1px solid var(--border-color); color:var(--text-main);' + (extra || "") + '"' + (title ? ' title="' + escapeHtml(title) + '"' : "") + ">" + escapeHtml(String(txt)) + "</td>";
+}
+function attnOpenImportLog() {
+    const body = document.getElementById("attnImportLogBody"), note = document.getElementById("attnImportLogNote");
+    const num = function (v) { return v == null ? "-" : v; };
+    const row = function (e) {
+        return "<tr>" + attnLogCell(e.at || "-", " white-space:nowrap;") + attnLogCell(e.by || "-") + attnLogCell(e.file || "-", " word-break:break-all;", e.file) +
+            attnLogCell(num(e.added), " text-align:center;") + attnLogCell(num(e.updated), " text-align:center;") + attnLogCell(num(e.total), " text-align:center;") +
+            attnLogCell(attnLogRange(e), " white-space:nowrap;") + "</tr>";
+    };
+    let html = attnImportLog.map(row).join("");
+    if (!attnImportLog.length && attnLegacyMeta && attnLegacyMeta.importedBy) {
+        const m = attnLegacyMeta;
+        html = row({ at: m.importedAt, by: m.importedBy, file: m.fileName, total: m.count, min: m.min, max: m.max });
+        note.innerText = "Baru import terakhir yang tercatat (import sebelum fitur Update Log belum punya riwayat).";
+    } else {
+        note.innerText = "Riwayat siapa saja yang meng-import Raw Attendance FMS (terbaru di atas, maks " + ATTN_LOG_MAX + " entri).";
+    }
+    body.innerHTML = html || '<tr><td colspan="7" style="padding:24px; text-align:center; color:var(--text-muted);">Belum ada riwayat import.</td></tr>';
+    document.getElementById("attnImportLogModal").style.display = "flex";
+}
+function attnCloseImportLog() { document.getElementById("attnImportLogModal").style.display = "none"; }
 
 // Listener dipasang sekali, baru saat tab ini pertama dibuka (biar page load Rest Time nggak ikut narik datanya).
 function attnAttachListener() {
@@ -4122,6 +4353,9 @@ function attnAttachListener() {
     attnListenerRef.on("value", function (snap) {
         const v = snap.val(); if (!v || !v.rows) return;
         const meta = { fileName: v.fileName || "", count: v.count || 0, min: v.min || "", max: v.max || "", skipped: v.skipped || 0, excluded: v.excluded || 0, importedBy: v.importedBy || "", importedAt: v.importedAt || "" };
+        attnLegacyMeta = meta;
+        attnImportLog = Object.keys(v.importLog || {}).map(function (k) { return Object.assign({ key: k }, v.importLog[k]); }).sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+        if (document.getElementById("attnImportLogModal").style.display === "flex") attnOpenImportLog();
         attnApplyData(Object.keys(v.rows).map(function (k) { return attnRowFromArr(v.rows[k]); }), meta, false);
     });
 }
@@ -4264,6 +4498,12 @@ function renderAttnPreWork() {
     document.getElementById("attnSudah").innerText = cnt(function (x) { return x.group === "sudah"; });
     document.getElementById("attnBelum").innerText = cnt(function (x) { return x.group === "belum"; });
     document.getElementById("attnUnfit").innerText = cnt(function (x) { return x.pw.code === "UNFIT"; });
+    // Kartu yang sesuai filter Status Pre-Work aktif diberi highlight (sinkron dgn dropdown, dua arah)
+    const fSel = document.getElementById("attnFilterStatus").value;
+    document.querySelectorAll("#attnCards .center-box[data-f]").forEach(function (c) {
+        const on = fSel !== "All" && c.dataset.f === fSel;
+        c.classList.toggle("attn-card-active", on); c.setAttribute("aria-pressed", on ? "true" : "false");
+    });
     const na = cnt(function (x) { return x.group === "na"; }), note = document.getElementById("attnNote");
     note.style.display = na ? "block" : "none";
     note.innerText = na ? "⚠️ " + na + " operator belum bisa dicek: sheet Pre-Work masih dimuat atau gagal dimuat. Statusnya tampil N/A." : "";
@@ -4509,6 +4749,25 @@ document.addEventListener("click", function (e) {
     if (td) attnSumDrill(td.dataset.m, td.dataset.k, td.dataset.v);
 });
 document.addEventListener("keydown", function (e) { if (e.key === "Escape") attnDrillClose(); });
+
+// ===== Kartu angka diklik = filter tabel (sama dgn dropdown Status Pre-Work). Klik kartu yang sedang aktif = balik ke All Status =====
+function attnCardFilter(f) {
+    const sel = document.getElementById("attnFilterStatus");
+    sel.value = (f !== "All" && sel.value === f) ? "All" : f;
+    renderAttnPreWork();
+}
+document.addEventListener("click", function (e) {
+    const c = e.target.closest && e.target.closest("#attnCards .center-box[data-f]");
+    if (c) attnCardFilter(c.dataset.f);
+});
+document.addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const c = e.target.closest && e.target.closest("#attnCards .center-box[data-f]");
+    if (c) { e.preventDefault(); attnCardFilter(c.dataset.f); }
+});
+document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && attnPending && document.getElementById("attnPreviewModal").style.display === "flex") attnPreviewCancel();
+});
 
 function attnApplyModuleVisibility(mod) {
     const isAttn = mod === "attn", isSum = mod === "sum", other = isAttn || isSum, $ = function (id) { return document.getElementById(id); };
