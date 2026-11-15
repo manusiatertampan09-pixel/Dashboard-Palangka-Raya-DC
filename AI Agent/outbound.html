@@ -61,6 +61,18 @@ tailwind.config = {
   th:first-child, td:first-child { border-left: 1px solid #e2e8f0; text-align: left; padding-left: 8px !important; }
   tr:first-child th { border-top: 1px solid #e2e8f0; }
   .dynamic-table thead th { white-space: nowrap; }
+  #schedHistList summary { list-style: none; }
+  #schedHistPanel { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+  #schedHistList .schedRouteCard { border: 2px solid #000; }
+  .dark #schedHistList .schedRouteCard { border-color: #e2e8f0; }
+  #schedHistList table th, #schedHistList table td { padding: 6px 8px !important; line-height: 1.3; }
+  #schedHistList .schedGrpEnd td { border-bottom: 2px solid #64748b !important; }
+  #schedHistList .schedRouteCell { border-bottom: 2px solid #64748b !important; border-right: 2px solid #64748b !important; }
+  .dark #schedHistList .schedGrpEnd td, .dark #schedHistList .schedRouteCell { border-bottom-color: #94a3b8 !important; }
+  .dark #schedHistList .schedRouteCell { border-right-color: #94a3b8 !important; }
+  #schedHistList summary::-webkit-details-marker { display: none; }
+  #schedHistList details > summary .schedChev { transition: transform .15s; }
+  #schedHistList details[open] > summary .schedChev { transform: rotate(90deg); }
   
   .dark th, .dark td { border-color: #1e293b; }
   .dark th:first-child, .dark td:first-child { border-left-color: #1e293b; }
@@ -394,6 +406,23 @@ th, td { padding: 5px 7px !important; }
     "ob.packer.operatorUnit": { "id": "{n} Operator", "en": "{n} Operator", "ja": "{n} 名", "zh": "{n} 名" },
     "ob.jump.aging": { "id": "Aging & Backlog", "en": "Aging & Backlog" },
     "ob.jump.occupancy": { "id": "Occupancy", "en": "Occupancy" },
+    "ob.sched.title": { "id": "Schedule Outbound", "en": "Outbound Schedule" },
+    "ob.sched.sub": { "id": "Jadwal LH per Route — Schedule V.5", "en": "LH schedule per route — Schedule V.5" },
+    "ob.sched.search": { "id": "Cari route / LH scheme / slot...", "en": "Search route / LH scheme / slot..." },
+    "ob.sched.refresh": { "id": "Refresh", "en": "Refresh" },
+    "ob.th.nextSlot": { "id": "Next Slot", "en": "Next Slot" },
+    "ob.th.nextDepart": { "id": "Next Depart", "en": "Next Depart" },
+    "ob.sched.allDays": { "id": "Semua Hari", "en": "All Days" },
+    "ob.sched.todayOnly": { "id": "Aktif Hari Ini", "en": "Active Today" },
+    "ob.sched.thInd": { "id": "Sch Indicator", "en": "Sch Indicator" },
+    "ob.sched.thUnit": { "id": "Unit Type", "en": "Unit Type" },
+    "ob.sched.thLh": { "id": "LH Scheme", "en": "LH Scheme" },
+    "ob.sched.thRoute": { "id": "Route", "en": "Route" },
+    "ob.sched.thSlot": { "id": "Slot", "en": "Slot" },
+    "ob.sched.thEtd": { "id": "ETD Origin", "en": "ETD Origin" },
+    "ob.sched.thDays": { "id": "Schedule Active Day", "en": "Schedule Active Day" },
+    "ob.sched.loading": { "id": "Memuat jadwal dari Google Sheet...", "en": "Loading schedule from Google Sheet..." },
+    "ob.sched.empty": { "id": "Tidak ada jadwal yang cocok.", "en": "No matching schedule." },
     "ob.packer.viewTop": { "id": "Menampilkan Top {n} dari {total} operator", "en": "Showing Top {n} of {total} operators" },
     "ob.packer.viewTopCritical": { "id": "Menampilkan Top {n} + {x} operator dengan backlog kritis, dari {total} operator", "en": "Showing Top {n} + {x} operators with critical backlog, out of {total}" },
     "ob.packer.viewAll": { "id": "Menampilkan semua {total} operator", "en": "Showing all {total} operators" },
@@ -970,6 +999,8 @@ th, td { padding: 5px 7px !important; }
               <tr>
                 <th class="w-10" data-i18n="ob.th.no">No</th>
                 <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
+                <th class="w-16" data-i18n-title="ob.th.nextSlot" title="Slot keberangkatan berikutnya (dari Schedule Outbound)" data-i18n="ob.th.nextSlot">Next Slot</th>
+                <th class="w-20" data-i18n-title="ob.th.nextDepart" title="ETD Origin terdekat dari jam device (dari Schedule Outbound)" data-i18n="ob.th.nextDepart">Next Depart</th>
                 <th class="w-12 bg-amber-600 border-x border-amber-700 text-white" data-i18n="ob.th.hv">HV</th>
                 <th class="w-12" data-i18n="ob.th.liquid">Liquid</th>
                 <th class="w-14" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing" data-i18n="ob.th.bulky">Bulky</th>
@@ -985,7 +1016,7 @@ th, td { padding: 5px 7px !important; }
               </tr>
             </thead>
             <tbody id="routeTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-              <tr><td colspan="14" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyPleaseImport">Silakan import data.</td></tr>
+              <tr><td colspan="16" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyPleaseImport">Silakan import data.</td></tr>
             </tbody>
           </table>
         </div>
@@ -1025,6 +1056,68 @@ th, td { padding: 5px 7px !important; }
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <section id="scheduleSection" class="flex flex-col gap-3">
+    <div class="flex items-center gap-3 pt-4 pb-1">
+      <i class="fa-solid fa-calendar-days text-sky-500"></i>
+      <h2 class="text-base font-extrabold text-slate-800 dark:text-slate-100 whitespace-nowrap" data-i18n="ob.sched.title">Schedule Outbound</h2>
+      <div class="flex-1 h-px bg-slate-300 dark:bg-slate-700"></div>
+    </div>
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col overflow-hidden">
+      <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white flex flex-wrap justify-between items-center gap-2 flex-shrink-0 px-3">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-truck-fast text-sky-400"></i> <span data-i18n="ob.sched.sub">Jadwal LH per Route — Schedule V.5</span></span>
+        <span class="flex items-center gap-2">
+          <input id="schedSearch" type="text" data-i18n-placeholder="ob.sched.search" placeholder="Cari route / LH scheme / slot..." class="text-[10px] font-normal text-slate-800 bg-white rounded-md px-2 py-1 w-52 outline-none border border-slate-300 focus:border-sky-400" />
+          <select id="schedDayFilter" class="text-[10px] font-normal text-slate-800 bg-white rounded-md px-1.5 py-1 outline-none border border-slate-300">
+            <option value="" data-i18n="ob.sched.allDays">Semua Hari</option>
+            <option value="today" data-i18n="ob.sched.todayOnly">Aktif Hari Ini</option>
+          </select>
+          <button id="schedHistToggle" type="button" onclick="toggleSchedHistory()" class="text-[10px] font-bold px-2.5 py-1 rounded-md bg-amber-500 hover:bg-amber-400 text-slate-900 transition flex items-center gap-1.5 relative"><i class="fa-solid fa-clock-rotate-left"></i> <span>Riwayat Perubahan</span> <span id="schedHistBtnCount" class="bg-slate-900/80 text-white px-1.5 rounded-full font-mono">0</span><span id="schedHistDot" class="hidden absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-rose-500 animate-pulse border border-white"></span></button>
+          <button id="schedRefreshBtn" type="button" class="text-[10px] font-bold px-2.5 py-1 rounded-md bg-sky-600 hover:bg-sky-500 transition flex items-center gap-1"><i class="fa-solid fa-rotate"></i> <span data-i18n="ob.sched.refresh">Refresh</span></button>
+          <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-mono" id="schedCountInfo">Total: 0</span>
+        </span>
+      </div>
+      <div class="overflow-x-auto overflow-y-auto custom-scrollbar" style="max-height: 640px;">
+        <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
+          <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
+            <tr>
+              <th class="w-10" data-i18n="ob.th.no">No</th>
+              <th class="w-24" data-i18n="ob.sched.thInd">Sch Indicator</th>
+              <th class="text-left pl-2" data-i18n="ob.sched.thLh">LH Scheme</th>
+              <th class="text-left pl-2" data-i18n="ob.sched.thRoute">Route</th>
+              <th class="w-24" data-i18n="ob.sched.thSlot">Slot</th>
+              <th class="w-32" data-i18n="ob.sched.thUnit">Unit Type</th>
+              <th class="w-28" data-i18n="ob.sched.thEtd">ETD Origin</th>
+              <th class="text-left pl-2" data-i18n="ob.sched.thDays">Schedule Active Day</th>
+            </tr>
+          </thead>
+          <tbody id="scheduleTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
+            <tr><td colspan="8" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.sched.loading">Memuat jadwal dari Google Sheet...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="px-3 py-1.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-[10px] text-slate-500 dark:text-slate-400 font-sans" id="schedUpdatedInfo">&nbsp;</div>
+    </div>
+
+    <div id="schedHistPanel" class="hidden fixed inset-0 z-[9999] items-center justify-center bg-black/50 p-4" onclick="if(event.target===this)toggleSchedHistory(false)">
+    <div class="bg-white dark:bg-slate-900 rounded-xl border border-slate-200/80 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden w-full" style="max-height: 92vh; max-width: min(97vw, 1600px);">
+      <div class="p-2 bg-slate-800 dark:bg-slate-950 font-bold text-white text-[14px] flex justify-between items-center flex-shrink-0 px-3">
+        <span class="flex items-center gap-2"><i class="fa-solid fa-clock-rotate-left text-amber-400"></i> <span>Riwayat Perubahan Schedule</span></span>
+        <span class="flex items-center gap-2">
+          <span class="text-[11px] bg-white/20 px-2 py-0.5 rounded-full font-mono" id="schedHistCount">0 perubahan</span>
+          <button type="button" onclick="toggleSchedHistory(false)" class="hover:bg-white/10 rounded-md px-2 py-0.5 text-sm leading-none" title="Tutup">&times;</button>
+        </span>
+      </div>
+      <div id="schedGuardBanner" class="hidden px-3 py-2 bg-amber-50 dark:bg-amber-950/30 border-b border-amber-200 dark:border-amber-900/60 text-[13px] font-sans text-amber-800 dark:text-amber-300"></div>
+      <div id="schedHistList" class="overflow-y-auto custom-scrollbar divide-y divide-slate-100 dark:divide-slate-800 flex-1 min-h-0">
+        <div class="p-4 text-center text-[13px] text-slate-400 dark:text-slate-500 font-sans">Memuat riwayat perubahan...</div>
+      </div>
+      <div class="px-3 py-1.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-[12px] font-medium text-slate-700 dark:text-slate-300 font-sans">
+        <i class="fa-solid fa-circle-info mr-1"></i>Perubahan terdeteksi otomatis saat halaman ini dibuka (dicek ulang tiap 5 menit selama halaman terbuka). Tanggal &amp; jam = waktu terdeteksi (WIB). Versi lama tetap tersimpan dan bisa diunduh.
+      </div>
+    </div>
     </div>
   </section>
 
@@ -2005,6 +2098,34 @@ function updateClock() {
   }
 }
 setInterval(updateClock, 1000); updateClock();
+
+/* ===== Next Slot & Next Depart (tabel Occupancy Inner Island) =====
+   Data dari Schedule Outbound (window.schedNextDeparture), acuan jam = jam lokal device. */
+function updateNextDepartCells() {
+  const fn = window.schedNextDeparture;
+  document.querySelectorAll('#routeTableBody td[data-nd-slot]').forEach(function (slotTd) {
+    const depTd = slotTd.parentElement.querySelector('td[data-nd-dep]');
+    if (!depTd) return;
+    const label = slotTd.dataset.ndRoute;
+    const route = linehaulRoutes.find(function (r) { return r.label === label; });
+    const nx = (fn && route) ? fn(label, route.hubs) : null;
+    if (!nx) {
+      slotTd.textContent = '-'; slotTd.className = 'text-center font-bold text-slate-400 dark:text-slate-600';
+      depTd.textContent = '-'; depTd.className = 'text-center font-bold text-slate-400 dark:text-slate-600';
+      return;
+    }
+    const h = Math.floor(nx.mins / 60), m = nx.mins % 60;
+    const cd = h > 0 ? (h + 'j ' + m + 'm') : (m + 'm');
+    const urgent = nx.off === 0 && nx.mins <= 30, soon = nx.off === 0 && nx.mins <= 60;
+    const cls = urgent ? 'text-rose-600 dark:text-rose-400' : soon ? 'text-amber-600 dark:text-amber-400' : 'text-sky-700 dark:text-sky-300';
+    slotTd.textContent = nx.slot || '-';
+    slotTd.className = 'text-center font-bold text-amber-600 dark:text-amber-400';
+    depTd.className = 'text-center font-bold ' + cls;
+    depTd.innerHTML = nx.etd + '<div class="text-[9px] font-sans font-semibold text-slate-400 dark:text-slate-500">' + (nx.off === 1 ? 'Besok · ' : nx.off > 1 ? '+' + nx.off + ' hari · ' : '') + cd + '</div>';
+  });
+}
+window.updateNextDepartCells = updateNextDepartCells;
+setInterval(updateNextDepartCells, 30 * 1000);
 
 document.getElementById('excelFile').addEventListener('change', function(e) {
   const file = e.target.files[0];
@@ -3432,6 +3553,8 @@ function renderDashboard() {
     return `<tr class="${bgRow} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
       <td class="text-center text-slate-400 dark:text-slate-500">${idx++}</td>
       <td class="font-sans text-slate-800 dark:text-slate-200 font-bold max-w-xs truncate text-left pl-2 cursor-pointer hover:text-shopee dark:hover:text-orange-400 hover:underline transition" onclick="showRouteDrilldown('${safeLabel}')" title="Klik untuk lihat breakdown per Hub di rute ${row.label}">${row.label}</td>
+      <td data-nd-slot data-nd-route="${row.label.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" class="text-center font-bold text-slate-400 dark:text-slate-600">-</td>
+      <td data-nd-dep class="text-center font-bold text-slate-400 dark:text-slate-600">-</td>
       <td class="text-center font-bold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${nz(row.hv)}</td>
       <td class="text-center text-sky-600 dark:text-sky-400">${nz(row.liquid)}</td>
       <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.bulky)}</td>
@@ -3446,6 +3569,7 @@ function renderDashboard() {
       <td ${tdAging(d5plus, row, 'd5')}>${nz(d5plus)}</td>
     </tr>`;
   }).join('');
+  updateNextDepartCells();
 
   const outerSorted = Object.values(outerIslandMap).sort((a, b) => b.total - a.total);
   document.getElementById('outerIslandTotalHeader').innerText = t('ob.occ.totalLabel', { n: totalOuterIslandCount.toLocaleString('id-ID') });
@@ -3728,6 +3852,555 @@ if (window.location.hash === '#occupancy') {
     setTimeout(function () { obs.disconnect(); }, 30000);
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+})();
+</script>
+<script>
+/* ===== Schedule Outbound (Google Sheet: Schedule V.5) ===== */
+(function () {
+  const SCHED_SHEET_ID = '1vuJf4-_9sVpWI2WnokZxVCcOyIrnci-qQckxoabNQ8w';
+  const SCHED_SHEET_NAME = 'Schedule V.5';
+  const SCHED_SHEET_GID = '1130982389';
+  // Index kolom (0-based): C=2, D=3, E=4, U=20, X=23, AC=28, AP=41
+  const COL = { ind: 2, lh: 3, route: 4, slot: 20, unit: 23, etd: 28, days: 41 };
+
+  let schedRows = [];
+
+  function parseCSV(text) {
+    const rows = []; let row = [], cur = '', q = false;
+    for (let i = 0; i < text.length; i++) {
+      const c = text[i];
+      if (q) {
+        if (c === '"') { if (text[i + 1] === '"') { cur += '"'; i++; } else q = false; }
+        else cur += c;
+      } else if (c === '"') q = true;
+      else if (c === ',') { row.push(cur); cur = ''; }
+      else if (c === '\n') { row.push(cur); rows.push(row); row = []; cur = ''; }
+      else if (c !== '\r') cur += c;
+    }
+    if (cur.length || row.length) { row.push(cur); rows.push(row); }
+    return rows;
+  }
+
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m])); }
+
+  const DAY_MAP = [
+    ['sun', 'min'], ['mon', 'sen'], ['tue', 'sel'], ['wed', 'rab'], ['thu', 'kam'], ['fri', 'jum'], ['sat', 'sab']
+  ];
+  function isActiveToday(daysStr) {
+    const s = String(daysStr || '').toLowerCase();
+    if (!s) return false;
+    if (/daily|everyday|setiap hari|all/.test(s)) return true;
+    const d = DAY_MAP[new Date().getDay()];
+    return s.split(/[,;/&\s]+/).some(tok => tok && (tok.startsWith(d[0]) || tok.startsWith(d[1])));
+  }
+
+  // ===== Next Slot & Next Depart: ETD Origin terdekat (>= jam lokal device) per route =====
+  function activeOnDate(daysStr, date) {
+    const s = String(daysStr || '').toLowerCase().trim();
+    if (!s || /daily|everyday|setiap hari|all/.test(s)) return true;
+    const d = DAY_MAP[date.getDay()];
+    return s.split(/[,;/&\s]+/).some(tok => tok && (tok.startsWith(d[0]) || tok.startsWith(d[1])));
+  }
+  const nrm = s => String(s || '').toLowerCase().replace(/\s+/g, ' ').trim();
+  function destOf(route) { const i = String(route || '').indexOf('>'); return nrm(i >= 0 ? String(route).slice(i + 1) : route); }
+  function hubsOfDest(dest) { return Array.from(new Set(dest.split(/\s*>\s*|\s+-\s+/).filter(Boolean))); }
+  function parseEtd(s) { const m = String(s || '').match(/(\d{1,2})[:.](\d{2})/); return m ? [parseInt(m[1], 10), parseInt(m[2], 10)] : null; }
+  window.schedNextDeparture = function (label, hubs, nowDate) {
+    const now = nowDate || new Date();
+    const lab = nrm(label);
+    const hubSet = new Set((hubs || []).map(nrm));
+    let rows = schedRows.filter(r => destOf(r.route) === lab);
+    if (!rows.length) rows = schedRows.filter(r => { const h = hubsOfDest(destOf(r.route)); return h.length === hubSet.size && h.every(x => hubSet.has(x)); });
+    rows = rows.filter(r => !/^off$/i.test(String(r.ind || '').trim()) && parseEtd(r.etd));
+    if (!rows.length) return null;
+    for (let off = 0; off <= 7; off++) {
+      const base = new Date(now.getFullYear(), now.getMonth(), now.getDate() + off);
+      let best = null;
+      rows.forEach(r => {
+        if (!activeOnDate(r.days, base)) return;
+        const hm = parseEtd(r.etd);
+        const t = new Date(base.getFullYear(), base.getMonth(), base.getDate(), hm[0], hm[1]);
+        if (t < now) return;
+        if (!best || t < best.t) best = { t: t, r: r };
+      });
+      if (best) {
+        const hm = parseEtd(best.r.etd);
+        return { slot: best.r.slot, etd: String(hm[0]).padStart(2, '0') + ':' + String(hm[1]).padStart(2, '0'), mins: Math.round((best.t - now) / 60000), off: off };
+      }
+    }
+    return null;
+  };
+  // ===== end Next Slot & Next Depart =====
+
+  function renderDays(daysStr) {
+    const parts = String(daysStr || '').split(/[,;]+/).map(x => x.trim()).filter(Boolean);
+    if (parts.length === 7) parts.splice(0, 7, 'Setiap Hari');
+    if (!parts.length) return '<span class="text-slate-400">-</span>';
+    return parts.map(p => `<span class="inline-block px-1.5 py-0.5 mr-1 mb-0.5 rounded bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900 font-sans font-semibold text-[10px]">${esc(p)}</span>`).join('');
+  }
+
+  function indBadge(v) {
+    const x = String(v || '').trim();
+    if (!x) return '<span class="text-slate-400">-</span>';
+    const on = /^on$/i.test(x), off = /^off$/i.test(x);
+    const cls = on ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900'
+      : off ? 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-900'
+      : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+    return `<span class="inline-block px-1.5 py-0.5 rounded border font-sans font-bold text-[10px] ${cls}">${esc(x)}</span>`;
+  }
+
+  function renderSchedule() {
+    const body = document.getElementById('scheduleTableBody');
+    const info = document.getElementById('schedCountInfo');
+    if (!body) return;
+    const q = (document.getElementById('schedSearch').value || '').trim().toLowerCase();
+    const dayF = document.getElementById('schedDayFilter').value;
+    const list = schedRows.filter(r => {
+      if (dayF === 'today' && !isActiveToday(r.days)) return false;
+      if (!q) return true;
+      return (r.ind + ' ' + r.lh + ' ' + r.route + ' ' + r.slot + ' ' + r.unit + ' ' + r.etd + ' ' + r.days).toLowerCase().includes(q);
+    });
+    info.textContent = 'Total: ' + list.length + (list.length !== schedRows.length ? ' / ' + schedRows.length : '');
+    if (!list.length) {
+      body.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">' + esc(t('ob.sched.empty')) + '</td></tr>';
+      return;
+    }
+    body.innerHTML = list.map((r, i) => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
+      <td class="text-slate-400">${i + 1}</td>
+      <td>${indBadge(r.ind)}</td>
+      <td class="font-sans text-left pl-2 font-semibold text-slate-700 dark:text-slate-200">${esc(r.lh) || '-'}</td>
+      <td class="font-sans text-left pl-2 font-bold text-slate-800 dark:text-slate-100">${esc(r.route) || '-'}</td>
+      <td class="font-bold text-amber-600 dark:text-amber-400">${esc(r.slot) || '-'}</td>
+      <td class="font-sans font-semibold text-slate-700 dark:text-slate-200">${esc(r.unit) || '-'}</td>
+      <td class="font-bold text-sky-700 dark:text-sky-300">${esc(r.etd) || '-'}</td>
+      <td class="text-left pl-2">${renderDays(r.days)}</td>
+    </tr>`).join('');
+  }
+
+  function setMsg(msg) {
+    const body = document.getElementById('scheduleTableBody');
+    if (body) body.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-rose-500 font-sans">' + msg + '</td></tr>';
+  }
+
+  const SCHED_BASE = 'https://docs.google.com/spreadsheets/d/' + SCHED_SHEET_ID;
+
+  // Percobaan 1 & 2: fetch CSV (gviz lalu export)
+  async function fetchRowsCsv() {
+    const urls = [
+      SCHED_BASE + '/gviz/tq?tqx=out:csv&gid=' + SCHED_SHEET_GID,
+      SCHED_BASE + '/export?format=csv&gid=' + SCHED_SHEET_GID
+    ];
+    let lastErr;
+    for (const u of urls) {
+      try {
+        const res = await fetch(u + '&_=' + Date.now(), { cache: 'no-store' });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const text = await res.text();
+        if (/^\s*<(!doctype|html)/i.test(text)) throw new Error('Sheet belum public');
+        return parseCSV(text);
+      } catch (e) { lastErr = e; }
+    }
+    throw lastErr;
+  }
+
+  // Percobaan 3: JSONP via <script> (tidak kena CORS)
+  function fetchRowsJsonp() {
+    return new Promise((resolve, reject) => {
+      const cb = '__schedCb' + Date.now();
+      const sc = document.createElement('script');
+      const timer = setTimeout(() => { cleanup(); reject(new Error('JSONP timeout')); }, 15000);
+      function cleanup() { clearTimeout(timer); try { delete window[cb]; } catch (_) { window[cb] = undefined; } sc.remove(); }
+      window[cb] = function (resp) {
+        cleanup();
+        if (!resp || resp.status === 'error' || !resp.table) { reject(new Error('JSONP error: ' + JSON.stringify((resp && resp.errors) || resp))); return; }
+        resolve(resp.table.rows.map(r => (r.c || []).map(c => c ? (c.f != null ? c.f : (c.v != null ? c.v : '')) : '')));
+      };
+      sc.onerror = function () { cleanup(); reject(new Error('JSONP diblokir')); };
+      sc.src = SCHED_BASE + '/gviz/tq?tqx=out:json;responseHandler:' + cb + '&headers=0&gid=' + SCHED_SHEET_GID;
+      document.head.appendChild(sc);
+    });
+  }
+
+  let schedLoading = false, schedLastSig = null, schedLastLoadAt = 0;
+  const SCHED_POLL_MS = 30 * 1000; // auto-refresh tiap 30 detik
+  async function loadSchedule(isManual) {
+    if (schedLoading) return;
+    schedLoading = true;
+    const btn = document.getElementById('schedRefreshBtn');
+    const upd = document.getElementById('schedUpdatedInfo');
+    if (btn) btn.disabled = true;
+    const errs = [];
+    let all = null;
+    try { all = await fetchRowsCsv(); } catch (e) { errs.push('CSV: ' + e.message); }
+    if (!all) { try { all = await fetchRowsJsonp(); } catch (e) { errs.push('JSONP: ' + e.message); } }
+    if (all) {
+      // header = baris yang kolom D-nya "LH Scheme"; data mulai setelahnya
+      let start = all.findIndex(r => /lh\s*scheme/i.test(String(r[COL.lh] || '')));
+      start = start >= 0 ? start + 1 : 2;
+      const get = (r, i) => String(r[i] == null ? '' : r[i]).trim();
+      schedRows = all.slice(start).map(r => ({
+        ind: get(r, COL.ind), lh: get(r, COL.lh), route: get(r, COL.route), slot: get(r, COL.slot),
+        unit: get(r, COL.unit), etd: get(r, COL.etd), days: get(r, COL.days)
+      })).filter(r => /\S\s*>\s*\S/.test(r.route)); // buang baris kosong & catatan (mis. "Live 13 Nov")
+      const sig = new Date().getDay() + '|' + JSON.stringify(schedRows.map(r => [r.ind, r.lh, r.route, r.slot, r.unit, r.etd, r.days]));
+      const changed = sig !== schedLastSig || isManual === true;
+      schedLastSig = sig;
+      if (changed) {
+        renderSchedule();
+        if (window.schedAfterLoad) window.schedAfterLoad(schedRows);
+      }
+      schedLastLoadAt = Date.now();
+      if (window.updateNextDepartCells) window.updateNextDepartCells();
+      if (upd) upd.textContent = 'Last sync: ' + new Date().toLocaleString('id-ID') + ' • Sheet: ' + SCHED_SHEET_NAME;
+    } else {
+      console.error('Gagal load Schedule Outbound:', errs);
+      if (schedRows.length) {
+        if (upd) upd.textContent = 'Gagal refresh (' + errs.join(' | ') + ') — menampilkan data terakhir yang berhasil dimuat.';
+      } else setMsg('Gagal load Schedule (' + esc(errs.join(' | ')) + ') — <a class="underline" target="_blank" rel="noopener" href="' + SCHED_BASE + '/edit#gid=' + SCHED_SHEET_GID + '">buka Sheet</a>');
+    }
+    if (btn) btn.disabled = false;
+    schedLoading = false;
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('schedSearch').addEventListener('input', renderSchedule);
+    document.getElementById('schedDayFilter').addEventListener('change', renderSchedule);
+    document.getElementById('schedRefreshBtn').addEventListener('click', function () { loadSchedule(true); });
+    loadSchedule(true);
+    setInterval(function () { if (!document.hidden) loadSchedule(); }, SCHED_POLL_MS);
+    // begitu tab dibuka lagi / koneksi balik, langsung refresh kalau data sudah > 10 detik
+    document.addEventListener('visibilitychange', function () {
+      if (!document.hidden && Date.now() - schedLastLoadAt > 10 * 1000) loadSchedule();
+    });
+    window.addEventListener('online', function () { loadSchedule(); });
+  });
+})();
+</script>
+<script>
+/* ===== Backup & Riwayat Perubahan Schedule Outbound (Firebase) ===== */
+(function () {
+  const BASE = FB_OUTBOUND_ROOT + '/scheduleBackup';
+  const TZ = 'Asia/Jakarta';
+  const DAY_ORDER = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const LABEL = { i: 'Sch Indicator', l: 'LH Scheme', r: 'Route', s: 'Slot', u: 'Unit Type', e: 'ETD Origin', d: 'Active Day' };
+  const CMP_FIELDS = ['i', 'l', 'u', 'e', 'd'];
+
+  let latestRows = null, authed = false, running = false, listenerOn = false, pendingForce = null;
+
+  const db = () => firebase.database();
+  const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[m]));
+  const clean = v => String(v == null ? '' : v).replace(/\s+/g, ' ').trim();
+  function normTime(v) { const m = /^(\d{1,2}):(\d{2})/.exec(v); return m ? m[1].padStart(2, '0') + ':' + m[2] : v; }
+  function normDays(v) {
+    const parts = clean(v).split(/\s*[,;]\s*/).filter(Boolean);
+    const idx = x => { const k = DAY_ORDER.findIndex(d => x.toLowerCase().startsWith(d.toLowerCase())); return k < 0 ? 99 : k; };
+    return parts.sort((a, b) => idx(a) - idx(b)).join(',');
+  }
+  function normRow(r) {
+    return { i: clean(r.ind), l: clean(r.lh), r: clean(r.route), s: clean(r.slot), u: clean(r.unit), e: normTime(clean(r.etd)), d: normDays(r.days) };
+  }
+  const keyOf = r => r.r + '|' + r.s + '|' + r.d;
+  function hashRows(rows) {
+    const str = JSON.stringify(rows);
+    let h = 2166136261;
+    for (let i = 0; i < str.length; i++) { h ^= str.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return (h >>> 0).toString(16) + '-' + str.length;
+  }
+  function sortRows(rows) { return rows.slice().sort((a, b) => (keyOf(a) + a.l + a.u).localeCompare(keyOf(b) + b.l + b.u)); }
+  const dateKey = ms => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ms));
+  const timeLabel = ms => new Intl.DateTimeFormat('id-ID', { timeZone: TZ, hour: '2-digit', minute: '2-digit', hour12: false }).format(new Date(ms)).replace('.', ':');
+  const dateLabel = ms => new Date(ms).toLocaleDateString('id-ID', { timeZone: TZ, weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const toArr = v => Array.isArray(v) ? v.filter(Boolean) : (v ? Object.values(v) : []);
+
+  function diffRows(oldRows, newRows) {
+    const index = rows => { const m = new Map(), cnt = {}; rows.forEach(r => { const k = keyOf(r); cnt[k] = (cnt[k] || 0) + 1; m.set(k + '#' + cnt[k], r); }); return m; };
+    const om = index(oldRows), nm = index(newRows);
+    const changes = [];
+    const removed = [], added = [];
+    om.forEach((o, k) => {
+      const n = nm.get(k);
+      if (!n) { removed.push(o); return; }
+      const f = CMP_FIELDS.filter(x => o[x] !== n[x]);
+      if (f.length) changes.push({ type: 'changed', route: n.r, slot: n.s, fields: f, before: o, after: n });
+    });
+    nm.forEach((n, k) => { if (!om.has(k)) added.push(n); });
+    // pasangkan sisa (route+slot sama, tapi hari berubah) sebagai "changed"
+    const used = new Set();
+    removed.forEach(o => {
+      const j = added.findIndex((n, idx) => !used.has(idx) && n.r === o.r && n.s === o.s);
+      if (j >= 0) {
+        used.add(j);
+        const n = added[j];
+        const f = CMP_FIELDS.filter(x => o[x] !== n[x]);
+        changes.push({ type: 'changed', route: n.r, slot: n.s, fields: f, before: o, after: n });
+      } else changes.push({ type: 'removed', route: o.r, slot: o.s, before: o });
+    });
+    added.forEach((n, idx) => { if (!used.has(idx)) changes.push({ type: 'added', route: n.r, slot: n.s, after: n }); });
+    changes.sort((a, b) => (a.route + '|' + a.slot).localeCompare(b.route + '|' + b.slot, undefined, { numeric: true }));
+    return changes;
+  }
+
+  function toast(msg, kind) { if (typeof showToast === 'function') showToast(msg, kind || 'info'); else console.log(msg); }
+
+  async function commit(rawRows, force) {
+    if (running) return;
+    running = true;
+    try {
+      const rows = sortRows(rawRows.map(normRow));
+      if (!rows.length) return;
+      const hash = hashRows(rows);
+      const curSnap = await db().ref(BASE + '/current').once('value');
+      const cur = curSnap.val();
+      if (cur && cur.hash === hash) { hideGuard(); return; }
+      if (cur && !force && cur.count > 10 && rows.length < cur.count * 0.5) {
+        showGuard(cur.count, rows.length);
+        return;
+      }
+      hideGuard();
+      const now = Date.now(), vid = 'v' + now;
+      await db().ref(BASE + '/versions/' + vid).set({ createdAt: now, count: rows.length, hash: hash, rows: rows });
+      let oldVal = null;
+      const res = await db().ref(BASE + '/current').transaction(function (c) {
+        if (c && c.hash === hash) return; // sudah disimpan device lain
+        oldVal = c;
+        return { hash: hash, versionId: vid, updatedAt: now, count: rows.length };
+      });
+      if (!res.committed) return;
+      const user = firebase.auth().currentUser;
+      const by = user ? (user.displayName || user.email || 'user') : 'user';
+      const entry = { at: now, dateKey: dateKey(now), by: by, versionId: vid };
+      if (!oldVal) {
+        entry.kind = 'baseline';
+        entry.summary = { added: 0, removed: 0, changed: 0, total: rows.length };
+      } else {
+        const oldSnap = await db().ref(BASE + '/versions/' + oldVal.versionId).once('value');
+        const oldRows = toArr((oldSnap.val() || {}).rows);
+        const changes = diffRows(oldRows, rows);
+        if (!changes.length) return;
+        entry.kind = 'change';
+        entry.prevVersionId = oldVal.versionId;
+        entry.summary = {
+          added: changes.filter(c => c.type === 'added').length,
+          removed: changes.filter(c => c.type === 'removed').length,
+          changed: changes.filter(c => c.type === 'changed').length,
+          total: rows.length
+        };
+        entry.changes = changes;
+      }
+      await db().ref(BASE + '/changelog').push(entry);
+      if (entry.kind === 'change') toast('📅 Schedule Outbound berubah — ' + entry.summary.added + ' slot baru, ' + entry.summary.removed + ' slot dihapus, ' + entry.summary.changed + ' berubah.', 'info');
+    } catch (e) {
+      console.error('Gagal backup schedule ke Firebase:', e);
+    } finally { running = false; }
+  }
+
+  function showGuard(oldN, newN) {
+    const el = document.getElementById('schedGuardBanner');
+    if (!el) return;
+    el.classList.remove('hidden');
+    window.toggleSchedHistory(true);
+    el.innerHTML = '<i class="fa-solid fa-triangle-exclamation mr-1"></i>Data Sheet turun drastis (<b>' + oldN + '</b> → <b>' + newN + '</b> baris), jadi <b>belum disimpan</b> sebagai perubahan (jaga-jaga kalau Sheet lagi diedit/error). ' +
+      '<button type="button" class="ml-2 px-2 py-0.5 rounded bg-amber-600 text-white font-bold hover:bg-amber-500" onclick="schedForceSave()">Simpan sebagai perubahan</button>';
+  }
+  function hideGuard() { const el = document.getElementById('schedGuardBanner'); if (el) { el.classList.add('hidden'); el.innerHTML = ''; } }
+  window.toggleSchedHistory = function (forceOpen) {
+    const pnl = document.getElementById('schedHistPanel');
+    if (!pnl) return;
+    if (pnl.parentNode !== document.body) document.body.appendChild(pnl); // biar fixed overlay nggak ketahan container lain
+    const open = typeof forceOpen === 'boolean' ? forceOpen : pnl.classList.contains('hidden');
+    pnl.classList.toggle('hidden', !open);
+    pnl.classList.toggle('flex', open);
+    if (open) { const d = document.getElementById('schedHistDot'); if (d) d.classList.add('hidden'); }
+  };
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') { const pnl = document.getElementById('schedHistPanel'); if (pnl && !pnl.classList.contains('hidden')) window.toggleSchedHistory(false); }
+  });
+  window.schedForceSave = function () { if (latestRows) commit(latestRows, true); };
+
+  function chip(txt, cls) { return '<span class="px-1.5 py-0.5 rounded font-sans font-extrabold text-[12px] ' + cls + '">' + txt + '</span>'; }
+
+  function describe(c) {
+    const fmt = r => esc(r.e || '-') + ' • ' + esc(r.u || '-') + ' • ' + esc(r.d || '-') + (r.i ? ' • ' + esc(r.i) : '');
+    if (c.type === 'added') return '<span class="text-emerald-600 dark:text-emerald-400 font-bold">+ Slot ditambah</span> — ' + fmt(c.after);
+    if (c.type === 'removed') return '<span class="text-rose-600 dark:text-rose-400 font-bold">− Slot dikurangi</span> — ' + fmt(c.before);
+    return toArr(c.fields).map(f => '<b>' + LABEL[f] + ':</b> <span class="line-through text-rose-500">' + esc(c.before[f] || '-') + '</span> → <b class="text-emerald-600 dark:text-emerald-400">' + esc(c.after[f] || '-') + '</b>').join('<br>');
+  }
+
+  const CMP_COLS = ['i', 'l', 'u', 'e', 'd'];
+  const evMap = {}, verCache = new Map();
+  let autoOpened = false;
+  const daysShow = d => (d && d.split(',').length === 7) ? 'Setiap Hari' : d;
+
+  async function getVersion(vid) {
+    if (verCache.has(vid)) return verCache.get(vid);
+    const snap = await db().ref(BASE + '/versions/' + vid).once('value');
+    const rows = toArr((snap.val() || {}).rows);
+    verCache.set(vid, rows);
+    return rows;
+  }
+
+  function alignRoute(oldR, newR) {
+    const idx = rows => { const m = new Map(), c = {}; rows.forEach(r => { const k = r.s + '|' + r.d; c[k] = (c[k] || 0) + 1; m.set(k + '#' + c[k], r); }); return m; };
+    const om = idx(oldR), nm = idx(newR), out = [], rem = [], add = [];
+    om.forEach((o, k) => {
+      const n = nm.get(k);
+      if (!n) { rem.push(o); return; }
+      out.push({ st: CMP_COLS.some(f => o[f] !== n[f]) ? 'changed' : 'same', b: o, a: n });
+    });
+    nm.forEach((n, k) => { if (!om.has(k)) add.push(n); });
+    const used = new Set();
+    rem.forEach(o => {
+      const j = add.findIndex((n, i) => !used.has(i) && n.s === o.s);
+      if (j >= 0) { used.add(j); out.push({ st: 'changed', b: o, a: add[j] }); }
+      else out.push({ st: 'removed', b: o, a: null });
+    });
+    add.forEach((n, i) => { if (!used.has(i)) out.push({ st: 'added', b: null, a: n }); });
+    out.sort((x, y) => { const rx = x.a || x.b, ry = y.a || y.b; return String(rx.s).localeCompare(String(ry.s), undefined, { numeric: true }) || String(rx.d).localeCompare(String(ry.d)); });
+    return out;
+  }
+
+  function sideCells(r, other, side, st) {
+    if (!r) return '<td colspan="5" class="text-center text-slate-300 dark:text-slate-600 ' + (side === 'a' ? 'border-l-2 border-slate-300 dark:border-slate-600' : '') + '">—</td>';
+    return CMP_COLS.map((f, i) => {
+      let cls = 'text-slate-900 dark:text-slate-100 font-semibold';
+      if (st === 'changed' && other && r[f] !== other[f]) cls = side === 'b' ? 'bg-rose-200 dark:bg-rose-900/60 text-rose-900 dark:text-rose-100 line-through font-extrabold' : 'bg-emerald-200 dark:bg-emerald-900/60 text-emerald-900 dark:text-emerald-100 font-extrabold';
+      else if (st === 'added') cls = 'text-emerald-800 dark:text-emerald-200 font-bold';
+      else if (st === 'removed') cls = 'text-rose-800 dark:text-rose-200 font-bold';
+      if (i === 0 && side === 'a') cls += ' border-l-2 border-slate-300 dark:border-slate-600';
+      const val = f === 'd' ? daysShow(r[f]) : r[f];
+      return '<td class="font-sans ' + cls + '">' + esc(val || '-') + '</td>';
+    }).join('');
+  }
+
+  function buildCompareHtml(oldRows, newRows, changes) {
+    const routes = Array.from(new Set(toArr(changes).map(c => c.route))).sort((a, b) => a.localeCompare(b));
+    const head2 = ['Sch', 'LH Scheme', 'Unit Type', 'ETD Origin', 'Active Day'];
+    return routes.map(route => {
+      const al = alignRoute(oldRows.filter(r => r.r === route), newRows.filter(r => r.r === route));
+      const nC = al.filter(x => x.st === 'changed').length, nA = al.filter(x => x.st === 'added').length, nR = al.filter(x => x.st === 'removed').length;
+      const body = al.map(x => {
+        const slot = (x.a || x.b).s;
+        const rowBg = x.st === 'added' ? 'bg-emerald-50/60 dark:bg-emerald-950/20' : x.st === 'removed' ? 'bg-rose-50/60 dark:bg-rose-950/20' : x.st === 'same' ? '' : '';
+        const tag = x.st === 'added' ? chip('BARU', 'bg-emerald-600 text-white') : x.st === 'removed' ? chip('DIHAPUS', 'bg-rose-600 text-white') : x.st === 'changed' ? chip('BERUBAH', 'bg-amber-600 text-white') : '';
+        return '<tr class="' + rowBg + '"><td class="font-extrabold text-[15px] text-amber-700 dark:text-amber-300 text-center">' + esc(slot) + (tag ? '<div class="mt-0.5">' + tag + '</div>' : '') + '</td>' +
+          sideCells(x.b, x.a, 'b', x.st) + sideCells(x.a, x.b, 'a', x.st) + '</tr>';
+      }).join('');
+      return '<div class="schedRouteCard mb-4 rounded-lg overflow-hidden">' +
+        '<div class="px-3 py-2 bg-slate-100 dark:bg-slate-800 flex flex-wrap items-center gap-2 text-[15px] font-sans font-extrabold text-slate-900 dark:text-white"><i class="fa-solid fa-route text-amber-500"></i>' + esc(route) +
+        (nC ? chip(nC + ' berubah', 'bg-amber-200 text-amber-900 dark:bg-amber-900/60 dark:text-amber-100') : '') +
+        (nA ? chip(nA + ' baru', 'bg-emerald-200 text-emerald-900 dark:bg-emerald-900/60 dark:text-emerald-100') : '') +
+        (nR ? chip(nR + ' dihapus', 'bg-rose-200 text-rose-900 dark:bg-rose-900/60 dark:text-rose-100') : '') + '</div>' +
+        '<div class="overflow-x-auto"><table class="w-full text-[14px] text-slate-900 dark:text-slate-100"><thead>' +
+        '<tr class="bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-slate-100"><th rowspan="2" class="w-20 text-center font-extrabold">Slot</th><th colspan="5" class="text-center bg-rose-200 dark:bg-rose-950/60 text-rose-900 dark:text-rose-200 font-extrabold tracking-wide">SEBELUM</th><th colspan="5" class="text-center bg-emerald-200 dark:bg-emerald-950/60 text-emerald-900 dark:text-emerald-200 font-extrabold tracking-wide border-l-2 border-slate-300 dark:border-slate-600">SESUDAH</th></tr>' +
+        '<tr class="bg-slate-100 dark:bg-slate-900 font-extrabold text-slate-900 dark:text-slate-100">' + head2.map(h => '<th class="text-center">' + h + '</th>').join('') + head2.map((h, i) => '<th class="text-center' + (i === 0 ? ' border-l-2 border-slate-300 dark:border-slate-600' : '') + '">' + h + '</th>').join('') + '</tr>' +
+        '</thead><tbody>' + body + '</tbody></table></div></div>';
+    }).join('');
+  }
+
+  async function loadCompare(box) {
+    if (box.dataset.done) return;
+    const ev = evMap[box.dataset.evk];
+    if (!ev) return;
+    box.innerHTML = '<div class="p-3 text-center text-[13px] text-slate-400 font-sans">Memuat perbandingan...</div>';
+    try {
+      const [oldRows, newRows] = await Promise.all([getVersion(ev.prevVersionId), getVersion(ev.versionId)]);
+      box.innerHTML = buildCompareHtml(oldRows, newRows, ev.changes);
+      box.dataset.done = '1';
+    } catch (e) {
+      console.error('Gagal muat perbandingan:', e);
+      box.innerHTML = '<div class="p-3 text-center text-[13px] text-rose-500 font-sans">Gagal memuat versi lama/baru dari Firebase.</div>';
+    }
+  }
+
+  function renderHistory(events) {
+    const list = document.getElementById('schedHistList');
+    const badge = document.getElementById('schedHistCount');
+    if (!list) return;
+    const openKeys = Array.from(list.querySelectorAll('details[open]')).map(d => d.dataset.evk);
+    events.forEach(ev => { evMap[ev._k] = ev; });
+    const changesOnly = events.filter(e => e.kind === 'change');
+    badge.textContent = changesOnly.length + ' perubahan';
+    const bc = document.getElementById('schedHistBtnCount'); if (bc) bc.textContent = changesOnly.length;
+    const last = changesOnly[changesOnly.length - 1];
+    const dot = document.getElementById('schedHistDot');
+    const pnl = document.getElementById('schedHistPanel');
+    if (dot && last && (Date.now() - last.at) < 24 * 3600 * 1000 && pnl && pnl.classList.contains('hidden')) dot.classList.remove('hidden');
+    if (!events.length) { list.innerHTML = '<div class="p-4 text-center text-[11px] text-slate-400 dark:text-slate-500 font-sans">Belum ada riwayat. Baseline pertama akan disimpan otomatis.</div>'; return; }
+    let html = '', lastDate = '';
+    events.slice().reverse().forEach(ev => {
+      if (ev.dateKey !== lastDate) {
+        lastDate = ev.dateKey;
+        html += '<div class="px-3 py-1 bg-slate-100 dark:bg-slate-800/70 text-[12px] font-extrabold uppercase tracking-wide text-slate-900 dark:text-slate-100 font-sans sticky top-0 z-10">' + esc(dateLabel(ev.at)) + '</div>';
+      }
+      const sm = ev.summary || {};
+      if (ev.kind === 'baseline') {
+        html += '<div class="px-3 py-2.5 flex items-center gap-2 text-[13px] font-sans text-slate-600 dark:text-slate-300"><span class="font-bold font-mono">' + timeLabel(ev.at) + ' WIB</span>' +
+          chip('Baseline awal', 'bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200') + '<span>' + (sm.total || 0) + ' baris tersimpan</span>' +
+          '<button type="button" class="ml-auto text-[12px] font-bold px-2.5 py-1 rounded bg-slate-800 text-white hover:bg-slate-700" onclick="schedDownloadVersion(\'' + ev.versionId + '\',\'' + ev.dateKey + '_baseline\')"><i class="fa-solid fa-download mr-1"></i>Unduh</button></div>';
+        return;
+      }
+      html += '<details data-evk="' + ev._k + '"><summary class="cursor-pointer px-3 py-2.5 flex flex-wrap items-center gap-2 text-[13px] font-sans hover:bg-slate-50 dark:hover:bg-slate-800/60">' +
+        '<i class="fa-solid fa-chevron-right schedChev text-[9px] text-slate-400"></i>' +
+        '<span class="font-extrabold font-mono text-slate-900 dark:text-white">' + timeLabel(ev.at) + ' WIB</span>' +
+        (sm.added ? chip('+' + sm.added + ' slot ditambah', 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300') : '') +
+        (sm.removed ? chip('−' + sm.removed + ' slot dikurangi', 'bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-300') : '') +
+        (sm.changed ? chip(sm.changed + ' berubah', 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300') : '') +
+        '<span class="text-[12px] font-bold text-sky-600 dark:text-sky-400 underline">klik: lihat perbandingan</span>' +
+        '<span class="ml-auto text-[12px] font-semibold text-slate-600 dark:text-slate-300">terdeteksi oleh ' + esc(ev.by || '-') + '</span></summary>' +
+        '<div class="px-3 pb-3"><div class="flex gap-2 mb-2">' +
+        (ev.prevVersionId ? '<button type="button" class="text-[12px] font-bold px-2.5 py-1 rounded bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600" onclick="schedDownloadVersion(\'' + ev.prevVersionId + '\',\'' + ev.dateKey + '_lama\')"><i class="fa-solid fa-download mr-1"></i>Unduh data lama</button>' : '') +
+        '<button type="button" class="text-[12px] font-bold px-2.5 py-1 rounded bg-slate-800 text-white hover:bg-slate-700" onclick="schedDownloadVersion(\'' + ev.versionId + '\',\'' + ev.dateKey + '_baru\')"><i class="fa-solid fa-download mr-1"></i>Unduh data baru</button></div>' +
+        '<div class="schedCmpBox" data-evk="' + ev._k + '"><div class="p-3 text-center text-[13px] text-slate-400 font-sans">Memuat perbandingan...</div></div></div></details>';
+    });
+    list.innerHTML = html;
+    openKeys.forEach(k => { const d = list.querySelector('details[data-evk="' + k + '"]'); if (d) d.open = true; });
+    if (!autoOpened && last) { autoOpened = true; const d = list.querySelector('details[data-evk="' + last._k + '"]'); if (d) d.open = true; }
+  }
+
+  window.schedDownloadVersion = async function (vid, label) {
+    try {
+      const snap = await db().ref(BASE + '/versions/' + vid).once('value');
+      const v = snap.val();
+      if (!v || !v.rows) { toast('⚠️ Versi tidak ditemukan.', 'info'); return; }
+      const rows = toArr(v.rows).map(r => ({ 'Sch Indicator': r.i, 'LH Scheme': r.l, 'Route': r.r, 'Slot': r.s, 'Unit Type': r.u, 'ETD Origin': r.e, 'Schedule Active Day': r.d }));
+      const ws = XLSX.utils.json_to_sheet(rows), wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, 'Schedule');
+      XLSX.writeFile(wb, 'Schedule_Outbound_' + label + '.xlsx');
+    } catch (e) { console.error(e); toast('⚠️ Gagal unduh versi.', 'info'); }
+  };
+
+  function attachListener() {
+    if (listenerOn) return;
+    listenerOn = true;
+    const hl = document.getElementById('schedHistList');
+    if (hl) hl.addEventListener('toggle', function (e) {
+      const d = e.target;
+      if (!d || d.tagName !== 'DETAILS' || !d.open) return;
+      const box = d.querySelector('.schedCmpBox');
+      if (box) loadCompare(box);
+    }, true);
+    db().ref(BASE + '/changelog').orderByKey().limitToLast(100).on('value', function (snap) {
+      const arr = [];
+      snap.forEach(ch => { const v = ch.val(); v._k = ch.key; arr.push(v); });
+      renderHistory(arr);
+    }, function (err) {
+      console.error('Gagal baca riwayat schedule:', err);
+      const list = document.getElementById('schedHistList');
+      if (list) list.innerHTML = '<div class="p-4 text-center text-[13px] text-rose-500 font-sans">Gagal baca riwayat dari Firebase (cek Rules untuk path ' + esc(BASE) + ').</div>';
+    });
+  }
+
+  function maybeRun() {
+    if (!authed) return;
+    attachListener();
+    if (latestRows && latestRows.length) commit(latestRows, false);
+  }
+
+  window.schedAfterLoad = function (rows) { latestRows = rows.slice(); maybeRun(); };
+
+  if (window.firebase && firebase.auth) {
+    firebase.auth().onAuthStateChanged(function (user) { authed = !!user; maybeRun(); });
+  }
 })();
 </script>
 </body>
