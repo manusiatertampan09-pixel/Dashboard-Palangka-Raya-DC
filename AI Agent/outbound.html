@@ -1952,10 +1952,45 @@ function getShiftFromTimeStr(timeStr) {
   return 'Shift 3';
 }
 
-const linehaulRoutes = Array.from(new Set(linehaulSchedule.map(s => s.dest))).map((label, idx) => {
+const linehaulRoutesFallback = Array.from(new Set(linehaulSchedule.map(s => s.dest))).map((label, idx) => {
   const hubs = Array.from(new Set(linehaulSchedule.filter(s => s.dest === label).flatMap(s => s.hubs)));
   return { id: idx + 1, label: label, hubs: hubs };
 });
+// Daftar route tabel Occupancy = UNIQUE(Route) dari Schedule Outbound; kalau Sheet belum/gagal load, pakai daftar bawaan di atas
+let linehaulRoutes = linehaulRoutesFallback.slice();
+
+const knownHubVariants = {};
+linehaulSchedule.forEach(s => s.hubs.forEach(h => {
+  const k = String(h).toLowerCase();
+  (knownHubVariants[k] = knownHubVariants[k] || []).indexOf(h) < 0 && knownHubVariants[k].push(h);
+}));
+function hubKey(s) { return String(s || '').replace(/\s+/g, ' ').trim().toLowerCase(); }
+function routeHasHub(route, name) {
+  if (!route.hubSet) route.hubSet = new Set(route.hubs.map(hubKey));
+  return route.hubSet.has(hubKey(name));
+}
+function rebuildLinehaulRoutesFromSchedule(rows) {
+  const seen = new Set(), out = [];
+  (rows || []).forEach(r => {
+    const raw = String(r.route || '').replace(/\s+/g, ' ').trim();
+    const i = raw.indexOf('>');
+    if (i < 0) return;
+    const key = raw.toLowerCase();
+    if (seen.has(key)) return; // UNIQUE: 1 route cuma 1 baris walau slot-nya banyak
+    seen.add(key);
+    const hubs = [];
+    raw.slice(i + 1).split(/\s*>\s*|\s+-\s+/).map(x => x.trim()).filter(Boolean).forEach(h => {
+      [h].concat(knownHubVariants[hubKey(h)] || []).forEach(v => { if (hubs.indexOf(v) < 0) hubs.push(v); });
+    });
+    out.push({ id: out.length + 1, label: raw, hubs: hubs });
+  });
+  if (!out.length) return false;
+  linehaulRoutes = out;
+  return true;
+}
+window.schedRoutesChanged = function (rows) {
+  if (rebuildLinehaulRoutesFromSchedule(rows) && typeof filteredData !== 'undefined' && filteredData.length > 0) renderDashboard();
+};
 
 function timeStrToMinutes(timeStr) {
   const parts = String(timeStr || '0:0').split(':');
@@ -2523,7 +2558,7 @@ function showTONumbers(hubName, agingType) {
 function showRouteTONumbers(routeLabel, agingType) {
   const route = linehaulRoutes.find(r => r.label === routeLabel);
   if (!route) return;
-  let matches = filteredData.filter(d => route.hubs.includes(d.receiverName));
+  let matches = filteredData.filter(d => routeHasHub(route, d.receiverName));
   if (agingType === 'd0') matches = matches.filter(d => d.agingDays === 0);
   else if (agingType === 'd1') matches = matches.filter(d => d.agingDays === 1);
   else if (agingType === 'd2') matches = matches.filter(d => d.agingDays === 2);
@@ -3507,7 +3542,7 @@ function renderDashboard() {
     let matched = false;
 
     for (let r of routeVolumes) {
-      if (r.hubs.includes(item.receiverName)) {
+      if (routeHasHub(r, item.receiverName)) {
         r.total++;
         if (isParcel) { r.parcel++; totalInnerParcel++; }
         if (isBulky) { r.bulky++; totalInnerBulky++; }
@@ -3569,6 +3604,8 @@ function renderDashboard() {
       <td ${tdAging(d5plus, row, 'd5')}>${nz(d5plus)}</td>
     </tr>`;
   }).join('');
+  const routeTotalInfoEl = document.getElementById('routeTotalInfo');
+  if (routeTotalInfoEl) routeTotalInfoEl.innerText = 'Total Jalur: ' + routeVolumes.length;
   updateNextDepartCells();
 
   const outerSorted = Object.values(outerIslandMap).sort((a, b) => b.total - a.total);
@@ -3909,7 +3946,7 @@ if (window.location.hash === '#occupancy') {
     const now = nowDate || new Date();
     const lab = nrm(label);
     const hubSet = new Set((hubs || []).map(nrm));
-    let rows = schedRows.filter(r => destOf(r.route) === lab);
+    let rows = schedRows.filter(r => nrm(r.route) === lab || destOf(r.route) === lab);
     if (!rows.length) rows = schedRows.filter(r => { const h = hubsOfDest(destOf(r.route)); return h.length === hubSet.size && h.every(x => hubSet.has(x)); });
     rows = rows.filter(r => !/^off$/i.test(String(r.ind || '').trim()) && parseEtd(r.etd));
     if (!rows.length) return null;
@@ -4046,6 +4083,7 @@ if (window.location.hash === '#occupancy') {
       const changed = sig !== schedLastSig || isManual === true;
       schedLastSig = sig;
       if (changed) {
+        if (window.schedRoutesChanged) window.schedRoutesChanged(schedRows);
         renderSchedule();
         if (window.schedAfterLoad) window.schedAfterLoad(schedRows);
       }
