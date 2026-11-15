@@ -61,6 +61,61 @@ tailwind.config = {
   th:first-child, td:first-child { border-left: 1px solid #e2e8f0; text-align: left; padding-left: 8px !important; }
   tr:first-child th { border-top: 1px solid #e2e8f0; }
   .dynamic-table thead th { white-space: nowrap; }
+
+  /* ===== Occupancy: tabel Inner Island & Priority Action Center ===== */
+  #routeTableBody td { padding: 3px 6px !important; font-size: 12px; }
+  #routeTableBody td.occ-st-no { text-align: center; }
+  .occ-st-no { position: sticky; left: 0; z-index: 3; width: 40px; min-width: 40px; max-width: 40px; }
+  .occ-st-route { position: sticky; left: 40px; z-index: 3; min-width: 280px; }
+  /* Tinggi card Inner Island mengikuti kolom kanan (Outer Island + Priority Action Center); tabel scroll di dalamnya */
+  #occScroll { position: relative; flex: 1 1 0; min-height: 320px; overflow: hidden; }
+  #occScrollInner { position: absolute; inset: 0; overflow: auto; }
+  /* Baris tabel melar mengisi sisa tinggi kartu (header tetap, tinggi ekstra dibagi ke baris data) */
+  #occScrollInner > table { height: 100%; }
+  #occScrollInner thead tr { height: auto; }
+  #routeTableBody tr { height: auto; }
+  #occScroll thead tr:first-child th { position: sticky; top: 0; z-index: 5; height: 24px; }
+  #occScroll thead tr:nth-child(2) th { position: sticky; top: 24px; z-index: 5; }
+  #occScroll thead th.occ-st-no, #occScroll thead th.occ-st-route { z-index: 7; }
+  #routeTableBody .occ-st-no, #routeTableBody .occ-st-route { background: inherit; z-index: 2; }
+  #routeTableBody .occ-st-route { line-height: 1.25; font-size: 13px; }
+  .occ-arrow { margin: 0 4px; color: #cbd5e1; font-weight: 400; }
+  .dark .occ-arrow { color: #475569; }
+  .occ-stripe-ok   { box-shadow: inset 3px 0 0 #10b981; }
+  .occ-stripe-warn { box-shadow: inset 3px 0 0 #f59e0b; }
+  .occ-stripe-bad  { box-shadow: inset 3px 0 0 #e11d48; }
+  .occ-bar { flex: 1; min-width: 40px; height: 6px; border-radius: 9999px; background: #e2e8f0; overflow: hidden; }
+  .dark .occ-bar { background: #334155; }
+  .occ-bar > div { height: 100%; border-radius: 9999px; }
+  .occ-age { min-width: 30px; padding: 1px 7px; border-radius: 9999px; font-weight: 800; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; border: 1px solid transparent; transition: transform .1s, box-shadow .1s; }
+  .occ-age:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
+  .occ-age-ok   { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
+  .occ-age-warn { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+  .occ-age-bad  { background: #e11d48; color: #fff; }
+  .dark .occ-age-ok   { background: #1e293b; color: #e2e8f0; border-color: #334155; }
+  .dark .occ-age-warn { background: rgba(245,158,11,.2); color: #fcd34d; border-color: rgba(245,158,11,.5); }
+  .occ-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 10px; font-weight: 700; padding: 3px 9px; border-radius: 9999px; border: 1px solid #cbd5e1; background: #fff; color: #475569; cursor: pointer; transition: all .12s; }
+  .occ-chip:hover { border-color: #f59e0b; color: #b45309; }
+  .occ-chip b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 9px; padding: 0 5px; border-radius: 9999px; background: rgba(100,116,139,.18); }
+  .occ-chip.active { background: #1e293b; border-color: #1e293b; color: #fff; }
+  .occ-chip.active b { background: rgba(255,255,255,.22); }
+  .dark .occ-chip { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+  .dark .occ-chip.active { background: #f59e0b; border-color: #f59e0b; color: #0f172a; }
+  .dark .occ-chip.active b { background: rgba(15,23,42,.2); }
+  .occ-mini { display: inline-flex; align-items: center; gap: 4px; font-size: 9.5px; font-weight: 700; padding: 2px 7px; border-radius: 6px; border: 1px solid #e2e8f0; background: #fff; color: #475569; white-space: nowrap; }
+  .occ-mini b { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 10px; color: #0f172a; }
+  .occ-mini-warn { background: #fffbeb; border-color: #fcd34d; color: #92400e; }
+  .occ-mini-bad  { background: #fff1f2; border-color: #fda4af; color: #be123c; }
+  .occ-mini-info { background: #f0f9ff; border-color: #bae6fd; color: #0369a1; }
+  .occ-mini-warn b, .occ-mini-bad b, .occ-mini-info b { color: inherit; }
+  .dark .occ-mini { background: #0f172a; border-color: #334155; color: #cbd5e1; }
+  .dark .occ-mini b { color: #f1f5f9; }
+  .dark .occ-mini-warn { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.5); color: #fcd34d; }
+  .dark .occ-mini-bad  { background: rgba(225,29,72,.18); border-color: rgba(225,29,72,.5); color: #fda4af; }
+  .dark .occ-mini-info { background: rgba(14,165,233,.15); border-color: rgba(14,165,233,.5); color: #7dd3fc; }
+  .dark .occ-mini-warn b, .dark .occ-mini-bad b, .dark .occ-mini-info b { color: inherit; }
+  .occ-card { cursor: pointer; transition: box-shadow .15s, transform .15s; }
+  .occ-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); transform: translateY(-1px); }
   #schedHistList summary { list-style: none; }
   #schedHistPanel { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
   #schedHistList .schedRouteCard { border: 2px solid #000; }
@@ -465,6 +520,31 @@ th, td { padding: 5px 7px !important; }
     "ob.occ.capTitle": { "id": "Estimasi Occupancy terhadap kapasitas per destination", "en": "Estimated occupancy relative to per-destination capacity", "ja": "宛先別キャパシティに対する稼働率の推定値", "zh": "相对于各目的地容量的估计占用率" },
     "ob.emptyNoOuterIsland": { "id": "Tidak ada data Outer Island.", "en": "No Outer Island data.", "ja": "アウターアイランドのデータはありません。", "zh": "暂无外岛数据。" },
     "ob.occ.actionCenterTitle": { "id": "Priority Action Center — Top 5 Rute Occupancy Tertinggi", "en": "Priority Action Center — Top 5 Highest Occupancy Routes", "ja": "優先対応センター — 稼働率トップ5ルート", "zh": "优先处理中心 — 占用率最高的5条路线" },
+    "ob.occ.search": { "id": "Cari rute / hub...", "en": "Search route / hub..." },
+    "ob.occ.sortBy": { "id": "Urutkan", "en": "Sort" },
+    "ob.occ.f.all": { "id": "Semua", "en": "All" },
+    "ob.occ.f.busy": { "id": "Padat >50%", "en": "Busy >50%" },
+    "ob.occ.f.hv": { "id": "Ada HV", "en": "Has HV" },
+    "ob.occ.f.aging": { "id": "Aging D-2+", "en": "Aging D-2+" },
+    "ob.occ.f.soon": { "id": "Berangkat ≤1 jam", "en": "Departs ≤1h" },
+    "ob.occ.s.total": { "id": "Total Parcel (terbanyak)", "en": "Total Parcel (highest)" },
+    "ob.occ.s.depart": { "id": "Next Depart (terdekat)", "en": "Next Depart (soonest)" },
+    "ob.occ.s.hv": { "id": "HV terbanyak", "en": "Most HV" },
+    "ob.occ.s.aging": { "id": "Aging D-2+ terbanyak", "en": "Most Aging D-2+" },
+    "ob.occ.s.name": { "id": "Nama rute (A–Z)", "en": "Route name (A–Z)" },
+    "ob.occ.grp.schedule": { "id": "Jadwal Berangkat", "en": "Departure" },
+    "ob.occ.grp.volume": { "id": "Volume & Kapasitas", "en": "Volume & Capacity" },
+    "ob.occ.grp.aging": { "id": "Aging Days", "en": "Aging Days" },
+    "ob.occ.legend.ok": { "id": "Cap ≤50% Aman", "en": "Cap ≤50% Safe" },
+    "ob.occ.legend.watch": { "id": "50–100% Watch", "en": "50–100% Watch" },
+    "ob.occ.legend.urgent": { "id": ">100% Urgent", "en": ">100% Urgent" },
+    "ob.occ.hint": { "id": "Klik nama rute = breakdown per hub · Klik angka aging = daftar TO", "en": "Click a route = per-hub breakdown · Click an aging number = TO list" },
+    "ob.occ.openTo": { "id": "Klik untuk lihat daftar TO", "en": "Click to view TO list" },
+    "ob.occ.noMatch": { "id": "Tidak ada rute yang cocok dengan filter.", "en": "No routes match the filter." },
+    "ob.occ.totalRoutes": { "id": "Total Jalur: {n}", "en": "Total Routes: {n}" },
+    "ob.occ.showing": { "id": "Menampilkan {v} dari {n} jalur", "en": "Showing {v} of {n} routes" },
+    "ob.occ.card.over": { "id": "Over kapasitas {n}", "en": "Over capacity by {n}" },
+    "ob.occ.card.left": { "id": "Sisa kapasitas {n}", "en": "{n} capacity left" },
     "ob.occ.liveMonitoring": { "id": "Live Monitoring", "en": "Live Monitoring", "ja": "ライブモニタリング", "zh": "实时监控" },
     "ob.occ.emptyAnalysis": { "id": "Belum ada data untuk dianalisis.", "en": "No data to analyze yet.", "ja": "分析対象のデータはまだありません。", "zh": "暂无可分析数据。" },
     "ob.occ.shiftVolumeTitle": { "id": "Perbandingan Volume Parcel per Shift", "en": "Parcel Volume Comparison per Shift", "ja": "シフト別パーセルボリューム比較", "zh": "各班次包裹量对比" },
@@ -993,32 +1073,69 @@ th, td { padding: 5px 7px !important; }
           <span class="flex items-center gap-2"><i class="fa-solid fa-route text-amber-400"></i> <span data-i18n="ob.occ.innerTitle">Breakdown Volume &amp; Aging Days Inner Island</span></span>
           <span class="text-[9px] bg-white/20 px-2 py-0.5 rounded-full font-mono" id="routeTotalInfo">Total Jalur: 25</span>
         </div>
-        <div class="overflow-x-auto custom-scrollbar">
+        <div class="px-3 py-2 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 flex flex-wrap items-center gap-2" data-html2canvas-ignore="true">
+          <div class="relative">
+            <i class="fa-solid fa-magnifying-glass absolute left-2 top-1/2 -translate-y-1/2 text-[10px] text-slate-400 pointer-events-none"></i>
+            <input id="occSearch" type="text" autocomplete="off" data-i18n-placeholder="ob.occ.search" placeholder="Cari rute / hub..." class="text-[11px] pl-6 pr-2 py-1 w-52 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 outline-none focus:border-amber-400" />
+          </div>
+          <div class="flex flex-wrap items-center gap-1">
+            <button type="button" class="occ-chip active" data-occ-filter="all"><span data-i18n="ob.occ.f.all">Semua</span><b data-occ-count="all">0</b></button>
+            <button type="button" class="occ-chip" data-occ-filter="busy"><span data-i18n="ob.occ.f.busy">Padat &gt;50%</span><b data-occ-count="busy">0</b></button>
+            <button type="button" class="occ-chip" data-occ-filter="hv"><span data-i18n="ob.occ.f.hv">Ada HV</span><b data-occ-count="hv">0</b></button>
+            <button type="button" class="occ-chip" data-occ-filter="aging"><span data-i18n="ob.occ.f.aging">Aging D-2+</span><b data-occ-count="aging">0</b></button>
+            <button type="button" class="occ-chip" data-occ-filter="soon"><span data-i18n="ob.occ.f.soon">Berangkat ≤1 jam</span><b data-occ-count="soon">0</b></button>
+          </div>
+          <label class="ml-auto flex items-center gap-1.5 text-[10px] font-bold text-slate-500 dark:text-slate-400"><span data-i18n="ob.occ.sortBy">Urutkan</span>
+            <select id="occSort" class="text-[11px] font-normal rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-100 px-1.5 py-1 outline-none focus:border-amber-400">
+              <option value="total" data-i18n="ob.occ.s.total">Total Parcel (terbanyak)</option>
+              <option value="depart" data-i18n="ob.occ.s.depart">Next Depart (terdekat)</option>
+              <option value="hv" data-i18n="ob.occ.s.hv">HV terbanyak</option>
+              <option value="aging" data-i18n="ob.occ.s.aging">Aging D-2+ terbanyak</option>
+              <option value="name" data-i18n="ob.occ.s.name">Nama rute (A–Z)</option>
+            </select>
+          </label>
+        </div>
+        <div id="occScroll">
+          <div id="occScrollInner" class="custom-scrollbar">
           <table class="w-full text-[11px] text-slate-600 dark:text-slate-300 dynamic-table">
-            <thead class="bg-slate-800 dark:bg-slate-950 text-white font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
-              <tr>
-                <th class="w-10" data-i18n="ob.th.no">No</th>
-                <th class="text-left pl-2" data-i18n="ob.th.listRoute">List Route</th>
-                <th class="w-16" data-i18n-title="ob.th.nextSlot" title="Slot keberangkatan berikutnya (dari Schedule Outbound)" data-i18n="ob.th.nextSlot">Next Slot</th>
-                <th class="w-20" data-i18n-title="ob.th.nextDepart" title="ETD Origin terdekat dari jam device (dari Schedule Outbound)" data-i18n="ob.th.nextDepart">Next Depart</th>
+            <thead class="text-white font-bold border-b border-slate-200 dark:border-slate-700">
+              <tr class="bg-slate-800 dark:bg-slate-950">
+                <th rowspan="2" class="occ-st-no bg-slate-800 dark:bg-slate-950" data-i18n="ob.th.no">No</th>
+                <th rowspan="2" class="occ-st-route text-left pl-2 bg-slate-800 dark:bg-slate-950" data-i18n="ob.th.listRoute">List Route</th>
+                <th colspan="2" class="bg-sky-800 dark:bg-sky-900 text-[10px] tracking-wide" data-i18n="ob.occ.grp.schedule">Jadwal Berangkat</th>
+                <th colspan="6" class="bg-slate-600 dark:bg-slate-700 text-[10px] tracking-wide" data-i18n="ob.occ.grp.volume">Volume &amp; Kapasitas</th>
+                <th colspan="6" class="bg-rose-800 dark:bg-rose-900 text-[10px] tracking-wide" data-i18n="ob.occ.grp.aging">Aging Days</th>
+              </tr>
+              <tr class="bg-slate-800 dark:bg-slate-950">
+                <th class="w-16 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nextSlot" title="Slot keberangkatan berikutnya (dari Schedule Outbound)" data-i18n="ob.th.nextSlot">Next Slot</th>
+                <th class="w-32 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nextDepart" title="ETD Origin terdekat dari jam device (dari Schedule Outbound)" data-i18n="ob.th.nextDepart">Next Depart</th>
                 <th class="w-12 bg-amber-600 border-x border-amber-700 text-white" data-i18n="ob.th.hv">HV</th>
-                <th class="w-12" data-i18n="ob.th.liquid">Liquid</th>
-                <th class="w-14" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing" data-i18n="ob.th.bulky">Bulky</th>
-                <th class="w-16" data-i18n-title="ob.th.nonBulkyTitle" title="Non-Bulky = Packing Method Assisted Sorting" data-i18n="ob.th.nonBulky">Non-Bulky</th>
-                <th class="w-16" data-i18n="ob.th.totalParcel">Total Parcel</th>
-                <th class="w-14" data-i18n="ob.th.capPct">Cap (%)</th>
-                <th class="w-12">D-Day</th>
-                <th class="w-12">D-1</th>
-                <th class="w-12">D-2</th>
-                <th class="w-12">D-3</th>
-                <th class="w-12">D-4</th>
-                <th class="w-12">D-5+</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950" data-i18n="ob.th.liquid">Liquid</th>
+                <th class="w-14 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing" data-i18n="ob.th.bulky">Bulky</th>
+                <th class="w-16 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nonBulkyTitle" title="Non-Bulky = Packing Method Assisted Sorting" data-i18n="ob.th.nonBulky">Non-Bulky</th>
+                <th class="w-16 bg-slate-800 dark:bg-slate-950" data-i18n="ob.th.totalParcel">Total Parcel</th>
+                <th class="w-36 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.occ.capTitle" title="Estimasi Occupancy terhadap kapasitas per rute" data-i18n="ob.th.capPct">Cap (%)</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950">D-Day</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950">D-1</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950">D-2</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950">D-3</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950">D-4</th>
+                <th class="w-12 bg-slate-800 dark:bg-slate-950">D-5+</th>
               </tr>
             </thead>
             <tbody id="routeTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
               <tr><td colspan="16" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.emptyPleaseImport">Silakan import data.</td></tr>
             </tbody>
           </table>
+          </div>
+        </div>
+        <div class="px-3 py-1.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/60 text-[10px] text-slate-500 dark:text-slate-400 font-sans flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+          <span class="flex flex-wrap items-center gap-x-3 gap-y-1 font-semibold">
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-emerald-500"></span><span data-i18n="ob.occ.legend.ok">Cap ≤50% Aman</span></span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span><span data-i18n="ob.occ.legend.watch">50–100% Watch</span></span>
+            <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-rose-500"></span><span data-i18n="ob.occ.legend.urgent">&gt;100% Urgent</span></span>
+          </span>
+          <span data-html2canvas-ignore="true" data-i18n="ob.occ.hint">Klik nama rute = breakdown per hub · Klik angka aging = daftar TO</span>
         </div>
       </div>
 
@@ -1051,7 +1168,7 @@ th, td { padding: 5px 7px !important; }
             <span class="flex items-center gap-2"><i class="fa-solid fa-bolt text-yellow-300"></i> <span data-i18n="ob.occ.actionCenterTitle">Priority Action Center — Top 5 Rute Occupancy Tertinggi</span></span>
             <span class="text-[9px] bg-black/30 px-2.5 py-0.5 rounded-full font-mono flex items-center gap-1.5 border border-white/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span><span data-i18n="ob.occ.liveMonitoring">Live Monitoring</span></span>
           </div>
-          <div class="p-2 grid grid-cols-1 gap-1.5 overflow-y-auto custom-scrollbar flex-1" id="topActionPlanContainer">
+          <div class="p-2 grid grid-cols-1 gap-2 overflow-y-auto custom-scrollbar flex-1" style="grid-auto-rows: 1fr;" id="topActionPlanContainer">
             <div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans" data-i18n="ob.occ.emptyAnalysis">Belum ada data untuk dianalisis.</div>
           </div>
         </div>
@@ -1772,6 +1889,7 @@ const LS_HISTORY_KEY = 'pkr_outbound_history_snapshots';
 const MAX_HISTORY_SNAPSHOTS = 30;
 const OCC_WARN_PCT = 70;
 const OCC_CRIT_PCT = 100;
+const INNER_ROUTE_CAPACITY = 4000; // kapasitas per rute Inner Island (dipakai tabel & Priority Action Center)
 
 let DESTINATION_CAPACITY = parseInt(localStorage.getItem(LS_CAPACITY_KEY), 10) || 2000;
 
@@ -2138,27 +2256,123 @@ setInterval(updateClock, 1000); updateClock();
    Data dari Schedule Outbound (window.schedNextDeparture), acuan jam = jam lokal device. */
 function updateNextDepartCells() {
   const fn = window.schedNextDeparture;
-  document.querySelectorAll('#routeTableBody td[data-nd-slot]').forEach(function (slotTd) {
-    const depTd = slotTd.parentElement.querySelector('td[data-nd-dep]');
-    if (!depTd) return;
-    const label = slotTd.dataset.ndRoute;
+  function info(label) {
     const route = linehaulRoutes.find(function (r) { return r.label === label; });
     const nx = (fn && route) ? fn(label, route.hubs) : null;
-    if (!nx) {
+    if (!nx) return null;
+    const h = Math.floor(nx.mins / 60), m = nx.mins % 60;
+    return {
+      nx: nx,
+      cd: h > 0 ? (h + 'j ' + m + 'm') : (m + 'm'),
+      urgent: nx.off === 0 && nx.mins <= 30,
+      soon: nx.off === 0 && nx.mins <= 60,
+      dayPrefix: nx.off === 1 ? 'Besok · ' : nx.off > 1 ? '+' + nx.off + ' hari · ' : ''
+    };
+  }
+  document.querySelectorAll('#routeTableBody td[data-nd-slot]').forEach(function (slotTd) {
+    const tr = slotTd.parentElement;
+    const depTd = tr.querySelector('td[data-nd-dep]');
+    if (!depTd) return;
+    const d = info(slotTd.dataset.ndRoute);
+    if (!d) {
       slotTd.textContent = '-'; slotTd.className = 'text-center font-bold text-slate-400 dark:text-slate-600';
       depTd.textContent = '-'; depTd.className = 'text-center font-bold text-slate-400 dark:text-slate-600';
+      tr.dataset.depKey = ''; tr.dataset.depSoon = '0';
       return;
     }
-    const h = Math.floor(nx.mins / 60), m = nx.mins % 60;
-    const cd = h > 0 ? (h + 'j ' + m + 'm') : (m + 'm');
-    const urgent = nx.off === 0 && nx.mins <= 30, soon = nx.off === 0 && nx.mins <= 60;
-    const cls = urgent ? 'text-rose-600 dark:text-rose-400' : soon ? 'text-amber-600 dark:text-amber-400' : 'text-sky-700 dark:text-sky-300';
-    slotTd.textContent = nx.slot || '-';
+    const cls = d.urgent ? 'text-rose-600 dark:text-rose-400' : d.soon ? 'text-amber-600 dark:text-amber-400' : 'text-sky-700 dark:text-sky-300';
+    slotTd.textContent = d.nx.slot || '-';
     slotTd.className = 'text-center font-bold text-amber-600 dark:text-amber-400';
-    depTd.className = 'text-center font-bold ' + cls;
-    depTd.innerHTML = nx.etd + '<div class="text-[9px] font-sans font-semibold text-slate-400 dark:text-slate-500">' + (nx.off === 1 ? 'Besok · ' : nx.off > 1 ? '+' + nx.off + ' hari · ' : '') + cd + '</div>';
+    depTd.className = 'text-center font-bold whitespace-nowrap ' + cls;
+    depTd.innerHTML = d.nx.etd + ' <span class="text-[10px] font-sans font-semibold text-slate-400 dark:text-slate-500">· ' + d.dayPrefix + d.cd + '</span>';
+    tr.dataset.depKey = String(d.nx.mins);
+    tr.dataset.depSoon = d.soon ? '1' : '0';
   });
+  document.querySelectorAll('#topActionPlanContainer [data-nd-card]').forEach(function (el) {
+    const d = info(el.dataset.ndCard);
+    if (!d) { el.className = 'occ-mini'; el.innerHTML = '<i class="fa-regular fa-clock"></i>Next Depart <b>-</b>'; return; }
+    el.className = 'occ-mini ' + (d.urgent ? 'occ-mini-bad' : d.soon ? 'occ-mini-warn' : 'occ-mini-info');
+    el.innerHTML = '<i class="fa-regular fa-clock"></i>' + (d.nx.slot ? d.nx.slot + ' · ' : '') + d.nx.etd + ' <b>' + d.dayPrefix + d.cd + '</b>';
+  });
+  if (typeof applyRouteTableView === 'function') applyRouteTableView();
 }
+
+/* ===== Tabel Occupancy Inner Island: filter, sort, pencarian ===== */
+var occFilter = 'all', occSort = 'total', occQuery = '';
+
+// "Palangka Raya DC > A Hub - B Hub - C Hub"  ->  "A Hub › B Hub › C Hub" (prefix origin dibuang, label asli tetap ada di tooltip)
+function occRouteChainHtml(label) {
+  const short = String(label).replace(/^\s*Palangka Raya DC\s*>\s*/i, '');
+  return short.split(/\s+-\s+/).map(function (h) { return escapeHtml(h); }).join('<span class="occ-arrow">›</span>');
+}
+
+function applyRouteTableView() {
+  const tb = document.getElementById('routeTableBody');
+  if (!tb) return;
+  tb.querySelectorAll('tr.occ-empty-row').forEach(function (e) { e.remove(); });
+  const rows = Array.from(tb.querySelectorAll('tr[data-occ-row]'));
+  if (rows.length === 0) return;
+
+  const flt = occFilter || 'all', srt = occSort || 'total', q = (occQuery || '').trim().toLowerCase();
+  const n = function (r, k) { return parseFloat(r.dataset[k]) || 0; };
+  const tests = {
+    all: function () { return true; },
+    busy: function (r) { return n(r, 'pct') > 50; },
+    hv: function (r) { return n(r, 'hv') > 0; },
+    aging: function (r) { return n(r, 'old') > 0; },
+    soon: function (r) { return r.dataset.depSoon === '1'; }
+  };
+  const searchOk = function (r) { return !q || (r.dataset.name || '').indexOf(q) !== -1; };
+
+  Object.keys(tests).forEach(function (k) {
+    const el = document.querySelector('[data-occ-count="' + k + '"]');
+    if (el) el.textContent = rows.filter(function (r) { return searchOk(r) && tests[k](r); }).length;
+  });
+  document.querySelectorAll('[data-occ-filter]').forEach(function (b) {
+    b.classList.toggle('active', b.dataset.occFilter === flt);
+  });
+  const sel = document.getElementById('occSort');
+  if (sel && sel.value !== srt) sel.value = srt;
+
+  const depVal = function (r) { const v = parseFloat(r.dataset.depKey); return isNaN(v) ? Infinity : v; };
+  const byTotal = function (a, b) { return n(b, 'total') - n(a, 'total'); };
+  const cmps = {
+    total: byTotal,
+    depart: function (a, b) { return (depVal(a) - depVal(b)) || byTotal(a, b); },
+    hv: function (a, b) { return (n(b, 'hv') - n(a, 'hv')) || byTotal(a, b); },
+    aging: function (a, b) { return (n(b, 'old') - n(a, 'old')) || byTotal(a, b); },
+    name: function (a, b) { return (a.dataset.name || '').localeCompare(b.dataset.name || ''); }
+  };
+  const sorted = rows.slice().sort(cmps[srt] || cmps.total);
+  if (sorted.some(function (r, i) { return r !== rows[i]; })) sorted.forEach(function (r) { tb.appendChild(r); });
+
+  let vis = 0;
+  sorted.forEach(function (r) {
+    const show = searchOk(r) && tests[flt](r);
+    r.style.display = show ? '' : 'none';
+    if (show) { vis++; if (r.cells[0]) r.cells[0].textContent = vis; }
+  });
+  if (vis === 0) {
+    tb.insertAdjacentHTML('beforeend', '<tr class="occ-empty-row"><td colspan="16" style="text-align:center" class="py-6 text-slate-400 dark:text-slate-500 font-sans">' + t('ob.occ.noMatch') + '</td></tr>');
+  }
+  const info = document.getElementById('routeTotalInfo');
+  if (info) info.textContent = vis === rows.length ? t('ob.occ.totalRoutes', { n: rows.length }) : t('ob.occ.showing', { v: vis, n: rows.length });
+}
+window.applyRouteTableView = applyRouteTableView;
+
+(function () {
+  const si = document.getElementById('occSearch');
+  if (si) si.addEventListener('input', function () { occQuery = si.value; applyRouteTableView(); });
+  const so = document.getElementById('occSort');
+  if (so) so.addEventListener('change', function () { occSort = so.value; applyRouteTableView(); });
+  document.querySelectorAll('[data-occ-filter]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      const v = b.dataset.occFilter;
+      occFilter = (occFilter === v && v !== 'all') ? 'all' : v;
+      applyRouteTableView();
+    });
+  });
+})();
 window.updateNextDepartCells = updateNextDepartCells;
 setInterval(updateNextDepartCells, 30 * 1000);
 
@@ -3565,29 +3779,35 @@ function renderDashboard() {
     }
 
     if (!matched) {
-      if (!outerIslandMap[item.receiverName]) outerIslandMap[item.receiverName] = { name: item.receiverName, total: 0, parcel: 0, category: 'Outer' };
-      outerIslandMap[item.receiverName].total++;
-      outerIslandMap[item.receiverName].parcel++;
+      const og = outerIslandMap[item.receiverName] || (outerIslandMap[item.receiverName] = { name: item.receiverName, total: 0, parcel: 0, hv: 0, bulky: 0, nonBulky: 0, old: 0, category: 'Outer' });
+      og.total++;
+      og.parcel++;
+      if (isBulky) og.bulky++;
+      if (isParcel) og.nonBulky++;
+      if (item.isHv) og.hv++;
+      if (item.agingDays >= 2) og.old++;
       totalOuterIslandCount++;
     }
   });
 
   routeVolumes.sort((a, b) => b.total - a.total);
   let idx = 1;
-  const routeMaxTotal = routeVolumes.reduce((m, r) => Math.max(m, r.total), 0);
-  const tdAging = (val, row, type) => val > 0
-    ? `class="text-center font-bold cursor-pointer hover:bg-slate-200 dark:hover:bg-slate-700 underline text-slate-800 dark:text-slate-200 transition px-0.5" onclick="showRouteTONumbers('${row.label.replace(/'/g, "\\'")}', '${type}')"`
-    : `class="text-center text-slate-400 dark:text-slate-600 font-normal px-0.5"`;
+  const ageCell = (val, label, type, tone) => {
+    if (!(val > 0)) return `<td class="text-center text-slate-300 dark:text-slate-600 px-0.5">–</td>`;
+    const safe = label.replace(/'/g, "\\'");
+    return `<td class="text-center px-0.5"><button type="button" class="occ-age ${tone}" onclick="showRouteTONumbers('${safe}', '${type}')" title="${escapeHtml(t('ob.occ.openTo'))}">${val.toLocaleString('id-ID')}</button></td>`;
+  };
   document.getElementById('routeTableBody').innerHTML = routeVolumes.map(row => {
-    const pctCapacity = ((row.total / 4000) * 100).toFixed(1);
+    const pct = (row.total / INNER_ROUTE_CAPACITY) * 100;
+    const alert = getRouteAlert(pct);
     const safeLabel = row.label.replace(/'/g, "\\'");
     const d5plus = row.d5 + row.d6 + row.dMore;
-    let bgRow = '';
-    if (routeMaxTotal > 0 && row.total === routeMaxTotal) bgRow = 'bg-orange-50 dark:bg-orange-950/50 font-bold';
-    else if (row.total > routeMaxTotal * 0.6) bgRow = 'bg-orange-50/50 dark:bg-orange-900/20';
-    return `<tr class="${bgRow} hover:bg-slate-100 dark:hover:bg-slate-800/80 transition">
-      <td class="text-center text-slate-400 dark:text-slate-500">${idx++}</td>
-      <td class="font-sans text-slate-800 dark:text-slate-200 font-bold max-w-xs truncate text-left pl-2 cursor-pointer hover:text-shopee dark:hover:text-orange-400 hover:underline transition" onclick="showRouteDrilldown('${safeLabel}')" title="Klik untuk lihat breakdown per Hub di rute ${row.label}">${row.label}</td>
+    const old = row.d2 + row.d3 + row.d4 + d5plus;
+    const stripe = pct > 100 ? 'occ-stripe-bad' : pct > 50 ? 'occ-stripe-warn' : 'occ-stripe-ok';
+    const pctTxt = pct > 100 ? 'text-rose-600 dark:text-rose-400' : pct > 50 ? 'text-amber-600 dark:text-amber-400' : 'text-slate-600 dark:text-slate-300';
+    return `<tr data-occ-row data-name="${escapeHtml(row.label.toLowerCase())}" data-total="${row.total}" data-pct="${pct.toFixed(2)}" data-hv="${row.hv}" data-old="${old}" class="bg-white dark:bg-slate-900 hover:bg-amber-50/70 dark:hover:bg-slate-800 transition">
+      <td class="occ-st-no text-center text-slate-400 dark:text-slate-500">${idx++}</td>
+      <td class="occ-st-route ${stripe} font-sans text-slate-800 dark:text-slate-200 font-bold text-left pl-2 cursor-pointer hover:text-shopee dark:hover:text-orange-400 transition" onclick="showRouteDrilldown('${safeLabel}')" title="Klik untuk lihat breakdown per Hub di rute ${escapeHtml(row.label)}">${occRouteChainHtml(row.label)}</td>
       <td data-nd-slot data-nd-route="${row.label.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" class="text-center font-bold text-slate-400 dark:text-slate-600">-</td>
       <td data-nd-dep class="text-center font-bold text-slate-400 dark:text-slate-600">-</td>
       <td class="text-center font-bold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${nz(row.hv)}</td>
@@ -3595,17 +3815,20 @@ function renderDashboard() {
       <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.bulky)}</td>
       <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.parcel)}</td>
       <td class="text-center bg-orange-50 dark:bg-orange-950/50 font-bold text-shopee dark:text-orange-400">${row.total.toLocaleString('id-ID')}</td>
-      <td class="text-center font-bold text-slate-700 dark:text-slate-300">${pctCapacity}%</td>
-      <td ${tdAging(row.d0, row, 'd0')}>${nz(row.d0)}</td>
-      <td ${tdAging(row.d1, row, 'd1')}>${nz(row.d1)}</td>
-      <td ${tdAging(row.d2, row, 'd2')}>${nz(row.d2)}</td>
-      <td ${tdAging(row.d3, row, 'd3')}>${nz(row.d3)}</td>
-      <td ${tdAging(row.d4, row, 'd4')}>${nz(row.d4)}</td>
-      <td ${tdAging(d5plus, row, 'd5')}>${nz(d5plus)}</td>
+      <td title="${row.total.toLocaleString('id-ID')} / ${INNER_ROUTE_CAPACITY.toLocaleString('id-ID')} parcel · ${alert.level}">
+        <div class="flex items-center gap-1.5">
+          <div class="occ-bar"><div class="${alert.bar}" style="width:${Math.min(pct, 100).toFixed(0)}%"></div></div>
+          <span class="font-mono font-bold ${pctTxt} w-11 text-right shrink-0">${pct.toFixed(1)}%</span>
+        </div>
+      </td>
+      ${ageCell(row.d0, row.label, 'd0', 'occ-age-ok')}
+      ${ageCell(row.d1, row.label, 'd1', 'occ-age-ok')}
+      ${ageCell(row.d2, row.label, 'd2', 'occ-age-warn')}
+      ${ageCell(row.d3, row.label, 'd3', 'occ-age-bad')}
+      ${ageCell(row.d4, row.label, 'd4', 'occ-age-bad')}
+      ${ageCell(d5plus, row.label, 'd5', 'occ-age-bad')}
     </tr>`;
   }).join('');
-  const routeTotalInfoEl = document.getElementById('routeTotalInfo');
-  if (routeTotalInfoEl) routeTotalInfoEl.innerText = 'Total Jalur: ' + routeVolumes.length;
   updateNextDepartCells();
 
   const outerSorted = Object.values(outerIslandMap).sort((a, b) => b.total - a.total);
@@ -3637,13 +3860,18 @@ function renderDashboard() {
   const routePlanList = routeVolumes.map(r => ({
     label: r.label,
     total: r.total,
-    pct: (r.total / 4000) * 100,
-    category: 'Inner'
+    pct: (r.total / INNER_ROUTE_CAPACITY) * 100,
+    cap: INNER_ROUTE_CAPACITY,
+    category: 'Inner',
+    hv: r.hv, bulky: r.bulky, nonBulky: r.parcel,
+    old: r.d2 + r.d3 + r.d4 + r.d5 + r.d6 + r.dMore
   })).concat(outerSorted.map(r => ({
     label: r.name,
     total: r.total,
-    pct: (r.total / 2000) * 100,
-    category: 'Outer'
+    pct: DESTINATION_CAPACITY > 0 ? (r.total / DESTINATION_CAPACITY) * 100 : 0,
+    cap: DESTINATION_CAPACITY,
+    category: 'Outer',
+    hv: r.hv, bulky: r.bulky, nonBulky: r.nonBulky, old: r.old
   })));
 
   const top5 = routePlanList.sort((a, b) => b.pct - a.pct).slice(0, 5);
@@ -3652,9 +3880,14 @@ function renderDashboard() {
   if (top5.length === 0 || top5.every(r => r.total === 0)) {
     planContainer.innerHTML = `<div class="text-center text-slate-400 dark:text-slate-500 py-3 font-sans">${t('ob.occ.emptyAnalysis')}</div>`;
   } else {
+    const miniChip = (icon, label, val, tone) => `<span class="occ-mini ${tone}"><i class="${icon}"></i>${label} <b>${Number(val).toLocaleString('id-ID')}</b></span>`;
     planContainer.innerHTML = top5.map((item, index) => {
       const alert = getRouteAlert(item.pct);
       const barWidth = Math.min(Math.round(item.pct), 100);
+      const diff = item.total - item.cap;
+      const capNote = diff > 0
+        ? `<span class="font-bold text-rose-600 dark:text-rose-400">${t('ob.occ.card.over', { n: diff.toLocaleString('id-ID') })}</span>`
+        : `<span class="text-slate-500 dark:text-slate-400">${t('ob.occ.card.left', { n: Math.max(-diff, 0).toLocaleString('id-ID') })}</span>`;
 
       let rankBadge = `<span class="w-5 h-5 rounded-full bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 font-black text-[10px] flex items-center justify-center shrink-0">${index + 1}</span>`;
       if (index === 0) rankBadge = `<span class="w-5 h-5 rounded-full bg-amber-400 text-slate-950 font-black text-[10px] flex items-center justify-center shadow-sm shrink-0"><i class="fa-solid fa-crown text-[9px]"></i></span>`;
@@ -3665,28 +3898,44 @@ function renderDashboard() {
         ? `<span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-sky-100 dark:bg-sky-950/50 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-800 shrink-0">OUTER</span>`
         : `<span class="text-[8px] font-bold px-1.5 py-0.5 rounded-md bg-orange-100 dark:bg-orange-950/50 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800 shrink-0">INNER</span>`;
 
-      return `<div class="p-2 rounded-xl border ${alert.ring} bg-slate-50/80 dark:bg-slate-800/60 text-[10px] shadow-sm">
-        <div class="flex items-center justify-between gap-2 mb-1">
-          <div class="flex items-center gap-1.5 min-w-0">
+      const safe = item.label.replace(/'/g, "\\'");
+      const onclick = item.category === 'Outer' ? `showDestinationDrilldown('${safe}')` : `showRouteDrilldown('${safe}')`;
+      const ndAttr = item.label.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+      const nextChip = item.category === 'Inner'
+        ? `<span data-nd-card="${ndAttr}" class="occ-mini"><i class="fa-regular fa-clock"></i>Next Depart <b>-</b></span>`
+        : '';
+
+      return `<div class="occ-card p-2 rounded-xl border ${alert.ring} bg-slate-50/80 dark:bg-slate-800/60 text-[10px] shadow-sm flex flex-col justify-between gap-1" onclick="${onclick}" title="${escapeHtml(item.label)}">
+        <div class="flex items-start justify-between gap-2">
+          <div class="flex items-start gap-1.5 min-w-0">
             ${rankBadge}
             ${catBadge}
-            <span class="font-bold text-slate-800 dark:text-slate-100 truncate" title="${item.label}">${item.label}</span>
+            <span class="font-bold text-[11px] leading-snug text-slate-800 dark:text-slate-100 break-words">${item.category === 'Inner' ? occRouteChainHtml(item.label) : escapeHtml(item.label)}</span>
           </div>
           <span class="font-bold px-2 py-0.5 rounded-full ${alert.badge} flex items-center gap-1 shrink-0 text-[9px]"><i class="${alert.icon}"></i>${alert.level}</span>
         </div>
         <div class="flex items-center gap-2">
-          <div class="flex-1 bg-slate-200 dark:bg-slate-700 h-1.5 rounded-full overflow-hidden">
+          <div class="flex-1 bg-slate-200 dark:bg-slate-700 h-2 rounded-full overflow-hidden">
             <div class="${alert.bar} h-full rounded-full transition-all duration-500" style="width: ${barWidth}%"></div>
           </div>
-          <span class="font-mono text-slate-500 dark:text-slate-400 shrink-0 w-10 text-right">${item.pct.toFixed(1)}%</span>
+          <span class="font-mono font-bold text-slate-700 dark:text-slate-200 shrink-0 w-12 text-right">${item.pct.toFixed(1)}%</span>
         </div>
-        <div class="flex items-center justify-between mt-1 gap-2">
-          <span class="font-mono text-slate-600 dark:text-slate-300 font-bold shrink-0"><i class="fa-solid fa-box mr-0.5"></i>${item.total.toLocaleString('id-ID')} Paket</span>
-          <span class="text-slate-500 dark:text-slate-400 italic truncate text-right" title="${alert.text}">${alert.text}</span>
+        <div class="flex items-center justify-between gap-2">
+          <span class="font-mono text-slate-700 dark:text-slate-200 font-bold"><i class="fa-solid fa-box mr-1"></i>${item.total.toLocaleString('id-ID')} <span class="font-normal text-slate-400">/ ${item.cap.toLocaleString('id-ID')} Paket</span></span>
+          ${capNote}
         </div>
+        <div class="flex flex-wrap items-center gap-1">
+          ${miniChip('fa-solid fa-gem', t('ob.th.hv'), item.hv, item.hv > 0 ? 'occ-mini-warn' : '')}
+          ${miniChip('fa-solid fa-box-open', t('ob.th.bulky'), item.bulky, '')}
+          ${miniChip('fa-solid fa-boxes-stacked', t('ob.th.nonBulky'), item.nonBulky, '')}
+          ${miniChip('fa-solid fa-hourglass-half', 'Aging D-2+', item.old, item.old > 0 ? 'occ-mini-bad' : '')}
+          ${nextChip}
+        </div>
+        <div class="text-slate-500 dark:text-slate-400 italic flex items-start gap-1"><i class="fa-solid fa-circle-info mt-0.5 shrink-0"></i><span>${alert.text}</span></div>
       </div>`;
     }).join('');
   }
+  updateNextDepartCells();
 
   renderExecutiveSummary({ total, criticalParcels, capPct, capPctRaw, prevDCSnapshot, top5 });
 }
@@ -3808,7 +4057,8 @@ function downloadReportImage() {
   html2canvas(dashboard, {
     scale: 2,
     useCORS: true,
-    logging: false
+    logging: false,
+    onclone: function (doc) { ['occScroll','occScrollInner'].forEach(function (id) { var el = doc.getElementById(id); if (el) { el.style.position = 'static'; el.style.flex = 'none'; el.style.maxHeight = 'none'; el.style.overflow = 'visible'; } }); }
   }).then(canvas => {
     const link = document.createElement('a');
     link.download = `STAGING_OUTBOUND_REPORT_${new Date().toISOString().slice(0, 10)}.png`;
