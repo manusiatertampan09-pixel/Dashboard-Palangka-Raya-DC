@@ -2521,8 +2521,11 @@
     }
 
     function normalizeOpsId(rawId) {
-        let cleaned = rawId.trim();
+        let cleaned = String(rawId == null ? "" : rawId).trim();
         if (!cleaned) return "";
+        // Hasil scan format "Ops289900_Irwan" / "Ops289900 Irwan" / "289900_Irwan" -> ambil OpsID-nya aja, nama dibuang
+        const scanMatch = cleaned.match(/^(?:ops)?(\d+)[\s_\-]+/i);
+        if (scanMatch) return "Ops" + scanMatch[1];
         if (/^\d+$/.test(cleaned)) return "Ops" + cleaned;
         if (cleaned.toLowerCase().startsWith("ops")) return "Ops" + cleaned.replace(/^[Oo][Pp][Ss]/, '');
         return cleaned;
