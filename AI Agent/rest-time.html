@@ -2250,7 +2250,7 @@
         return new Date(t[0], t[1]-1, t[2], t[3], t[4], t[5]);
     }
 
-    const REST_RESET_HOURS = 9;
+    const REST_RESET_HOURS = 9.5; // 9 jam 30 menit
 
     const DOUBLE_SCAN_COOLDOWN_SEC = 120;
     const recentScanAt = {};
@@ -2348,7 +2348,7 @@
         const tip = gaps.map(function (g) {
             const c = g.c, what = c.gap === "noBO" ? "Check In tapi tidak Break Out" : "Break Out tapi tidak Break In";
             const why = c.nextCi ? "lalu Check In baru " + fmt(c.nextCi) + " (" + Math.floor(c.ageH) + " jam sejak Check In)" : "sudah " + Math.floor(c.ageH) + " jam sejak Check In";
-            return (g.prev ? "Siklus sebelumnya " : "Siklus ") + fmt(c.ci) + ": " + what + ", " + why + ". Batas " + REST_RESET_HOURS + " jam = Expired.";
+            return (g.prev ? "Siklus sebelumnya " : "Siklus ") + fmt(c.ci) + ": " + what + ", " + why + ". Batas " + (Math.floor(REST_RESET_HOURS) + " jam" + (REST_RESET_HOURS % 1 ? " " + Math.round((REST_RESET_HOURS % 1) * 60) + " menit" : "")) + " = Expired.";
         }).join("\n");
         const g0 = gaps[gaps.length - 1], label = (g0.c.gap === "noBO" ? "Tanpa Break Out" : "Tanpa Break In");
         const txt = "⌛ Expired" + (g0.prev ? " (siklus lalu)" : "") + " · " + label + (gaps.length > 1 ? " +" + (gaps.length - 1) : "");
