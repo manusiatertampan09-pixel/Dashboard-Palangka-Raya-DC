@@ -63,22 +63,45 @@ tailwind.config = {
   .dynamic-table thead th { white-space: nowrap; }
 
   /* ===== Occupancy: tabel Inner Island & Priority Action Center ===== */
-  #routeTableBody td { padding: 3px 6px !important; font-size: 12px; }
+  /* Tinggi baris dikunci ke angka bulat (px) supaya garis pemisah sinkron di semua kolom, termasuk kolom sticky */
+  #routeTableBody td { padding: 3px 6px !important; height: 30px; line-height: 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
+  /* Kolom angka: rata kanan biar digit sejajar & gampang dibandingkan */
+  #routeTableBody td.occ-num { text-align: right !important; padding-right: 16px !important; }
+  /* Nilai kosong dibikin pudar supaya angka yang ada isinya menonjol */
+  #routeTableBody .nz { color: #cbd5e1; font-weight: 400; }
+  .dark #routeTableBody .nz { color: #475569; }
   #routeTableBody td.occ-st-no { text-align: center; }
+  /* Header Next Slot: th:first-child bawaan rata kiri, paksa center */
+  #occScroll thead th[data-i18n="ob.th.nextSlot"] { text-align: center !important; padding-left: 6px !important; }
+  /* Pemisah antar grup kolom: List Route | Jadwal Berangkat | Volume & Kapasitas | Aging Days */
+  #routeTableBody td.occ-st-route { border-right: 2px solid #475569; }
+  #routeTableBody td:nth-child(3), #routeTableBody td:nth-child(5), #routeTableBody td:nth-child(11) { border-left: 2px solid #475569; }
+  #occScroll thead tr:first-child th:nth-child(2) { border-right: 2px solid #e2e8f0; }
+  #occScroll thead tr:first-child th:nth-child(n+3) { border-left: 2px solid #e2e8f0; }
+  #occScroll thead tr:nth-child(2) th:nth-child(1), #occScroll thead tr:nth-child(2) th:nth-child(3), #occScroll thead tr:nth-child(2) th:nth-child(9) { border-left: 2px solid #e2e8f0; }
+  .dark #routeTableBody td.occ-st-route { border-right-color: #94a3b8; }
+  .dark #routeTableBody td:nth-child(3), .dark #routeTableBody td:nth-child(5), .dark #routeTableBody td:nth-child(11) { border-left-color: #94a3b8; }
+  /* Pemisah antar route: garis lebih tegas + selang-seling warna baris */
+  #routeTableBody td { border-bottom: 1px solid #94a3b8; }
+  .dark #routeTableBody td { border-bottom-color: #475569; }
+  #routeTableBody tr.occ-zebra { background-color: #f1f5f9; }
+  .dark #routeTableBody tr.occ-zebra { background-color: #131c2e; }
+  #routeTableBody tr.occ-zebra:hover { background-color: #fef3c7; }
+  .dark #routeTableBody tr.occ-zebra:hover { background-color: #1e293b; }
   .occ-st-no { position: sticky; left: 0; z-index: 3; width: 40px; min-width: 40px; max-width: 40px; }
-  .occ-st-route { position: sticky; left: 40px; z-index: 3; min-width: 280px; }
+  .occ-st-route { position: sticky; left: 40px; z-index: 3; min-width: 280px; white-space: nowrap; }
   /* Tinggi card Inner Island mengikuti kolom kanan (Outer Island + Priority Action Center); tabel scroll di dalamnya */
   #occScroll { position: relative; flex: 1 1 0; min-height: 320px; overflow: hidden; }
   #occScrollInner { position: absolute; inset: 0; overflow: auto; }
   /* Baris tabel melar mengisi sisa tinggi kartu (header tetap, tinggi ekstra dibagi ke baris data) */
-  #occScrollInner > table { height: 100%; }
+  #occScrollInner > table { height: auto; }
   #occScrollInner thead tr { height: auto; }
   #routeTableBody tr { height: auto; }
   #occScroll thead tr:first-child th { position: sticky; top: 0; z-index: 5; height: 24px; }
   #occScroll thead tr:nth-child(2) th { position: sticky; top: 24px; z-index: 5; }
   #occScroll thead th.occ-st-no, #occScroll thead th.occ-st-route { z-index: 7; }
   #routeTableBody .occ-st-no, #routeTableBody .occ-st-route { background: inherit; z-index: 2; }
-  #routeTableBody .occ-st-route { line-height: 1.25; font-size: 13px; }
+  #routeTableBody .occ-st-route { line-height: 1.25; font-size: 13px; white-space: nowrap; }
   .occ-arrow { margin: 0 4px; color: #cbd5e1; font-weight: 400; }
   .dark .occ-arrow { color: #475569; }
   .occ-stripe-ok   { box-shadow: inset 3px 0 0 #10b981; }
@@ -87,10 +110,10 @@ tailwind.config = {
   .occ-bar { flex: 1; min-width: 40px; height: 6px; border-radius: 9999px; background: #e2e8f0; overflow: hidden; }
   .dark .occ-bar { background: #334155; }
   .occ-bar > div { height: 100%; border-radius: 9999px; }
-  .occ-age { min-width: 30px; padding: 1px 7px; border-radius: 9999px; font-weight: 800; font-size: 11px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; border: 1px solid transparent; transition: transform .1s, box-shadow .1s; }
+  .occ-age { min-width: 40px; padding: 1px 10px; line-height: 16px; border-radius: 9999px; font-weight: 800; font-size: 13px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; cursor: pointer; border: 1px solid transparent; transition: transform .1s, box-shadow .1s; }
   .occ-age:hover { transform: translateY(-1px); box-shadow: 0 2px 6px rgba(0,0,0,.2); }
-  .occ-age-ok   { background: #f1f5f9; color: #334155; border-color: #e2e8f0; }
-  .occ-age-warn { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+  .occ-age-ok   { background: #e2e8f0; color: #0f172a; border-color: #94a3b8; }
+  .occ-age-warn { background: #fde68a; color: #78350f; border-color: #f59e0b; }
   .occ-age-bad  { background: #e11d48; color: #fff; }
   .dark .occ-age-ok   { background: #1e293b; color: #e2e8f0; border-color: #334155; }
   .dark .occ-age-warn { background: rgba(245,158,11,.2); color: #fcd34d; border-color: rgba(245,158,11,.5); }
@@ -469,6 +492,7 @@ th, td { padding: 5px 7px !important; }
     "ob.th.nextDepart": { "id": "Next Depart", "en": "Next Depart" },
     "ob.sched.allDays": { "id": "Semua Hari", "en": "All Days" },
     "ob.sched.todayOnly": { "id": "Aktif Hari Ini", "en": "Active Today" },
+    "ob.sched.thCot": { "id": "COT", "en": "COT" },
     "ob.sched.thInd": { "id": "Sch Indicator", "en": "Sch Indicator" },
     "ob.sched.thUnit": { "id": "Unit Type", "en": "Unit Type" },
     "ob.sched.thLh": { "id": "LH Scheme", "en": "LH Scheme" },
@@ -1107,8 +1131,8 @@ th, td { padding: 5px 7px !important; }
                 <th colspan="6" class="bg-rose-800 dark:bg-rose-900 text-[10px] tracking-wide" data-i18n="ob.occ.grp.aging">Aging Days</th>
               </tr>
               <tr class="bg-slate-800 dark:bg-slate-950">
-                <th class="w-16 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nextSlot" title="Slot keberangkatan berikutnya (dari Schedule Outbound)" data-i18n="ob.th.nextSlot">Next Slot</th>
-                <th class="w-32 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nextDepart" title="ETD Origin terdekat dari jam device (dari Schedule Outbound)" data-i18n="ob.th.nextDepart">Next Depart</th>
+                <th class="w-36 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nextSlot" title="Slot keberangkatan berikutnya (dari Schedule Outbound)" data-i18n="ob.th.nextSlot">Next Slot</th>
+                <th class="w-44 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.nextDepart" title="ETD Origin terdekat dari jam device (dari Schedule Outbound)" data-i18n="ob.th.nextDepart">Next Depart</th>
                 <th class="w-12 bg-amber-600 border-x border-amber-700 text-white" data-i18n="ob.th.hv">HV</th>
                 <th class="w-12 bg-slate-800 dark:bg-slate-950" data-i18n="ob.th.liquid">Liquid</th>
                 <th class="w-14 bg-slate-800 dark:bg-slate-950" data-i18n-title="ob.th.bulkyTitle" title="Bulky = Packing Method Individual Packing" data-i18n="ob.th.bulky">Bulky</th>
@@ -1201,6 +1225,7 @@ th, td { padding: 5px 7px !important; }
           <thead class="bg-slate-100 dark:bg-slate-800/80 text-slate-800 dark:text-slate-200 font-bold border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
             <tr>
               <th class="w-10" data-i18n="ob.th.no">No</th>
+              <th class="w-28" data-i18n="ob.sched.thCot">COT</th>
               <th class="w-24" data-i18n="ob.sched.thInd">Sch Indicator</th>
               <th class="text-left pl-2" data-i18n="ob.sched.thLh">LH Scheme</th>
               <th class="text-left pl-2" data-i18n="ob.sched.thRoute">Route</th>
@@ -1211,7 +1236,7 @@ th, td { padding: 5px 7px !important; }
             </tr>
           </thead>
           <tbody id="scheduleTableBody" class="divide-y divide-slate-100 dark:divide-slate-800 font-mono">
-            <tr><td colspan="8" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.sched.loading">Memuat jadwal dari Google Sheet...</td></tr>
+            <tr><td colspan="9" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans" data-i18n="ob.sched.loading">Memuat jadwal dari Google Sheet...</td></tr>
           </tbody>
         </table>
       </div>
@@ -2281,10 +2306,12 @@ function updateNextDepartCells() {
       return;
     }
     const cls = d.urgent ? 'text-rose-600 dark:text-rose-400' : d.soon ? 'text-amber-600 dark:text-amber-400' : 'text-sky-700 dark:text-sky-300';
-    slotTd.textContent = d.nx.slot || '-';
+    const isGH = /golden/i.test(d.nx.cot || '');
     slotTd.className = 'text-center font-bold text-amber-600 dark:text-amber-400';
+    slotTd.innerHTML = '<span class="inline-flex items-center justify-center gap-1.5 whitespace-nowrap"><span class="text-[15px] font-extrabold">' + escapeHtml(d.nx.slot || '-') + '</span>' + (isGH ? '<span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded border font-sans font-bold text-[9px] leading-none whitespace-nowrap bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800" title="COT: Golden Hours (masuk KPI)"><i class="fa-solid fa-star text-[8px]"></i>Golden Hours</span>' : '') + '</span>';
     depTd.className = 'text-center font-bold whitespace-nowrap ' + cls;
-    depTd.innerHTML = d.nx.etd + ' <span class="text-[10px] font-sans font-semibold text-slate-400 dark:text-slate-500">· ' + d.dayPrefix + d.cd + '</span>';
+    const cdCls = d.urgent ? 'text-rose-600 dark:text-rose-400' : d.soon ? 'text-amber-600 dark:text-amber-400' : 'text-slate-700 dark:text-slate-200';
+    depTd.innerHTML = '<span class="text-[14px] font-extrabold">' + d.nx.etd + '</span> <span class="text-[12px] font-sans font-bold ' + cdCls + '">· ' + d.dayPrefix + d.cd + '</span>';
     tr.dataset.depKey = String(d.nx.mins);
     tr.dataset.depSoon = d.soon ? '1' : '0';
   });
@@ -2292,7 +2319,7 @@ function updateNextDepartCells() {
     const d = info(el.dataset.ndCard);
     if (!d) { el.className = 'occ-mini'; el.innerHTML = '<i class="fa-regular fa-clock"></i>Next Depart <b>-</b>'; return; }
     el.className = 'occ-mini ' + (d.urgent ? 'occ-mini-bad' : d.soon ? 'occ-mini-warn' : 'occ-mini-info');
-    el.innerHTML = '<i class="fa-regular fa-clock"></i>' + (d.nx.slot ? d.nx.slot + ' · ' : '') + d.nx.etd + ' <b>' + d.dayPrefix + d.cd + '</b>';
+    el.innerHTML = '<i class="fa-regular fa-clock"></i>' + (/golden/i.test(d.nx.cot || '') ? '<i class="fa-solid fa-star text-amber-500" title="Golden Hours"></i>' : '') + (d.nx.slot ? d.nx.slot + ' · ' : '') + d.nx.etd + ' <b>' + d.dayPrefix + d.cd + '</b>';
   });
   if (typeof applyRouteTableView === 'function') applyRouteTableView();
 }
@@ -2350,7 +2377,7 @@ function applyRouteTableView() {
   sorted.forEach(function (r) {
     const show = searchOk(r) && tests[flt](r);
     r.style.display = show ? '' : 'none';
-    if (show) { vis++; if (r.cells[0]) r.cells[0].textContent = vis; }
+    if (show) { vis++; r.classList.toggle('occ-zebra', vis % 2 === 0); if (r.cells[0]) r.cells[0].textContent = vis; }
   });
   if (vis === 0) {
     tb.insertAdjacentHTML('beforeend', '<tr class="occ-empty-row"><td colspan="16" style="text-align:center" class="py-6 text-slate-400 dark:text-slate-500 font-sans">' + t('ob.occ.noMatch') + '</td></tr>');
@@ -3793,7 +3820,7 @@ function renderDashboard() {
   routeVolumes.sort((a, b) => b.total - a.total);
   let idx = 1;
   const ageCell = (val, label, type, tone) => {
-    if (!(val > 0)) return `<td class="text-center text-slate-300 dark:text-slate-600 px-0.5">–</td>`;
+    if (!(val > 0)) return `<td class="text-center text-slate-300 dark:text-slate-700 font-normal px-0.5">–</td>`;
     const safe = label.replace(/'/g, "\\'");
     return `<td class="text-center px-0.5"><button type="button" class="occ-age ${tone}" onclick="showRouteTONumbers('${safe}', '${type}')" title="${escapeHtml(t('ob.occ.openTo'))}">${val.toLocaleString('id-ID')}</button></td>`;
   };
@@ -3810,11 +3837,11 @@ function renderDashboard() {
       <td class="occ-st-route ${stripe} font-sans text-slate-800 dark:text-slate-200 font-bold text-left pl-2 cursor-pointer hover:text-shopee dark:hover:text-orange-400 transition" onclick="showRouteDrilldown('${safeLabel}')" title="Klik untuk lihat breakdown per Hub di rute ${escapeHtml(row.label)}">${occRouteChainHtml(row.label)}</td>
       <td data-nd-slot data-nd-route="${row.label.replace(/&/g, '&amp;').replace(/"/g, '&quot;')}" class="text-center font-bold text-slate-400 dark:text-slate-600">-</td>
       <td data-nd-dep class="text-center font-bold text-slate-400 dark:text-slate-600">-</td>
-      <td class="text-center font-bold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${nz(row.hv)}</td>
-      <td class="text-center text-sky-600 dark:text-sky-400">${nz(row.liquid)}</td>
-      <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.bulky)}</td>
-      <td class="text-center font-bold text-slate-800 dark:text-slate-200">${nz(row.parcel)}</td>
-      <td class="text-center bg-orange-50 dark:bg-orange-950/50 font-bold text-shopee dark:text-orange-400">${row.total.toLocaleString('id-ID')}</td>
+      <td class="occ-num font-extrabold text-amber-600 dark:text-amber-400 bg-amber-50/50 dark:bg-amber-950/30">${nz(row.hv)}</td>
+      <td class="occ-num font-bold text-sky-600 dark:text-sky-400">${nz(row.liquid)}</td>
+      <td class="occ-num font-bold text-slate-800 dark:text-slate-200">${nz(row.bulky)}</td>
+      <td class="occ-num font-bold text-slate-800 dark:text-slate-200">${nz(row.parcel)}</td>
+      <td class="occ-num bg-orange-50 dark:bg-orange-950/50 font-black text-shopee dark:text-orange-400">${row.total.toLocaleString('id-ID')}</td>
       <td title="${row.total.toLocaleString('id-ID')} / ${INNER_ROUTE_CAPACITY.toLocaleString('id-ID')} parcel · ${alert.level}">
         <div class="flex items-center gap-1.5">
           <div class="occ-bar"><div class="${alert.bar}" style="width:${Math.min(pct, 100).toFixed(0)}%"></div></div>
@@ -4147,8 +4174,8 @@ if (window.location.hash === '#occupancy') {
   const SCHED_SHEET_ID = '1vuJf4-_9sVpWI2WnokZxVCcOyIrnci-qQckxoabNQ8w';
   const SCHED_SHEET_NAME = 'Schedule V.5';
   const SCHED_SHEET_GID = '1130982389';
-  // Index kolom (0-based): C=2, D=3, E=4, U=20, X=23, AC=28, AP=41
-  const COL = { ind: 2, lh: 3, route: 4, slot: 20, unit: 23, etd: 28, days: 41 };
+  // Index kolom (0-based): B=1, C=2, D=3, E=4, U=20, X=23, AC=28, AP=41
+  const COL = { cot: 1, ind: 2, lh: 3, route: 4, slot: 20, unit: 23, etd: 28, days: 41 };
 
   let schedRows = [];
 
@@ -4212,7 +4239,7 @@ if (window.location.hash === '#occupancy') {
       });
       if (best) {
         const hm = parseEtd(best.r.etd);
-        return { slot: best.r.slot, etd: String(hm[0]).padStart(2, '0') + ':' + String(hm[1]).padStart(2, '0'), mins: Math.round((best.t - now) / 60000), off: off };
+        return { slot: best.r.slot, cot: best.r.cot || '', etd: String(hm[0]).padStart(2, '0') + ':' + String(hm[1]).padStart(2, '0'), mins: Math.round((best.t - now) / 60000), off: off };
       }
     }
     return null;
@@ -4224,6 +4251,15 @@ if (window.location.hash === '#occupancy') {
     if (parts.length === 7) parts.splice(0, 7, 'Setiap Hari');
     if (!parts.length) return '<span class="text-slate-400">-</span>';
     return parts.map(p => `<span class="inline-block px-1.5 py-0.5 mr-1 mb-0.5 rounded bg-sky-50 dark:bg-sky-950/40 text-sky-700 dark:text-sky-300 border border-sky-200 dark:border-sky-900 font-sans font-semibold text-[10px]">${esc(p)}</span>`).join('');
+  }
+
+  function cotBadge(v) {
+    const x = String(v || '').trim();
+    if (!x) return '<span class="text-slate-400">-</span>';
+    const gh = /golden/i.test(x);
+    const cls = gh ? 'bg-amber-50 text-amber-700 border-amber-300 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800'
+      : 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700';
+    return `<span class="inline-block px-1.5 py-0.5 rounded border font-sans font-bold text-[10px] whitespace-nowrap ${cls}">${gh ? '<i class="fa-solid fa-star text-[8px] mr-1"></i>' : ''}${esc(x)}</span>`;
   }
 
   function indBadge(v) {
@@ -4245,15 +4281,16 @@ if (window.location.hash === '#occupancy') {
     const list = schedRows.filter(r => {
       if (dayF === 'today' && !isActiveToday(r.days)) return false;
       if (!q) return true;
-      return (r.ind + ' ' + r.lh + ' ' + r.route + ' ' + r.slot + ' ' + r.unit + ' ' + r.etd + ' ' + r.days).toLowerCase().includes(q);
+      return (r.cot + ' ' + r.ind + ' ' + r.lh + ' ' + r.route + ' ' + r.slot + ' ' + r.unit + ' ' + r.etd + ' ' + r.days).toLowerCase().includes(q);
     });
     info.textContent = 'Total: ' + list.length + (list.length !== schedRows.length ? ' / ' + schedRows.length : '');
     if (!list.length) {
-      body.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">' + esc(t('ob.sched.empty')) + '</td></tr>';
+      body.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-slate-400 dark:text-slate-500 font-sans">' + esc(t('ob.sched.empty')) + '</td></tr>';
       return;
     }
     body.innerHTML = list.map((r, i) => `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/60 transition">
       <td class="text-slate-400">${i + 1}</td>
+      <td>${cotBadge(r.cot)}</td>
       <td>${indBadge(r.ind)}</td>
       <td class="font-sans text-left pl-2 font-semibold text-slate-700 dark:text-slate-200">${esc(r.lh) || '-'}</td>
       <td class="font-sans text-left pl-2 font-bold text-slate-800 dark:text-slate-100">${esc(r.route) || '-'}</td>
@@ -4266,7 +4303,7 @@ if (window.location.hash === '#occupancy') {
 
   function setMsg(msg) {
     const body = document.getElementById('scheduleTableBody');
-    if (body) body.innerHTML = '<tr><td colspan="8" class="text-center py-6 text-rose-500 font-sans">' + msg + '</td></tr>';
+    if (body) body.innerHTML = '<tr><td colspan="9" class="text-center py-6 text-rose-500 font-sans">' + msg + '</td></tr>';
   }
 
   const SCHED_BASE = 'https://docs.google.com/spreadsheets/d/' + SCHED_SHEET_ID;
@@ -4326,10 +4363,10 @@ if (window.location.hash === '#occupancy') {
       start = start >= 0 ? start + 1 : 2;
       const get = (r, i) => String(r[i] == null ? '' : r[i]).trim();
       schedRows = all.slice(start).map(r => ({
-        ind: get(r, COL.ind), lh: get(r, COL.lh), route: get(r, COL.route), slot: get(r, COL.slot),
+        cot: get(r, COL.cot), ind: get(r, COL.ind), lh: get(r, COL.lh), route: get(r, COL.route), slot: get(r, COL.slot),
         unit: get(r, COL.unit), etd: get(r, COL.etd), days: get(r, COL.days)
       })).filter(r => /\S\s*>\s*\S/.test(r.route)); // buang baris kosong & catatan (mis. "Live 13 Nov")
-      const sig = new Date().getDay() + '|' + JSON.stringify(schedRows.map(r => [r.ind, r.lh, r.route, r.slot, r.unit, r.etd, r.days]));
+      const sig = new Date().getDay() + '|' + JSON.stringify(schedRows.map(r => [r.cot, r.ind, r.lh, r.route, r.slot, r.unit, r.etd, r.days]));
       const changed = sig !== schedLastSig || isManual === true;
       schedLastSig = sig;
       if (changed) {
