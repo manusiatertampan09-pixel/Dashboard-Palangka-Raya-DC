@@ -2103,6 +2103,38 @@
         renderAll();
     }
 
+    // Setelah scan Asset: pastikan filter tanggal tabel mencakup TANGGAL LOCAL DEVICE (hari ini) dan tanggal baris yang
+    // baru disimpan (Kembali PDA ikut tanggal Pinjam, bisa kemarin kalau lewat tengah malam). Kalau belum tercakup,
+    // range disesuaikan supaya baris yang barusan di-scan pasti ketemu & ke-highlight.
+    function syncDateFilterForScan(rowDateStr) {
+        const sEl = document.getElementById("filterTanggalStart"), eEl = document.getElementById("filterTanggalEnd");
+        if (!sEl || !eEl) return;
+        const today = getWorkingDateStr(new Date());
+        const rowDate = rowDateStr || today;
+        const range = getFilterDateRange();
+        const covers = function (d) { return d >= range.start && d <= range.end; };
+        if (covers(today) && covers(rowDate)) return;
+        const newStart = rowDate < today ? rowDate : today;
+        sEl.value = newStart; eEl.value = today;
+        followToday = (newStart === today);
+        lastCheckedCalendarDate = today;
+        ensureLogsLoadedForRange(newStart, today);
+        showToast("📅 Filter tanggal disesuaikan ke tanggal device (" + (newStart === today ? today : newStart + " s.d " + today) + ").", 'info');
+    }
+
+    // Setelah scan Asset: filter Dept / Status / Station / Jam / Cari yang masih aktif ikut di-reset (tanggal tidak disentuh),
+    // supaya baris yang barusan di-scan gak ketutup filter dan auto highlight selalu ketemu.
+    function resetNonDateFiltersForScan() {
+        const val = function (id) { const el = document.getElementById(id); return el ? el.value : ""; };
+        const active = !!val("filterTimeFrom") || !!val("filterTimeTo") || !!val("searchGlobal")
+            || (val("filterBreakType") && val("filterBreakType") !== "All")
+            || (val("filterDept") && val("filterDept") !== "All")
+            || (val("filterStation") && val("filterStation") !== "All");
+        if (!active) return;
+        resetTableFilters();
+        showToast("🔄 Filter (Dept/Status/Station/Jam/Cari) di-reset otomatis biar hasil scan kelihatan.", 'info');
+    }
+
     const SUMMARY_COLLAPSE_KEY = "pr_dc_summary_collapsed";
 
     function applySummaryBoxesState(collapsed) {
@@ -2270,6 +2302,34 @@
     // Batas umur siklus (jam), DIHITUNG DARI CHECK IN siklus berjalan. Lewat batas ini (belum Break Out / belum Break In)
     // -> siklus dianggap Expired, scan berikutnya kembali ke Check In baru.
     const REST_RESET_HOURS = 9;
+
+    // ===== ANTI DOUBLE SCAN (Rest Time) =====
+    // OpsID yang SAMA ditolak kalau di-scan lagi dalam jeda ini sejak scan terakhirnya (apa pun aksinya).
+    // Tanpa ini, scan kedua otomatis jadi langkah berikutnya (Check In -> langsung Break Out). Ubah angkanya kalau perlu.
+    const DOUBLE_SCAN_COOLDOWN_SEC = 120;
+    const recentScanAt = {};   // cache lokal: scan yang baru dikirim tapi belum balik dari Firebase
+
+    function getLastScanInfo(opsId) {
+        const low = String(opsId).toLowerCase();
+        let last = null;
+        logsArray.forEach(function (l) {
+            if (String(l.opsId).toLowerCase() !== low) return;
+            const t = parseDateTime(l.timestamp);
+            if (t && (!last || t > last.t)) last = { t: t, type: l.breakType };
+        });
+        const mem = recentScanAt[low];
+        if (mem && (!last || mem.t > last.t)) last = mem;
+        return last;
+    }
+
+    // return null kalau aman, atau { type, secAgo, waitSec } kalau terdeteksi double scan
+    function detectDoubleScan(opsId) {
+        const last = getLastScanInfo(opsId);
+        if (!last) return null;
+        const secAgo = Math.round((new Date() - last.t) / 1000);
+        if (secAgo < 0 || secAgo >= DOUBLE_SCAN_COOLDOWN_SEC) return null;
+        return { type: last.type, secAgo: secAgo, waitSec: DOUBLE_SCAN_COOLDOWN_SEC - secAgo };
+    }
 
     // Status siklus DIHITUNG dari log yang ada (bukan dari angka cycleNum), jadi kalau Break Out / Break In di-rollback
     // otomatis balik ke langkah yang belum ada ("Scan Awal" langkah itu):
@@ -2629,6 +2689,20 @@
         if (currentActiveModule === 'rest') {
             let state = calculateNextState(cleanOpsId, actualDateStr);
 
+            // ANTI DOUBLE SCAN: OpsID sama baru saja di-scan -> tolak (jangan lanjut ke Break Out / Check In baru)
+            const dup = detectDoubleScan(cleanOpsId);
+            if (dup) {
+                lastSubmittedOpsId = null;
+                playSound('warning');
+                showToast("⛔ DOUBLE SCAN ditolak! " + cleanOpsId + " baru saja " + dup.type + " " + dup.secAgo + " detik lalu. Scan berikutnya baru bisa " + dup.waitSec + " detik lagi.", 'err');
+                inputEl.value = ""; document.getElementById("inputNama").value = "";
+                document.getElementById("inputNama").setAttribute("readonly", true);
+                document.getElementById("predictedAction").innerText = t("predicted.scan");
+                document.getElementById("predictedAction").style.background = "var(--table-header-bg)";
+                inputEl.focus();
+                return;
+            }
+
             // BLOCKER CHECK IN: cek Pre-Work Status dulu (FIT = pass; UNFIT / Belum Submit = blok)
             if (state.action === "Check In") {
                 // BLOCKER SHIFT 00.00: Check In sebelum jam 00.00 ditolak (dicek duluan, sebelum Pre-Work)
@@ -2673,6 +2747,7 @@
                 }
             }
 
+            recentScanAt[cleanOpsId.toLowerCase()] = { t: new Date(), type: state.action };
             const newKey = fbDb.ref(FB_ROOT + "/logs").push().key;
             updates[FB_ROOT + "/logs/" + newKey] = { opsId: cleanOpsId, breakType: state.action, timestamp: timestampStr, workingDate: targetDateToSave, cycleNum: state.cycleNum };
 
@@ -2712,6 +2787,8 @@
                 }
             }
 
+            syncDateFilterForScan(state.logDate);
+            resetNonDateFiltersForScan();
             const newKey = fbDb.ref(FB_ROOT + "/assetLogs").push().key;
             updates[FB_ROOT + "/assetLogs/" + newKey] = { 
                 opsId: cleanOpsId, 
@@ -3329,7 +3406,10 @@
         assetRowsToRender.sort((a, b) => a.ms === b.ms ? 0 : (b.ms > a.ms ? 1 : -1));
         assetRowsToRender.forEach(function (row) {
             tbody.appendChild(row.tr);
-            if (row.isNewlySubmitted) targetRowElement = row.tr;
+            if (row.isNewlySubmitted) {
+                if (!targetRowElement) targetRowElement = row.tr;          // ambil yang paling atas (terbaru)
+                else row.tr.classList.remove("row-highlight");             // sisanya (tanggal lama) gak usah ikut kedip
+            }
         });
 
         if (targetRowElement) {
