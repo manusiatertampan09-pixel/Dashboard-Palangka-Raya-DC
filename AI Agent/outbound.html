@@ -62,18 +62,12 @@ tailwind.config = {
   tr:first-child th { border-top: 1px solid #e2e8f0; }
   .dynamic-table thead th { white-space: nowrap; }
 
-  /* ===== Occupancy: tabel Inner Island & Priority Action Center ===== */
-  /* Tinggi baris dikunci ke angka bulat (px) supaya garis pemisah sinkron di semua kolom, termasuk kolom sticky */
   #routeTableBody td { padding: 3px 6px !important; height: 30px; line-height: 18px; font-size: 13px; font-variant-numeric: tabular-nums; }
-  /* Kolom angka: rata kanan biar digit sejajar & gampang dibandingkan */
   #routeTableBody td.occ-num { text-align: right !important; padding-right: 16px !important; }
-  /* Nilai kosong dibikin pudar supaya angka yang ada isinya menonjol */
   #routeTableBody .nz { color: #cbd5e1; font-weight: 400; }
   .dark #routeTableBody .nz { color: #475569; }
   #routeTableBody td.occ-st-no { text-align: center; }
-  /* Header Next Slot: th:first-child bawaan rata kiri, paksa center */
   #occScroll thead th[data-i18n="ob.th.nextSlot"] { text-align: center !important; padding-left: 6px !important; }
-  /* Pemisah antar grup kolom: List Route | Jadwal Berangkat | Volume & Kapasitas | Aging Days */
   #routeTableBody td.occ-st-route { border-right: 2px solid #475569; }
   #routeTableBody td:nth-child(3), #routeTableBody td:nth-child(5), #routeTableBody td:nth-child(11) { border-left: 2px solid #475569; }
   #occScroll thead tr:first-child th:nth-child(2) { border-right: 2px solid #e2e8f0; }
@@ -81,7 +75,6 @@ tailwind.config = {
   #occScroll thead tr:nth-child(2) th:nth-child(1), #occScroll thead tr:nth-child(2) th:nth-child(3), #occScroll thead tr:nth-child(2) th:nth-child(9) { border-left: 2px solid #e2e8f0; }
   .dark #routeTableBody td.occ-st-route { border-right-color: #94a3b8; }
   .dark #routeTableBody td:nth-child(3), .dark #routeTableBody td:nth-child(5), .dark #routeTableBody td:nth-child(11) { border-left-color: #94a3b8; }
-  /* Pemisah antar route: garis lebih tegas + selang-seling warna baris */
   #routeTableBody td { border-bottom: 1px solid #94a3b8; }
   .dark #routeTableBody td { border-bottom-color: #475569; }
   #routeTableBody tr.occ-zebra { background-color: #f1f5f9; }
@@ -90,10 +83,8 @@ tailwind.config = {
   .dark #routeTableBody tr.occ-zebra:hover { background-color: #1e293b; }
   .occ-st-no { position: sticky; left: 0; z-index: 3; width: 40px; min-width: 40px; max-width: 40px; }
   .occ-st-route { position: sticky; left: 40px; z-index: 3; min-width: 280px; white-space: nowrap; }
-  /* Tinggi card Inner Island mengikuti kolom kanan (Outer Island + Priority Action Center); tabel scroll di dalamnya */
   #occScroll { position: relative; flex: 1 1 0; min-height: 320px; overflow: hidden; }
   #occScrollInner { position: absolute; inset: 0; overflow: auto; }
-  /* Baris tabel melar mengisi sisa tinggi kartu (header tetap, tinggi ekstra dibagi ke baris data) */
   #occScrollInner > table { height: auto; }
   #occScrollInner thead tr { height: auto; }
   #routeTableBody tr { height: auto; }
@@ -1914,7 +1905,7 @@ const LS_HISTORY_KEY = 'pkr_outbound_history_snapshots';
 const MAX_HISTORY_SNAPSHOTS = 30;
 const OCC_WARN_PCT = 70;
 const OCC_CRIT_PCT = 100;
-const INNER_ROUTE_CAPACITY = 4000; // kapasitas per rute Inner Island (dipakai tabel & Priority Action Center)
+const INNER_ROUTE_CAPACITY = 4000;
 
 let DESTINATION_CAPACITY = parseInt(localStorage.getItem(LS_CAPACITY_KEY), 10) || 2000;
 
@@ -2099,7 +2090,6 @@ const linehaulRoutesFallback = Array.from(new Set(linehaulSchedule.map(s => s.de
   const hubs = Array.from(new Set(linehaulSchedule.filter(s => s.dest === label).flatMap(s => s.hubs)));
   return { id: idx + 1, label: label, hubs: hubs };
 });
-// Daftar route tabel Occupancy = UNIQUE(Route) dari Schedule Outbound; kalau Sheet belum/gagal load, pakai daftar bawaan di atas
 let linehaulRoutes = linehaulRoutesFallback.slice();
 
 const knownHubVariants = {};
@@ -2119,7 +2109,7 @@ function rebuildLinehaulRoutesFromSchedule(rows) {
     const i = raw.indexOf('>');
     if (i < 0) return;
     const key = raw.toLowerCase();
-    if (seen.has(key)) return; // UNIQUE: 1 route cuma 1 baris walau slot-nya banyak
+    if (seen.has(key)) return;
     seen.add(key);
     const hubs = [];
     raw.slice(i + 1).split(/\s*>\s*|\s+-\s+/).map(x => x.trim()).filter(Boolean).forEach(h => {
@@ -2277,8 +2267,6 @@ function updateClock() {
 }
 setInterval(updateClock, 1000); updateClock();
 
-/* ===== Next Slot & Next Depart (tabel Occupancy Inner Island) =====
-   Data dari Schedule Outbound (window.schedNextDeparture), acuan jam = jam lokal device. */
 function updateNextDepartCells() {
   const fn = window.schedNextDeparture;
   function info(label) {
@@ -2324,10 +2312,8 @@ function updateNextDepartCells() {
   if (typeof applyRouteTableView === 'function') applyRouteTableView();
 }
 
-/* ===== Tabel Occupancy Inner Island: filter, sort, pencarian ===== */
 var occFilter = 'all', occSort = 'total', occQuery = '';
 
-// "Palangka Raya DC > A Hub - B Hub - C Hub"  ->  "A Hub › B Hub › C Hub" (prefix origin dibuang, label asli tetap ada di tooltip)
 function occRouteChainHtml(label) {
   const short = String(label).replace(/^\s*Palangka Raya DC\s*>\s*/i, '');
   return short.split(/\s+-\s+/).map(function (h) { return escapeHtml(h); }).join('<span class="occ-arrow">›</span>');
@@ -2572,7 +2558,7 @@ function classifyToType(item) {
   if (item.isLiquid) return 'LIQUID';
 
   const isForward = String(item.journeyType || '').trim().toLowerCase() === 'forward';
-  if (!isForward) return 'OTHER'; // Return: pakai model lama (Non-HV), gak dipecah Bag/Bulky/TTO Hub
+  if (!isForward) return 'OTHER';
 
   const method = String(item.packingMethod || '').trim();
   const senderIsHub = String(item.senderName || '').toLowerCase().includes('hub');
@@ -3418,7 +3404,7 @@ function renderBacklogCharts() {
 
 function renderShiftVolumeChart() {
   if (typeof Chart === 'undefined') return;
-  if (!document.getElementById('shiftVolumeChart')) return; // chart Perbandingan Volume per Shift sudah dihapus dari halaman
+  if (!document.getElementById('shiftVolumeChart')) return;
   const colors = getChartThemeColors();
 
   let s1 = 0, s2 = 0, s3 = 0;
@@ -4244,7 +4230,6 @@ if (window.location.hash === '#occupancy') {
     }
     return null;
   };
-  // ===== end Next Slot & Next Depart =====
 
   function renderDays(daysStr) {
     const parts = String(daysStr || '').split(/[,;]+/).map(x => x.trim()).filter(Boolean);
@@ -4308,7 +4293,6 @@ if (window.location.hash === '#occupancy') {
 
   const SCHED_BASE = 'https://docs.google.com/spreadsheets/d/' + SCHED_SHEET_ID;
 
-  // Percobaan 1 & 2: fetch CSV (gviz lalu export)
   async function fetchRowsCsv() {
     const urls = [
       SCHED_BASE + '/gviz/tq?tqx=out:csv&gid=' + SCHED_SHEET_GID,
@@ -4327,7 +4311,6 @@ if (window.location.hash === '#occupancy') {
     throw lastErr;
   }
 
-  // Percobaan 3: JSONP via <script> (tidak kena CORS)
   function fetchRowsJsonp() {
     return new Promise((resolve, reject) => {
       const cb = '__schedCb' + Date.now();
@@ -4358,14 +4341,13 @@ if (window.location.hash === '#occupancy') {
     try { all = await fetchRowsCsv(); } catch (e) { errs.push('CSV: ' + e.message); }
     if (!all) { try { all = await fetchRowsJsonp(); } catch (e) { errs.push('JSONP: ' + e.message); } }
     if (all) {
-      // header = baris yang kolom D-nya "LH Scheme"; data mulai setelahnya
       let start = all.findIndex(r => /lh\s*scheme/i.test(String(r[COL.lh] || '')));
       start = start >= 0 ? start + 1 : 2;
       const get = (r, i) => String(r[i] == null ? '' : r[i]).trim();
       schedRows = all.slice(start).map(r => ({
         cot: get(r, COL.cot), ind: get(r, COL.ind), lh: get(r, COL.lh), route: get(r, COL.route), slot: get(r, COL.slot),
         unit: get(r, COL.unit), etd: get(r, COL.etd), days: get(r, COL.days)
-      })).filter(r => /\S\s*>\s*\S/.test(r.route)); // buang baris kosong & catatan (mis. "Live 13 Nov")
+      })).filter(r => /\S\s*>\s*\S/.test(r.route));
       const sig = new Date().getDay() + '|' + JSON.stringify(schedRows.map(r => [r.cot, r.ind, r.lh, r.route, r.slot, r.unit, r.etd, r.days]));
       const changed = sig !== schedLastSig || isManual === true;
       schedLastSig = sig;
@@ -4393,7 +4375,6 @@ if (window.location.hash === '#occupancy') {
     document.getElementById('schedRefreshBtn').addEventListener('click', function () { loadSchedule(true); });
     loadSchedule(true);
     setInterval(function () { if (!document.hidden) loadSchedule(); }, SCHED_POLL_MS);
-    // begitu tab dibuka lagi / koneksi balik, langsung refresh kalau data sudah > 10 detik
     document.addEventListener('visibilitychange', function () {
       if (!document.hidden && Date.now() - schedLastLoadAt > 10 * 1000) loadSchedule();
     });
@@ -4402,7 +4383,6 @@ if (window.location.hash === '#occupancy') {
 })();
 </script>
 <script>
-/* ===== Backup & Riwayat Perubahan Schedule Outbound (Firebase) ===== */
 (function () {
   const BASE = FB_OUTBOUND_ROOT + '/scheduleBackup';
   const TZ = 'Asia/Jakarta';
@@ -4449,7 +4429,6 @@ if (window.location.hash === '#occupancy') {
       if (f.length) changes.push({ type: 'changed', route: n.r, slot: n.s, fields: f, before: o, after: n });
     });
     nm.forEach((n, k) => { if (!om.has(k)) added.push(n); });
-    // pasangkan sisa (route+slot sama, tapi hari berubah) sebagai "changed"
     const used = new Set();
     removed.forEach(o => {
       const j = added.findIndex((n, idx) => !used.has(idx) && n.r === o.r && n.s === o.s);
