@@ -1488,10 +1488,25 @@
 </div>
 
 <style>
-  .sum-sec { margin-bottom: 20px; }
-  .sum-sec h3 { margin: 0 0 8px; font-size: 14px; color: #0f172a; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  /* ===== Tema abu-abu slate (selaras tombol Refresh / Reset) ===== */
+  .sum-sec { margin-bottom: 22px; }
+  .sum-sec h3 { margin: 0 0 10px; font-size: 15px; color: #0f172a; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding-left: 10px; border-left: 4px solid #64748b; }
   .sum-sec h3 small { font-weight: 600; color: #64748b; font-size: 11px; }
-  .sum-scroll { max-height: 560px; overflow: auto; background: #fff; border: 1px solid #e2e8f0; border-radius: 6px; }
+  .projection-filter-bar { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  .forecast-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; }
+  .forecast-header { color: #334155; }
+  .sum-k { border: 1px solid #e2e8f0; border-top: 4px solid #64748b; border-radius: 10px; box-shadow: 0 1px 3px rgba(15,23,42,.06); transition: transform .15s, box-shadow .15s; }
+  .sum-k:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15,23,42,.10); }
+  .sum-k .forecast-title { color: #64748b; }
+  .sum-k .forecast-value { color: #0f172a; font-size: 26px; }
+  .sum-k.a-green { border-top-color: #22c55e; } .sum-k.a-blue { border-top-color: #3b82f6; } .sum-k.a-red { border-top-color: #ef4444; }
+  .ch-wrapper, .sum-scroll { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  .container .ch-table th { background: #64748b; color: #fff; border: 1px solid #7b8aa0; font-size: 11.5px; letter-spacing: .2px; }
+  .container .ch-table td { border: 1px solid #eef2f7; }
+  .container .ch-table tbody tr:nth-child(even) td { background: #f8fafc; }
+  .container .ch-table tbody tr:hover td { background: #eef2f7; }
+  .container .ch-table tbody tr.sum-total td { background: #e2e8f0; font-weight: 800; color: #0f172a; }
+  .sum-scroll { max-height: 560px; overflow: auto; }
   .sum-scroll .ch-table { min-width: 2600px; }
   .sum-scroll .ch-table th { position: sticky; top: 0; z-index: 2; white-space: nowrap; }
   .sum-scroll .ch-table td { white-space: nowrap; }
@@ -1500,9 +1515,29 @@
   .sum-chip.ontime { background: #dbeafe; color: #1d4ed8; }
   .sum-chip.late { background: #fee2e2; color: #b91c1c; }
   .sum-over { color: #b91c1c; font-weight: 800; }
-  .sum-total td { background: #f1f5f9; font-weight: 800; }
+  .sum-ok { color: #15803d; font-weight: 800; }
+  .sum-pe { color: #15803d; font-weight: 700; } .sum-po { color: #1d4ed8; font-weight: 700; } .sum-pl { color: #b91c1c; font-weight: 700; }
+  .sum-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #e2e8f0; min-width: 140px; }
+  .sum-bar span.e { background: #22c55e; } .sum-bar span.o { background: #3b82f6; } .sum-bar span.l { background: #ef4444; }
   .sum-err { display: none; background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; border-radius: 6px; padding: 10px 14px; margin-bottom: 15px; font-size: 13px; font-weight: 600; }
   .sum-kpi-sub { font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px; }
+  .sum-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 1100px) { .sum-grid2 { grid-template-columns: 1fr; } }
+  .sum-k.clickable { cursor: pointer; }
+  .sum-k.active { outline: 2px solid #64748b; background: #f1f5f9; }
+  .projection-filter-bar { gap: 10px; }
+  .filter-item select { min-width: 120px; }
+  .sum-chart-box { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; overflow-x: auto; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
+  .sum-chart-title { font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 8px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .sum-lg { font-weight: 600; color: #64748b; font-size: 11px; display: inline-flex; align-items: center; gap: 4px; }
+  .sum-lg i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+  .sum-plot { display: flex; align-items: flex-end; gap: 6px; min-height: 150px; }
+  .sum-col { flex: 1; min-width: 24px; max-width: 46px; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; font-size: 10px; color: #64748b; }
+  .sum-col b { color: #334155; font-size: 10px; margin-bottom: 2px; }
+  .sum-col span { margin-top: 3px; font-weight: 700; }
+  .sum-stk { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; background: #64748b; }
+  .sum-stk i.e { background: #22c55e; } .sum-stk i.o { background: #3b82f6; } .sum-stk i.l { background: #ef4444; }
+  .sum-empty { color: #94a3b8; font-size: 12px; padding: 20px; text-align: center; }
 </style>
 <div class="container">
   <div class="header-bar">
@@ -1517,7 +1552,11 @@
     <div class="filter-item"><label>📅 Dari Tanggal (Arrival)</label><input type="date" id="sumFrom"></div>
     <div class="filter-item"><label>📅 Sampai Tanggal (Arrival)</label><input type="date" id="sumTo"></div>
     <div class="filter-item"><label>🔍 Cari (LT / Route / Nopol / Driver / Vendor)</label><input type="text" id="sumSearch" placeholder="Ketik untuk cari..." style="min-width:260px;"></div>
-    <button type="button" class="btn-reset-filter" id="sumBtnReset">🔄 Reset (Bulan Berjalan)</button>
+    <div class="filter-item"><label>🏢 Vendor</label><select id="sumVendor"><option value="">Semua</option></select></div>
+    <div class="filter-item"><label>🔄 Shift</label><select id="sumShiftSel"><option value="">Semua</option></select></div>
+    <div class="filter-item"><label>✈️ Trip Type</label><select id="sumType"><option value="">Semua</option></select></div>
+    <div class="filter-item"><label>🚦 Status</label><select id="sumStatus"><option value="">Semua</option><option>Early</option><option>Ontime</option><option>Late</option></select></div>
+    <button type="button" class="btn-reset-filter" id="sumBtnReset">🔄 Reset Filter</button>
   </div>
 
   <div class="sum-err" id="sumError"></div>
@@ -1528,9 +1567,17 @@
   </div>
 
   <div class="sum-sec">
+    <h3>📈 Tren Harian <small>berdasarkan tanggal Arrival, ikut filter di atas</small></h3>
+    <div class="sum-grid2">
+      <div class="sum-chart-box"><div class="sum-chart-title">Jumlah Trip per Hari <span class="sum-lg"><i style="background:#22c55e"></i>Early</span><span class="sum-lg"><i style="background:#3b82f6"></i>Ontime</span><span class="sum-lg"><i style="background:#ef4444"></i>Late</span></div><div class="sum-plot" id="sumTrendTrip"></div></div>
+      <div class="sum-chart-box"><div class="sum-chart-title">Parcel Qty per Hari</div><div class="sum-plot" id="sumTrendParcel"></div></div>
+    </div>
+  </div>
+
+  <div class="sum-sec">
     <h3>🏢 Rekap Performance Vendor <small>Early, Ontime &amp; Late Arrival (berdasarkan Status Standard)</small></h3>
     <div class="ch-wrapper"><table class="ch-table">
-      <thead><tr><th>Vendor</th><th>Total Trip</th><th>Early</th><th>Ontime</th><th>Late</th><th>% Early</th><th>% Ontime</th><th>% Late</th></tr></thead>
+      <thead><tr><th>Vendor</th><th>Total Trip</th><th>Early</th><th>Ontime</th><th>Late</th><th>% Early</th><th>% Ontime</th><th>% Late</th><th>Distribusi</th></tr></thead>
       <tbody id="sumVendorBody"></tbody>
     </table></div>
   </div>
@@ -1541,6 +1588,24 @@
       <thead><tr><th>Shift</th><th>Total Trip</th><th>Sudah Finish</th><th>Avg Arrival → Unload</th><th>Avg Unload → Finish</th><th>Avg Arrival → Finish</th><th>Max Arrival → Finish</th></tr></thead>
       <tbody id="sumShiftBody"></tbody>
     </table></div>
+  </div>
+
+  <div class="sum-sec">
+    <h3>👥 Rekap per Shift Lead &amp; Team Lead <small>merah = melebihi standar</small></h3>
+    <div class="sum-grid2">
+      <div class="ch-wrapper"><table class="ch-table"><thead><tr><th>Shift Lead</th><th>Trip</th><th>Late</th><th>Avg Arrival → Unload</th><th>Avg Unload → Finish</th><th>Avg Arrival → Finish</th></tr></thead><tbody id="sumShiftLeadBody"></tbody></table></div>
+      <div class="ch-wrapper"><table class="ch-table"><thead><tr><th>Team Lead</th><th>Trip</th><th>Late</th><th>Avg Arrival → Unload</th><th>Avg Unload → Finish</th><th>Avg Arrival → Finish</th></tr></thead><tbody id="sumTeamLeadBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <div class="sum-sec">
+    <h3>🚨 Perlu Perhatian <small>10 teratas, ikut filter di atas</small></h3>
+    <div class="sum-grid2">
+      <div><div class="sum-chart-title">Late Arrival terparah <small id="sumLateCount" style="color:#64748b"></small></div>
+        <div class="ch-wrapper"><table class="ch-table"><thead><tr><th>LT</th><th>Vendor</th><th>Route</th><th>STA</th><th>ATA</th><th>Telat</th></tr></thead><tbody id="sumLateBody"></tbody></table></div></div>
+      <div><div class="sum-chart-title">Arrival → Finish melebihi standar (1:40) <small id="sumSlowCount" style="color:#64748b"></small></div>
+        <div class="ch-wrapper"><table class="ch-table"><thead><tr><th>LT</th><th>Vendor</th><th>Shift</th><th>Arr → Unload</th><th>Unload → Finish</th><th>Arr → Finish</th></tr></thead><tbody id="sumSlowBody"></tbody></table></div></div>
+    </div>
   </div>
 
   <div class="sum-sec">
@@ -1860,6 +1925,7 @@
       sumRows = p.data.slice(1).filter(function (r) { return r[C.lt] && String(r[C.lt]).trim(); });
       err.style.display = 'none';
       document.getElementById('sumLast').textContent = new Date().toLocaleTimeString('id-ID');
+      fillSumSelects();
       renderAll();
     } catch (e) {
       err.style.display = 'block';
@@ -1869,22 +1935,45 @@
     }
   }
 
+  let sumBase = [];
+  function selVal(id) { return document.getElementById(id).value; }
   function applySumFilter() {
-    const f = document.getElementById('sumFrom').value;
-    const t2 = document.getElementById('sumTo').value;
+    const f = selVal('sumFrom'), t2 = selVal('sumTo');
     const q = document.getElementById('sumSearch').value.trim().toLowerCase();
+    const vd = selVal('sumVendor'), sh = selVal('sumShiftSel'), ty = selVal('sumType'), st = selVal('sumStatus');
     const from = f ? new Date(f + 'T00:00:00') : null;
     const to = t2 ? new Date(t2 + 'T23:59:59') : null;
-    sumFiltered = sumRows.filter(function (r) {
+    sumBase = sumRows.filter(function (r) {
       const d = rowDate(r);
       if (from && (!d || d < from)) return false;
       if (to && (!d || d > to)) return false;
+      if (vd && ((r[C.vendor] || '').trim() || '-') !== vd) return false;
+      if (sh && normShift(r[C.shift]) !== sh) return false;
+      if (ty && (r[C.type] || '').trim() !== ty) return false;
       if (q) {
         const hay = [r[C.lt], r[C.route], r[C.nopol], r[C.driver], r[C.vendor]].join(' ').toLowerCase();
         if (hay.indexOf(q) === -1) return false;
       }
       return true;
     });
+    // sumBase = semua filter KECUALI status (dipakai kartu & rekap vendor biar tetap utuh)
+    sumFiltered = st ? sumBase.filter(function (r) { return normStatus(r[C.status]) === st; }) : sumBase;
+  }
+  function fillSel(id, vals, allLabel) {
+    const el = document.getElementById(id), cur = el.value;
+    el.innerHTML = '<option value="">' + allLabel + '</option>' + vals.map(function (v) { return '<option value="' + escapeHtml(v) + '">' + escapeHtml(v) + '</option>'; }).join('');
+    if (vals.indexOf(cur) > -1) el.value = cur;
+  }
+  function uniqVals(fn) { const m = {}; sumRows.forEach(function (r) { const v = fn(r); if (v) m[v] = 1; }); return Object.keys(m).sort(); }
+  function fillSumSelects() {
+    fillSel('sumVendor', uniqVals(function (r) { return (r[C.vendor] || '').trim() || '-'; }), 'Semua');
+    fillSel('sumShiftSel', uniqVals(function (r) { return normShift(r[C.shift]); }), 'Semua');
+    fillSel('sumType', uniqVals(function (r) { return (r[C.type] || '').trim(); }), 'Semua');
+  }
+  function sumSetStatus(st) {
+    const el = document.getElementById('sumStatus');
+    el.value = el.value === st ? '' : st;
+    renderAll();
   }
 
   function renderAll() {
@@ -1894,10 +1983,13 @@
     renderSumVendor();
     renderSumShift();
     renderSumDetail();
+    renderSumTrend();
+    renderSumLeads();
+    renderSumAttention();
   }
 
   function renderSumKpi() {
-    const rows = sumFiltered;
+    const rows = sumBase;
     const cnt = { Early: 0, Ontime: 0, Late: 0 };
     let toQty = 0, parcel = 0, done = 0;
     const fin = [];
@@ -1909,24 +2001,24 @@
     });
     const judged = cnt.Early + cnt.Ontime + cnt.Late;
     const cards = [
-      ['🚚 Total Trip', rows.length.toLocaleString(), 'Sudah Finish: ' + done],
-      ['📦 Total TO Qty', toQty.toLocaleString(), ''],
-      ['🧮 Total Parcel Qty', parcel.toLocaleString(), ''],
-      ['🟢 Early', cnt.Early.toLocaleString(), pct(cnt.Early, judged)],
-      ['🔵 Ontime', cnt.Ontime.toLocaleString(), pct(cnt.Ontime, judged)],
-      ['🔴 Late', cnt.Late.toLocaleString(), pct(cnt.Late, judged)],
-      ['⏱️ Avg Arrival → Finish', fMin(avg(fin)), 'Standar 1:40']
+      ['🚚 Total Trip', rows.length.toLocaleString(), 'Sudah Finish: ' + done, ''],
+      ['📦 Total TO Qty', toQty.toLocaleString(), '', ''],
+      ['🧮 Total Parcel Qty', parcel.toLocaleString(), '', ''],
+      ['🟢 Early', cnt.Early.toLocaleString(), pct(cnt.Early, judged), 'a-green', 'Early'],
+      ['🔵 Ontime', cnt.Ontime.toLocaleString(), pct(cnt.Ontime, judged), 'a-blue', 'Ontime'],
+      ['🔴 Late', cnt.Late.toLocaleString(), pct(cnt.Late, judged), 'a-red', 'Late'],
+      ['⏱️ Avg Arrival → Finish', fMin(avg(fin)), 'Standar 1:40', '']
     ];
     document.getElementById('sumKpi').innerHTML = cards.map(function (c) {
-      return '<div class="forecast-item"><div class="forecast-title">' + c[0] + '</div><div class="forecast-value">' + c[1] + '</div>' +
+      return '<div class="forecast-item sum-k ' + c[3] + (c[4] ? ' clickable' + (selVal('sumStatus') === c[4] ? ' active' : '') + '" onclick="sumSetStatus(\'' + c[4] + '\')' : '') + '"><div class="forecast-title">' + c[0] + '</div><div class="forecast-value">' + c[1] + '</div>' +
         (c[2] ? '<div class="sum-kpi-sub">' + escapeHtml(c[2]) + '</div>' : '') + '</div>';
     }).join('');
-    document.getElementById('sumCount').textContent = rows.length + ' / ' + sumRows.length + ' trip';
+    document.getElementById('sumCount').textContent = sumFiltered.length + ' / ' + sumRows.length + ' trip';
   }
 
   function renderSumVendor() {
     const map = {};
-    sumFiltered.forEach(function (r) {
+    sumBase.forEach(function (r) {
       const v = (r[C.vendor] || '').trim() || '-';
       const o = map[v] || (map[v] = { n: 0, Early: 0, Ontime: 0, Late: 0 });
       o.n++; const s = normStatus(r[C.status]); if (s) o[s]++;
@@ -1935,14 +2027,16 @@
     const tot = { n: 0, Early: 0, Ontime: 0, Late: 0 };
     const line = function (name, o, cls) {
       const j = o.Early + o.Ontime + o.Late;
+      const w = function (x) { return j ? (x / j * 100).toFixed(1) : 0; };
       return '<tr class="' + (cls || '') + '"><td style="text-align:left;">' + escapeHtml(name) + '</td><td>' + o.n + '</td><td>' + o.Early + '</td><td>' + o.Ontime + '</td><td>' + o.Late +
-        '</td><td>' + pct(o.Early, j) + '</td><td>' + pct(o.Ontime, j) + '</td><td>' + pct(o.Late, j) + '</td></tr>';
+        '</td><td class="sum-pe">' + pct(o.Early, j) + '</td><td class="sum-po">' + pct(o.Ontime, j) + '</td><td class="sum-pl">' + pct(o.Late, j) + '</td>' +
+        '<td><div class="sum-bar"><span class="e" style="width:' + w(o.Early) + '%"></span><span class="o" style="width:' + w(o.Ontime) + '%"></span><span class="l" style="width:' + w(o.Late) + '%"></span></div></td></tr>';
     };
     let html = list.map(function (v) {
       const o = map[v]; tot.n += o.n; tot.Early += o.Early; tot.Ontime += o.Ontime; tot.Late += o.Late;
       return line(v, o);
     }).join('');
-    html += list.length ? line('TOTAL', tot, 'sum-total') : '<tr><td colspan="8" style="color:#94a3b8;">Tidak ada data di periode ini.</td></tr>';
+    html += list.length ? line('TOTAL', tot, 'sum-total') : '<tr><td colspan="9" style="color:#94a3b8;">Tidak ada data di periode ini.</td></tr>';
     document.getElementById('sumVendorBody').innerHTML = html;
   }
 
@@ -1956,7 +2050,7 @@
       if (u != null) o.u.push(u); if (f != null) o.f.push(f); if (a != null) o.a.push(a);
     });
     const keys = Object.keys(map).sort();
-    const cell = function (v, std) { return '<td class="' + (v != null && v > std ? 'sum-over' : '') + '">' + fMin(v) + '</td>'; };
+    const cell = function (v, std) { return '<td class="' + (v == null ? '' : (v > std ? 'sum-over' : 'sum-ok')) + '">' + fMin(v) + '</td>'; };
     document.getElementById('sumShiftBody').innerHTML = keys.length ? keys.map(function (k) {
       const o = map[k];
       return '<tr><td style="font-weight:800;">' + escapeHtml(k) + '</td><td>' + o.n + '</td><td>' + o.a.length + '</td>' +
@@ -1976,12 +2070,84 @@
     }).join('') || '<tr><td colspan="' + (sumHeaders.length || 1) + '" style="color:#94a3b8;">Tidak ada data di periode ini.</td></tr>';
   }
 
+  function durCell(v, std) { return '<td class="' + (v == null ? '' : (v > std ? 'sum-over' : 'sum-ok')) + '">' + fMin(v) + '</td>'; }
+  function fmtK(n) { return n >= 1000 ? (n / 1000).toFixed(n >= 10000 ? 0 : 1) + 'k' : String(n); }
+
+  function renderSumTrend() {
+    const map = {};
+    sumFiltered.forEach(function (r) {
+      const d = rowDate(r); if (!d) return;
+      const k = ymd(d);
+      const o = map[k] || (map[k] = { Early: 0, Ontime: 0, Late: 0, n: 0, parcel: 0 });
+      o.n++; o.parcel += pNum(r[C.parcel]);
+      const s2 = normStatus(r[C.status]); if (s2) o[s2]++;
+    });
+    const keys = Object.keys(map).sort();
+    const tripEl = document.getElementById('sumTrendTrip'), parEl = document.getElementById('sumTrendParcel');
+    if (!keys.length) { tripEl.innerHTML = parEl.innerHTML = '<div class="sum-empty">Tidak ada data di periode ini.</div>'; return; }
+    const maxN = Math.max.apply(null, keys.map(function (k) { return map[k].n; }));
+    const maxP = Math.max.apply(null, keys.map(function (k) { return map[k].parcel; })) || 1;
+    const H = 110;
+    tripEl.innerHTML = keys.map(function (k) {
+      const o = map[k], day = k.slice(8), h = Math.max(3, Math.round(o.n / maxN * H));
+      const seg = ['Early', 'Ontime', 'Late'].map(function (n2) { return o[n2] ? '<i class="' + n2[0].toLowerCase() + '" style="height:' + Math.round(o[n2] / o.n * h) + 'px"></i>' : ''; }).join('');
+      return '<div class="sum-col" title="' + day + '/' + k.slice(5, 7) + ' · ' + o.n + ' trip (Early ' + o.Early + ' / Ontime ' + o.Ontime + ' / Late ' + o.Late + ')"><b>' + o.n + '</b><div class="sum-stk" style="height:' + h + 'px">' + seg + '</div><span>' + day + '</span></div>';
+    }).join('');
+    parEl.innerHTML = keys.map(function (k) {
+      const o = map[k], day = k.slice(8), h = Math.max(3, Math.round(o.parcel / maxP * H));
+      return '<div class="sum-col" title="' + day + '/' + k.slice(5, 7) + ' · ' + o.parcel.toLocaleString() + ' parcel"><b>' + fmtK(o.parcel) + '</b><div class="sum-stk" style="height:' + h + 'px"></div><span>' + day + '</span></div>';
+    }).join('');
+  }
+
+  function renderLeadTable(bodyId, idx) {
+    const map = {};
+    sumFiltered.forEach(function (r) {
+      const k = (r[idx] || '').trim() || '-';
+      const o = map[k] || (map[k] = { n: 0, late: 0, u: [], f: [], a: [] });
+      o.n++; if (normStatus(r[C.status]) === 'Late') o.late++;
+      const u = pMin(r[C.durUnload]), f = pMin(r[C.durFinishUnload]), a = pMin(r[C.durFinish]);
+      if (u != null) o.u.push(u); if (f != null) o.f.push(f); if (a != null) o.a.push(a);
+    });
+    const keys = Object.keys(map).sort(function (a, b) { return map[b].n - map[a].n; });
+    document.getElementById(bodyId).innerHTML = keys.length ? keys.map(function (k) {
+      const o = map[k];
+      return '<tr><td style="text-align:left;font-weight:700;">' + escapeHtml(k) + '</td><td>' + o.n + '</td><td>' + o.late + '</td>' + durCell(avg(o.u), 20) + durCell(avg(o.f), 80) + durCell(avg(o.a), 100) + '</tr>';
+    }).join('') : '<tr><td colspan="6" style="color:#94a3b8;">Tidak ada data.</td></tr>';
+  }
+  function renderSumLeads() { renderLeadTable('sumShiftLeadBody', 27); renderLeadTable('sumTeamLeadBody', 28); }
+
+  function renderSumAttention() {
+    const late = [];
+    sumFiltered.forEach(function (r) {
+      if (normStatus(r[C.status]) !== 'Late') return;
+      const sta = pDT(r[12]), ata = pDT(r[C.ata]);
+      let delay = sta && ata ? (ata - sta) / 60000 : null;
+      if (delay != null && (delay <= 0 || delay > 7 * 1440)) delay = null; // STA ngaco (mis. jadwal udara) -> gak dihitung
+      late.push({ r: r, delay: delay });
+    });
+    late.sort(function (a, b) { return (b.delay == null ? -1 : b.delay) - (a.delay == null ? -1 : a.delay); });
+    document.getElementById('sumLateCount').textContent = '(' + late.length + ' trip Late)';
+    document.getElementById('sumLateBody').innerHTML = late.slice(0, 10).map(function (x) {
+      const r = x.r;
+      return '<tr><td>' + escapeHtml(r[C.lt]) + '</td><td>' + escapeHtml(r[C.vendor]) + '</td><td style="text-align:left;">' + escapeHtml(r[C.route]) + '</td><td>' + escapeHtml(r[12]) + '</td><td>' + escapeHtml(r[C.ata]) + '</td><td class="sum-over">' + (x.delay == null ? '-' : fMin(x.delay)) + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" style="color:#94a3b8;">Tidak ada trip Late.</td></tr>';
+
+    const slow = [];
+    sumFiltered.forEach(function (r) { const a = pMin(r[C.durFinish]); if (a != null && a > 100) slow.push({ r: r, a: a }); });
+    slow.sort(function (x, y) { return y.a - x.a; });
+    document.getElementById('sumSlowCount').textContent = '(' + slow.length + ' trip)';
+    document.getElementById('sumSlowBody').innerHTML = slow.slice(0, 10).map(function (x) {
+      const r = x.r;
+      return '<tr><td>' + escapeHtml(r[C.lt]) + '</td><td>' + escapeHtml(r[C.vendor]) + '</td><td>' + escapeHtml(normShift(r[C.shift])) + '</td><td>' + escapeHtml(r[C.durUnload]) + '</td><td>' + escapeHtml(r[C.durFinishUnload]) + '</td><td class="sum-over">' + fMin(x.a) + '</td></tr>';
+    }).join('') || '<tr><td colspan="6" style="color:#94a3b8;">Semua trip dalam standar.</td></tr>';
+  }
+
   document.addEventListener('DOMContentLoaded', function () {
     setDefaultPeriod();
-    ['sumFrom', 'sumTo'].forEach(function (id) { document.getElementById(id).addEventListener('change', renderAll); });
+    ['sumFrom', 'sumTo', 'sumVendor', 'sumShiftSel', 'sumType', 'sumStatus'].forEach(function (id) { document.getElementById(id).addEventListener('change', renderAll); });
     document.getElementById('sumSearch').addEventListener('input', renderAll);
     document.getElementById('sumBtnReset').addEventListener('click', function () {
-      setDefaultPeriod(); document.getElementById('sumSearch').value = ''; renderAll();
+      setDefaultPeriod(); document.getElementById('sumSearch').value = ''; ['sumVendor', 'sumShiftSel', 'sumType', 'sumStatus'].forEach(function (id) { document.getElementById(id).value = ''; }); renderAll();
     });
     loadSummary();
     setInterval(loadSummary, SUM_AUTO_REFRESH_MS);
