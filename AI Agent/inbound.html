@@ -1554,10 +1554,21 @@
   .sum-presets button:hover { background: #f1f5f9; }
   .sum-presets button.on { background: #64748b; border-color: #64748b; color: #fff; }
 
-  /* ===== Pola jam kedatangan ===== */
-  .sum-heat { display: flex; gap: 6px; }
-  .sum-hcell { flex: 1; min-width: 24px; max-width: 46px; height: 34px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #334155; background: #f1f5f9; }
-  .sum-hcell.dim { color: #cbd5e1; font-weight: 600; }
+  /* ===== Pola jam kedatangan (line chart) ===== */
+  .hr-ctl { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .hr-seg { display: inline-flex; gap: 6px; }
+  .hr-seg button { padding: 7px 14px; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; font-family: inherit; }
+  .hr-seg button:hover { background: #f1f5f9; }
+  .hr-seg button.on { background: #64748b; border-color: #64748b; color: #fff; }
+  #sumHourSel { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #fff; min-width: 230px; display: none; font-family: inherit; }
+  .hr-cap { font-size: 12px; color: #64748b; font-weight: 600; }
+  .hr-wrap { position: relative; overflow-x: auto; }
+  .hr-tip { position: absolute; display: none; pointer-events: none; background: #0f172a; color: #fff; font-size: 11.5px; line-height: 1.6; padding: 8px 11px; border-radius: 8px; box-shadow: 0 6px 16px rgba(0,0,0,.25); white-space: nowrap; z-index: 5; }
+  .hr-tip b { font-weight: 800; }
+  .hr-table th, .hr-table td { padding: 5px 4px; font-size: 11.5px; white-space: nowrap; }
+  .hr-table th { font-size: 10.5px; line-height: 1.25; }
+  .hr-table td.hr-lbl { text-align: left; padding-left: 10px; }
+  .hr-table tr.hr-total td { background: #e2e8f0; font-weight: 800; }
   .sum-hour-ins { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: #475569; }
   .sum-hour-ins .sum-chip { font-size: 11.5px; padding: 3px 10px; }
 
@@ -1654,12 +1665,24 @@
   </div>
 
   <div class="sum-sec">
-    <h3>🕐 Pola Jam Kedatangan <small>berdasarkan jam ATA, ikut filter di atas</small></h3>
+    <h3>🕐 Pola Jam Kedatangan <small>jumlah unit per jam ATA (00.00 – 23.59): Early Arrival, On Time &amp; Late Arrival</small></h3>
     <div class="sum-chart-box">
-      <div class="sum-chart-title">Jumlah Trip per Jam Arrival <span class="sum-lg"><i style="background:#22c55e"></i>Early</span><span class="sum-lg"><i style="background:#3b82f6"></i>Ontime</span><span class="sum-lg"><i style="background:#ef4444"></i>Late</span></div>
-      <div class="sum-plot" id="sumHourPlot"></div>
-      <div class="sum-chart-title" style="margin-top:14px;">% Late per Jam <small style="color:#64748b;font-weight:600;">makin pekat = makin tinggi</small></div>
-      <div class="sum-heat" id="sumHourHeat"></div>
+      <div class="hr-ctl">
+        <div class="hr-seg" id="sumHourMode">
+          <button type="button" data-m="avg" onclick="sumHourSetMode('avg')">Rata-rata</button>
+          <button type="button" data-m="month" onclick="sumHourSetMode('month')">Month</button>
+          <button type="button" data-m="week" onclick="sumHourSetMode('week')">Weeks</button>
+        </div>
+        <select id="sumHourSel" onchange="sumHourSetSel(this.value)"></select>
+        <span class="hr-cap" id="sumHourCap"></span>
+      </div>
+      <div class="sum-chart-title" style="margin-bottom:4px;">
+        <span class="sum-lg"><i style="width:18px;height:3px;border-radius:2px;background:#22c55e"></i>Early Arrival</span>
+        <span class="sum-lg"><i style="width:18px;height:3px;border-radius:2px;background:#3b82f6"></i>On Time</span>
+        <span class="sum-lg"><i style="width:18px;height:3px;border-radius:2px;background:#ef4444"></i>Late Arrival</span>
+      </div>
+      <div class="hr-wrap" id="sumHourWrap"><div id="sumHourSvg"></div><div class="hr-tip" id="sumHourTip"></div></div>
+      <div class="ch-wrapper" style="margin-top:12px;"><table class="ch-table hr-table" id="sumHourTable"></table></div>
       <div class="sum-hour-ins" id="sumHourIns"></div>
     </div>
   </div>
@@ -2140,46 +2163,167 @@
     });
   }
 
-  // ==== Pola jam kedatangan (jam ATA) ====
-  function renderSumHour() {
-    const plot = document.getElementById('sumHourPlot'), heat = document.getElementById('sumHourHeat'), ins = document.getElementById('sumHourIns');
-    if (!plot) return;
-    const HR = []; for (let h = 0; h < 24; h++) HR.push({ Early: 0, Ontime: 0, Late: 0, n: 0 });
-    let withAta = 0;
-    sumFiltered.forEach(function (r) {
-      const d = pDT(r[C.ata]); if (!d) return;
-      const o = HR[d.getHours()], st = normStatus(r[C.status]);
-      o.n++; withAta++; if (st) o[st]++;
+  // ==== Pola jam kedatangan (jam ATA) — line chart Early / On Time / Late ====
+  // Basis data (semua = rata-rata unit per hari): Rata-rata (periode filter tanggal di atas) | Month (1 bulan) | Weeks (1 minggu, Senin–Minggu)
+  // Filter Vendor / Shift / Trip Type / Cari tetap ikut; filter Status tidak (karena ketiga status ditampilkan sekaligus).
+  let hourMode = 'avg', hourMonth = '', hourWeek = '', hourView = null;
+  const HR_KEYS = ['Early', 'Ontime', 'Late'];
+  const HR_COL = { Early: '#22c55e', Ontime: '#3b82f6', Late: '#ef4444' };
+  const HR_LBL = { Early: 'Early Arrival', Ontime: 'On Time', Late: 'Late Arrival' };
+  const HR_TDC = { Early: 'sum-pe', Ontime: 'sum-po', Late: 'sum-pl' };
+  const HR_MON = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  const HR_MONF = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  function hrPad(n) { return String(n).padStart(2, '0'); }
+  function hrWeekStart(d) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() - ((d.getDay() + 6) % 7)); }
+  function hrIsoWeek(d) {
+    const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())), dn = t.getUTCDay() || 7;
+    t.setUTCDate(t.getUTCDate() + 4 - dn);
+    return Math.ceil(((t - new Date(Date.UTC(t.getUTCFullYear(), 0, 1))) / 86400000 + 1) / 7);
+  }
+  function hrWeekLabel(mon) {
+    const e = new Date(mon.getFullYear(), mon.getMonth(), mon.getDate() + 6);
+    return 'W' + hrIsoWeek(mon) + ' · ' + mon.getDate() + ' ' + HR_MON[mon.getMonth()] + ' – ' + e.getDate() + ' ' + HR_MON[e.getMonth()] + ' ' + e.getFullYear();
+  }
+  function hrFmt(v) { return String(+v.toFixed(1)); } // semua mode = rata-rata unit per hari
+  function hrBaseRows() {
+    const vd = selVal('sumVendor'), sh = selVal('sumShiftSel'), ty = selVal('sumType');
+    const q = document.getElementById('sumSearch').value.trim().toLowerCase();
+    return sumRows.filter(function (r) {
+      if (vd && ((r[C.vendor] || '').trim() || '-') !== vd) return false;
+      if (sh && normShift(r[C.shift]) !== sh) return false;
+      if (ty && (r[C.type] || '').trim() !== ty) return false;
+      if (q && [r[C.lt], r[C.route], r[C.nopol], r[C.driver], r[C.vendor]].join(' ').toLowerCase().indexOf(q) === -1) return false;
+      return true;
     });
-    if (!withAta) {
-      plot.innerHTML = '<div class="sum-empty" style="width:100%;">Tidak ada data jam ATA di periode ini.</div>';
-      heat.innerHTML = ''; ins.innerHTML = ''; return;
+  }
+  function sumHourSetMode(m) { hourMode = m; renderSumHour(); }
+  function sumHourSetSel(v) { if (hourMode === 'month') hourMonth = v; else hourWeek = v; renderSumHour(); }
+
+  function renderSumHour() {
+    const svgBox = document.getElementById('sumHourSvg');
+    if (!svgBox) return;
+    const items = hrBaseRows().map(function (r) { return { r: r, a: pDT(r[C.ata]), d: rowDate(r) }; });
+
+    // daftar bulan & minggu yang ada datanya (berdasarkan tanggal ATA)
+    const mSet = {}, wSet = {};
+    items.forEach(function (x) {
+      if (!x.a) return;
+      mSet[x.a.getFullYear() + '-' + hrPad(x.a.getMonth() + 1)] = 1;
+      wSet[ymd(hrWeekStart(x.a))] = 1;
+    });
+    const months = Object.keys(mSet).sort().reverse(), weeks = Object.keys(wSet).sort().reverse();
+    const f = selVal('sumFrom'), t2 = selVal('sumTo');
+    if (months.indexOf(hourMonth) === -1) hourMonth = (t2 && months.indexOf(t2.slice(0, 7)) > -1) ? t2.slice(0, 7) : (months[0] || '');
+    if (weeks.indexOf(hourWeek) === -1) hourWeek = weeks[0] || '';
+
+    // kontrol: tombol mode + dropdown bulan/minggu
+    document.querySelectorAll('#sumHourMode button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === hourMode); });
+    const sel = document.getElementById('sumHourSel');
+    if (hourMode === 'month') {
+      sel.innerHTML = months.map(function (k) { return '<option value="' + k + '"' + (k === hourMonth ? ' selected' : '') + '>' + HR_MONF[+k.slice(5) - 1] + ' ' + k.slice(0, 4) + '</option>'; }).join('');
+      sel.style.display = 'inline-block';
+    } else if (hourMode === 'week') {
+      sel.innerHTML = weeks.map(function (k) { return '<option value="' + k + '"' + (k === hourWeek ? ' selected' : '') + '>' + hrWeekLabel(new Date(k + 'T00:00:00')) + '</option>'; }).join('');
+      sel.style.display = 'inline-block';
+    } else { sel.style.display = 'none'; }
+
+    // pilih baris sesuai basis
+    const from = f ? new Date(f + 'T00:00:00') : null, to = t2 ? new Date(t2 + 'T23:59:59') : null;
+    const inBasis = function (d) {
+      if (!d) return false;
+      if (hourMode === 'month') return d.getFullYear() + '-' + hrPad(d.getMonth() + 1) === hourMonth;
+      if (hourMode === 'week') return ymd(hrWeekStart(d)) === hourWeek;
+      return (!from || d >= from) && (!to || d <= to);
+    };
+    const cnt = []; for (let h = 0; h < 24; h++) cnt.push({ Early: 0, Ontime: 0, Late: 0 });
+    const days = {}; let noAta = 0, used = 0;
+    items.forEach(function (x) {
+      if (!x.a) { if (inBasis(x.d)) noAta++; return; }
+      if (!inBasis(x.a)) return;
+      used++; days[ymd(x.a)] = 1;
+      const st = normStatus(x.r[C.status]); if (st) cnt[x.a.getHours()][st]++;
+    });
+    const nDays = Object.keys(days).length, div = nDays || 1; // rata-rata per hari (hari yang ada datanya)
+    const ser = {}; HR_KEYS.forEach(function (k) { ser[k] = cnt.map(function (o) { return o[k] / div; }); });
+
+    // keterangan basis
+    const cap = document.getElementById('sumHourCap');
+    if (hourMode === 'avg') cap.textContent = 'Rata-rata unit per hari · ' + fmtYmd(f) + ' – ' + fmtYmd(t2) + ' · ' + nDays + ' hari ada data';
+    else if (hourMode === 'month') cap.textContent = 'Rata-rata unit per hari · ' + (hourMonth ? HR_MONF[+hourMonth.slice(5) - 1] + ' ' + hourMonth.slice(0, 4) : '-') + ' · ' + nDays + ' hari ada data';
+    else cap.textContent = 'Rata-rata unit per hari · ' + (hourWeek ? hrWeekLabel(new Date(hourWeek + 'T00:00:00')) : '-') + ' · ' + nDays + ' hari ada data';
+
+    const tbl = document.getElementById('sumHourTable'), ins = document.getElementById('sumHourIns'), tip = document.getElementById('sumHourTip');
+    tip.style.display = 'none'; hourView = null;
+    if (!used) {
+      svgBox.innerHTML = '<div class="sum-empty">Tidak ada data jam ATA pada basis yang dipilih.</div>';
+      tbl.innerHTML = ''; ins.innerHTML = ''; return;
     }
-    const pad = function (h) { return String(h).padStart(2, '0'); };
-    const maxN = Math.max.apply(null, HR.map(function (o) { return o.n; })), H = 110;
-    plot.innerHTML = HR.map(function (o, h) {
-      const bh = o.n ? Math.max(3, Math.round(o.n / maxN * H)) : 0;
-      const seg = ['Early', 'Ontime', 'Late'].map(function (n2) { return o[n2] ? '<i class="' + n2[0].toLowerCase() + '" style="height:' + Math.round(o[n2] / o.n * bh) + 'px"></i>' : ''; }).join('');
-      return '<div class="sum-col" title="' + pad(h) + ':00-' + pad(h) + ':59 · ' + o.n + ' trip (Early ' + o.Early + ' / Ontime ' + o.Ontime + ' / Late ' + o.Late + ')"><b>' + (o.n || '') + '</b><div class="sum-stk" style="height:' + bh + 'px">' + seg + '</div><span>' + pad(h) + '</span></div>';
-    }).join('');
 
-    const lp = HR.map(function (o) { const j = o.Early + o.Ontime + o.Late; return j ? o.Late / j : 0; });
-    const maxLp = Math.max.apply(null, lp);
-    heat.innerHTML = HR.map(function (o, h) {
-      const j = o.Early + o.Ontime + o.Late;
-      const tip = pad(h) + ':00-' + pad(h) + ':59 · ' + (j ? o.Late + ' Late dari ' + j + ' trip (' + (lp[h] * 100).toFixed(1) + '%)' : 'tidak ada trip');
-      if (!j) return '<div class="sum-hcell dim" title="' + tip + '">·</div>';
-      const a = maxLp ? 0.1 + 0.9 * (lp[h] / maxLp) : 0.1;
-      return '<div class="sum-hcell" style="background:rgba(239,68,68,' + a.toFixed(2) + ');' + (a > 0.55 ? 'color:#fff;' : '') + '" title="' + tip + '">' + Math.round(lp[h] * 100) + '%</div>';
-    }).join('');
+    // ---- line chart (SVG) ----
+    const W = Math.max(720, svgBox.clientWidth || 1000), Ht = 280, L = 44, R = 20, T = 16, B = 30;
+    const pw = W - L - R, ph = Ht - T - B, stepX = pw / 23;
+    let mx = 0; HR_KEYS.forEach(function (k) { ser[k].forEach(function (v) { if (v > mx) mx = v; }); });
+    const rough = (mx || 1) / 4, mag = Math.pow(10, Math.floor(Math.log10(rough)));
+    const stp = [1, 2, 2.5, 5, 10].map(function (c) { return c * mag; }).filter(function (c) { return c >= rough - 1e-9; })[0];
+    const top = Math.ceil((mx || 1) / stp - 1e-9) * stp;
+    const X = function (i) { return L + i * stepX; }, Y = function (v) { return T + ph - (v / top) * ph; };
+    let g = '';
+    for (let t = 0; t <= top + 1e-9; t += stp) {
+      g += '<line x1="' + L + '" x2="' + (L + pw) + '" y1="' + Y(t).toFixed(1) + '" y2="' + Y(t).toFixed(1) + '" stroke="#e2e8f0" stroke-width="1"/>' +
+        '<text x="' + (L - 7) + '" y="' + (Y(t) + 3.5).toFixed(1) + '" text-anchor="end" font-size="10.5" fill="#64748b">' + (+t.toFixed(2)) + '</text>';
+    }
+    for (let i = 0; i < 24; i++) {
+      g += '<text x="' + X(i).toFixed(1) + '" y="' + (Ht - 10) + '" text-anchor="middle" font-size="10" fill="#64748b">' + hrPad(i) + (stepX >= 34 ? '.00' : '') + '</text>';
+    }
+    HR_KEYS.forEach(function (k) {
+      const pts = ser[k].map(function (v, i) { return X(i).toFixed(1) + ',' + Y(v).toFixed(1); });
+      g += '<polyline fill="none" stroke="' + HR_COL[k] + '" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round" points="' + pts.join(' ') + '"/>';
+      g += ser[k].map(function (v, i) { return '<circle cx="' + X(i).toFixed(1) + '" cy="' + Y(v).toFixed(1) + '" r="3.4" fill="#fff" stroke="' + HR_COL[k] + '" stroke-width="2"/>'; }).join('');
+    });
+    g += '<line id="sumHourGuide" x1="0" x2="0" y1="' + T + '" y2="' + (T + ph) + '" stroke="#94a3b8" stroke-width="1" stroke-dasharray="4 3" style="display:none"/>';
+    svgBox.innerHTML = '<svg id="sumHourChart" width="' + W + '" height="' + Ht + '" style="display:block">' + g + '</svg>';
+    hourView = { X: X, W: W, T: T, L: L, stepX: stepX, ser: ser, cnt: cnt };
+    const svg = document.getElementById('sumHourChart'), guide = document.getElementById('sumHourGuide');
+    svg.addEventListener('mousemove', function (e) {
+      const rc = svg.getBoundingClientRect(), mxp = e.clientX - rc.left;
+      const i = Math.max(0, Math.min(23, Math.round((mxp - L) / stepX)));
+      const tot = HR_KEYS.reduce(function (a2, k) { return a2 + ser[k][i]; }, 0);
+      tip.innerHTML = '<b>' + hrPad(i) + '.00 – ' + hrPad(i) + '.59</b><br>' + HR_KEYS.map(function (k) {
+        return '<span style="color:' + HR_COL[k] + '">●</span> ' + HR_LBL[k] + ': <b>' + hrFmt(ser[k][i]) + '</b>';
+      }).join('<br>') + '<br>Total: <b>' + hrFmt(tot) + '</b>';
+      tip.style.display = 'block';
+      const tx = X(i), tw = tip.offsetWidth;
+      tip.style.left = Math.max(4, (tx + 14 + tw > W ? tx - tw - 14 : tx + 14)) + 'px';
+      tip.style.top = '8px';
+      guide.setAttribute('x1', tx); guide.setAttribute('x2', tx); guide.style.display = '';
+    });
+    svg.addEventListener('mouseleave', function () { tip.style.display = 'none'; guide.style.display = 'none'; });
 
-    const top = HR.map(function (o, h) { return { h: h, late: o.Late, j: o.Early + o.Ontime + o.Late, p: lp[h] }; })
+    // ---- tabel angka per jam ----
+    const unit = '<small style="font-weight:600;color:#94a3b8;">unit/hari</small>';
+    let th = '<th style="text-align:left;padding-left:10px;">Jam ATA</th>';
+    for (let h = 0; h < 24; h++) th += '<th title="' + hrPad(h) + '.00 – ' + hrPad(h) + '.59">' + hrPad(h) + '.00<br>' + hrPad(h) + '.59</th>';
+    th += '<th>Total</th>';
+    const sums = {}; HR_KEYS.forEach(function (k) { sums[k] = ser[k].reduce(function (a2, b2) { return a2 + b2; }, 0); });
+    let rowsH = HR_KEYS.map(function (k) {
+      return '<tr><td class="hr-lbl"><span class="sum-lg"><i style="width:14px;height:3px;border-radius:2px;background:' + HR_COL[k] + '"></i>' + HR_LBL[k] + '</span></td>' +
+        ser[k].map(function (v) { return '<td class="' + (v ? HR_TDC[k] : '') + '">' + (v ? hrFmt(v) : '0') + '</td>'; }).join('') +
+        '<td class="' + HR_TDC[k] + '">' + hrFmt(sums[k]) + '</td></tr>';
+    }).join('');
+    const totH = ser.Early.map(function (_, i) { return ser.Early[i] + ser.Ontime[i] + ser.Late[i]; });
+    rowsH += '<tr class="hr-total"><td class="hr-lbl">Total ' + unit + '</td>' + totH.map(function (v) { return '<td>' + hrFmt(v) + '</td>'; }).join('') + '<td>' + hrFmt(sums.Early + sums.Ontime + sums.Late) + '</td></tr>';
+    tbl.innerHTML = '<thead><tr>' + th + '</tr></thead><tbody>' + rowsH + '</tbody>';
+
+    // ---- jam rawan Late ----
+    const topH = totH.map(function (t, i) { return { h: i, late: ser.Late[i], t: t }; })
       .filter(function (x) { return x.late > 0; })
-      .sort(function (a, b) { return b.late - a.late || b.p - a.p; }).slice(0, 3);
-    let html = top.length
-      ? '<b style="color:#0f172a;">🔥 Jam rawan Late:</b>' + top.map(function (x) { return '<span class="sum-chip late">' + pad(x.h) + ':00–' + pad(x.h) + ':59 · ' + x.late + ' Late (' + (x.p * 100).toFixed(0) + '%)</span>'; }).join('')
-      : '<span>Tidak ada trip Late di periode ini.</span>';
-    if (sumFiltered.length > withAta) html += '<span style="color:#94a3b8;">· ' + (sumFiltered.length - withAta) + ' trip tanpa data ATA tidak dihitung</span>';
+      .sort(function (a2, b2) { return b2.late - a2.late || (b2.late / b2.t) - (a2.late / a2.t); }).slice(0, 3);
+    let html = topH.length
+      ? '<b style="color:#0f172a;">🔥 Jam rawan Late:</b>' + topH.map(function (x) {
+          return '<span class="sum-chip late">' + hrPad(x.h) + '.00–' + hrPad(x.h) + '.59 · ' + hrFmt(x.late) + ' Late' + '/hari' + ' (' + Math.round(x.late / x.t * 100) + '%)</span>';
+        }).join('')
+      : '<span>Tidak ada trip Late pada basis yang dipilih.</span>';
+    if (noAta) html += '<span style="color:#94a3b8;">· ' + noAta + ' trip tanpa data ATA tidak dihitung</span>';
     ins.innerHTML = html;
   }
 
@@ -2681,6 +2825,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    let hrTimer; window.addEventListener('resize', function () { clearTimeout(hrTimer); hrTimer = setTimeout(renderSumHour, 150); });
     document.getElementById('expStatusSeg').addEventListener('click', function (e) {
       const b = e.target.closest('button'); if (!b) return;
       expStatus = b.getAttribute('data-v'); renderExportPreview();
