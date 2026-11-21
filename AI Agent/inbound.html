@@ -8,6 +8,9 @@
   <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚚</text></svg>">
   <!-- PapaParse CDN for CSV parsing -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <!-- jsPDF + AutoTable buat Export PDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
   <!-- FIREBASE SDK (app+auth dibutuhkan auth-guard.js, database dibutuhkan buat sync LH Tracking & Forecast MP) -->
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
@@ -1538,6 +1541,43 @@
   .sum-stk { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; background: #64748b; }
   .sum-stk i.e { background: #22c55e; } .sum-stk i.o { background: #3b82f6; } .sum-stk i.l { background: #ef4444; }
   .sum-empty { color: #94a3b8; font-size: 12px; padding: 20px; text-align: center; }
+
+  /* ===== Export PDF (modal preview) ===== */
+  .btn-export-pdf { background: #0f172a; }
+  .btn-export-pdf:hover { background: #1e293b; }
+  .exp-backdrop { position: fixed; inset: 0; background: rgba(15,23,42,.55); backdrop-filter: blur(2px); z-index: 300; display: none; align-items: center; justify-content: center; padding: 20px; }
+  .exp-backdrop.open { display: flex; }
+  .exp-box { background: #fff; border-radius: 14px; width: min(1120px, 100%); max-height: 92vh; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,.3); overflow: hidden; font-family: var(--tw-sans); }
+  .exp-head { display: flex; align-items: center; justify-content: space-between; padding: 14px 20px; border-bottom: 1px solid #e2e8f0; background: #f8fafc; }
+  .exp-head h3 { margin: 0; font-size: 16px; color: #0f172a; }
+  .exp-head button { background: transparent; border: none; font-size: 18px; color: #64748b; cursor: pointer; padding: 4px 8px; }
+  .exp-head button:hover { color: #0f172a; }
+  .exp-body { padding: 16px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 12px; }
+  .exp-opts { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-start; }
+  .exp-opt { display: flex; flex-direction: column; gap: 6px; }
+  .exp-opt > label { font-size: 12px; font-weight: 700; color: #475569; }
+  .exp-seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+  .exp-seg button { padding: 7px 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; font-family: inherit; }
+  .exp-seg button:hover { background: #f1f5f9; }
+  .exp-seg button.on { background: #0f172a; border-color: #0f172a; color: #fff; }
+  #expVendorSel { margin-top: 6px; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; min-width: 260px; background: #fff; display: none; }
+  .exp-info { font-size: 12px; color: #64748b; line-height: 1.6; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 12px; }
+  .exp-info b { color: #0f172a; }
+  .exp-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .exp-chips .sum-chip { font-size: 12px; padding: 4px 12px; }
+  .exp-chips .tot { background: #e2e8f0; color: #0f172a; }
+  .exp-scroll { border: 1px solid #e2e8f0; border-radius: 10px; max-height: 340px; overflow: auto; }
+  .exp-scroll .ch-table { min-width: 1000px; }
+  .exp-scroll .ch-table th { position: sticky; top: 0; z-index: 2; white-space: nowrap; background: #64748b; color: #fff; }
+  .exp-scroll .ch-table td { white-space: nowrap; }
+  .exp-foot { display: flex; align-items: center; gap: 10px; padding: 12px 20px; border-top: 1px solid #e2e8f0; background: #f8fafc; }
+  .exp-foot .exp-note { flex: 1; font-size: 11.5px; color: #64748b; }
+  .exp-foot button { padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .exp-cancel { background: #fff; border: 1px solid #cbd5e1; color: #334155; }
+  .exp-cancel:hover { background: #f1f5f9; }
+  .exp-go { background: #0f172a; border: 1px solid #0f172a; color: #fff; }
+  .exp-go:hover { background: #1e293b; }
+  .exp-go:disabled { opacity: .45; cursor: not-allowed; }
 </style>
 <div class="container">
   <div class="header-bar">
@@ -1545,6 +1585,7 @@
     <div class="freshness-bar">
       <span style="color:#64748b;">Last: <b id="sumLast">-</b></span>
       <button type="button" class="btn-reset-filter" style="margin:0;" id="sumBtnRefresh" onclick="loadSummary()">🔄 Refresh</button>
+      <button type="button" class="btn-reset-filter btn-export-pdf" style="margin:0;" id="sumBtnExport" onclick="openExportPreview()">📄 Export PDF</button>
     </div>
   </div>
 
@@ -1614,6 +1655,50 @@
       <thead><tr id="sumDetailHead"></tr></thead>
       <tbody id="sumDetailBody"></tbody>
     </table></div>
+  </div>
+</div>
+
+<!-- ===== Modal Preview Export PDF ===== -->
+<div class="exp-backdrop" id="expModal" onclick="if (event.target === this) closeExportPreview()">
+  <div class="exp-box" role="dialog" aria-modal="true" aria-labelledby="expTitle">
+    <div class="exp-head">
+      <h3 id="expTitle">📄 Preview Export PDF</h3>
+      <button type="button" onclick="closeExportPreview()" title="Tutup">✕</button>
+    </div>
+    <div class="exp-body">
+      <div class="exp-opts">
+        <div class="exp-opt">
+          <label>🚦 Status Arrival</label>
+          <div class="exp-seg" id="expStatusSeg">
+            <button type="button" data-v="">All</button>
+            <button type="button" data-v="Early">🟢 Early Arrival</button>
+            <button type="button" data-v="Ontime">🔵 On Time</button>
+            <button type="button" data-v="Late">🔴 Late Arrival</button>
+          </div>
+        </div>
+        <div class="exp-opt">
+          <label>🏢 Vendor</label>
+          <div class="exp-seg" id="expVendorSeg">
+            <button type="button" data-m="all">All Vendor</button>
+            <button type="button" data-m="one">Specific Vendor</button>
+          </div>
+          <select id="expVendorSel"></select>
+        </div>
+      </div>
+      <div class="exp-info" id="expInfo"></div>
+      <div class="exp-chips" id="expChips"></div>
+      <div class="exp-scroll">
+        <table class="ch-table">
+          <thead><tr id="expHead"></tr></thead>
+          <tbody id="expBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="exp-foot">
+      <span class="exp-note" id="expNote"></span>
+      <button type="button" class="exp-cancel" onclick="closeExportPreview()">Batal</button>
+      <button type="button" class="exp-go" id="expGo" onclick="downloadExportPdf()">⬇️ Download PDF</button>
+    </div>
   </div>
 </div>
 
@@ -2141,6 +2226,219 @@
       return '<tr><td>' + escapeHtml(r[C.lt]) + '</td><td>' + escapeHtml(r[C.vendor]) + '</td><td>' + escapeHtml(normShift(r[C.shift])) + '</td><td>' + escapeHtml(r[C.durUnload]) + '</td><td>' + escapeHtml(r[C.durFinishUnload]) + '</td><td class="sum-over">' + fMin(x.a) + '</td></tr>';
     }).join('') || '<tr><td colspan="6" style="color:#94a3b8;">Semua trip dalam standar.</td></tr>';
   }
+
+
+  // ==== EXPORT PDF (preview dulu → pilih Status & Vendor → download) ====
+  // Data dasar ikut filter di halaman (tanggal, cari, shift, trip type); Status & Vendor ditentukan di modal.
+  const EXP_STATUS_LABEL = { '': 'All', Early: 'Early Arrival', Ontime: 'On Time', Late: 'Late Arrival' };
+  const EXP_COLS = [
+    { h: 'No' },
+    { h: 'LT', f: function (r) { return r[C.lt]; } },
+    { h: 'Vendor', f: function (r) { return r[C.vendor]; } },
+    { h: 'Type', f: function (r) { return r[C.type]; } },
+    { h: 'Route', f: function (r) { return r[C.route]; } },
+    { h: 'Parcel', f: function (r) { return r[C.parcel]; } },
+    { h: 'Nopol', f: function (r) { return r[C.nopol]; } },
+    { h: 'Driver', f: function (r) { return r[C.driver]; } },
+    { h: 'STA', f: function (r) { return r[12]; } },
+    { h: 'ATA', f: function (r) { return r[C.ata]; } },
+    { h: 'Status', f: function (r) { return normStatus(r[C.status]) || r[C.status]; } },
+    { h: 'Shift', f: function (r) { return normShift(r[C.shift]); } },
+    { h: 'Arr-Unload', f: function (r) { return r[C.durUnload]; } },
+    { h: 'Unload-Finish', f: function (r) { return r[C.durFinishUnload]; } },
+    { h: 'Arr-Finish', f: function (r) { return r[C.durFinish]; } }
+  ];
+  const EXP_STATUS_COL = 10;
+  let expStatus = '';
+  let expVendorMode = 'all';
+  let expVendor = '';
+
+  function vendorOf(r) { return (r[C.vendor] || '').trim() || '-'; }
+  function fmtYmd(v) { return v ? v.split('-').reverse().join('/') : '-'; }
+
+  // Semua filter halaman KECUALI vendor & status
+  function expBaseRows() {
+    const f = selVal('sumFrom'), t2 = selVal('sumTo');
+    const q = document.getElementById('sumSearch').value.trim().toLowerCase();
+    const sh = selVal('sumShiftSel'), ty = selVal('sumType');
+    const from = f ? new Date(f + 'T00:00:00') : null;
+    const to = t2 ? new Date(t2 + 'T23:59:59') : null;
+    return sumRows.filter(function (r) {
+      const d = rowDate(r);
+      if (from && (!d || d < from)) return false;
+      if (to && (!d || d > to)) return false;
+      if (sh && normShift(r[C.shift]) !== sh) return false;
+      if (ty && (r[C.type] || '').trim() !== ty) return false;
+      if (q) {
+        const hay = [r[C.lt], r[C.route], r[C.nopol], r[C.driver], r[C.vendor]].join(' ').toLowerCase();
+        if (hay.indexOf(q) === -1) return false;
+      }
+      return true;
+    });
+  }
+  function expVendorFiltered(base) {
+    return (expVendorMode === 'one' && expVendor) ? base.filter(function (r) { return vendorOf(r) === expVendor; }) : base;
+  }
+  function expRows() {
+    const rows = expVendorFiltered(expBaseRows());
+    const out = expStatus ? rows.filter(function (r) { return normStatus(r[C.status]) === expStatus; }) : rows.slice();
+    out.sort(function (a, b) { const da = rowDate(a), db = rowDate(b); return (da ? +da : 0) - (db ? +db : 0); });
+    return out;
+  }
+  function expFilterNote() {
+    const parts = [];
+    if (selVal('sumShiftSel')) parts.push('Shift: ' + selVal('sumShiftSel'));
+    if (selVal('sumType')) parts.push('Trip Type: ' + selVal('sumType'));
+    const q = document.getElementById('sumSearch').value.trim();
+    if (q) parts.push('Cari: "' + q + '"');
+    return parts.join(' | ');
+  }
+
+  function openExportPreview() {
+    if (!sumRows.length) { showToast('Data belum termuat. Coba klik Refresh dulu.', 'err'); return; }
+    expStatus = selVal('sumStatus');
+    expVendor = selVal('sumVendor');
+    expVendorMode = expVendor ? 'one' : 'all';
+    document.getElementById('expModal').classList.add('open');
+    renderExportPreview();
+  }
+  function closeExportPreview() { document.getElementById('expModal').classList.remove('open'); }
+
+  function renderExportPreview() {
+    const base = expBaseRows();
+
+    // dropdown vendor (hanya vendor yang ada di periode/filter halaman)
+    const cnt = {};
+    base.forEach(function (r) { const v = vendorOf(r); cnt[v] = (cnt[v] || 0) + 1; });
+    const vendors = Object.keys(cnt).sort();
+    if (expVendor && vendors.indexOf(expVendor) === -1) expVendor = '';
+    if (expVendorMode === 'one' && !expVendor && vendors.length) expVendor = vendors[0];
+    const sel = document.getElementById('expVendorSel');
+    sel.innerHTML = vendors.map(function (v) { return '<option value="' + escapeHtml(v) + '"' + (v === expVendor ? ' selected' : '') + '>' + escapeHtml(v) + ' (' + cnt[v] + ')</option>'; }).join('');
+    sel.style.display = expVendorMode === 'one' ? 'block' : 'none';
+    document.querySelectorAll('#expVendorSeg button').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-m') === expVendorMode); });
+
+    // hitung per status (sesudah filter vendor) → tampil di tombol status
+    const vf = expVendorFiltered(base);
+    const c = { Early: 0, Ontime: 0, Late: 0 };
+    vf.forEach(function (r) { const st = normStatus(r[C.status]); if (st) c[st]++; });
+    const segTxt = { '': 'All (' + vf.length + ')', Early: '🟢 Early Arrival (' + c.Early + ')', Ontime: '🔵 On Time (' + c.Ontime + ')', Late: '🔴 Late Arrival (' + c.Late + ')' };
+    document.querySelectorAll('#expStatusSeg button').forEach(function (b) {
+      const v = b.getAttribute('data-v');
+      b.textContent = segTxt[v];
+      b.classList.toggle('on', v === expStatus);
+    });
+
+    const rows = expRows();
+    const info = '<b>Periode:</b> ' + fmtYmd(selVal('sumFrom')) + ' – ' + fmtYmd(selVal('sumTo')) +
+      ' &nbsp;·&nbsp; <b>Status:</b> ' + EXP_STATUS_LABEL[expStatus] +
+      ' &nbsp;·&nbsp; <b>Vendor:</b> ' + (expVendorMode === 'one' && expVendor ? escapeHtml(expVendor) : 'All Vendor') +
+      (expFilterNote() ? '<br><b>Filter halaman:</b> ' + escapeHtml(expFilterNote()) : '');
+    document.getElementById('expInfo').innerHTML = info;
+
+    const cs = { Early: 0, Ontime: 0, Late: 0 };
+    rows.forEach(function (r) { const st = normStatus(r[C.status]); if (st) cs[st]++; });
+    document.getElementById('expChips').innerHTML =
+      '<span class="sum-chip tot">Total ' + rows.length + ' trip</span>' +
+      '<span class="sum-chip early">Early ' + cs.Early + '</span>' +
+      '<span class="sum-chip ontime">Ontime ' + cs.Ontime + '</span>' +
+      '<span class="sum-chip late">Late ' + cs.Late + '</span>';
+
+    document.getElementById('expHead').innerHTML = EXP_COLS.map(function (col) { return '<th>' + col.h + '</th>'; }).join('');
+    const LIM = 100;
+    document.getElementById('expBody').innerHTML = rows.slice(0, LIM).map(function (r, i) {
+      return '<tr>' + EXP_COLS.map(function (col, ci) {
+        if (ci === 0) return '<td>' + (i + 1) + '</td>';
+        const v = col.f(r);
+        if (ci === EXP_STATUS_COL) { const st = normStatus(r[C.status]); return '<td>' + (st ? '<span class="sum-chip ' + st.toLowerCase() + '">' + st + '</span>' : escapeHtml(v)) + '</td>'; }
+        return '<td>' + escapeHtml(v == null ? '' : v) + '</td>';
+      }).join('') + '</tr>';
+    }).join('') || '<tr><td colspan="' + EXP_COLS.length + '" style="color:#94a3b8;">Tidak ada data dengan pilihan ini.</td></tr>';
+
+    document.getElementById('expNote').textContent = rows.length > LIM
+      ? 'Preview menampilkan ' + LIM + ' dari ' + rows.length + ' baris — file PDF memuat semua baris.'
+      : (rows.length ? 'PDF memuat ' + rows.length + ' baris (A4 landscape).' : '');
+    document.getElementById('expGo').disabled = !rows.length;
+  }
+
+  // teks aman buat font bawaan jsPDF (helvetica = Latin-1 saja)
+  function pdfTxt(v) { const t = String(v == null ? '' : v).replace(/[^\x20-\x7E\u00A0-\u00FF]/g, '').replace(/\s+/g, ' ').trim(); return t || '-'; }
+
+  function downloadExportPdf() {
+    const rows = expRows();
+    if (!rows.length) { showToast('Tidak ada data untuk di-export dengan pilihan ini.', 'err'); return; }
+    if (!window.jspdf || !window.jspdf.jsPDF) { showToast('Library PDF belum termuat. Cek koneksi internet lalu coba lagi.', 'err'); return; }
+    try {
+      const doc = new window.jspdf.jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4', compress: true });
+      const vendorLbl = (expVendorMode === 'one' && expVendor) ? expVendor : 'All Vendor';
+      const cs = { Early: 0, Ontime: 0, Late: 0 };
+      rows.forEach(function (r) { const st = normStatus(r[C.status]); if (st) cs[st]++; });
+      const judged = cs.Early + cs.Ontime + cs.Late;
+
+      doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(15, 23, 42);
+      doc.text('Inbound Tracking - Palangka Raya DC', 10, 12);
+      doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
+      doc.text(pdfTxt('Periode: ' + fmtYmd(selVal('sumFrom')) + ' - ' + fmtYmd(selVal('sumTo')) + '   |   Status: ' + EXP_STATUS_LABEL[expStatus] + '   |   Vendor: ' + vendorLbl), 10, 17.5);
+      const extra = expFilterNote();
+      let y = 17.5;
+      if (extra) { y += 4.5; doc.text(pdfTxt('Filter: ' + extra), 10, y); }
+      y += 4.5;
+      doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
+      doc.text(pdfTxt('Total ' + rows.length + ' trip   |   Early ' + cs.Early + ' (' + pct(cs.Early, judged) + ')   |   Ontime ' + cs.Ontime + ' (' + pct(cs.Ontime, judged) + ')   |   Late ' + cs.Late + ' (' + pct(cs.Late, judged) + ')'), 10, y);
+
+      const body = rows.map(function (r, i) {
+        return EXP_COLS.map(function (col, ci) { return pdfTxt(ci === 0 ? i + 1 : col.f(r)); });
+      });
+      const colors = { Early: [21, 128, 61], Ontime: [29, 78, 216], Late: [185, 28, 28] };
+      doc.autoTable({
+        head: [EXP_COLS.map(function (c) { return c.h; })],
+        body: body,
+        startY: y + 3.5,
+        theme: 'grid',
+        margin: { left: 10, right: 10, top: 12, bottom: 12 },
+        styles: { fontSize: 6.5, cellPadding: 1.2, overflow: 'linebreak', valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.1, textColor: [30, 41, 59] },
+        headStyles: { fillColor: [100, 116, 139], textColor: 255, halign: 'center', fontStyle: 'bold' },
+        alternateRowStyles: { fillColor: [248, 250, 252] },
+        columnStyles: { 0: { halign: 'center', cellWidth: 8 }, 5: { halign: 'center' }, 8: { halign: 'center' }, 9: { halign: 'center' }, 10: { halign: 'center' }, 11: { halign: 'center' }, 12: { halign: 'center' }, 13: { halign: 'center' }, 14: { halign: 'center' } },
+        didParseCell: function (d) {
+          if (d.section === 'body' && d.column.index === EXP_STATUS_COL && colors[d.cell.raw]) {
+            d.cell.styles.textColor = colors[d.cell.raw]; d.cell.styles.fontStyle = 'bold';
+          }
+        }
+      });
+
+      const n = doc.getNumberOfPages();
+      const pw = doc.internal.pageSize.getWidth(), ph = doc.internal.pageSize.getHeight();
+      const stamp = new Date().toLocaleString('id-ID');
+      for (let i = 1; i <= n; i++) {
+        doc.setPage(i); doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(100, 116, 139);
+        doc.text('Dicetak: ' + stamp + '  |  Internal Palangka Raya DC', 10, ph - 6);
+        doc.text('Halaman ' + i + ' / ' + n, pw - 10, ph - 6, { align: 'right' });
+      }
+
+      const safe = function (x) { return String(x).replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, ''); };
+      const fname = 'Inbound_' + safe(EXP_STATUS_LABEL[expStatus]) + '_' + safe(vendorLbl) + '_' + (selVal('sumFrom') || 'awal') + '_sd_' + (selVal('sumTo') || 'akhir') + '.pdf';
+      doc.save(fname);
+      showToast('PDF berhasil dibuat: ' + fname, 'ok');
+      closeExportPreview();
+    } catch (e) {
+      console.error(e);
+      showToast('Gagal membuat PDF: ' + e.message, 'err');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('expStatusSeg').addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b) return;
+      expStatus = b.getAttribute('data-v'); renderExportPreview();
+    });
+    document.getElementById('expVendorSeg').addEventListener('click', function (e) {
+      const b = e.target.closest('button'); if (!b) return;
+      expVendorMode = b.getAttribute('data-m'); renderExportPreview();
+    });
+    document.getElementById('expVendorSel').addEventListener('change', function () { expVendor = this.value; renderExportPreview(); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeExportPreview(); });
+  });
 
   document.addEventListener('DOMContentLoaded', function () {
     setDefaultPeriod();
