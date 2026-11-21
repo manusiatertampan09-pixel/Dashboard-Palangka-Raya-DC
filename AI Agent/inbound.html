@@ -1556,6 +1556,8 @@
   .exp-opts { display: flex; flex-wrap: wrap; gap: 18px 28px; align-items: flex-start; }
   .exp-opt { display: flex; flex-direction: column; gap: 6px; }
   .exp-opt > label { font-size: 12px; font-weight: 700; color: #475569; }
+  .exp-dates { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: #64748b; font-weight: 600; }
+  .exp-dates input { padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12.5px; background: #fff; font-family: inherit; color: #334155; }
   .exp-seg { display: inline-flex; flex-wrap: wrap; gap: 6px; }
   .exp-seg button { padding: 7px 12px; border: 1px solid #cbd5e1; background: #fff; border-radius: 8px; font-size: 12.5px; font-weight: 600; color: #334155; cursor: pointer; font-family: inherit; }
   .exp-seg button:hover { background: #f1f5f9; }
@@ -1667,6 +1669,12 @@
     </div>
     <div class="exp-body">
       <div class="exp-opts">
+        <div class="exp-opt">
+          <label>📅 Tanggal (Arrival)</label>
+          <div class="exp-dates">
+            <input type="date" id="expFrom"><span>s/d</span><input type="date" id="expTo">
+          </div>
+        </div>
         <div class="exp-opt">
           <label>🚦 Status Arrival</label>
           <div class="exp-seg" id="expStatusSeg">
@@ -2258,9 +2266,10 @@
 
   // Semua filter halaman KECUALI vendor & status
   function expBaseRows() {
-    const f = selVal('sumFrom'), t2 = selVal('sumTo');
+    const f = selVal('expFrom'), t2 = selVal('expTo');
     const q = document.getElementById('sumSearch').value.trim().toLowerCase();
     const sh = selVal('sumShiftSel'), ty = selVal('sumType');
+    if (f && t2 && f > t2) return [];
     const from = f ? new Date(f + 'T00:00:00') : null;
     const to = t2 ? new Date(t2 + 'T23:59:59') : null;
     return sumRows.filter(function (r) {
@@ -2296,6 +2305,8 @@
 
   function openExportPreview() {
     if (!sumRows.length) { showToast('Data belum termuat. Coba klik Refresh dulu.', 'err'); return; }
+    document.getElementById('expFrom').value = selVal('sumFrom');
+    document.getElementById('expTo').value = selVal('sumTo');
     expStatus = selVal('sumStatus');
     expVendor = selVal('sumVendor');
     expVendorMode = expVendor ? 'one' : 'all';
@@ -2330,7 +2341,7 @@
     });
 
     const rows = expRows();
-    const info = '<b>Periode:</b> ' + fmtYmd(selVal('sumFrom')) + ' – ' + fmtYmd(selVal('sumTo')) +
+    const info = '<b>Periode:</b> ' + fmtYmd(selVal('expFrom')) + ' – ' + fmtYmd(selVal('expTo')) +
       ' &nbsp;·&nbsp; <b>Status:</b> ' + EXP_STATUS_LABEL[expStatus] +
       ' &nbsp;·&nbsp; <b>Vendor:</b> ' + (expVendorMode === 'one' && expVendor ? escapeHtml(expVendor) : 'All Vendor') +
       (expFilterNote() ? '<br><b>Filter halaman:</b> ' + escapeHtml(expFilterNote()) : '');
@@ -2355,7 +2366,8 @@
       }).join('') + '</tr>';
     }).join('') || '<tr><td colspan="' + EXP_COLS.length + '" style="color:#94a3b8;">Tidak ada data dengan pilihan ini.</td></tr>';
 
-    document.getElementById('expNote').textContent = rows.length > LIM
+    const badRange = selVal('expFrom') && selVal('expTo') && selVal('expFrom') > selVal('expTo');
+    document.getElementById('expNote').textContent = badRange ? 'Tanggal "Dari" tidak boleh lebih besar dari "Sampai".' : rows.length > LIM
       ? 'Preview menampilkan ' + LIM + ' dari ' + rows.length + ' baris — file PDF memuat semua baris.'
       : (rows.length ? 'PDF memuat ' + rows.length + ' baris (A4 landscape).' : '');
     document.getElementById('expGo').disabled = !rows.length;
@@ -2378,7 +2390,7 @@
       doc.setFont('helvetica', 'bold'); doc.setFontSize(14); doc.setTextColor(15, 23, 42);
       doc.text('Inbound Tracking - Palangka Raya DC', 10, 12);
       doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(71, 85, 105);
-      doc.text(pdfTxt('Periode: ' + fmtYmd(selVal('sumFrom')) + ' - ' + fmtYmd(selVal('sumTo')) + '   |   Status: ' + EXP_STATUS_LABEL[expStatus] + '   |   Vendor: ' + vendorLbl), 10, 17.5);
+      doc.text(pdfTxt('Periode: ' + fmtYmd(selVal('expFrom')) + ' - ' + fmtYmd(selVal('expTo')) + '   |   Status: ' + EXP_STATUS_LABEL[expStatus] + '   |   Vendor: ' + vendorLbl), 10, 17.5);
       const extra = expFilterNote();
       let y = 17.5;
       if (extra) { y += 4.5; doc.text(pdfTxt('Filter: ' + extra), 10, y); }
@@ -2417,7 +2429,7 @@
       }
 
       const safe = function (x) { return String(x).replace(/[^A-Za-z0-9]+/g, '-').replace(/^-|-$/g, ''); };
-      const fname = 'Inbound_' + safe(EXP_STATUS_LABEL[expStatus]) + '_' + safe(vendorLbl) + '_' + (selVal('sumFrom') || 'awal') + '_sd_' + (selVal('sumTo') || 'akhir') + '.pdf';
+      const fname = 'Inbound_' + safe(EXP_STATUS_LABEL[expStatus]) + '_' + safe(vendorLbl) + '_' + (selVal('expFrom') || 'awal') + '_sd_' + (selVal('expTo') || 'akhir') + '.pdf';
       doc.save(fname);
       showToast('PDF berhasil dibuat: ' + fname, 'ok');
       closeExportPreview();
@@ -2436,6 +2448,7 @@
       const b = e.target.closest('button'); if (!b) return;
       expVendorMode = b.getAttribute('data-m'); renderExportPreview();
     });
+    ['expFrom', 'expTo'].forEach(function (id) { document.getElementById(id).addEventListener('change', renderExportPreview); });
     document.getElementById('expVendorSel').addEventListener('change', function () { expVendor = this.value; renderExportPreview(); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeExportPreview(); });
   });
