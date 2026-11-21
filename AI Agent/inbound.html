@@ -2376,6 +2376,63 @@
   // teks aman buat font bawaan jsPDF (helvetica = Latin-1 saja)
   function pdfTxt(v) { const t = String(v == null ? '' : v).replace(/[^\x20-\x7E\u00A0-\u00FF]/g, '').replace(/\s+/g, ' ').trim(); return t || '-'; }
 
+  // Grafik tren harian (batang bertumpuk Early/Ontime/Late) digambar langsung pakai primitif jsPDF
+  function pdfTrendChart(doc, rows, x, y, w, h) {
+    const map = {};
+    rows.forEach(function (r) {
+      const d = rowDate(r); if (!d) return;
+      const k = ymd(d), o = map[k] || (map[k] = { Early: 0, Ontime: 0, Late: 0 });
+      const st = normStatus(r[C.status]); if (st) o[st]++;
+    });
+    let keys = Object.keys(map).sort();
+    if (!keys.length) return y;
+    const f = selVal('expFrom'), t2 = selVal('expTo');
+    const s0 = new Date((f || keys[0]) + 'T00:00:00'), e0 = new Date((t2 || keys[keys.length - 1]) + 'T00:00:00');
+    const span = Math.round((e0 - s0) / 86400000) + 1;
+    if (span > 0 && span <= 120) { // isi hari kosong biar sumbu-X lengkap
+      keys = [];
+      for (let i = 0; i < span; i++) keys.push(ymd(new Date(s0.getFullYear(), s0.getMonth(), s0.getDate() + i)));
+    }
+    const tot = function (k) { const o = map[k]; return o ? o.Early + o.Ontime + o.Late : 0; };
+    const mxv = Math.max.apply(null, keys.map(tot)) || 1;
+    const step = Math.max(1, Math.ceil(mxv / 4)), top = step * Math.ceil(mxv / step);
+
+    doc.setDrawColor(226, 232, 240); doc.setLineWidth(0.2); doc.roundedRect(x, y, w, h, 1.5, 1.5, 'S');
+    doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
+    doc.text('Tren Harian - Jumlah Trip per Hari (tanggal Arrival)', x + 4, y + 6);
+    // legend
+    const lg = [['Early', [34, 197, 94]], ['Ontime', [59, 130, 246]], ['Late', [239, 68, 68]]];
+    let lx = x + w - 58;
+    doc.setFont('helvetica', 'normal'); doc.setFontSize(7); doc.setTextColor(71, 85, 105);
+    lg.forEach(function (l) { doc.setFillColor(l[1][0], l[1][1], l[1][2]); doc.rect(lx, y + 3.6, 2.6, 2.6, 'F'); doc.text(l[0], lx + 3.8, y + 5.8); lx += 19; });
+
+    const x0 = x + 10, pw = w - 14, yb = y + h - 7, ph = h - 21;
+    doc.setLineWidth(0.1); doc.setFontSize(6); doc.setTextColor(100, 116, 139);
+    for (let t = 0; t <= top; t += step) {
+      const gy = yb - (t / top) * ph;
+      doc.setDrawColor(226, 232, 240); doc.line(x0, gy, x0 + pw, gy);
+      doc.text(String(t), x0 - 1.5, gy + 0.8, { align: 'right' });
+    }
+    const slot = pw / keys.length, bw = Math.min(slot * 0.7, 9);
+    const every = slot >= 4.5 ? 1 : Math.ceil(5 / slot);
+    keys.forEach(function (k, i) {
+      const o = map[k] || { Early: 0, Ontime: 0, Late: 0 }, bx = x0 + i * slot + (slot - bw) / 2;
+      let by = yb;
+      lg.forEach(function (l) {
+        const hh = (o[l[0]] / top) * ph; if (!hh) return;
+        doc.setFillColor(l[1][0], l[1][1], l[1][2]); doc.rect(bx, by - hh, bw, hh, 'F'); by -= hh;
+      });
+      doc.setFontSize(5.5); doc.setTextColor(51, 65, 85);
+      if (slot >= 4.5 && tot(k) > 0) doc.text(String(tot(k)), bx + bw / 2, by - 0.8, { align: 'center' });
+      if (i % every === 0) {
+        const dd = k.slice(8, 10), mm = k.slice(5, 7);
+        doc.setTextColor(100, 116, 139);
+        doc.text(slot >= 8.5 ? dd + '/' + mm : dd, bx + bw / 2, yb + 3.4, { align: 'center' });
+      }
+    });
+    return y + h;
+  }
+
   function downloadExportPdf() {
     const rows = expRows();
     if (!rows.length) { showToast('Tidak ada data untuk di-export dengan pilihan ini.', 'err'); return; }
@@ -2398,6 +2455,48 @@
       doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
       doc.text(pdfTxt('Total ' + rows.length + ' trip   |   Early ' + cs.Early + ' (' + pct(cs.Early, judged) + ')   |   Ontime ' + cs.Ontime + ' (' + pct(cs.Ontime, judged) + ')   |   Late ' + cs.Late + ' (' + pct(cs.Late, judged) + ')'), 10, y);
 
+      // Rekap per vendor (hanya kalau pilih All Vendor)
+      let detailY = pdfTrendChart(doc, rows, 10, y + 4, 277, 48) + 2;
+      if (expVendorMode !== 'one' || !expVendor) {
+        const vm = {};
+        rows.forEach(function (r) {
+          const v = vendorOf(r), o = vm[v] || (vm[v] = { n: 0, Early: 0, Ontime: 0, Late: 0 });
+          o.n++; const st = normStatus(r[C.status]); if (st) o[st]++;
+        });
+        const vl = Object.keys(vm).sort(function (a, b) { return vm[b].n - vm[a].n; });
+        const tot = { n: 0, Early: 0, Ontime: 0, Late: 0 };
+        const vline = function (name, o) {
+          const j = o.Early + o.Ontime + o.Late;
+          return [pdfTxt(name), o.n, o.Early, o.Ontime, o.Late, pct(o.Early, j), pct(o.Ontime, j), pct(o.Late, j)].map(String);
+        };
+        const vbody = vl.map(function (v) { const o = vm[v]; tot.n += o.n; tot.Early += o.Early; tot.Ontime += o.Ontime; tot.Late += o.Late; return vline(v, o); });
+        vbody.push(vline('TOTAL', tot));
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
+        doc.text('Rekap Performance per Vendor', 10, detailY + 3);
+        const vcol = { 2: [21, 128, 61], 5: [21, 128, 61], 3: [29, 78, 216], 6: [29, 78, 216], 4: [185, 28, 28], 7: [185, 28, 28] };
+        doc.autoTable({
+          head: [['Vendor', 'Total Trip', 'Early', 'Ontime', 'Late', '% Early', '% Ontime', '% Late']],
+          body: vbody,
+          startY: detailY + 5,
+          theme: 'grid',
+          tableWidth: 170,
+          margin: { left: 10, right: 10, top: 12, bottom: 12 },
+          styles: { fontSize: 7.5, cellPadding: 1.5, halign: 'center', valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.1, textColor: [30, 41, 59] },
+          headStyles: { fillColor: [100, 116, 139], textColor: 255, fontStyle: 'bold' },
+          alternateRowStyles: { fillColor: [248, 250, 252] },
+          columnStyles: { 0: { halign: 'left', fontStyle: 'bold' } },
+          didParseCell: function (d) {
+            if (d.section !== 'body') return;
+            if (vcol[d.column.index]) { d.cell.styles.textColor = vcol[d.column.index]; d.cell.styles.fontStyle = 'bold'; }
+            if (d.row.index === vbody.length - 1) { d.cell.styles.fillColor = [226, 232, 240]; d.cell.styles.fontStyle = 'bold'; if (d.column.index === 0) d.cell.styles.textColor = [15, 23, 42]; }
+          }
+        });
+        detailY = doc.lastAutoTable.finalY + 8;
+        doc.setFont('helvetica', 'bold'); doc.setFontSize(9); doc.setTextColor(15, 23, 42);
+        doc.text('Detail Trip', 10, detailY);
+        detailY += 2;
+      }
+
       const body = rows.map(function (r, i) {
         return EXP_COLS.map(function (col, ci) { return pdfTxt(ci === 0 ? i + 1 : col.f(r)); });
       });
@@ -2405,7 +2504,7 @@
       doc.autoTable({
         head: [EXP_COLS.map(function (c) { return c.h; })],
         body: body,
-        startY: y + 3.5,
+        startY: detailY,
         theme: 'grid',
         margin: { left: 10, right: 10, top: 12, bottom: 12 },
         styles: { fontSize: 6.5, cellPadding: 1.2, overflow: 'linebreak', valign: 'middle', lineColor: [226, 232, 240], lineWidth: 0.1, textColor: [30, 41, 59] },
