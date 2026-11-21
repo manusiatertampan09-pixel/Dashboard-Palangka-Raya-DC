@@ -1519,6 +1519,12 @@
   .sum-chip.late { background: #fee2e2; color: #b91c1c; }
   .sum-over { color: #b91c1c; font-weight: 800; }
   .sum-ok { color: #15803d; font-weight: 800; }
+  /* spesifisitas dinaikkan: aturan .ch-table td { color } sebelumnya menimpa warna merah/hijau ini */
+  .container .ch-table td.sum-over { color: #b91c1c; font-weight: 800; }
+  .container .ch-table td.sum-ok { color: #15803d; font-weight: 800; }
+  .container .ch-table td.sum-pe { color: #15803d; font-weight: 700; }
+  .container .ch-table td.sum-po { color: #1d4ed8; font-weight: 700; }
+  .container .ch-table td.sum-pl { color: #b91c1c; font-weight: 700; }
   .sum-pe { color: #15803d; font-weight: 700; } .sum-po { color: #1d4ed8; font-weight: 700; } .sum-pl { color: #b91c1c; font-weight: 700; }
   .sum-bar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: #e2e8f0; min-width: 140px; }
   .sum-bar span.e { background: #22c55e; } .sum-bar span.o { background: #3b82f6; } .sum-bar span.l { background: #ef4444; }
@@ -1541,6 +1547,27 @@
   .sum-stk { width: 100%; display: flex; flex-direction: column-reverse; border-radius: 4px 4px 0 0; overflow: hidden; background: #64748b; }
   .sum-stk i.e { background: #22c55e; } .sum-stk i.o { background: #3b82f6; } .sum-stk i.l { background: #ef4444; }
   .sum-empty { color: #94a3b8; font-size: 12px; padding: 20px; text-align: center; }
+
+  /* ===== Preset periode ===== */
+  .sum-presets { display: flex; gap: 4px; flex-wrap: wrap; }
+  .sum-presets button { padding: 7px 10px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; font-size: 12px; font-weight: 600; color: #334155; cursor: pointer; font-family: inherit; }
+  .sum-presets button:hover { background: #f1f5f9; }
+  .sum-presets button.on { background: #64748b; border-color: #64748b; color: #fff; }
+
+  /* ===== Pola jam kedatangan ===== */
+  .sum-heat { display: flex; gap: 6px; }
+  .sum-hcell { flex: 1; min-width: 24px; max-width: 46px; height: 34px; border-radius: 5px; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: #334155; background: #f1f5f9; }
+  .sum-hcell.dim { color: #cbd5e1; font-weight: 600; }
+  .sum-hour-ins { margin-top: 12px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; font-size: 12px; color: #475569; }
+  .sum-hour-ins .sum-chip { font-size: 11.5px; padding: 3px 10px; }
+
+  /* ===== Data Lengkap: kolom Date & LT dibekukan ===== */
+  .sum-scroll .ch-table th.frz-a, .sum-scroll .ch-table th.frz-b { position: sticky; top: 0; z-index: 6; background: #64748b; }
+  .sum-scroll .ch-table td.frz-a, .sum-scroll .ch-table td.frz-b { position: sticky; z-index: 3; background: #fff; }
+  .sum-scroll .ch-table .frz-a { left: 0; }
+  .sum-scroll .ch-table .frz-b { left: var(--c0w, 90px); box-shadow: 2px 0 0 #cbd5e1; }
+  .sum-scroll .ch-table tbody tr:nth-child(even) td.frz-a, .sum-scroll .ch-table tbody tr:nth-child(even) td.frz-b { background: #f8fafc; }
+  .sum-scroll .ch-table tbody tr:hover td.frz-a, .sum-scroll .ch-table tbody tr:hover td.frz-b { background: #eef2f7; }
 
   /* ===== Export PDF (modal preview) ===== */
   .btn-export-pdf { background: #0f172a; }
@@ -1594,6 +1621,15 @@
   <div class="projection-filter-bar">
     <div class="filter-item"><label>📅 Dari Tanggal (Arrival)</label><input type="date" id="sumFrom"></div>
     <div class="filter-item"><label>📅 Sampai Tanggal (Arrival)</label><input type="date" id="sumTo"></div>
+    <div class="filter-item"><label>⚡ Periode Cepat</label>
+      <div class="sum-presets" id="sumPresets">
+        <button type="button" data-p="today" onclick="sumPreset('today')">Hari ini</button>
+        <button type="button" data-p="yesterday" onclick="sumPreset('yesterday')">Kemarin</button>
+        <button type="button" data-p="7d" onclick="sumPreset('7d')">7 Hari</button>
+        <button type="button" data-p="month" onclick="sumPreset('month')">Bulan ini</button>
+        <button type="button" data-p="lastMonth" onclick="sumPreset('lastMonth')">Bulan lalu</button>
+      </div>
+    </div>
     <div class="filter-item"><label>🔍 Cari (LT / Route / Nopol / Driver / Vendor)</label><input type="text" id="sumSearch" placeholder="Ketik untuk cari..." style="min-width:260px;"></div>
     <div class="filter-item"><label>🏢 Vendor</label><select id="sumVendor"><option value="">Semua</option></select></div>
     <div class="filter-item"><label>🔄 Shift</label><select id="sumShiftSel"><option value="">Semua</option></select></div>
@@ -1614,6 +1650,17 @@
     <div class="sum-grid2">
       <div class="sum-chart-box"><div class="sum-chart-title">Jumlah Trip per Hari <span class="sum-lg"><i style="background:#22c55e"></i>Early</span><span class="sum-lg"><i style="background:#3b82f6"></i>Ontime</span><span class="sum-lg"><i style="background:#ef4444"></i>Late</span></div><div class="sum-plot" id="sumTrendTrip"></div></div>
       <div class="sum-chart-box"><div class="sum-chart-title">Parcel Qty per Hari</div><div class="sum-plot" id="sumTrendParcel"></div></div>
+    </div>
+  </div>
+
+  <div class="sum-sec">
+    <h3>🕐 Pola Jam Kedatangan <small>berdasarkan jam ATA, ikut filter di atas</small></h3>
+    <div class="sum-chart-box">
+      <div class="sum-chart-title">Jumlah Trip per Jam Arrival <span class="sum-lg"><i style="background:#22c55e"></i>Early</span><span class="sum-lg"><i style="background:#3b82f6"></i>Ontime</span><span class="sum-lg"><i style="background:#ef4444"></i>Late</span></div>
+      <div class="sum-plot" id="sumHourPlot"></div>
+      <div class="sum-chart-title" style="margin-top:14px;">% Late per Jam <small style="color:#64748b;font-weight:600;">makin pekat = makin tinggi</small></div>
+      <div class="sum-heat" id="sumHourHeat"></div>
+      <div class="sum-hour-ins" id="sumHourIns"></div>
     </div>
   </div>
 
@@ -2069,6 +2116,73 @@
     renderAll();
   }
 
+  // ==== Preset periode cepat ====
+  function sumPresetRange(p) {
+    const n = new Date(), y = n.getFullYear(), m = n.getMonth(), d = n.getDate();
+    if (p === 'today') return [ymd(n), ymd(n)];
+    if (p === 'yesterday') { const x = ymd(new Date(y, m, d - 1)); return [x, x]; }
+    if (p === '7d') return [ymd(new Date(y, m, d - 6)), ymd(n)];
+    if (p === 'month') return [ymd(new Date(y, m, 1)), ymd(new Date(y, m + 1, 0))];
+    if (p === 'lastMonth') return [ymd(new Date(y, m - 1, 1)), ymd(new Date(y, m, 0))];
+    return null;
+  }
+  function sumPreset(p) {
+    const r = sumPresetRange(p); if (!r) return;
+    document.getElementById('sumFrom').value = r[0];
+    document.getElementById('sumTo').value = r[1];
+    renderAll();
+  }
+  function updatePresetActive() {
+    const f = selVal('sumFrom'), t2 = selVal('sumTo');
+    document.querySelectorAll('#sumPresets button').forEach(function (b) {
+      const r = sumPresetRange(b.getAttribute('data-p'));
+      b.classList.toggle('on', !!r && r[0] === f && r[1] === t2);
+    });
+  }
+
+  // ==== Pola jam kedatangan (jam ATA) ====
+  function renderSumHour() {
+    const plot = document.getElementById('sumHourPlot'), heat = document.getElementById('sumHourHeat'), ins = document.getElementById('sumHourIns');
+    if (!plot) return;
+    const HR = []; for (let h = 0; h < 24; h++) HR.push({ Early: 0, Ontime: 0, Late: 0, n: 0 });
+    let withAta = 0;
+    sumFiltered.forEach(function (r) {
+      const d = pDT(r[C.ata]); if (!d) return;
+      const o = HR[d.getHours()], st = normStatus(r[C.status]);
+      o.n++; withAta++; if (st) o[st]++;
+    });
+    if (!withAta) {
+      plot.innerHTML = '<div class="sum-empty" style="width:100%;">Tidak ada data jam ATA di periode ini.</div>';
+      heat.innerHTML = ''; ins.innerHTML = ''; return;
+    }
+    const pad = function (h) { return String(h).padStart(2, '0'); };
+    const maxN = Math.max.apply(null, HR.map(function (o) { return o.n; })), H = 110;
+    plot.innerHTML = HR.map(function (o, h) {
+      const bh = o.n ? Math.max(3, Math.round(o.n / maxN * H)) : 0;
+      const seg = ['Early', 'Ontime', 'Late'].map(function (n2) { return o[n2] ? '<i class="' + n2[0].toLowerCase() + '" style="height:' + Math.round(o[n2] / o.n * bh) + 'px"></i>' : ''; }).join('');
+      return '<div class="sum-col" title="' + pad(h) + ':00-' + pad(h) + ':59 · ' + o.n + ' trip (Early ' + o.Early + ' / Ontime ' + o.Ontime + ' / Late ' + o.Late + ')"><b>' + (o.n || '') + '</b><div class="sum-stk" style="height:' + bh + 'px">' + seg + '</div><span>' + pad(h) + '</span></div>';
+    }).join('');
+
+    const lp = HR.map(function (o) { const j = o.Early + o.Ontime + o.Late; return j ? o.Late / j : 0; });
+    const maxLp = Math.max.apply(null, lp);
+    heat.innerHTML = HR.map(function (o, h) {
+      const j = o.Early + o.Ontime + o.Late;
+      const tip = pad(h) + ':00-' + pad(h) + ':59 · ' + (j ? o.Late + ' Late dari ' + j + ' trip (' + (lp[h] * 100).toFixed(1) + '%)' : 'tidak ada trip');
+      if (!j) return '<div class="sum-hcell dim" title="' + tip + '">·</div>';
+      const a = maxLp ? 0.1 + 0.9 * (lp[h] / maxLp) : 0.1;
+      return '<div class="sum-hcell" style="background:rgba(239,68,68,' + a.toFixed(2) + ');' + (a > 0.55 ? 'color:#fff;' : '') + '" title="' + tip + '">' + Math.round(lp[h] * 100) + '%</div>';
+    }).join('');
+
+    const top = HR.map(function (o, h) { return { h: h, late: o.Late, j: o.Early + o.Ontime + o.Late, p: lp[h] }; })
+      .filter(function (x) { return x.late > 0; })
+      .sort(function (a, b) { return b.late - a.late || b.p - a.p; }).slice(0, 3);
+    let html = top.length
+      ? '<b style="color:#0f172a;">🔥 Jam rawan Late:</b>' + top.map(function (x) { return '<span class="sum-chip late">' + pad(x.h) + ':00–' + pad(x.h) + ':59 · ' + x.late + ' Late (' + (x.p * 100).toFixed(0) + '%)</span>'; }).join('')
+      : '<span>Tidak ada trip Late di periode ini.</span>';
+    if (sumFiltered.length > withAta) html += '<span style="color:#94a3b8;">· ' + (sumFiltered.length - withAta) + ' trip tanpa data ATA tidak dihitung</span>';
+    ins.innerHTML = html;
+  }
+
   function renderAll() {
     if (!document.getElementById('sumKpi')) return;
     applySumFilter();
@@ -2079,6 +2193,8 @@
     renderSumTrend();
     renderSumLeads();
     renderSumAttention();
+    renderSumHour();
+    updatePresetActive();
   }
 
   function renderSumKpi() {
@@ -2152,15 +2268,41 @@
   }
 
   function renderSumDetail() {
-    document.getElementById('sumDetailHead').innerHTML = sumHeaders.map(function (h) { return '<th>' + escapeHtml(h) + '</th>'; }).join('');
+    const frz = function (i) { return i === 0 ? ' class="frz-a"' : (i === C.lt ? ' class="frz-b"' : ''); };
+    const STD = {}; STD[C.durUnload] = 20; STD[C.durFinishUnload] = 80; STD[C.durFinish] = 100; // standar (menit)
+    let head = '';
+    sumHeaders.forEach(function (h, i) {
+      head += '<th' + frz(i) + '>' + escapeHtml(h) + '</th>';
+      if (i === C.status) head += '<th>Telat (ATA − STA)</th>';
+    });
+    document.getElementById('sumDetailHead').innerHTML = head;
     document.getElementById('sumDetailCount').textContent = sumFiltered.length + ' baris';
     document.getElementById('sumDetailBody').innerHTML = sumFiltered.map(function (r) {
-      return '<tr>' + sumHeaders.map(function (h, i) {
+      let tr = '';
+      sumHeaders.forEach(function (h, i) {
         const v = r[i] == null ? '' : r[i];
-        if (i === C.status) { const s = normStatus(v); return '<td>' + (s ? '<span class="sum-chip ' + s.toLowerCase() + '">' + s + '</span>' : escapeHtml(v)) + '</td>'; }
-        return '<td>' + escapeHtml(v) + '</td>';
-      }).join('') + '</tr>';
-    }).join('') || '<tr><td colspan="' + (sumHeaders.length || 1) + '" style="color:#94a3b8;">Tidak ada data di periode ini.</td></tr>';
+        if (i === C.status) {
+          const st = normStatus(v);
+          tr += '<td>' + (st ? '<span class="sum-chip ' + st.toLowerCase() + '">' + st + '</span>' : escapeHtml(v)) + '</td>';
+          // kolom Telat: hanya trip Late, selisih ATA - STA (guard sama dgn panel Perlu Perhatian)
+          let delay = null;
+          if (st === 'Late') {
+            const sta = pDT(r[12]), ata = pDT(r[C.ata]);
+            delay = sta && ata ? (ata - sta) / 60000 : null;
+            if (delay != null && (delay <= 0 || delay > 7 * 1440)) delay = null;
+          }
+          tr += delay == null ? '<td>-</td>' : '<td class="sum-over">' + fMin(delay) + '</td>';
+          return;
+        }
+        let cls = frz(i);
+        if (STD[i] != null) { const m = pMin(v); if (m != null && m > STD[i]) cls = ' class="sum-over"'; }
+        tr += '<td' + cls + '>' + escapeHtml(v) + '</td>';
+      });
+      return '<tr>' + tr + '</tr>';
+    }).join('') || '<tr><td colspan="' + ((sumHeaders.length || 1) + 1) + '" style="color:#94a3b8;">Tidak ada data di periode ini.</td></tr>';
+    // lebar kolom Date dipakai sebagai offset kolom LT yang dibekukan
+    const th0 = document.querySelector('#sumDetailHead th'), box = document.getElementById('sumDetailHead').closest('.sum-scroll');
+    if (th0 && box) box.style.setProperty('--c0w', th0.offsetWidth + 'px');
   }
 
   function durCell(v, std) { return '<td class="' + (v == null ? '' : (v > std ? 'sum-over' : 'sum-ok')) + '">' + fMin(v) + '</td>'; }
